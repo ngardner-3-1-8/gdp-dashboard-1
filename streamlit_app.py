@@ -730,4 +730,4 @@ if st.button("Get Schedule"):
 
 if st.session_state['schedule_data_retrieved']: # Check if data is retrieved
     if st.button("Get Travel, Ranking, and Rest Data"):
-        collect_schedule_travel_ranking_data_df = collect_schedule_travel_ranking_data(pd) # Function call on button click
+        collect_schedule_travel_ranking_data_df = collect_schedule_travel_ranking_data(pd, schedule_table, schedule_rows) # Function call on button click

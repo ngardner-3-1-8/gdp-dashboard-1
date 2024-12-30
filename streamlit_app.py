@@ -695,24 +695,25 @@ def collect_schedule_travel_ranking_data(pd):  # Defined dummy function to call
 
 st.title("NFL Survivor Optimization")
 
-schedule_data_retrieved = False #Flag to check schedule data
+if 'schedule_data_retrieved' not in st.session_state: #Initialize on first run
+    st.session_state['schedule_data_retrieved'] = False
 
 if st.button("Get Schedule"):
     table, rows = get_schedule() # Call the function
     
     if table:
         st.write("Schedule Data Retrieved")
-        schedule_data_retrieved = True #Set Flag to True after retrieval
+        st.session_state['schedule_data_retrieved'] = True #Set Flag to True after retrieval
     else:
          st.write("Error. Could not find the table.")
-         schedule_data_retrieved = False #Set flag to False on error
+         st.session_state['schedule_data_retrieved'] = False #Set flag to False on error
          
     if rows:
         st.write(f"Number of Schedule Rows: {len(rows)}") #Display row length
     else:
          st.write("Error. Could not find the rows")
-         schedule_data_retrieved = False #Set flag to False on error
+         st.session_state['schedule_data_retrieved'] = False #Set flag to False on error
 
-if schedule_data_retrieved:# Check if data is retrieved
+if st.session_state['schedule_data_retrieved']: # Check if data is retrieved
     if st.button("Get Travel, Ranking, and Rest Data"):
         collect_schedule_travel_ranking_data(pd) # Function call on button click

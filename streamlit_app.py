@@ -739,8 +739,8 @@ def collect_schedule_travel_ranking_data(pd, schedule_table, schedule_rows):  # 
     
     df = schedule_df_with_odds_df
     # Convert percentage strings to floats
-    df["Away Team Fair Odds"] = df["Away Team Fair Odds"].str.rstrip("%").astype(float) / 100
-    df["Home Team Fair Odds"] = df["Home Team Fair Odds"].str.rstrip("%").astype(float) / 100
+#    df["Away Team Fair Odds"] = df["Away Team Fair Odds"].str.rstrip("%").astype(float) / 100
+#    df["Home Team Fair Odds"] = df["Home Team Fair Odds"].str.rstrip("%").astype(float) / 100
 
     # Calculate expected win advantage for away team
     df["Away Team Expected Win Advantage"] = round(df["Away Team Fair Odds"] - 0.5,4)

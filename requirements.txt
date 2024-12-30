@@ -7,3 +7,4 @@ tqdm
 ortools
 python-dateutil
 pytz
+python-dateutil

@@ -32,7 +32,7 @@ def get_schedule():
     print("Schedule Data Retrieved")
     return table, rows
 
-def collect_schedule_travel_ranking_data(pd):  # Defined dummy function to call
+def collect_schedule_travel_ranking_data(pd, schedule_table):  # Defined dummy function to call
     print("Collecting Travel, Ranking, and Rest Data...")
     # Replace with your actual logic
     data = []

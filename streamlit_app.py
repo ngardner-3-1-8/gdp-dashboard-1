@@ -32,7 +32,7 @@ def get_schedule():
     print("Schedule Data Retrieved")
     return table, rows
 
-def collect_schedule_travel_ranking_data(pd, schedule_table):  # Defined dummy function to call
+def collect_schedule_travel_ranking_data(pd, schedule_table, schedule_rows):  # Defined dummy function to call
     print("Collecting Travel, Ranking, and Rest Data...")
     # Replace with your actual logic
     data = []
@@ -716,6 +716,8 @@ if st.button("Get Schedule"):
     if schedule_table:
         st.write("Schedule Data Retrieved")
         st.session_state['schedule_data_retrieved'] = True #Set Flag to True after retrieval
+        st.session_state['schedule_table'] = schedule_table #Store table data into session state
+        st.session_state['schedule_rows'] = schedule_rows #Store rows data into session state # ADD THIS LINE
     else:
          st.write("Error. Could not find the table.")
          st.session_state['schedule_data_retrieved'] = False #Set flag to False on error

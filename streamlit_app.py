@@ -693,99 +693,99 @@ def collect_schedule_travel_ranking_data(pd, schedule_table, schedule_rows):  # 
 
 
  def get_preseason_odds():
-        print("Scraping for Live Odds...")
-        url = "https://sportsbook.draftkings.com/leagues/football/nfl"
+    print("Scraping for Live Odds...")
+    url = "https://sportsbook.draftkings.com/leagues/football/nfl"
+
+    headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/102.0.0.0 Safari/537.36'}
+    response = requests.get(url, headers=headers)
+
+    soup = BeautifulSoup(response.text, 'html.parser')
+
+
+    team_name_mapping = {
+        "ARI Cardinals" : "Arizona Cardinals",
+        "ATL Falcons" : "Atlanta Falcons",
+        "BAL Ravens" : "Baltimore Ravens",
+        "BUF Bills" : "Buffalo Bills",
+        "CAR Panthers" : "Carolina Panthers",
+        "CHI Bears" : "Chicago Bears",
+        "CIN Bengals" : 'Cincinnati Bengals',
+        "CLE Browns" : 'Cleveland Browns',
+        "DAL Cowboys" : 'Dallas Cowboys',
+        "DEN Broncos" : 'Denver Broncos',
+        "DET Lions" : 'Detroit Lions',
+        "GB Packers" : 'Green Bay Packers',
+        "HOU Texans" : 'Houston Texans',
+        "IND Colts" : 'Indianapolis Colts',
+        "JAX Jaguars" : 'Jacksonville Jaguars',
+        "KC Chiefs" : 'Kansas City Chiefs',
+        "LV Raiders" : 'Las Vegas Raiders',
+        "LA Chargers" : 'Los Angeles Chargers',
+        "LA Rams" : 'Los Angeles Rams',
+        "MIA Dolphins" : 'Miami Dolphins',
+        "MIN Vikings" : 'Minnesota Vikings',
+        "NE Patriots" : 'New England Patriots',
+        "NO Saints" : 'New Orleans Saints',
+        "NY Giants" : 'New York Giants',
+        "NY Jets" : 'New York Jets',
+        "PHI Eagles" : 'Philadelphia Eagles',
+        "PIT Steelers" : 'Pittsburgh Steelers',
+        "SF 49ers" : 'San Francisco 49ers',
+        "SEA Seahawks" : 'Seattle Seahawks',
+        "TB Buccaneers" : 'Tampa Bay Buccaneers',
+        "TEN Titans" : 'Tennessee Titans',
+        "WAS Commanders" : 'Washington Commanders'
+    }
+
+    # Find all the table rows containing game data
+    game_rows = soup.find_all('tr', class_=['break-line', ''])
+
+    games = []
+    game_data = {}  # Temporary dictionary to store game data
+
+    for i, row in enumerate(game_rows):
+        # Extract time only from the first row of a game
+        if 'break-line' in row['class']:
+            time = row.find('span', class_='event-cell__start-time').text
+            game_data['Time'] = time
+
+        # Extract team and odds - handle potential missing elements
+        team = row.find('div', class_='event-cell__name-text')
+        if team:
+            team = team.text.strip()
+            team = team_name_mapping.get(team, team)
+        else:
+            team = None  # Set team to None if not found
+
+        odds_element = row.find('span', class_='sportsbook-odds american no-margin default-color')
+        if odds_element:
+            odds = odds_element.text.strip().replace('−', '-')
+            odds = int(odds)
+        else:
+            odds = None  # Set odds to None if not found
+
+        # Assign team and odds to the appropriate key in the game_data dictionary
+        if i % 2 == 0:  # Even index: Away Team
+            game_data['Away Team'] = team
+            game_data['Away Odds'] = odds
+        else:  # Odd index: Home Team
+            game_data['Home Team'] = team
+            game_data['Home Odds'] = odds
+
+            # Append complete game data to the games list and reset game_data
+            games.append(game_data)
+            game_data = {}
+
+    # Create pandas DataFrame from the extracted data
+    df = pd.DataFrame(games)
+
+    print(df)
+    df.to_csv('Live Scraped Odds.csv', index=False)
     
-        headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/102.0.0.0 Safari/537.36'}
-        response = requests.get(url, headers=headers)
+    live_scraped_odds_nfl_df = df
     
-        soup = BeautifulSoup(response.text, 'html.parser')
-    
-    
-        team_name_mapping = {
-            "ARI Cardinals" : "Arizona Cardinals",
-            "ATL Falcons" : "Atlanta Falcons",
-            "BAL Ravens" : "Baltimore Ravens",
-            "BUF Bills" : "Buffalo Bills",
-            "CAR Panthers" : "Carolina Panthers",
-            "CHI Bears" : "Chicago Bears",
-            "CIN Bengals" : 'Cincinnati Bengals',
-            "CLE Browns" : 'Cleveland Browns',
-            "DAL Cowboys" : 'Dallas Cowboys',
-            "DEN Broncos" : 'Denver Broncos',
-            "DET Lions" : 'Detroit Lions',
-            "GB Packers" : 'Green Bay Packers',
-            "HOU Texans" : 'Houston Texans',
-            "IND Colts" : 'Indianapolis Colts',
-            "JAX Jaguars" : 'Jacksonville Jaguars',
-            "KC Chiefs" : 'Kansas City Chiefs',
-            "LV Raiders" : 'Las Vegas Raiders',
-            "LA Chargers" : 'Los Angeles Chargers',
-            "LA Rams" : 'Los Angeles Rams',
-            "MIA Dolphins" : 'Miami Dolphins',
-            "MIN Vikings" : 'Minnesota Vikings',
-            "NE Patriots" : 'New England Patriots',
-            "NO Saints" : 'New Orleans Saints',
-            "NY Giants" : 'New York Giants',
-            "NY Jets" : 'New York Jets',
-            "PHI Eagles" : 'Philadelphia Eagles',
-            "PIT Steelers" : 'Pittsburgh Steelers',
-            "SF 49ers" : 'San Francisco 49ers',
-            "SEA Seahawks" : 'Seattle Seahawks',
-            "TB Buccaneers" : 'Tampa Bay Buccaneers',
-            "TEN Titans" : 'Tennessee Titans',
-            "WAS Commanders" : 'Washington Commanders'
-        }
-    
-        # Find all the table rows containing game data
-        game_rows = soup.find_all('tr', class_=['break-line', ''])
-    
-        games = []
-        game_data = {}  # Temporary dictionary to store game data
-    
-        for i, row in enumerate(game_rows):
-            # Extract time only from the first row of a game
-            if 'break-line' in row['class']:
-                time = row.find('span', class_='event-cell__start-time').text
-                game_data['Time'] = time
-    
-            # Extract team and odds - handle potential missing elements
-            team = row.find('div', class_='event-cell__name-text')
-            if team:
-                team = team.text.strip()
-                team = team_name_mapping.get(team, team)
-            else:
-                team = None  # Set team to None if not found
-    
-            odds_element = row.find('span', class_='sportsbook-odds american no-margin default-color')
-            if odds_element:
-                odds = odds_element.text.strip().replace('−', '-')
-                odds = int(odds)
-            else:
-                odds = None  # Set odds to None if not found
-    
-            # Assign team and odds to the appropriate key in the game_data dictionary
-            if i % 2 == 0:  # Even index: Away Team
-                game_data['Away Team'] = team
-                game_data['Away Odds'] = odds
-            else:  # Odd index: Home Team
-                game_data['Home Team'] = team
-                game_data['Home Odds'] = odds
-    
-                # Append complete game data to the games list and reset game_data
-                games.append(game_data)
-                game_data = {}
-    
-        # Create pandas DataFrame from the extracted data
-        df = pd.DataFrame(games)
-    
-        print(df)
-        df.to_csv('Live Scraped Odds.csv', index=False)
-        
-        live_scraped_odds_nfl_df = df
-        
-        return live_scraped_odds_nfl_df
-        print("Live Odds Fetched")
+    return live_scraped_odds_nfl_df
+    print("Live Odds Fetched")
 
 def add_odds_to_main_csv():
 # 0: Stadium | 1: Lattitude | 2: Longitude | 3: Timezone | 4: Division | 5: Start of 2023 Season Rank | 6: Current Rank | 7: Average points better than Average Team (Used for Spread and Odds Calculation)

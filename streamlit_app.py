@@ -721,7 +721,7 @@ if st.button("Get Schedule"):
          st.session_state['schedule_data_retrieved'] = False #Set flag to False on error
          
     if schedule_rows:
-        st.write(f"Number of Schedule Rows: {len(rows)}") #Display row length
+        st.write(f"Number of Schedule Rows: {len(schedule_rows)}") #Display row length
     else:
          st.write("Error. Could not find the rows")
          st.session_state['schedule_data_retrieved'] = False #Set flag to False on error

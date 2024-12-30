@@ -1,2 +1,9 @@
-streamlit
+requests
+beautifulsoup4
 pandas
+numpy
+scikit-learn
+tqdm
+ortools
+python-dateutil
+pytz

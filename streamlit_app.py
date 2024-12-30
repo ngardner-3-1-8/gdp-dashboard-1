@@ -1,4 +1,4 @@
-import streamlit as st
+leimport streamlit as st
 import requests
 from bs4 import BeautifulSoup
 import pandas as pd
@@ -713,14 +713,14 @@ if 'schedule_data_retrieved' not in st.session_state: #Initialize on first run
 if st.button("Get Schedule"):
     schedule_table, schedule_rows = get_schedule() # Call the function
     
-    if table:
+    if schedule_table:
         st.write("Schedule Data Retrieved")
         st.session_state['schedule_data_retrieved'] = True #Set Flag to True after retrieval
     else:
          st.write("Error. Could not find the table.")
          st.session_state['schedule_data_retrieved'] = False #Set flag to False on error
          
-    if rows:
+    if schedule_rows:
         st.write(f"Number of Schedule Rows: {len(rows)}") #Display row length
     else:
          st.write("Error. Could not find the rows")

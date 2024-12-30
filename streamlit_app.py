@@ -702,7 +702,6 @@ if st.button("Get Schedule"):
     
     if table:
         st.write("Schedule Data Retrieved")
-        st.markdown(str(table), unsafe_allow_html=True) #Display table as HTML
         schedule_data_retrieved = True #Set Flag to True after retrieval
     else:
          st.write("Error. Could not find the table.")

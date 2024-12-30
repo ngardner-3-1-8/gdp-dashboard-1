@@ -692,7 +692,7 @@ def collect_schedule_travel_ranking_data(pd, schedule_table, schedule_rows):  # 
     return travel_data
 
 
- def get_preseason_odds():
+def get_preseason_odds():
     print("Scraping for Live Odds...")
     url = "https://sportsbook.draftkings.com/leagues/football/nfl"
 

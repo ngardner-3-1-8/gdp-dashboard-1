@@ -21,7 +21,7 @@ def get_schedule():
     return table, rows
 
 def collect_schedule_travel_ranking_data(pd):  # Defined dummy function to call
-    print("Collecting Travel Data...")
+    print("Collecting Travel, Ranking, and Rest Data...")
     # Replace with your actual logic
     data = []
     # Initialize a variable to hold the last valid date and week
@@ -693,7 +693,7 @@ def collect_schedule_travel_ranking_data(pd):  # Defined dummy function to call
     return travel_data
 
 
-st.title("NFL Schedule Viewer")
+st.title("NFL Survivor Optimization")
 
 schedule_data_retrieved = False #Flag to check schedule data
 
@@ -713,6 +713,6 @@ if st.button("Get Schedule"):
          st.write("Error. Could not find the rows")
          schedule_data_retrieved = False #Set flag to False on error
 
-if schedule_data_retrieved: # Check if data is retrieved
-    if st.button("Get Travel Ranking Data"): #Show secondary Button on success
+if schedule_data_retrieved:# Check if data is retrieved
+    if st.button("Get Travel, Ranking, and Rest Data"):
         collect_schedule_travel_ranking_data(pd) # Function call on button click

@@ -15,34 +15,6 @@ from tqdm import tqdm
 from tqdm.notebook import tqdm
 from ortools.linear_solver import pywraplp
 
-def get_schedule():
-    print("Gathering Schedule Data...")
-    # Make a request to the website
-    r = requests.get('https://www.fftoday.com/nfl/schedule.php')
-    r_html = r.text
-
-    # Create a BeautifulSoup object and specify the parser
-    soup = BeautifulSoup(r_html, 'html.parser')
-
-    # Find the table in the HTML
-    table = soup.find('table', attrs={'width': '80%', 'border': '0', 'cellpadding': '0', 'cellspacing': '0'})
-
-    # Find all rows in the table with a white background
-    rows = table.find_all('tr', attrs={'bgcolor': '#ffffff'})
-    print("Schedule Data Retrieved")
-    return table, rows
-
-#THIS CELL FINDS ALL THE DAT ABOUT THE SCHEDULE, TRAVEL, AND RANKINGS - THEN PUTS THEM INTO THE DF
-
-#THIS CELL FINDS ALL THE DAT ABOUT THE SCHEDULE, TRAVEL, AND RANKINGS - THEN PUTS THEM INTO THE DF
-
-import numpy as np
-from math import radians, sin, cos, sqrt, atan2
-import pytz
-from dateutil.parser import parse
-from datetime import timedelta
-import pandas as pd
-
 def collect_schedule_travel_ranking_data(pd):
     data = []
     # Initialize a variable to hold the last valid date and week
@@ -629,34 +601,13 @@ def collect_schedule_travel_ranking_data(pd):
         }
 
         live_odds_df = live_scraped_odds_df
-
-        # Create the mask for where there is no 'Home Odds'
-        mask = live_odds_df['Home Odds'] == ''
-        # Only apply calculations if the 'Home Odds' column is empty
-        if mask.any():
-            # Adjust Average Points Difference for Favorite/Underdog Determination
-            live_odds_df['Adjusted Home Points'] = live_odds_df.apply(lambda row: stadiums[row['Home Team']][7] + 1, axis=1)
-            live_odds_df['Adjusted Away Points'] = live_odds_df.apply(lambda row: stadiums[row['Away Team']][7] - 1, axis=1)
-
-            live_odds_df['Spread'] = live_odds_df.apply(lambda row: abs(stadiums[row['Away Team']][7] - stadiums[row['Home Team']][7]), axis=1)
-
-            # Determine Favorite and Underdog
-            live_odds_df['Favorite'] = live_odds_df.apply(lambda row: row['Home Team'] if row['Adjusted Home Points'] > row['Adjusted Away Points'] else row['Away Team'], axis=1)
-            live_odds_df['Underdog'] = live_odds_df.apply(lambda row: row['Home Team'] if row['Adjusted Home Points'] < row['Adjusted Away Points'] else row['Away Team'], axis=1)
-
-            # Adjust Spread based on Favorite
-            live_odds_df['Adjusted Spread'] = live_odds_df.apply(lambda row: row['Spread'] + 2 if row['Favorite'] == row['Home Team'] else row['Spread'] - 2, axis=1)
-
-            # Overwrite Odds based on Spread and Favorite/Underdog
-            live_odds_df['Home Odds'] = live_odds_df.apply(lambda row: odds[row['Adjusted Spread']][0] if row['Favorite'] == row['Home Team'] else odds[row['Adjusted Spread']][1], axis=1)
-            live_odds_df['Away Odds'] = live_odds_df.apply(lambda row: odds[row['Adjusted Spread']][1] if row['Favorite'] == row['Home Team'] else odds[row['Adjusted Spread']][0], axis=1)
-
- 
+        
+        print(live_odds_df)
 
         #df.to_csv('TEST Manual Odds.csv', index = False)
         # Load the CSV data
         csv_df = df
-
+        print(csv_df)
         # Update CSV data with scraped odds
         for index, row in csv_df.iterrows():
             matching_row = live_odds_df[
@@ -665,6 +616,26 @@ def collect_schedule_travel_ranking_data(pd):
             if not matching_row.empty:
                 csv_df.loc[index, 'Away Team Moneyline'] = matching_row.iloc[0]['Away Odds']
                 csv_df.loc[index, 'Home Team Moneyline'] = matching_row.iloc[0]['Home Odds']
+                # Create the mask for where there is no 'Home Odds'
+        mask = csv_df['Home Team Moneyline'].isna()
+        # Only apply calculations if the 'Home Odds' column is empty
+        if mask.any():
+            # Adjust Average Points Difference for Favorite/Underdog Determination
+            csv_df['Adjusted Home Points'] = csv_df.apply(lambda row: stadiums[row['Home Team']][7] + 1, axis=1)
+            csv_df['Adjusted Away Points'] = csv_df.apply(lambda row: stadiums[row['Away Team']][7] - 1, axis=1)
+
+            csv_df['Spread'] = csv_df.apply(lambda row: abs(stadiums[row['Away Team']][7] - stadiums[row['Home Team']][7]), axis=1)
+
+            # Determine Favorite and Underdog
+            csv_df['Favorite'] = csv_df.apply(lambda row: row['Home Team'] if row['Adjusted Home Points'] > row['Adjusted Away Points'] else row['Away Team'], axis=1)
+            csv_df['Underdog'] = csv_df.apply(lambda row: row['Home Team'] if row['Adjusted Home Points'] < row['Adjusted Away Points'] else row['Away Team'], axis=1)
+
+            # Adjust Spread based on Favorite
+            csv_df['Adjusted Spread'] = csv_df.apply(lambda row: row['Spread'] + 2 if row['Favorite'] == row['Home Team'] else row['Spread'] - 2, axis=1)
+
+            # Overwrite Odds based on Spread and Favorite/Underdog
+            csv_df['Home Team Moneyline'] = csv_df.apply(lambda row: odds[row['Adjusted Spread']][0] if row['Favorite'] == row['Home Team'] else odds[row['Adjusted Spread']][1], axis=1)
+            csv_df['Away Team Moneyline'] = csv_df.apply(lambda row: odds[row['Adjusted Spread']][1] if row['Favorite'] == row['Home Team'] else odds[row['Adjusted Spread']][0], axis=1)
         # Calculate Implied Odds and Fair Odds
         for index, row in csv_df.iterrows():
             # Implied Odds
@@ -800,10 +771,8 @@ def collect_schedule_travel_ranking_data(pd):
     # Define a function to calculate the star rating
     def calculate_star_rating(cumulative_win_percentage, week):
         # Normalize the cumulative win percentage to a scale of 0 to 1
-        if pd.isna(cumulative_win_percentage) or pd.isna(min_cumulative_win_percentage[week]):
+        if pd.isna(cumulative_win_percentage) or pd.isna(min_cumulative_win_percentage[week]) or pd.isna(range_cumulative_win_percentage[week]):
             return 0.0  # Return 0 for NaN inputs
-        if pd.isna(range_cumulative_win_percentage[week]):
-            return 1.0
         try:
             normalized_percentage = (cumulative_win_percentage - min_cumulative_win_percentage[week]) / range_cumulative_win_percentage[week]
             # Assign stars linearly based on the normalized percentage
@@ -820,6 +789,7 @@ def collect_schedule_travel_ranking_data(pd):
         # Calculate star ratings first
         week_df["Away Team Star Rating"] = week_df["Away Team Cumulative Win Percentage"].apply(lambda x: calculate_star_rating(x, week))
         week_df["Home Team Star Rating"] = week_df["Home Team Cumulative Win Percentage"].apply(lambda x: calculate_star_rating(x, week))
+
         # Mark Thanksgiving Favorites
         # Find Week 13 games and winners
         week13_df = df[df["Week"] == "Week 13"]

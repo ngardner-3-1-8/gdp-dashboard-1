@@ -441,19 +441,19 @@ def collect_schedule_travel_ranking_data(pd):
 
     #Remnove this line for the first time you run the schedule in May############################################################################################
     # Assuming your DataFrame is named 'df'
-    nfl_schedule_with_odds_circa = pd.read_csv('nfl_schedule_with_odds_circa.csv')
-    df = df.assign(
-        **{
-            "Away Team Spread": nfl_schedule_with_odds_circa["Away Team Spread"],
-            "Home Team Spread": nfl_schedule_with_odds_circa["Home Team Spread"],
-            "Away Team Moneyline": nfl_schedule_with_odds_circa["Away Team Moneyline"],
-            "Home Team Moneyline": nfl_schedule_with_odds_circa["Home Team Moneyline"],
-            "Away Team Implied Odds to Win": nfl_schedule_with_odds_circa["Away Team Implied Odds to Win"],
-            "Home team Implied Odds to Win": nfl_schedule_with_odds_circa["Home team Implied Odds to Win"],
-            "Away Team Fair Odds": nfl_schedule_with_odds_circa["Away Team Fair Odds"],
-            "Home Team Fair Odds": nfl_schedule_with_odds_circa["Home Team Fair Odds"],
-        }
-    )
+#    nfl_schedule_with_odds_circa = pd.read_csv('nfl_schedule_with_odds_circa.csv')
+#    df = df.assign(
+#        **{
+#            "Away Team Spread": nfl_schedule_with_odds_circa["Away Team Spread"],
+#            "Home Team Spread": nfl_schedule_with_odds_circa["Home Team Spread"],
+#            "Away Team Moneyline": nfl_schedule_with_odds_circa["Away Team Moneyline"],
+#            "Home Team Moneyline": nfl_schedule_with_odds_circa["Home Team Moneyline"],
+#            "Away Team Implied Odds to Win": nfl_schedule_with_odds_circa["Away Team Implied Odds to Win"],
+#            "Home team Implied Odds to Win": nfl_schedule_with_odds_circa["Home team Implied Odds to Win"],
+#            "Away Team Fair Odds": nfl_schedule_with_odds_circa["Away Team Fair Odds"],
+#            "Home Team Fair Odds": nfl_schedule_with_odds_circa["Home Team Fair Odds"],
+#        }
+#    )
 
 
     # Save the DataFrame to a CSV file

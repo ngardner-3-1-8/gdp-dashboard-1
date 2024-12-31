@@ -793,7 +793,7 @@ def collect_schedule_travel_ranking_data(pd):
         if pd.isna(min_cumulative_win_percentage[week]):
             min_cumulative_win_percentage[week] = 0.0
         if pd.isna(range_cumulative_win_percentage[week]):
-            range_cumulative_win_percentage[week] = 0.0
+            range_cumulative_win_percentage[week] = 1.0
         try:
             normalized_percentage = (cumulative_win_percentage - min_cumulative_win_percentage[week]) / range_cumulative_win_percentage[week]
             # Assign stars linearly based on the normalized percentage

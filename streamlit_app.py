@@ -903,13 +903,13 @@ def collect_schedule_travel_ranking_data(pd):
 
 st.title("NFL Survivor Optimization")
 st.subheader("The second best Circa Survivor Contest Optimizer")
-st.text_area("Alright, clowns. This site is built to help you optimize your picks for the Circa Survivor contest (Eventually other contests). Simply input which week you're in, your team rankings, and the algorithm will do the rest. For a full season, Running the algorith will take up to 5 hours or more. Good luck!")
+st.text("Alright, clowns. This site is built to help you optimize your picks for the Circa Survivor contest (Eventually other contests). Simply input which week you're in, your team rankings, and the algorithm will do the rest. For a full season, Running the algorith will take up to 5 hours or more. Good luck!")
 
 schedule_data_retrieved = False #Initialize on first run
 
 if st.button("Get Schedule"):
-    schedule_table, schedule_rows = get_schedule() # Call the function
-    
+    st.write("Step 1/9: Fetching Schedule Data...")
+    schedule_table, schedule_rows = get_schedule() # Call the function   
     if schedule_table:
         st.write("Step 1 Completed: Schedule Data Retrieved")
         schedule_data_retrieved = True #Set Flag to True after retrieval

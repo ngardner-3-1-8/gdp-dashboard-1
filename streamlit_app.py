@@ -816,9 +816,8 @@ def collect_schedule_travel_ranking_data(pd):
         week_df = df[df["Week"] == week]
 
         # Calculate star ratings first
-        week_df["Away Team Star Rating"] = week_df["Away Team Cumulative Win Percentage"].apply(lambda x: calculate_star_rating(x, week))
-        week_df["Home Team Star Rating"] = week_df["Home Team Cumulative Win Percentage"].apply(lambda x: calculate_star_rating(x, week))
-
+        week_df["Away Team Star Rating"] = week_df["Away Team Cumulative Win Percentage"].apply(lambda x: calculate_star_rating(x, min_cumulative_win_percentage, range_cumulative_win_percentage))
+        week_df["Home Team Star Rating"] = week_df["Home Team Cumulative Win Percentage"].apply(lambda x: calculate_star_rating(x, min_cumulative_win_percentage, range_cumulative_win_percentage))
         # Mark Thanksgiving Favorites
         # Find Week 13 games and winners
         week13_df = df[df["Week"] == "Week 13"]

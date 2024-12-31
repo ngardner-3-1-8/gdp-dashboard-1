@@ -34,8 +34,16 @@ def get_schedule():
 
 #THIS CELL FINDS ALL THE DAT ABOUT THE SCHEDULE, TRAVEL, AND RANKINGS - THEN PUTS THEM INTO THE DF
 
+#THIS CELL FINDS ALL THE DAT ABOUT THE SCHEDULE, TRAVEL, AND RANKINGS - THEN PUTS THEM INTO THE DF
+
+import numpy as np
+from math import radians, sin, cos, sqrt, atan2
+import pytz
+from dateutil.parser import parse
+from datetime import timedelta
+import pandas as pd
+
 def collect_schedule_travel_ranking_data(pd):
-    print("Collecting Travel, Ranking, and Rest Data...")
     data = []
     # Initialize a variable to hold the last valid date and week
     last_date = None
@@ -439,36 +447,257 @@ def collect_schedule_travel_ranking_data(pd):
             # Update the 'Away Team Short Rest' for the specific row
             df.loc[index, 'Away Team Short Rest'] = 'Yes'
 
-    #Remnove this line for the first time you run the schedule in May############################################################################################
-    # Assuming your DataFrame is named 'df'
-#    nfl_schedule_with_odds_circa = pd.read_csv('nfl_schedule_with_odds_circa.csv')
-#    df = df.assign(
-#        **{
-#            "Away Team Spread": nfl_schedule_with_odds_circa["Away Team Spread"],
-#            "Home Team Spread": nfl_schedule_with_odds_circa["Home Team Spread"],
-#            "Away Team Moneyline": nfl_schedule_with_odds_circa["Away Team Moneyline"],
-#            "Home Team Moneyline": nfl_schedule_with_odds_circa["Home Team Moneyline"],
-#            "Away Team Implied Odds to Win": nfl_schedule_with_odds_circa["Away Team Implied Odds to Win"],
-#            "Home team Implied Odds to Win": nfl_schedule_with_odds_circa["Home team Implied Odds to Win"],
-#            "Away Team Fair Odds": nfl_schedule_with_odds_circa["Away Team Fair Odds"],
-#            "Home Team Fair Odds": nfl_schedule_with_odds_circa["Home Team Fair Odds"],
-#        }
-#    )
+
+    def get_preseason_odds():
+        url = "https://sportsbook.draftkings.com/leagues/football/nfl"
+
+        headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/102.0.0.0 Safari/537.36'}
+        response = requests.get(url, headers=headers)
+
+        soup = BeautifulSoup(response.text, 'html.parser')
 
 
-    # Save the DataFrame to a CSV file
-    #df.to_csv('nfl_schedule_circa.csv', index=False)
+        team_name_mapping = {
+            "ARI Cardinals" : "Arizona Cardinals",
+            "ATL Falcons" : "Atlanta Falcons",
+            "BAL Ravens" : "Baltimore Ravens",
+            "BUF Bills" : "Buffalo Bills",
+            "CAR Panthers" : "Carolina Panthers",
+            "CHI Bears" : "Chicago Bears",
+            "CIN Bengals" : 'Cincinnati Bengals',
+            "CLE Browns" : 'Cleveland Browns',
+            "DAL Cowboys" : 'Dallas Cowboys',
+            "DEN Broncos" : 'Denver Broncos',
+            "DET Lions" : 'Detroit Lions',
+            "GB Packers" : 'Green Bay Packers',
+            "HOU Texans" : 'Houston Texans',
+            "IND Colts" : 'Indianapolis Colts',
+            "JAX Jaguars" : 'Jacksonville Jaguars',
+            "KC Chiefs" : 'Kansas City Chiefs',
+            "LV Raiders" : 'Las Vegas Raiders',
+            "LA Chargers" : 'Los Angeles Chargers',
+            "LA Rams" : 'Los Angeles Rams',
+            "MIA Dolphins" : 'Miami Dolphins',
+            "MIN Vikings" : 'Minnesota Vikings',
+            "NE Patriots" : 'New England Patriots',
+            "NO Saints" : 'New Orleans Saints',
+            "NY Giants" : 'New York Giants',
+            "NY Jets" : 'New York Jets',
+            "PHI Eagles" : 'Philadelphia Eagles',
+            "PIT Steelers" : 'Pittsburgh Steelers',
+            "SF 49ers" : 'San Francisco 49ers',
+            "SEA Seahawks" : 'Seattle Seahawks',
+            "TB Buccaneers" : 'Tampa Bay Buccaneers',
+            "TEN Titans" : 'Tennessee Titans',
+            "WAS Commanders" : 'Washington Commanders'
+        }
 
-    ### THIS CELL GETS THE CUMULATIVE REMAINING WIN ODDS AND FUTURE VALUE
-    import pandas as pd
+        # Find all the table rows containing game data
+        game_rows = soup.find_all('tr', class_=['break-line', ''])
 
-    # Read the CSV file
-    #csv_file = "nfl_schedule_circa.csv"
-    #df = pd.read_csv(csv_file)
+        games = []
+        game_data = {}  # Temporary dictionary to store game data
 
-    # Convert percentage strings to floats
-    df["Away Team Fair Odds"] = df["Away Team Fair Odds"].str.rstrip("%").astype(float) / 100
-    df["Home Team Fair Odds"] = df["Home Team Fair Odds"].str.rstrip("%").astype(float) / 100
+        for i, row in enumerate(game_rows):
+            # Extract time only from the first row of a game
+            if 'break-line' in row['class']:
+                time = row.find('span', class_='event-cell__start-time').text
+                game_data['Time'] = time
+
+            # Extract team and odds - handle potential missing elements
+            team = row.find('div', class_='event-cell__name-text')
+            if team:
+                team = team.text.strip()
+                team = team_name_mapping.get(team, team)
+            else:
+                team = None  # Set team to None if not found
+
+            odds_element = row.find('span', class_='sportsbook-odds american no-margin default-color')
+            if odds_element:
+                odds = odds_element.text.strip().replace('−', '-')
+                odds = int(odds)
+            else:
+                odds = None  # Set odds to None if not found
+
+            # Assign team and odds to the appropriate key in the game_data dictionary
+            if i % 2 == 0:  # Even index: Away Team
+                game_data['Away Team'] = team
+                game_data['Away Odds'] = odds
+            else:  # Odd index: Home Team
+                game_data['Home Team'] = team
+                game_data['Home Odds'] = odds
+
+                # Append complete game data to the games list and reset game_data
+                games.append(game_data)
+                game_data = {}
+
+        # Create pandas DataFrame from the extracted data
+        df = pd.DataFrame(games)
+
+        print(df)
+        df.to_csv('Live Scraped Odds.csv', index=False)
+
+        live_scraped_odds_nfl_df = df
+
+        return live_scraped_odds_nfl_df
+            
+    live_scraped_odds_df = get_preseason_odds()    
+    
+    
+    def add_odds_to_main_csv():
+        # 0: Stadium | 1: Lattitude | 2: Longitude | 3: Timezone | 4: Division | 5: Start of 2023 Season Rank | 6: Current Rank | 7: Average points better than Average Team (Used for Spread and Odds Calculation)
+        stadiums = {
+            'Arizona Cardinals': ['State Farm Stadium', 33.5277, -112.262608, 'America/Denver', 'NFC West', 26, 24, -.5],
+            'Atlanta Falcons': ['Mercedez-Benz Stadium', 33.757614, -84.400972, 'America/New_York', 'NFC South', 13, 18, 0],
+            'Baltimore Ravens': ['M&T Stadium', 39.277969, -76.622767, 'America/New_York', 'AFC North', 3, 3, 3],
+            'Buffalo Bills': ['Highmark Stadium', 42.773739, -78.786978, 'America/New_York', 'AFC East', 5, 7, 3.5],
+            'Carolina Panthers': ['Bank of America Stadium', 35.225808, -80.852861, 'America/New_York', 'NFC South', 32, 32, -7],
+            'Chicago Bears': ['Soldier Field', 41.862306, -87.616672, 'America/Chicago', 'NFC North', 15, 19, -2],
+            'Cincinnati Bengals': ['Paycor Stadium', 39.095442, -84.516039, 'America/New_York', 'AFC North', 6, 11, 2],
+            'Cleveland Browns': ['Cleveland Browns Stadium', 41.506022, -81.699564, 'America/New_York', 'AFC North', 17, 20, 0],
+            'Dallas Cowboys': ['AT&T Stadium', 32.747778, -97.092778, 'America/Chicago', 'NFC East', 9, 6, 1.5],
+            'Denver Broncos': ['Empower Field at Mile High', 39.743936, -105.020097, 'America/Denver', 'AFC West', 29, 29, -5.5],
+            'Detroit Lions': ['Ford Field', 42.340156, -83.045808, 'America/New_York', 'NFC North', 4, 5, 3],
+            'Green Bay Packers': ['Lambeau Field', 44.501306, -88.062167, 'America/Chicago', 'NFC North', 10, 12, -4],
+            'Houston Texans': ['NRG Stadium', 29.684781, -95.410956, 'America/Chicago', 'AFC South', 7, 8, 3.5],
+            'Indianapolis Colts': ['Lucas Oil Stadium', 39.760056, -86.163806, 'America/New_York', 'AFC South', 20, 19, -2],
+            'Jacksonville Jaguars': ['Everbank Stadium', 30.323925, -81.637356, 'America/New_York', 'AFC South', 18, 17, -.5],
+            'Kansas City Chiefs': ['Arrowhead Stadium', 39.048786, -94.484566, 'America/Chicago', 'AFC West', 1, 1, 5],
+            'Las Vegas Raiders': ['Allegiant Stadium', 36.090794, -115.183952, 'America/Los_Angeles', 'AFC West', 28, 26, -3],
+            'Los Angeles Chargers': ['SoFi Stadium', 33.953587, -118.33963, 'America/Los_Angeles', 'AFC West', 14, 17, 1.5],
+            'Los Angeles Rams': ['SoFi Stadium', 33.953587, -118.33963, 'America/Los_Angeles', 'NFC West', 16, 15, -3.5],
+            'Miami Dolphins': ['Hard Rock Stadium', 25.957919, -80.238842, 'America/New_York', 'AFC East', 12, 11, -4],
+            'Minnesota Vikings': ['U.S Bank Stadium', 44.973881, -93.258094, 'America/Chicago', 'NFC North', 24, 22, .5],
+            'New England Patriots': ['Gillette Stadium', 42.090925, -71.26435, 'America/New_York', 'AFC East', 31, 27, -4.5],
+            'New Orleans Saints': ['Caesars Superdome', 29.950931, -90.081364, 'America/Chicago', 'NFC South', 23, 16, 2],
+            'New York Giants': ['MetLife Stadium', 40.812194, -74.076983, 'America/New_York', 'NFC East', 27, 31, -5],
+            'New York Jets': ['MetLife Stadium', 40.812194, -74.076983, 'America/New_York', 'AFC East', 11, 13, 1],
+            'Philadelphia Eagles': ['Lincoln Financial Field', 39.900775, -75.167453, 'America/New_York', 'NFC East', 8, 4, 3],
+            'Pittsburgh Steelers': ['Acrisure Stadium', 40.446786, -80.015761, 'America/New_York', 'AFC North', 19, 16, .5],
+            'San Francisco 49ers': ['Levi\'s Stadium', 37.713486, -122.386256, 'America/Los_Angeles', 'NFC West', 2, 1.5, 4.5],
+            'Seattle Seahawks': ['Lumen Field', 47.595153, -122.331625, 'America/Los_Angeles', 'NFC West', 22, 19, .5],
+            'Tampa Bay Buccaneers': ['Raymomd James Stadium', 27.975967, -82.50335, 'America/New_York', 'NFC South', 21, 21, 0],
+            'Tennessee Titans': ['Nissan Stadium', 36.166461, -86.771289, 'America/Chicago', 'AFC South', 20, 24, -2.5],
+            'Washington Commanders': ['FedExField', 38.907697, -76.864517, 'America/New_York', 'NFC East', 25, 28, -3.5]
+        }
+
+        # 0: Spread | 1: Favorite Odds| 2: Underdog Odds
+        odds = {
+            0: [-110, -110],
+            .5: [-116, -104],    
+            1: [-122, 101],
+            1.5: [-128, 105],
+            2: [-131, 108],
+            2.5: [-142, 117],
+            3: [-164, 135],
+            3.5: [-191, 156],
+            4: [-211, 171],
+            4.5: [-224, 181],
+            5: [-234, 188],
+            5.5: [-244, 195],
+            6: [-261, 208],
+            6.5: [-282, 224],
+            7: [-319, 249],
+            7.5: [-346, 268],
+            8: [-366, 282],
+            8.5: [-397, 302],
+            9: [-416, 314],
+            9.5: [-436, 327],
+            10: [-483, 356],
+            10.5: [-538, 389],
+            11: [-567, 406],
+            11.5: [-646, 450],
+            12: [-660, 458],
+            12.5: [-675, 466],
+            13: [-729, 494],
+            13.5: [-819, 539],
+            14: [-890, 573],
+            14.5: [-984, 615],
+            15: [-1134, 677],
+            15.5: [-1197, 702],
+            16: [-1266, 728],
+            16.5: [-1267, 728],
+            17: [-1381, 769],
+            17.5: [-1832, 906],
+            18: [-2149, 986],
+            18.5: [-2590, 1079],
+            19: [-3245, 1190],
+            19.5: [-4323, 1324],
+            20: [-4679, 1359],
+            20.5: [-5098, 1396],
+            21: [-5597, 1434]
+        }
+
+        live_odds_df = live_scraped_odds_df
+
+        # Create the mask for where there is no 'Home Odds'
+        mask = live_odds_df['Home Odds'] == ''
+        # Only apply calculations if the 'Home Odds' column is empty
+        if mask.any():
+            # Adjust Average Points Difference for Favorite/Underdog Determination
+            live_odds_df['Adjusted Home Points'] = live_odds_df.apply(lambda row: stadiums[row['Home Team']][7] + 1, axis=1)
+            live_odds_df['Adjusted Away Points'] = live_odds_df.apply(lambda row: stadiums[row['Away Team']][7] - 1, axis=1)
+
+            live_odds_df['Spread'] = live_odds_df.apply(lambda row: abs(stadiums[row['Away Team']][7] - stadiums[row['Home Team']][7]), axis=1)
+
+            # Determine Favorite and Underdog
+            live_odds_df['Favorite'] = live_odds_df.apply(lambda row: row['Home Team'] if row['Adjusted Home Points'] > row['Adjusted Away Points'] else row['Away Team'], axis=1)
+            live_odds_df['Underdog'] = live_odds_df.apply(lambda row: row['Home Team'] if row['Adjusted Home Points'] < row['Adjusted Away Points'] else row['Away Team'], axis=1)
+
+            # Adjust Spread based on Favorite
+            live_odds_df['Adjusted Spread'] = live_odds_df.apply(lambda row: row['Spread'] + 2 if row['Favorite'] == row['Home Team'] else row['Spread'] - 2, axis=1)
+
+            # Overwrite Odds based on Spread and Favorite/Underdog
+            live_odds_df['Home Odds'] = live_odds_df.apply(lambda row: odds[row['Adjusted Spread']][0] if row['Favorite'] == row['Home Team'] else odds[row['Adjusted Spread']][1], axis=1)
+            live_odds_df['Away Odds'] = live_odds_df.apply(lambda row: odds[row['Adjusted Spread']][1] if row['Favorite'] == row['Home Team'] else odds[row['Adjusted Spread']][0], axis=1)
+
+ 
+
+        #df.to_csv('TEST Manual Odds.csv', index = False)
+        # Load the CSV data
+        csv_df = df
+
+        # Update CSV data with scraped odds
+        for index, row in csv_df.iterrows():
+            matching_row = df[
+                (df['Away Team'] == row['Away Team']) & (df['Home Team'] == row['Home Team'])
+            ]
+            if not matching_row.empty:
+                csv_df.loc[index, 'Away Team Moneyline'] = matching_row.iloc[0]['Away Odds']
+                csv_df.loc[index, 'Home Team Moneyline'] = matching_row.iloc[0]['Home Odds']
+        # Calculate Implied Odds and Fair Odds
+        for index, row in csv_df.iterrows():
+            # Implied Odds
+            if row['Away Team Moneyline'] > 0:
+                csv_df.loc[index, 'Away Team Implied Odds to Win'] = 100 / (row['Away Team Moneyline'] + 100)
+            else:
+                csv_df.loc[index, 'Away Team Implied Odds to Win'] = abs(row['Away Team Moneyline']) / (abs(row['Away Team Moneyline']) + 100)
+
+            if row['Home Team Moneyline'] > 0:
+                csv_df.loc[index, 'Home team Implied Odds to Win'] = 100 / (row['Home Team Moneyline'] + 100)
+            else:
+                csv_df.loc[index, 'Home team Implied Odds to Win'] = abs(row['Home Team Moneyline']) / (abs(row['Home Team Moneyline']) + 100)
+
+            # Fair Odds
+            away_implied_odds = csv_df.loc[index, 'Away Team Implied Odds to Win']
+            home_implied_odds = csv_df.loc[index, 'Home team Implied Odds to Win']
+            csv_df.loc[index, 'Away Team Fair Odds'] = away_implied_odds / (away_implied_odds + home_implied_odds)
+            csv_df.loc[index, 'Home Team Fair Odds'] = home_implied_odds / (away_implied_odds + home_implied_odds)
+
+            # Convert to percentage and round to 2 decimal places
+            csv_df.loc[index, 'Away Team Implied Odds to Win'] = round(csv_df.loc[index, 'Away Team Implied Odds to Win'], 4)
+            csv_df.loc[index, 'Home team Implied Odds to Win'] = round(csv_df.loc[index, 'Home team Implied Odds to Win'], 4)
+            csv_df.loc[index, 'Away Team Fair Odds'] = round(csv_df.loc[index, 'Away Team Fair Odds'], 4)
+            csv_df.loc[index, 'Home Team Fair Odds'] = round(csv_df.loc[index, 'Home Team Fair Odds'], 4)
+        # Save the updated CSV
+        csv_df.to_csv('nfl_schedule_circa.csv', index=False)
+        main_df_with_odds_df = csv_df
+        return main_df_with_odds_df
+    
+    schedule_df_with_odds_df = add_odds_to_main_csv()
+    
+    df = schedule_df_with_odds_df
+            
 
     # Calculate expected win advantage for away team
     df["Away Team Expected Win Advantage"] = round(df["Away Team Fair Odds"] - 0.5,4)
@@ -519,19 +748,6 @@ def collect_schedule_travel_ranking_data(pd):
             # Add the cumulative win percentage to the dictionary
             team_dict[team][week]["Cumulative Win Percentage"] = cumulative_win_percentage
 
-    # Print the updated team dictionary with cumulative win percentages
-    #for team, games in team_dict.items():
-    #    print(f"{team}:")
-    #    for week, details in games.items():
-    #        opponent = details["Opponent"]
-    #        home_away = details["Home/Away"]
-    #        win_odds = details["Win Odds"]
-    #        cumulative_win_percentage = details.get("Cumulative Win Percentage", 0)  # Default to 0 if not calculated
-    #        print(f"  {week}: {opponent} ({home_away}), Win Odds: {win_odds:.2f}, Cumulative Win Percentage: {cumulative_win_percentage:.4f}")
-
-    # Read the original CSV file
-    #csv_file = "nfl_schedule_with_odds_circa.csv"
-    #df = pd.read_csv(csv_file)
 
     # Initialize empty lists for cumulative win percentages
     away_cumulative_win_percentages = []
@@ -555,50 +771,6 @@ def collect_schedule_travel_ranking_data(pd):
     df["Away Team Cumulative Win Percentage"] = away_cumulative_win_percentages
     df["Home Team Cumulative Win Percentage"] = home_cumulative_win_percentages
 
-    # Save the updated DataFrame to a new CSV file
-    #output_csv_file = "nfl_schedule_with_cumulative_win_percentages_circa.csv"
-    #df.to_csv(output_csv_file, index=False)
-
-    # Read the original CSV file
-    #csv_file = "nfl_schedule_with_cumulative_win_percentages_circa.csv"
-    #df = pd.read_csv(csv_file)
-
-    # Define a function to calculate the "Away Team Future Value"
-    #def calculate_away_team_future_value(cumulative_advantage):
-    #    thresholds = [0.11, 0.09, 0.07, 0.05, 0.03, 0.01, -0.01, -0.03, -0.05, -0.07, -0.09, -0.11]
-    #    values = [5, 4.5, 4, 3.5, 3, 2.5, 2, 1.5, 1, 0.5, 0, 0]
-
-    #    for i in range(len(thresholds)):
-    #        if cumulative_advantage >= thresholds[i]:
-    #            return values[i]
-
-        # If cumulative_advantage is less than -0.11, return 0
-    #    return 0
-    # Define a function to calculate the "Away Team Future Value"
-    #def calculate_home_team_future_value(cumulative_advantage):
-    #    thresholds = [0.11, 0.09, 0.07, 0.05, 0.03, 0.01, -0.01, -0.03, -0.05, -0.07, -0.09, -0.11]
-    #    values = [5, 4.5, 4, 3.5, 3, 2.5, 2, 1.5, 1, 0.5, 0, 0]
-
-    #    for i in range(len(thresholds)):
-    #        if cumulative_advantage >= thresholds[i]:
-    #            return values[i]
-
-        # If cumulative_advantage is less than -0.11, return 0
-    #    return 0
-
-    # Apply the function to create the new column
-    #df["Away Team Future Value"] = df["Away Team Cumulative Win Percentage"].apply(calculate_away_team_future_value)
-    #df["Home Team Future Value"] = df["Home Team Cumulative Win Percentage"].apply(calculate_home_team_future_value)
-
-    # Save the updated DataFrame to a new CSV file
-    #output_csv_file = "nfl_schedule_with_future_values_circa.csv"
-    #df.to_csv(output_csv_file, index=False)
-
-    #import pandas as pd
-
-    # Read the original CSV file
-    #csv_file = "nfl_schedule_with_cumulative_win_percentages_circa.csv"
-    #df = pd.read_csv(csv_file)
 
     # Get unique week values
     unique_weeks = df["Week"].unique()
@@ -697,7 +869,7 @@ def collect_schedule_travel_ranking_data(pd):
     consolidated_df.to_csv(consolidated_csv_file, index=False)
     
     collect_schedule_travel_ranking_data_nfl_schedule_circa_df = consolidated_df
-    print("Travel, Ranking, and Rest Data Gathered")
+    
     return collect_schedule_travel_ranking_data_nfl_schedule_circa_df
 
 

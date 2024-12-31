@@ -659,8 +659,8 @@ def collect_schedule_travel_ranking_data(pd):
 
         # Update CSV data with scraped odds
         for index, row in csv_df.iterrows():
-            matching_row = df[
-                (df['Away Team'] == row['Away Team']) & (df['Home Team'] == row['Home Team'])
+            matching_row = live_odds_df[
+                (live_odds_df['Away Team'] == row['Away Team']) & (live_odds_df['Home Team'] == row['Home Team'])
             ]
             if not matching_row.empty:
                 csv_df.loc[index, 'Away Team Moneyline'] = matching_row.iloc[0]['Away Odds']

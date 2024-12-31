@@ -732,7 +732,6 @@ def collect_schedule_travel_ranking_data(pd):
                 cumulative_win_percentage = cumulative_win_odds/len(remaining_weeks)
             else:
                 cumulative_win_percentage = 0  # Set to 0 for week 18
-            if
 
             # Add the cumulative win percentage to the dictionary
             team_dict[team][week]["Cumulative Win Percentage"] = cumulative_win_percentage

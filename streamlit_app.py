@@ -732,6 +732,7 @@ def collect_schedule_travel_ranking_data(pd):
                 cumulative_win_percentage = cumulative_win_odds/len(remaining_weeks)
             else:
                 cumulative_win_percentage = 0  # Set to 0 for week 18
+            if
 
             # Add the cumulative win percentage to the dictionary
             team_dict[team][week]["Cumulative Win Percentage"] = cumulative_win_percentage
@@ -799,12 +800,16 @@ def collect_schedule_travel_ranking_data(pd):
             min_cumulative_win_percentage[week] = 0
         else:
             min_cumulative_win_percentage[week] = min_val
-
+    
     # Calculate the range of cumulative win percentages for each week
     range_cumulative_win_percentage = {}
     for week in unique_weeks:
         range_cumulative_win_percentage[week] = max_cumulative_win_percentage[week] - min_cumulative_win_percentage[week]
-
+        if range_cumulative_win_percentage[week] == 0:
+            range_cumulative_win_percentage[week]=1
+        if pd.isna(range_cumulative_win_percentage[week]):
+            range_cumulative_win_percentage[week] = 1
+            
     # Define a function to calculate the star rating
     def calculate_star_rating(cumulative_win_percentage, week):
         # Normalize the cumulative win percentage to a scale of 0 to 1
@@ -823,7 +828,6 @@ def collect_schedule_travel_ranking_data(pd):
             return round(10 * normalized_percentage) / 2
         except ZeroDivisionError:
             return 0.0
-
 
     # Apply the function to create the new columns for each week
 

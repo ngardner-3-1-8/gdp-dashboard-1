@@ -710,7 +710,7 @@ def collect_schedule_travel_ranking_data(pd):
 
 st.title("NFL Survivor Optimization")
 
-schedule_data_retrieved = False: #Initialize on first run
+schedule_data_retrieved = False #Initialize on first run
 
 if st.button("Get Schedule"):
     schedule_table, schedule_rows = get_schedule() # Call the function

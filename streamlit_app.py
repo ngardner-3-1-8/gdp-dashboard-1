@@ -789,7 +789,7 @@ def collect_schedule_travel_ranking_data(pd):
     def calculate_star_rating(cumulative_win_percentage, week):
         # Normalize the cumulative win percentage to a scale of 0 to 1
         if pd.isna(cumulative_win_percentage):
-             cumulative_win_percentage = 0.0  # Return 0 for NaN inputs
+            cumulative_win_percentage = 0.0  # Return 0 for NaN inputs
         if pd.isna(min_cumulative_win_percentage[week]):
             min_cumulative_win_percentage[week] = 0.0
         if pd.isna(range_cumulative_win_percentage[week]):

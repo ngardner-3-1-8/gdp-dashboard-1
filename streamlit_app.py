@@ -770,15 +770,35 @@ def collect_schedule_travel_ranking_data(pd):
     max_cumulative_win_percentage = {}
     for week in unique_weeks:
         week_df = df[df["Week"] == week]
-        max_cumulative_win_percentage[week] = max(week_df["Away Team Cumulative Win Percentage"].max(),
-                                                  week_df["Home Team Cumulative Win Percentage"].max())
+        # Calculate the maximum, using `0` as default if week_df is empty
+        if week_df.empty:
+            max_val = 0
+        else:
+           max_val = max(week_df["Away Team Cumulative Win Percentage"].max(),
+                         week_df["Home Team Cumulative Win Percentage"].max())
+
+        # Check if the calculated max_val is NaN and replace with 1 if so
+        if pd.isna(max_val):
+            max_cumulative_win_percentage[week] = 1
+        else:
+            max_cumulative_win_percentage[week] = max_val
 
     # Calculate the minimum cumulative win percentage for each week
     min_cumulative_win_percentage = {}
     for week in unique_weeks:
         week_df = df[df["Week"] == week]
-        min_cumulative_win_percentage[week] = min(week_df["Away Team Cumulative Win Percentage"].min(), 
-                                                  week_df["Home Team Cumulative Win Percentage"].min())
+        # Calculate the maximum, using `0` as default if week_df is empty
+        if week_df.empty:
+            min_val = 0
+        else:
+            min_val = min(week_df["Away Team Cumulative Win Percentage"].min(),
+                         week_df["Home Team Cumulative Win Percentage"].min())
+
+        # Check if the calculated max_val is NaN and replace with 1 if so
+        if pd.isna(min_val):
+            min_cumulative_win_percentage[week] = 0
+        else:
+            min_cumulative_win_percentage[week] = min_val
 
     # Calculate the range of cumulative win percentages for each week
     range_cumulative_win_percentage = {}
@@ -790,10 +810,13 @@ def collect_schedule_travel_ranking_data(pd):
         # Normalize the cumulative win percentage to a scale of 0 to 1
         if pd.isna(cumulative_win_percentage):
             cumulative_win_percentage = 0.0  # Return 0 for NaN inputs
+            print("Cumulative Win % is error")
         if pd.isna(min_cumulative_win_percentage[week]):
             min_cumulative_win_percentage[week] = 0.0
+            print("Minimum Cumulative Win % is error")
         if pd.isna(range_cumulative_win_percentage[week]):
             range_cumulative_win_percentage[week] = 1.0
+            print("Range Cumulative Win % is error")
         try:
             normalized_percentage = (cumulative_win_percentage - min_cumulative_win_percentage[week]) / range_cumulative_win_percentage[week]
             # Assign stars linearly based on the normalized percentage

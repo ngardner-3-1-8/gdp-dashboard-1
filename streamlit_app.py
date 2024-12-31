@@ -902,6 +902,7 @@ def collect_schedule_travel_ranking_data(pd):
 
 
 st.title("NFL Survivor Optimization")
+st.subtitle("Alright, clowns. This site is built to help you optimize your picks for the Circa Survivor contest. Simply input which week you're in, your team rankings, and the algorithm will do the rest. For a full season, Running the algorith will take up to 5 hours or more. Good luck!")
 
 schedule_data_retrieved = False #Initialize on first run
 

@@ -15,6 +15,23 @@ from tqdm import tqdm
 from tqdm.notebook import tqdm
 from ortools.linear_solver import pywraplp
 
+def get_schedule():
+    print("Gathering Schedule Data...")
+    # Make a request to the website
+    r = requests.get('https://www.fftoday.com/nfl/schedule.php')
+    r_html = r.text
+
+    # Create a BeautifulSoup object and specify the parser
+    soup = BeautifulSoup(r_html, 'html.parser')
+
+    # Find the table in the HTML
+    table = soup.find('table', attrs={'width': '80%', 'border': '0', 'cellpadding': '0', 'cellspacing': '0'})
+
+    # Find all rows in the table with a white background
+    rows = table.find_all('tr', attrs={'bgcolor': '#ffffff'})
+    print("Schedule Data Retrieved")
+    return table, rows
+
 def collect_schedule_travel_ranking_data(pd):
     data = []
     # Initialize a variable to hold the last valid date and week

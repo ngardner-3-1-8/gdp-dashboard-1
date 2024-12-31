@@ -907,7 +907,7 @@ st.text("Alright, clowns. This site is built to help you optimize your picks for
 
 schedule_data_retrieved = False #Initialize on first run
 
-if st.button("Get Optimized SUrvivor Picks"):
+if st.button("Get Optimized Survivor Picks"):
     st.write("Step 1/9: Fetching Schedule Data...")
     schedule_table, schedule_rows = get_schedule() # Call the function   
     if schedule_table:

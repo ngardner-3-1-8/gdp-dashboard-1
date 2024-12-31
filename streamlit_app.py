@@ -911,7 +911,7 @@ if st.button("Get Optimized Survivor Picks"):
     st.write("Step 1/9: Fetching Schedule Data...")
     schedule_table, schedule_rows = get_schedule() # Call the function   
     if schedule_table:
-        st.write("Step 1 Completed: Schedule Data Retrieved")
+        st.write("Step 1 Completed: Schedule Data Retrieved!")
         schedule_data_retrieved = True #Set Flag to True after retrieval
         schedule_table = schedule_table #Store table data into session state
         schedule_rows = schedule_rows #Store rows data into session state # ADD THIS LINE
@@ -923,7 +923,7 @@ if st.button("Get Optimized Survivor Picks"):
         st.write(f"Number of Schedule Rows: {len(schedule_rows)}") #Display row length
         st.write("Step 2/9: Collecting Travel, Ranking, Odds, and Rest Data...")
         collect_schedule_travel_ranking_data_df = collect_schedule_travel_ranking_data(pd)
-        st.write("Step 2 Complete: Travel, Ranking, Odds, and Rest Data Retrieved")
+        st.write("Step 2 Complete: Travel, Ranking, Odds, and Rest Data Retrieved!")
         st.write(collect_schedule_travel_ranking_data_df)
         #live_scraped_odds_df = get_preseason_odds()
         #schedule_df_with_odds_df = add_odds_to_main_csv()

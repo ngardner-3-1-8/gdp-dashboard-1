@@ -1216,7 +1216,7 @@ def calculate_ev():
         #progress_bar.write(f"Processing Week: {week}/{total_weeks}")
 
         # --- Option 2: Update progress bar ---
-        progress_percent = int((week / total_weeks) * 100)
+        progress_percent = int((week / ending_week) * 100)
         progress_bar.progress(progress_percent)
 
     nfl_schedule_circa_pick_percentages_df.to_csv("NFL Schedule with full ev_circa.csv", index=False)

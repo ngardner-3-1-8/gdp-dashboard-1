@@ -1245,7 +1245,9 @@ if st.button("Get Optimized Survivor Picks"):
         nfl_schedule_circa_pick_percentages_df = get_predicted_pick_percentages(pd)
         st.write("Step 3 Completed: Public Pick Percentages Predicted")
         #nfl_schedule_circa_df_2 = manually_adjust_pick_predictions()
-        #full_df_with_ev = calculate_ev()
+        st.write("Step 4/9: Calculating Expected Value (Could take several hours)...")
+        full_df_with_ev = calculate_ev()
+        st.write("Step 4 Completed: Expected Value Calculated")
         #get_survivor_picks_based_on_ev()
         #get_survivor_picks_based_on_internal_rankings()
     else:

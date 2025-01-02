@@ -932,7 +932,7 @@ def get_predicted_pick_percentages(pd):
 
     # Read the CSV file into a DataFrame
     
-    df = schedule_df_with_odds_df
+    df = collect_schedule_travel_ranking_data_df
 
     # Create a new DataFrame with selected columns
     selected_columns = ['Week', 'Away Team', 'Home Team', 'Away Team Fair Odds',

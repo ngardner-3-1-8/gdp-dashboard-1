@@ -133,6 +133,8 @@ def collect_schedule_travel_ranking_data(pd):
                 if date.month == 1:
                     # Change the year to 2025
                     date = date.replace(year=2025)
+                else:
+                    date = date.replace(year=2024)
                 # Adjust week for games on or after November 30th
                 if date >= pd.Timestamp('2024-11-30'):
                     week += 1
@@ -925,8 +927,6 @@ if st.button("Get Optimized Survivor Picks"):
         collect_schedule_travel_ranking_data_df = collect_schedule_travel_ranking_data(pd)
         st.write("Step 2 Complete: Travel, Ranking, Odds, and Rest Data Retrieved!")
         st.write(collect_schedule_travel_ranking_data_df)
-        #live_scraped_odds_df = get_preseason_odds()
-        #schedule_df_with_odds_df = add_odds_to_main_csv()
         #nfl_schedule_circa_pick_percentages_df = get_predicted_pick_percentages(pd)
         #nfl_schedule_circa_df_2 = manually_adjust_pick_predictions()
         #full_df_with_ev = calculate_ev()

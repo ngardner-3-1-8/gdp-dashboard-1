@@ -1264,7 +1264,6 @@ def create_nfl_app():
         st.write("You selected:")
         for team in picked_teams:
             st.write(f"- {team}")
-        st.write(f"Picked teams as a list: {picked_teams}")
         st.write(f"Starting Week: {starting_week}")
         st.write(f"Ending Week: {ending_week}")
     else:

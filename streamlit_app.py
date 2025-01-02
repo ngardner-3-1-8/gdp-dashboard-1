@@ -1195,9 +1195,9 @@ def calculate_ev():
         return week_df, all_outcomes, scenario_weights 
 
     # Add "Week" to the beginning of each value in the 'Week' column
-    nfl_schedule_circa_df_2['Week'] = nfl_schedule_circa_df_2['Week'].apply(lambda x: f"Week {x}")
+    nfl_schedule_circa_pick_percentages_df['Week'] = nfl_schedule_circa_pick_percentages_df['Week'].apply(lambda x: f"Week {x}")
 
-    print(nfl_schedule_circa_df_2)
+    print(nfl_schedule_circa_pick_percentages_df)
 
     for week in tqdm(range(1, 21), desc="Processing Weeks", leave=True): #########SET THE RANGE TO (1, 21) TO PROCESS THE WHOLE SEASON, or (2,3) to process ONLY WEEK . The rest you can figure out 
         week_df = nfl_schedule_circa_df_2[nfl_schedule_circa_df_2['Week'] == f"Week {week}"]

@@ -1097,15 +1097,6 @@ def get_predicted_pick_percentages(pd):
     nfl_schedule_circa_df.to_csv("Circa_Predicted_Pick_%.csv", index=False)
     return nfl_schedule_circa_df
 
-import streamlit as st
-import pandas as pd
-from tqdm import tqdm
-import time #For testing purposes, remove later
-# Load Dataframes
-
-nfl_schedule_circa_pick_percentages_df = pd.read_csv('NFL Schedule circa.csv')
-nfl_schedule_circa_df_2 = pd.read_csv('NFL Schedule circa.csv')
-
 
 def calculate_ev():
     def calculate_all_scenarios(week_df):
@@ -1197,7 +1188,9 @@ def calculate_ev():
 
     # Add "Week" to the beginning of each value in the 'Week' column
     nfl_schedule_circa_pick_percentages_df['Week'] = nfl_schedule_circa_pick_percentages_df['Week'].apply(lambda x: f"Week {x}")
-    total_weeks = 20
+
+    starting_week = 1
+    ending_week = 20
     
     # --- Option 1: Using st.empty for text updates ---
     progress_bar = st.empty()  # Create an empty placeholder
@@ -1205,7 +1198,7 @@ def calculate_ev():
     # --- Option 2: Using st.progress for a bar ---
     # progress_bar = st.progress(0)  # Initialize progress bar at 0%
 
-    for week in tqdm(range(1, total_weeks + 1), desc="Processing Weeks", leave=False): #########SET THE RANGE TO (1, 21) TO PROCESS THE WHOLE SEASON, or (2,3) to process ONLY WEEK . The rest you can figure out 
+    for week in tqdm(range(starting_week, ending_week + 1), desc="Processing Weeks", leave=False): #########SET THE RANGE TO (1, 21) TO PROCESS THE WHOLE SEASON, or (2,3) to process ONLY WEEK . The rest you can figure out 
         week_df = nfl_schedule_circa_df_2[nfl_schedule_circa_df_2['Week'] == f"Week {week}"]
         week_df, all_outcomes, scenario_weights = calculate_all_scenarios(week_df)
 

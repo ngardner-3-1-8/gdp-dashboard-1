@@ -1232,6 +1232,35 @@ st.title("NFL Survivor Optimization")
 st.subheader("The second best Circa Survivor Contest optimizer")
 st.text("Alright, clowns. This site is built to help you optimize your picks for the Circa Survivor contest (Eventually other contests). Simply input which week you're in, your team rankings, and the algorithm will do the rest. For a full season, Running the algorith will take up to 5 hours or more. Good luck!")
 
+import streamlit as st
+
+def create_nfl_team_multiselect():
+    """Creates a multi-select box with NFL teams."""
+
+    nfl_teams = [
+        "Arizona Cardinals", "Atlanta Falcons", "Baltimore Ravens", "Buffalo Bills",
+        "Carolina Panthers", "Chicago Bears", "Cincinnati Bengals", "Cleveland Browns",
+        "Dallas Cowboys", "Denver Broncos", "Detroit Lions", "Green Bay Packers",
+        "Houston Texans", "Indianapolis Colts", "Jacksonville Jaguars", "Kansas City Chiefs",
+        "Las Vegas Raiders", "Los Angeles Chargers", "Los Angeles Rams", "Miami Dolphins",
+        "Minnesota Vikings", "New England Patriots", "New Orleans Saints", "New York Giants",
+        "New York Jets", "Philadelphia Eagles", "Pittsburgh Steelers", "San Francisco 49ers",
+        "Seattle Seahawks", "Tampa Bay Buccaneers", "Tennessee Titans", "Washington Commanders"
+    ]
+
+    selected_teams = st.multiselect("Select NFL Teams:", options=nfl_teams)
+    
+    if selected_teams:
+        st.write("You selected:")
+        for team in selected_teams:
+            st.write(f"- {team}")
+    else:
+        st.write("No teams selected")
+
+if __name__ == "__main__":
+    create_nfl_team_multiselect()
+
+
 schedule_data_retrieved = False #Initialize on first run
 
 if st.button("Get Optimized Survivor Picks"):

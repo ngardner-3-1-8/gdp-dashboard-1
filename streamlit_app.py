@@ -1234,8 +1234,10 @@ st.text("Alright, clowns. This site is built to help you optimize your picks for
 
 import streamlit as st
 
-def create_nfl_team_multiselect():
-    """Creates a multi-select box with NFL teams."""
+import streamlit as st
+
+def create_nfl_app():
+    """Creates a Streamlit app with NFL teams and dependent week select boxes."""
 
     nfl_teams = [
         "Arizona Cardinals", "Atlanta Falcons", "Baltimore Ravens", "Buffalo Bills",
@@ -1249,16 +1251,28 @@ def create_nfl_team_multiselect():
     ]
 
     selected_teams = st.multiselect("Select NFL Teams:", options=nfl_teams)
-    
-    if selected_teams:
+    picked_teams = selected_teams if selected_teams else []
+
+    starting_week = st.selectbox("Select Starting Week:", options=range(1, 21))
+
+    # Create a dynamic range for ending week based on starting week
+    ending_week_options = range(starting_week, 21)
+    ending_week = st.selectbox("Select Ending Week:", options=ending_week_options)
+
+
+    if picked_teams:
         st.write("You selected:")
-        for team in selected_teams:
+        for team in picked_teams:
             st.write(f"- {team}")
+        st.write(f"Picked teams as a list: {picked_teams}")
+        st.write(f"Starting Week: {starting_week}")
+        st.write(f"Ending Week: {ending_week}")
     else:
-        st.write("No teams selected")
+      st.write("No teams selected")
 
 if __name__ == "__main__":
-    create_nfl_team_multiselect()
+    create_nfl_app()
+
 
 
 schedule_data_retrieved = False #Initialize on first run

@@ -12,7 +12,6 @@ from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.metrics import mean_absolute_error
 from tqdm import tqdm
-from tqdm.notebook import tqdm
 from ortools.linear_solver import pywraplp
 
 def get_schedule():
@@ -1214,12 +1213,6 @@ def calculate_ev():
 
     nfl_schedule_circa_df_2.to_csv("NFL Schedule with full ev_circa.csv", index=False)
     return nfl_schedule_circa_df_2
-
-if st.button("Calculate EV"):
-    with st.spinner('Processing...'):
-        full_df_with_ev = calculate_ev()
-        st.write("Processing Complete!")
-        st.dataframe(full_df_with_ev)
 
 
 

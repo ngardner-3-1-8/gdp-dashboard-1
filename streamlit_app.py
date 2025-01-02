@@ -1198,11 +1198,11 @@ def calculate_ev():
     # progress_bar = st.progress(0)  # Initialize progress bar at 0%
 
     for week in tqdm(range(starting_week, ending_week + 1), desc="Processing Weeks", leave=False): #########SET THE RANGE TO (1, 21) TO PROCESS THE WHOLE SEASON, or (2,3) to process ONLY WEEK . The rest you can figure out 
-        week_df = nfl_schedule_circa_df_2[nfl_schedule_circa_df_2['Week'] == f"Week {week}"]
+        week_df = nfl_schedule_circa_pick_percentages_df[nfl_schedule_circa_pick_percentages_df['Week'] == f"Week {week}"]
         week_df, all_outcomes, scenario_weights = calculate_all_scenarios(week_df)
 
         # Update nfl_schedule_circa_df_2 using the 'update' method
-        nfl_schedule_circa_df_2.update(week_df[['Home Team EV', 'Away Team EV']])
+        nfl_schedule_circa_pick_percentages_df.update(week_df[['Home Team EV', 'Away Team EV']])
 
         # --- Option 1: Update progress text ---
         progress_bar.write(f"Processing Week: {week}/{total_weeks}")
@@ -1211,8 +1211,8 @@ def calculate_ev():
         # progress_percent = int((week / total_weeks) * 100)
         # progress_bar.progress(progress_percent)
 
-    nfl_schedule_circa_df_2.to_csv("NFL Schedule with full ev_circa.csv", index=False)
-    return nfl_schedule_circa_df_2
+    nfl_schedule_circa_pick_percentages_df.to_csv("NFL Schedule with full ev_circa.csv", index=False)
+    return nfl_schedule_circa_pick_percentages_df
 
 
 

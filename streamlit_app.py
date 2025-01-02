@@ -1252,7 +1252,7 @@ def create_nfl_app():
 
     selected_teams = st.multiselect("Select NFL Teams:", options=nfl_teams)
     picked_teams = selected_teams if selected_teams else []
-
+    st.body("Week 13 is Thanksgiving and Week 18 is Christmas Week")
     starting_week = st.selectbox("Select Starting Week:", options=range(1, 21))
 
     # Create a dynamic range for ending week based on starting week

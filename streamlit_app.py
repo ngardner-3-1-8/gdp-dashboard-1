@@ -1129,6 +1129,8 @@ def calculate_ev():
         ev_df = pd.DataFrame(columns=week_df['Home Team'].tolist() + week_df['Away Team'].tolist())
 
         scenario_weights = []  # Calculate scenario weights directly
+        weekly_progress_bar = st.progress(0)
+        total_scenarios = len(all_outcomes)
         for i, outcome in enumerate(tqdm(all_outcomes, desc="Calculating Scenarios", leave=False)):  
             scenario_ev = {team: 0 for team in week_df['Home Team'].unique().tolist() + week_df['Away Team'].unique().tolist()} 
             surviving_entries = 0
@@ -1160,7 +1162,11 @@ def calculate_ev():
             for team, ev in scenario_ev.items():
                 ev_df.loc[i, team] = ev
 
-            scenario_weights.append(scenario_weight)  # Append weight for the scenario
+            scenario_weights.append(scenario_weight) # Append weight for the scenario
+
+            # --- Option 2: Update progress bar ---
+            progress_percent = int((i / total_scenarios) * 100)
+            progress_bar.progress(progress_percent)
 
         # Calculate weighted average EV
         weighted_avg_ev = {}

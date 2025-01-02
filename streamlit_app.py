@@ -1097,7 +1097,16 @@ def get_predicted_pick_percentages(pd):
     nfl_schedule_circa_df.to_csv("Circa_Predicted_Pick_%.csv", index=False)
     return nfl_schedule_circa_df
 
-#THIS CELL FINDS EV
+import streamlit as st
+import pandas as pd
+from tqdm import tqdm
+import time #For testing purposes, remove later
+# Load Dataframes
+
+nfl_schedule_circa_pick_percentages_df = pd.read_csv('NFL Schedule circa.csv')
+nfl_schedule_circa_df_2 = pd.read_csv('NFL Schedule circa.csv')
+
+
 def calculate_ev():
     def calculate_all_scenarios(week_df):
         """
@@ -1156,10 +1165,6 @@ def calculate_ev():
                     winning_team = week_df.iloc[j]['Away Team']
                     if surviving_entries > 0:
                         scenario_ev[winning_team] = 1 / surviving_entries
-                #print(f"Winning Team: {winning_team}")
-                #print(f"Surviving Entries: {surviving_entries}")
-                #print(f"Scenario Weight: {scenario_weight}")
-                # EV is 1/survival probability for this scenario
 
 
             for team, ev in scenario_ev.items():
@@ -1181,35 +1186,47 @@ def calculate_ev():
 
             # Find the weighted average EV for the home team
             if home_team in weighted_avg_ev:
-                week_df.loc[(week_df['Week'] == week) & (week_df['Home Team'] == home_team), 'Home Team EV'] = weighted_avg_ev[home_team]
+                 week_df.loc[(week_df['Week'] == week) & (week_df['Home Team'] == home_team), 'Home Team EV'] = weighted_avg_ev[home_team]
 
             # Find the weighted average EV for the away team
             if away_team in weighted_avg_ev:
-                week_df.loc[(week_df['Week'] == week) & (week_df['Away Team'] == away_team), 'Away Team EV'] = weighted_avg_ev[away_team]
-
-        # Print the team names and their weighted average EVs
-        for team, avg_ev in weighted_avg_ev.items():
-            print(f"{team}: {avg_ev:.4f}") 
+                 week_df.loc[(week_df['Week'] == week) & (week_df['Away Team'] == away_team), 'Away Team EV'] = weighted_avg_ev[away_team]
 
         # Return updated week_df and other values
         return week_df, all_outcomes, scenario_weights 
 
     # Add "Week" to the beginning of each value in the 'Week' column
     nfl_schedule_circa_pick_percentages_df['Week'] = nfl_schedule_circa_pick_percentages_df['Week'].apply(lambda x: f"Week {x}")
+    total_weeks = 20
+    
+    # --- Option 1: Using st.empty for text updates ---
+    progress_bar = st.empty()  # Create an empty placeholder
 
-    print(nfl_schedule_circa_pick_percentages_df)
+    # --- Option 2: Using st.progress for a bar ---
+    # progress_bar = st.progress(0)  # Initialize progress bar at 0%
 
-    for week in tqdm(range(1, 21), desc="Processing Weeks", leave=True): #########SET THE RANGE TO (1, 21) TO PROCESS THE WHOLE SEASON, or (2,3) to process ONLY WEEK . The rest you can figure out 
+    for week in tqdm(range(1, total_weeks + 1), desc="Processing Weeks", leave=False): #########SET THE RANGE TO (1, 21) TO PROCESS THE WHOLE SEASON, or (2,3) to process ONLY WEEK . The rest you can figure out 
         week_df = nfl_schedule_circa_df_2[nfl_schedule_circa_df_2['Week'] == f"Week {week}"]
         week_df, all_outcomes, scenario_weights = calculate_all_scenarios(week_df)
 
         # Update nfl_schedule_circa_df_2 using the 'update' method
-        nfl_schedule_circa_df_2.update(week_df[['Home Team EV', 'Away Team EV']]) 
-        #print(nfl_schedule_circa_df_2)
+        nfl_schedule_circa_df_2.update(week_df[['Home Team EV', 'Away Team EV']])
 
-    #print(nfl_schedule_circa_df_2)
+        # --- Option 1: Update progress text ---
+        progress_bar.write(f"Processing Week: {week}/{total_weeks}")
+
+        # --- Option 2: Update progress bar ---
+        # progress_percent = int((week / total_weeks) * 100)
+        # progress_bar.progress(progress_percent)
+
     nfl_schedule_circa_df_2.to_csv("NFL Schedule with full ev_circa.csv", index=False)
     return nfl_schedule_circa_df_2
+
+if st.button("Calculate EV"):
+    with st.spinner('Processing...'):
+        full_df_with_ev = calculate_ev()
+        st.write("Processing Complete!")
+        st.dataframe(full_df_with_ev)
 
 
 
@@ -1246,7 +1263,10 @@ if st.button("Get Optimized Survivor Picks"):
         st.write("Step 3 Completed: Public Pick Percentages Predicted")
         #nfl_schedule_circa_df_2 = manually_adjust_pick_predictions()
         st.write("Step 4/9: Calculating Expected Value (Could take several hours)...")
-        full_df_with_ev = calculate_ev()
+        with st.spinner('Processing...'):
+            full_df_with_ev = calculate_ev()
+            st.write("Processing Complete!")
+            st.dataframe(full_df_with_ev)
         st.write("Step 4 Completed: Expected Value Calculated")
         #get_survivor_picks_based_on_ev()
         #get_survivor_picks_based_on_internal_rankings()

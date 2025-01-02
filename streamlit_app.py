@@ -1129,6 +1129,7 @@ def calculate_ev():
         ev_df = pd.DataFrame(columns=week_df['Home Team'].tolist() + week_df['Away Team'].tolist())
 
         scenario_weights = []  # Calculate scenario weights directly
+        st.write("Current Week Progress")
         weekly_progress_bar = st.progress(0)
         total_scenarios = len(all_outcomes)
         for i, outcome in enumerate(tqdm(all_outcomes, desc="Calculating Scenarios", leave=False)):  
@@ -1201,6 +1202,7 @@ def calculate_ev():
     #progress_bar = st.empty()  # Create an empty placeholder
 
     # --- Option 2: Using st.progress for a bar ---
+    st.write("Full Season Progress")
     progress_bar = st.progress(0)  # Initialize progress bar at 0%
 
     for week in tqdm(range(starting_week, ending_week + 1), desc="Processing Weeks", leave=False): #########SET THE RANGE TO (1, 21) TO PROCESS THE WHOLE SEASON, or (2,3) to process ONLY WEEK . The rest you can figure out 

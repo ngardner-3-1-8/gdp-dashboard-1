@@ -1287,7 +1287,7 @@ else:
     ending_week_options = range(starting_week, 21)
 ending_week = st.selectbox("Select Ending Week:", options=ending_week_options)
 ending_week = ending_week + 1
-return starting_week, ending_week, picked_teams
+#return starting_week, ending_week, picked_teams
     #if ending_week:
         #st.write(f"Selected Ending Week: {ending_week}")
 #if __name__ == "__main__":

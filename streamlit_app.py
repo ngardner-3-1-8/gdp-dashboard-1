@@ -1278,10 +1278,10 @@ st.write('')
 st.write('')
 st.subheader('Remaining Weeks:')
 st.text('Select the upcoming week for the starting week. Select the week you want the algorithm to stop at. If you select one week, it will take about 30-45 minutes. All 20 weeks will take 5-6 hours. Ending Week must be greater than or equal to Starting Week.')
-st.write(":red[Week 13 is Thanksgiving/Black Friday Week and Week 18 is Christmas Week]")
 if selected_contest == "DraftKings":
     starting_week = st.selectbox("Select Starting Week:", options=range(1, 19))
 else:
+    st.write(":red[Week 13 is Thanksgiving/Black Friday Week and Week 18 is Christmas Week]")
     starting_week = st.selectbox("Select Starting Week:", options=range(1, 21))
 #if starting_week:
     #st.write(f"Selected Starting Week: {starting_week}")

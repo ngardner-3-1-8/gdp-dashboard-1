@@ -1422,7 +1422,7 @@ st.write('')
 cle_rank = st.selectbox("Cleveland Browns Ranking:", options=team_rankings)
 if cle_rank == "Default":
     cle_rank = default_cle_rank
-st.write(f'Current Cleveland Browns Ranking: {was_rank}')
+st.write(f'Current Cleveland Browns Ranking: {cle_rank}')
 st.write('')
 dal_rank = st.selectbox("Dallas Cowboys Ranking:", options=team_rankings)
 if dal_rank == "Default":

@@ -1283,7 +1283,7 @@ if __name__ == "__main__":
 st.write('')
 st.write('')
 st.write('')
-st.subtitle('Teams That Have to Be Picked')
+st.subheader('Teams That Have to Be Picked')
 st.write('Select the week in which the algorithm has to pick that team. If you do not, want the team to be required to be used, select 0')
 required_week_options = [0] + list(range(starting_week, ending_week))
 

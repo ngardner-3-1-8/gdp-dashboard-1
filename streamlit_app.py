@@ -1260,12 +1260,13 @@ def create_nfl_app():
     st.text("Week 13 is Thanksgiving/Black Friday Week and Week 18 is Christmas Week")
     starting_week = st.selectbox("Select Starting Week:", options=range(1, 21))
     if starting_week:
-        st.write(f"Starting Week: {starting_week}")
+        st.write(f"Selected Starting Week: {starting_week}")
     # Create a dynamic range for ending week based on starting week
+    st.write('')
     ending_week_options = range(starting_week, 21)
     ending_week = st.selectbox("Select Ending Week:", options=ending_week_options)
     if ending_week:
-        st.write(f"Ending Week: {ending_week}")
+        st.write(f"Selected Ending Week: {ending_week}")
 
 
 if __name__ == "__main__":
@@ -1273,7 +1274,7 @@ if __name__ == "__main__":
 st.write('')
 st.write('')
 
-st.subtitle('NFL Team Rankings')
+st.subheader('NFL Team Rankings')
 st.text('The Ranking represents how much a team would either win (positive number) or lose (negative number) by to an average NFL team. 0 means the team is perfectly average')
 st.write('')
 def create_nfl_rankings():

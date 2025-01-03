@@ -317,8 +317,8 @@ def collect_schedule_travel_ranking_data(pd):
     df['Preseason Winner'] = df.apply(lambda row: row['Away Team'] if row['Away Team Preseason Rank'] < row['Home Team Preseason Rank'] else (row['Home Team'] if row['Away Team Preseason Rank'] > row['Home Team Preseason Rank'] else 'Tie'), axis=1)
     df['Preseason Difference'] = abs(df['Away Team Preseason Rank'] - df['Home Team Preseason Rank'])
 
-    df['Away Team Adjusted Preseason Rank'] = df['Away Team'].map(lambda team: stadiums[team][5]) + np.where((df['Away Travel Advantage'] < -100) & (df['Home Stadium'] == df['Actual Stadium']), -.125, 0) - pd.to_numeric(df['Away Timezone Advantage']*.25, errors='coerce').fillna(0)-pd.to_numeric(df['Weekly Away Rest Advantage'], errors='coerce').fillna(0)-.125*df['Away Team Current Week Cumulative Rest Advantage' - np.where((df['Away Team'].map(lambda team: stadiums[team][1])] != df['Home Team'].map(lambda team: stadiums[team][1])]), df['Away Team'].map(lambda team: stadiums[team][9])], 0)]
-    df['Home Team Adjusted Preseason Rank'] = df['Home Team'].map(lambda team: stadiums[team][5]) - np.where((df['Away Travel Advantage'] < -100) & (df['Home Stadium'] == df['Actual Stadium']), .125, 0) - pd.to_numeric(df['Home Timezone Advantage']*.25, errors='coerce').fillna(0)-pd.to_numeric(df['Weekly Home Rest Advantage'], errors='coerce').fillna(0)-.125*df['Home Team Current Week Cumulative Rest Advantage'+ np.where((df['Away Team'].map(lambda team: stadiums[team][1])] != df['Home Team'].map(lambda team: stadiums[team][1])]), df['Home Team'].map(lambda team: stadiums[team][8])]
+    df['Away Team Adjusted Preseason Rank'] = df['Away Team'].map(lambda team: stadiums[team][5]) + np.where((df['Away Travel Advantage'] < -100) & (df['Home Stadium'] == df['Actual Stadium']), -.125, 0) - pd.to_numeric(df['Away Timezone Advantage']*.25, errors='coerce').fillna(0)-pd.to_numeric(df['Weekly Away Rest Advantage'], errors='coerce').fillna(0)-.125*df['Away Team Current Week Cumulative Rest Advantage' - np.where((df['Away Team'].map(lambda team: stadiums[team][1])) != df['Home Team'].map(lambda team: stadiums[team][1]), df['Away Team'].map(lambda team: stadiums[team][9]), 0)
+    df['Home Team Adjusted Preseason Rank'] = df['Home Team'].map(lambda team: stadiums[team][5]) - np.where((df['Away Travel Advantage'] < -100) & (df['Home Stadium'] == df['Actual Stadium']), .125, 0) - pd.to_numeric(df['Home Timezone Advantage']*.25, errors='coerce').fillna(0)-pd.to_numeric(df['Weekly Home Rest Advantage'], errors='coerce').fillna(0)-.125*df['Home Team Current Week Cumulative Rest Advantage'+ np.where((df['Away Team'].map(lambda team: stadiums[team][1])) != df['Home Team'].map(lambda team: stadiums[team][1]), df['Home Team'].map(lambda team: stadiums[team][8]), 0)
 
     df['Adjusted Preseason Winner'] = df.apply(lambda row: row['Away Team'] if row['Away Team Adjusted Preseason Rank'] < row['Home Team Adjusted Preseason Rank'] else (row['Home Team'] if row['Away Team Adjusted Preseason Rank'] > row['Home Team Adjusted Preseason Rank'] else 'Tie'), axis=1)
     df['Adjusted Preseason Difference'] = abs(df['Away Team Adjusted Preseason Rank'] - df['Home Team Adjusted Preseason Rank'])
@@ -329,8 +329,8 @@ def collect_schedule_travel_ranking_data(pd):
     df['Current Winner'] = df.apply(lambda row: row['Away Team'] if row['Away Team Current Rank'] < row['Home Team Current Rank'] else (row['Home Team'] if row['Away Team Current Rank'] > row['Home Team Current Rank'] else 'Tie'), axis=1)
     df['Current Difference'] = abs(df['Away Team Current Rank'] - df['Home Team Current Rank'])
 
-    df['Away Team Adjusted Current Rank'] = df['Away Team'].map(lambda team: stadiums[team][7]) + np.where((df['Away Travel Advantage'] < -100) & (df['Home Stadium'] == df['Actual Stadium']), -.125, 0) - pd.to_numeric(df['Away Timezone Advantage']*.25, errors='coerce').fillna(0)-pd.to_numeric(df['Weekly Away Rest Advantage'], errors='coerce').fillna(0)-.125*df['Away Team Current Week Cumulative Rest Advantage' - np.where((df['Away Team'].map(lambda team: stadiums[team][1])] != df['Home Team'].map(lambda team: stadiums[team][1])]), df['Away Team'].map(lambda team: stadiums[team][9])], 0)]
-    df['Home Team Adjusted Current Rank'] = df['Home Team'].map(lambda team: stadiums[team][7]) - np.where((df['Away Travel Advantage'] < -100) & (df['Home Stadium'] == df['Actual Stadium']), .125, 0) - pd.to_numeric(df['Home Timezone Advantage']*.25, errors='coerce').fillna(0)-pd.to_numeric(df['Weekly Home Rest Advantage'], errors='coerce').fillna(0)-.125*df['Home Team Current Week Cumulative Rest Advantage'+ np.where((df['Away Team'].map(lambda team: stadiums[team][1])] != df['Home Team'].map(lambda team: stadiums[team][1])]), df['Home Team'].map(lambda team: stadiums[team][8])]
+    df['Away Team Adjusted Current Rank'] = df['Away Team'].map(lambda team: stadiums[team][7]) + np.where((df['Away Travel Advantage'] < -100) & (df['Home Stadium'] == df['Actual Stadium']), -.125, 0) - pd.to_numeric(df['Away Timezone Advantage']*.25, errors='coerce').fillna(0)-pd.to_numeric(df['Weekly Away Rest Advantage'], errors='coerce').fillna(0)-.125*df['Away Team Current Week Cumulative Rest Advantage'] - np.where((df['Away Team'].map(lambda team: stadiums[team][1])) != df['Home Team'].map(lambda team: stadiums[team][1]), df['Away Team'].map(lambda team: stadiums[team][9]), 0)
+    df['Home Team Adjusted Current Rank'] = df['Home Team'].map(lambda team: stadiums[team][7]) - np.where((df['Away Travel Advantage'] < -100) & (df['Home Stadium'] == df['Actual Stadium']), .125, 0) - pd.to_numeric(df['Home Timezone Advantage']*.25, errors='coerce').fillna(0)-pd.to_numeric(df['Weekly Home Rest Advantage'], errors='coerce').fillna(0)-.125*df['Home Team Current Week Cumulative Rest Advantage']+ np.where((df['Away Team'].map(lambda team: stadiums[team][1])) != df['Home Team'].map(lambda team: stadiums[team][1]), df['Home Team'].map(lambda team: stadiums[team][8]), 0)
 
     df['Adjusted Current Winner'] = df.apply(lambda row: row['Away Team'] if row['Away Team Adjusted Current Rank'] < row['Home Team Adjusted Current Rank'] else (row['Home Team'] if row['Away Team Adjusted Current Rank'] > row['Home Team Adjusted Current Rank'] else 'Tie'), axis=1)
     df['Adjusted Current Difference'] = abs(df['Away Team Adjusted Current Rank'] - df['Home Team Adjusted Current Rank'])
@@ -1277,7 +1277,7 @@ st.write('')
 st.write('')
 st.write('')
 st.subheader('Remaining Weeks:')
-st.text('Select the upcoming week for the starting week. Select the week you want the algorithm to stop at. If yiu select one week, it will take about 20 minutes. All 20 weeks will take 5-6 hours. Ending Week must be greater than or equal to Starting Week.')
+st.text('Select the upcoming week for the starting week. Select the week you want the algorithm to stop at. If you select one week, it will take about 30-45 minutes. All 20 weeks will take 5-6 hours. Ending Week must be greater than or equal to Starting Week.')
 st.write(":red[Week 13 is Thanksgiving/Black Friday Week and Week 18 is Christmas Week]")
 if selected_contest == "DraftKings":
     starting_week = st.selectbox("Select Starting Week:", options=range(1, 19))
@@ -1302,7 +1302,7 @@ st.write('')
 st.write('')
 st.write('')
 st.subheader('Teams That Have to Be Picked')
-st.write('Select the week in which the algorithm has to pick that team. If you do not, want the team to be required to be used, select 0')
+st.write('Select the week in which the algorithm has to pick that team. If you do not want the team to be :red[required] to be used, select 0')
 required_week_options = [0] + list(range(starting_week, ending_week))
 
 az_req_week = st.selectbox("Arizona Cardinals Week Required to Be Picked:", options=required_week_options)
@@ -1343,7 +1343,7 @@ st.write('')
 st.write('')
 
 st.subheader('NFL Team Rankings')
-st.write('The Ranking represents :red[how much a team would either win (positive number) or lose (negative number) by to an average NFL team]. 0 means the team is perfectly average')
+st.write('The Ranking represents :red[how much a team would either win (positive number) or lose (negative number) by to an average NFL team] on a neutral field. 0 means the team is perfectly average. If you leave the "Default" value, the default rankings will be used.')
 st.write('')
 
 default_az_rank = 1

@@ -1245,53 +1245,53 @@ st.write('')
 st.write('')
 st.subheader('Picked Teams:')
 st.write('Select the teams that you have already used in the Survivor contest, or teams that you just do not want to pick in the enirety of the contest')
-def create_nfl_app():
-    """Creates a Streamlit app with NFL teams and dependent week select boxes."""
+#def create_nfl_app():
+"""Creates a Streamlit app with NFL teams and dependent week select boxes."""
 
-    nfl_teams = [
-        "Arizona Cardinals", "Atlanta Falcons", "Baltimore Ravens", "Buffalo Bills",
-        "Carolina Panthers", "Chicago Bears", "Cincinnati Bengals", "Cleveland Browns",
-        "Dallas Cowboys", "Denver Broncos", "Detroit Lions", "Green Bay Packers",
-        "Houston Texans", "Indianapolis Colts", "Jacksonville Jaguars", "Kansas City Chiefs",
-        "Las Vegas Raiders", "Los Angeles Chargers", "Los Angeles Rams", "Miami Dolphins",
-        "Minnesota Vikings", "New England Patriots", "New Orleans Saints", "New York Giants",
-        "New York Jets", "Philadelphia Eagles", "Pittsburgh Steelers", "San Francisco 49ers",
-        "Seattle Seahawks", "Tampa Bay Buccaneers", "Tennessee Titans", "Washington Commanders"
-    ]
+nfl_teams = [
+    "Arizona Cardinals", "Atlanta Falcons", "Baltimore Ravens", "Buffalo Bills",
+    "Carolina Panthers", "Chicago Bears", "Cincinnati Bengals", "Cleveland Browns",
+    "Dallas Cowboys", "Denver Broncos", "Detroit Lions", "Green Bay Packers",
+    "Houston Texans", "Indianapolis Colts", "Jacksonville Jaguars", "Kansas City Chiefs",
+    "Las Vegas Raiders", "Los Angeles Chargers", "Los Angeles Rams", "Miami Dolphins",
+    "Minnesota Vikings", "New England Patriots", "New Orleans Saints", "New York Giants",
+    "New York Jets", "Philadelphia Eagles", "Pittsburgh Steelers", "San Francisco 49ers",
+    "Seattle Seahawks", "Tampa Bay Buccaneers", "Tennessee Titans", "Washington Commanders"
+]
 
-    selected_teams = st.multiselect("Prohibited Picks:", options=nfl_teams)
-    picked_teams = selected_teams if selected_teams else []
-    if picked_teams:
-        st.write("You selected:")
-        for team in picked_teams:
-            st.write(f"- {team}")
-    else:
-      st.write("No teams selected")
-    st.write('')
-    st.write('')
-    st.write('')
-    st.subheader('Remaining Weeks:')
-    st.text('Select the upcoming week for the starting week. Select the week you want the algorithm to stop at. If yiu select one week, it will take about 20 minutes. All 20 weeks will take 5-6 hours. Ending Week must be greater than or equa to Starting Week.')
-    st.write(":red[Week 13 is Thanksgiving/Black Friday Week and Week 18 is Christmas Week]")
-    if selected_contest == DraftKings:
-        starting_week = st.selectbox("Select Starting Week:", options=range(1, 19))
-    else:
-        starting_week = st.selectbox("Select Starting Week:", options=range(1, 21))
-    #if starting_week:
-        #st.write(f"Selected Starting Week: {starting_week}")
-    # Create a dynamic range for ending week based on starting week
-    st.write('')
-    if selected_contest == DraftKings:
-        ending_week_options = range(starting_week, 19)
-    else:
-        ending_week_options = range(starting_week, 21)
-    ending_week = st.selectbox("Select Ending Week:", options=ending_week_options)
-    ending_week = ending_week + 1
-    return starting_week, ending_week, picked_teams
+selected_teams = st.multiselect("Prohibited Picks:", options=nfl_teams)
+picked_teams = selected_teams if selected_teams else []
+if picked_teams:
+    st.write("You selected:")
+    for team in picked_teams:
+        st.write(f"- {team}")
+else:
+  st.write("No teams selected")
+st.write('')
+st.write('')
+st.write('')
+st.subheader('Remaining Weeks:')
+st.text('Select the upcoming week for the starting week. Select the week you want the algorithm to stop at. If yiu select one week, it will take about 20 minutes. All 20 weeks will take 5-6 hours. Ending Week must be greater than or equa to Starting Week.')
+st.write(":red[Week 13 is Thanksgiving/Black Friday Week and Week 18 is Christmas Week]")
+if selected_contest == "DraftKings":
+    starting_week = st.selectbox("Select Starting Week:", options=range(1, 19))
+else:
+    starting_week = st.selectbox("Select Starting Week:", options=range(1, 21))
+#if starting_week:
+    #st.write(f"Selected Starting Week: {starting_week}")
+# Create a dynamic range for ending week based on starting week
+st.write('')
+if selected_contest == "DraftKings":
+    ending_week_options = range(starting_week, 19)
+else:
+    ending_week_options = range(starting_week, 21)
+ending_week = st.selectbox("Select Ending Week:", options=ending_week_options)
+ending_week = ending_week + 1
+return starting_week, ending_week, picked_teams
     #if ending_week:
         #st.write(f"Selected Ending Week: {ending_week}")
-if __name__ == "__main__":
-    starting_week, ending_week, picked_teams = create_nfl_app()
+#if __name__ == "__main__":
+#    starting_week, ending_week, picked_teams = create_nfl_app()
 st.write('')
 st.write('')
 st.write('')

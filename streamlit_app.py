@@ -45,38 +45,38 @@ def collect_schedule_travel_ranking_data(pd):
     cumulative_advantage = {}
     # 0: Stadium | 1: Lattitude | 2: Longitude | 3: Timezone | 4: Division | 5: Start of 2023 Season Rank | 6: Current Rank | 7: Average points better than Average Team (Used for Spread and Odds Calculation)
     stadiums = {
-        'Arizona Cardinals': ['State Farm Stadium', 33.5277, -112.262608, 'America/Denver', 'NFC West', 26, 24, -.5],
-        'Atlanta Falcons': ['Mercedez-Benz Stadium', 33.757614, -84.400972, 'America/New_York', 'NFC South', 13, 18, 0],
-        'Baltimore Ravens': ['M&T Stadium', 39.277969, -76.622767, 'America/New_York', 'AFC North', 3, 3, 3],
-        'Buffalo Bills': ['Highmark Stadium', 42.773739, -78.786978, 'America/New_York', 'AFC East', 5, 7, 3.5],
-        'Carolina Panthers': ['Bank of America Stadium', 35.225808, -80.852861, 'America/New_York', 'NFC South', 32, 32, -7],
-        'Chicago Bears': ['Soldier Field', 41.862306, -87.616672, 'America/Chicago', 'NFC North', 15, 19, -2],
-        'Cincinnati Bengals': ['Paycor Stadium', 39.095442, -84.516039, 'America/New_York', 'AFC North', 6, 11, 2],
-        'Cleveland Browns': ['Cleveland Browns Stadium', 41.506022, -81.699564, 'America/New_York', 'AFC North', 17, 20, 0],
-        'Dallas Cowboys': ['AT&T Stadium', 32.747778, -97.092778, 'America/Chicago', 'NFC East', 9, 6, 1.5],
-        'Denver Broncos': ['Empower Field at Mile High', 39.743936, -105.020097, 'America/Denver', 'AFC West', 29, 29, -5.5],
-        'Detroit Lions': ['Ford Field', 42.340156, -83.045808, 'America/New_York', 'NFC North', 4, 5, 3],
-        'Green Bay Packers': ['Lambeau Field', 44.501306, -88.062167, 'America/Chicago', 'NFC North', 10, 12, -4],
-        'Houston Texans': ['NRG Stadium', 29.684781, -95.410956, 'America/Chicago', 'AFC South', 7, 8, 3.5],
-        'Indianapolis Colts': ['Lucas Oil Stadium', 39.760056, -86.163806, 'America/New_York', 'AFC South', 20, 19, -2],
-        'Jacksonville Jaguars': ['Everbank Stadium', 30.323925, -81.637356, 'America/New_York', 'AFC South', 18, 17, -.5],
-        'Kansas City Chiefs': ['Arrowhead Stadium', 39.048786, -94.484566, 'America/Chicago', 'AFC West', 1, 1, 5],
-        'Las Vegas Raiders': ['Allegiant Stadium', 36.090794, -115.183952, 'America/Los_Angeles', 'AFC West', 28, 26, -3],
-        'Los Angeles Chargers': ['SoFi Stadium', 33.953587, -118.33963, 'America/Los_Angeles', 'AFC West', 14, 17, 1.5],
-        'Los Angeles Rams': ['SoFi Stadium', 33.953587, -118.33963, 'America/Los_Angeles', 'NFC West', 16, 15, -3.5],
-        'Miami Dolphins': ['Hard Rock Stadium', 25.957919, -80.238842, 'America/New_York', 'AFC East', 12, 11, -4],
-        'Minnesota Vikings': ['U.S Bank Stadium', 44.973881, -93.258094, 'America/Chicago', 'NFC North', 24, 22, .5],
-        'New England Patriots': ['Gillette Stadium', 42.090925, -71.26435, 'America/New_York', 'AFC East', 31, 27, -4.5],
-        'New Orleans Saints': ['Caesars Superdome', 29.950931, -90.081364, 'America/Chicago', 'NFC South', 23, 16, 2],
-        'New York Giants': ['MetLife Stadium', 40.812194, -74.076983, 'America/New_York', 'NFC East', 27, 31, -5],
-        'New York Jets': ['MetLife Stadium', 40.812194, -74.076983, 'America/New_York', 'AFC East', 11, 13, 1],
-        'Philadelphia Eagles': ['Lincoln Financial Field', 39.900775, -75.167453, 'America/New_York', 'NFC East', 8, 4, 3],
-        'Pittsburgh Steelers': ['Acrisure Stadium', 40.446786, -80.015761, 'America/New_York', 'AFC North', 19, 16, .5],
-        'San Francisco 49ers': ['Levi\'s Stadium', 37.713486, -122.386256, 'America/Los_Angeles', 'NFC West', 2, 1.5, 4.5],
-        'Seattle Seahawks': ['Lumen Field', 47.595153, -122.331625, 'America/Los_Angeles', 'NFC West', 22, 19, .5],
-        'Tampa Bay Buccaneers': ['Raymomd James Stadium', 27.975967, -82.50335, 'America/New_York', 'NFC South', 21, 21, 0],
-        'Tennessee Titans': ['Nissan Stadium', 36.166461, -86.771289, 'America/Chicago', 'AFC South', 20, 24, -2.5],
-        'Washington Commanders': ['FedExField', 38.907697, -76.864517, 'America/New_York', 'NFC East', 25, 28, -3.5]
+        'Arizona Cardinals': ['State Farm Stadium', 33.5277, -112.262608, 'America/Denver', 'NFC West', 26, 24, az_rank],
+        'Atlanta Falcons': ['Mercedez-Benz Stadium', 33.757614, -84.400972, 'America/New_York', 'NFC South', 13, 18, atl_rank],
+        'Baltimore Ravens': ['M&T Stadium', 39.277969, -76.622767, 'America/New_York', 'AFC North', 3, 3, bal_rank],
+        'Buffalo Bills': ['Highmark Stadium', 42.773739, -78.786978, 'America/New_York', 'AFC East', 5, 7, buf_rank],
+        'Carolina Panthers': ['Bank of America Stadium', 35.225808, -80.852861, 'America/New_York', 'NFC South', 32, 32, car_rank],
+        'Chicago Bears': ['Soldier Field', 41.862306, -87.616672, 'America/Chicago', 'NFC North', 15, 19, chi_rank],
+        'Cincinnati Bengals': ['Paycor Stadium', 39.095442, -84.516039, 'America/New_York', 'AFC North', 6, 11, cin_rank],
+        'Cleveland Browns': ['Cleveland Browns Stadium', 41.506022, -81.699564, 'America/New_York', 'AFC North', 17, 20, cle_rank],
+        'Dallas Cowboys': ['AT&T Stadium', 32.747778, -97.092778, 'America/Chicago', 'NFC East', 9, 6, dal_rank],
+        'Denver Broncos': ['Empower Field at Mile High', 39.743936, -105.020097, 'America/Denver', 'AFC West', 29, 29, den_rank],
+        'Detroit Lions': ['Ford Field', 42.340156, -83.045808, 'America/New_York', 'NFC North', 4, 5, det_rank],
+        'Green Bay Packers': ['Lambeau Field', 44.501306, -88.062167, 'America/Chicago', 'NFC North', 10, 12, gb_rank],
+        'Houston Texans': ['NRG Stadium', 29.684781, -95.410956, 'America/Chicago', 'AFC South', 7, 8, hou_rank],
+        'Indianapolis Colts': ['Lucas Oil Stadium', 39.760056, -86.163806, 'America/New_York', 'AFC South', 20, 19, ind_rank],
+        'Jacksonville Jaguars': ['Everbank Stadium', 30.323925, -81.637356, 'America/New_York', 'AFC South', 18, 17, jax_rank],
+        'Kansas City Chiefs': ['Arrowhead Stadium', 39.048786, -94.484566, 'America/Chicago', 'AFC West', 1, 1, kc_rank],
+        'Las Vegas Raiders': ['Allegiant Stadium', 36.090794, -115.183952, 'America/Los_Angeles', 'AFC West', 28, 26, lv_rank],
+        'Los Angeles Chargers': ['SoFi Stadium', 33.953587, -118.33963, 'America/Los_Angeles', 'AFC West', 14, 17, lac_rank],
+        'Los Angeles Rams': ['SoFi Stadium', 33.953587, -118.33963, 'America/Los_Angeles', 'NFC West', 16, 15, lar_rank],
+        'Miami Dolphins': ['Hard Rock Stadium', 25.957919, -80.238842, 'America/New_York', 'AFC East', 12, 11, mia_rank],
+        'Minnesota Vikings': ['U.S Bank Stadium', 44.973881, -93.258094, 'America/Chicago', 'NFC North', 24, 22, min_rank],
+        'New England Patriots': ['Gillette Stadium', 42.090925, -71.26435, 'America/New_York', 'AFC East', 31, 27, ne_rank],
+        'New Orleans Saints': ['Caesars Superdome', 29.950931, -90.081364, 'America/Chicago', 'NFC South', 23, 16, no_rank],
+        'New York Giants': ['MetLife Stadium', 40.812194, -74.076983, 'America/New_York', 'NFC East', 27, 31, nyg_rank],
+        'New York Jets': ['MetLife Stadium', 40.812194, -74.076983, 'America/New_York', 'AFC East', 11, 13, nyj_rank],
+        'Philadelphia Eagles': ['Lincoln Financial Field', 39.900775, -75.167453, 'America/New_York', 'NFC East', 8, 4, phi_rank],
+        'Pittsburgh Steelers': ['Acrisure Stadium', 40.446786, -80.015761, 'America/New_York', 'AFC North', 19, 16, pit_rank],
+        'San Francisco 49ers': ['Levi\'s Stadium', 37.713486, -122.386256, 'America/Los_Angeles', 'NFC West', 2, 1.5, sf_rank],
+        'Seattle Seahawks': ['Lumen Field', 47.595153, -122.331625, 'America/Los_Angeles', 'NFC West', 22, 19, sea_rank],
+        'Tampa Bay Buccaneers': ['Raymomd James Stadium', 27.975967, -82.50335, 'America/New_York', 'NFC South', 21, 21, tb_rank],
+        'Tennessee Titans': ['Nissan Stadium', 36.166461, -86.771289, 'America/Chicago', 'AFC South', 20, 24, ten_rank],
+        'Washington Commanders': ['FedExField', 38.907697, -76.864517, 'America/New_York', 'NFC East', 25, 28, was_rank]
     }
 
     #Get the distances traveled
@@ -537,38 +537,38 @@ def collect_schedule_travel_ranking_data(pd):
     def add_odds_to_main_csv():
         # 0: Stadium | 1: Lattitude | 2: Longitude | 3: Timezone | 4: Division | 5: Start of 2023 Season Rank | 6: Current Rank | 7: Average points better than Average Team (Used for Spread and Odds Calculation)
         stadiums = {
-            'Arizona Cardinals': ['State Farm Stadium', 33.5277, -112.262608, 'America/Denver', 'NFC West', 26, 24, -.5],
-            'Atlanta Falcons': ['Mercedez-Benz Stadium', 33.757614, -84.400972, 'America/New_York', 'NFC South', 13, 18, 0],
-            'Baltimore Ravens': ['M&T Stadium', 39.277969, -76.622767, 'America/New_York', 'AFC North', 3, 3, 3],
-            'Buffalo Bills': ['Highmark Stadium', 42.773739, -78.786978, 'America/New_York', 'AFC East', 5, 7, 3.5],
-            'Carolina Panthers': ['Bank of America Stadium', 35.225808, -80.852861, 'America/New_York', 'NFC South', 32, 32, -7],
-            'Chicago Bears': ['Soldier Field', 41.862306, -87.616672, 'America/Chicago', 'NFC North', 15, 19, -2],
-            'Cincinnati Bengals': ['Paycor Stadium', 39.095442, -84.516039, 'America/New_York', 'AFC North', 6, 11, 2],
-            'Cleveland Browns': ['Cleveland Browns Stadium', 41.506022, -81.699564, 'America/New_York', 'AFC North', 17, 20, 0],
-            'Dallas Cowboys': ['AT&T Stadium', 32.747778, -97.092778, 'America/Chicago', 'NFC East', 9, 6, 1.5],
-            'Denver Broncos': ['Empower Field at Mile High', 39.743936, -105.020097, 'America/Denver', 'AFC West', 29, 29, -5.5],
-            'Detroit Lions': ['Ford Field', 42.340156, -83.045808, 'America/New_York', 'NFC North', 4, 5, 3],
-            'Green Bay Packers': ['Lambeau Field', 44.501306, -88.062167, 'America/Chicago', 'NFC North', 10, 12, -4],
-            'Houston Texans': ['NRG Stadium', 29.684781, -95.410956, 'America/Chicago', 'AFC South', 7, 8, 3.5],
-            'Indianapolis Colts': ['Lucas Oil Stadium', 39.760056, -86.163806, 'America/New_York', 'AFC South', 20, 19, -2],
-            'Jacksonville Jaguars': ['Everbank Stadium', 30.323925, -81.637356, 'America/New_York', 'AFC South', 18, 17, -.5],
-            'Kansas City Chiefs': ['Arrowhead Stadium', 39.048786, -94.484566, 'America/Chicago', 'AFC West', 1, 1, 5],
-            'Las Vegas Raiders': ['Allegiant Stadium', 36.090794, -115.183952, 'America/Los_Angeles', 'AFC West', 28, 26, -3],
-            'Los Angeles Chargers': ['SoFi Stadium', 33.953587, -118.33963, 'America/Los_Angeles', 'AFC West', 14, 17, 1.5],
-            'Los Angeles Rams': ['SoFi Stadium', 33.953587, -118.33963, 'America/Los_Angeles', 'NFC West', 16, 15, -3.5],
-            'Miami Dolphins': ['Hard Rock Stadium', 25.957919, -80.238842, 'America/New_York', 'AFC East', 12, 11, -4],
-            'Minnesota Vikings': ['U.S Bank Stadium', 44.973881, -93.258094, 'America/Chicago', 'NFC North', 24, 22, .5],
-            'New England Patriots': ['Gillette Stadium', 42.090925, -71.26435, 'America/New_York', 'AFC East', 31, 27, -4.5],
-            'New Orleans Saints': ['Caesars Superdome', 29.950931, -90.081364, 'America/Chicago', 'NFC South', 23, 16, 2],
-            'New York Giants': ['MetLife Stadium', 40.812194, -74.076983, 'America/New_York', 'NFC East', 27, 31, -5],
-            'New York Jets': ['MetLife Stadium', 40.812194, -74.076983, 'America/New_York', 'AFC East', 11, 13, 1],
-            'Philadelphia Eagles': ['Lincoln Financial Field', 39.900775, -75.167453, 'America/New_York', 'NFC East', 8, 4, 3],
-            'Pittsburgh Steelers': ['Acrisure Stadium', 40.446786, -80.015761, 'America/New_York', 'AFC North', 19, 16, .5],
-            'San Francisco 49ers': ['Levi\'s Stadium', 37.713486, -122.386256, 'America/Los_Angeles', 'NFC West', 2, 1.5, 4.5],
-            'Seattle Seahawks': ['Lumen Field', 47.595153, -122.331625, 'America/Los_Angeles', 'NFC West', 22, 19, .5],
-            'Tampa Bay Buccaneers': ['Raymomd James Stadium', 27.975967, -82.50335, 'America/New_York', 'NFC South', 21, 21, 0],
-            'Tennessee Titans': ['Nissan Stadium', 36.166461, -86.771289, 'America/Chicago', 'AFC South', 20, 24, -2.5],
-            'Washington Commanders': ['FedExField', 38.907697, -76.864517, 'America/New_York', 'NFC East', 25, 28, -3.5]
+        'Arizona Cardinals': ['State Farm Stadium', 33.5277, -112.262608, 'America/Denver', 'NFC West', 26, 24, az_rank],
+        'Atlanta Falcons': ['Mercedez-Benz Stadium', 33.757614, -84.400972, 'America/New_York', 'NFC South', 13, 18, atl_rank],
+        'Baltimore Ravens': ['M&T Stadium', 39.277969, -76.622767, 'America/New_York', 'AFC North', 3, 3, bal_rank],
+        'Buffalo Bills': ['Highmark Stadium', 42.773739, -78.786978, 'America/New_York', 'AFC East', 5, 7, buf_rank],
+        'Carolina Panthers': ['Bank of America Stadium', 35.225808, -80.852861, 'America/New_York', 'NFC South', 32, 32, car_rank],
+        'Chicago Bears': ['Soldier Field', 41.862306, -87.616672, 'America/Chicago', 'NFC North', 15, 19, chi_rank],
+        'Cincinnati Bengals': ['Paycor Stadium', 39.095442, -84.516039, 'America/New_York', 'AFC North', 6, 11, cin_rank],
+        'Cleveland Browns': ['Cleveland Browns Stadium', 41.506022, -81.699564, 'America/New_York', 'AFC North', 17, 20, cle_rank],
+        'Dallas Cowboys': ['AT&T Stadium', 32.747778, -97.092778, 'America/Chicago', 'NFC East', 9, 6, dal_rank],
+        'Denver Broncos': ['Empower Field at Mile High', 39.743936, -105.020097, 'America/Denver', 'AFC West', 29, 29, den_rank],
+        'Detroit Lions': ['Ford Field', 42.340156, -83.045808, 'America/New_York', 'NFC North', 4, 5, det_rank],
+        'Green Bay Packers': ['Lambeau Field', 44.501306, -88.062167, 'America/Chicago', 'NFC North', 10, 12, gb_rank],
+        'Houston Texans': ['NRG Stadium', 29.684781, -95.410956, 'America/Chicago', 'AFC South', 7, 8, hou_rank],
+        'Indianapolis Colts': ['Lucas Oil Stadium', 39.760056, -86.163806, 'America/New_York', 'AFC South', 20, 19, ind_rank],
+        'Jacksonville Jaguars': ['Everbank Stadium', 30.323925, -81.637356, 'America/New_York', 'AFC South', 18, 17, jax_rank],
+        'Kansas City Chiefs': ['Arrowhead Stadium', 39.048786, -94.484566, 'America/Chicago', 'AFC West', 1, 1, kc_rank],
+        'Las Vegas Raiders': ['Allegiant Stadium', 36.090794, -115.183952, 'America/Los_Angeles', 'AFC West', 28, 26, lv_rank],
+        'Los Angeles Chargers': ['SoFi Stadium', 33.953587, -118.33963, 'America/Los_Angeles', 'AFC West', 14, 17, lac_rank],
+        'Los Angeles Rams': ['SoFi Stadium', 33.953587, -118.33963, 'America/Los_Angeles', 'NFC West', 16, 15, lar_rank],
+        'Miami Dolphins': ['Hard Rock Stadium', 25.957919, -80.238842, 'America/New_York', 'AFC East', 12, 11, mia_rank],
+        'Minnesota Vikings': ['U.S Bank Stadium', 44.973881, -93.258094, 'America/Chicago', 'NFC North', 24, 22, min_rank],
+        'New England Patriots': ['Gillette Stadium', 42.090925, -71.26435, 'America/New_York', 'AFC East', 31, 27, ne_rank],
+        'New Orleans Saints': ['Caesars Superdome', 29.950931, -90.081364, 'America/Chicago', 'NFC South', 23, 16, no_rank],
+        'New York Giants': ['MetLife Stadium', 40.812194, -74.076983, 'America/New_York', 'NFC East', 27, 31, nyg_rank],
+        'New York Jets': ['MetLife Stadium', 40.812194, -74.076983, 'America/New_York', 'AFC East', 11, 13, nyj_rank],
+        'Philadelphia Eagles': ['Lincoln Financial Field', 39.900775, -75.167453, 'America/New_York', 'NFC East', 8, 4, phi_rank],
+        'Pittsburgh Steelers': ['Acrisure Stadium', 40.446786, -80.015761, 'America/New_York', 'AFC North', 19, 16, pit_rank],
+        'San Francisco 49ers': ['Levi\'s Stadium', 37.713486, -122.386256, 'America/Los_Angeles', 'NFC West', 2, 1.5, sf_rank],
+        'Seattle Seahawks': ['Lumen Field', 47.595153, -122.331625, 'America/Los_Angeles', 'NFC West', 22, 19, sea_rank],
+        'Tampa Bay Buccaneers': ['Raymomd James Stadium', 27.975967, -82.50335, 'America/New_York', 'NFC South', 21, 21, tb_rank],
+        'Tennessee Titans': ['Nissan Stadium', 36.166461, -86.771289, 'America/Chicago', 'AFC South', 20, 24, ten_rank],
+        'Washington Commanders': ['FedExField', 38.907697, -76.864517, 'America/New_York', 'NFC East', 25, 28, was_rank]
         }
 
         # 0: Spread | 1: Favorite Odds| 2: Underdog Odds
@@ -1346,43 +1346,171 @@ st.subheader('NFL Team Rankings')
 st.write('The Ranking represents :red[how much a team would either win (positive number) or lose (negative number) by to an average NFL team]. 0 means the team is perfectly average')
 st.write('')
 
+default_atl_rank = 1
+default_bal_rank = 0
+default_buf_rank = 7
+default_car_rank = 0
+default_chi_rank = -2
+default_cin_rank = 0
+default_cle_rank = -3
+default_dal_rank = 0
+default_den_rank = -1
+default_det_rank = 0
+default_gb_rank = 4
+default_hou_rank = 0
+default_ind_rank = 6
+default_jax_rank = 0
+default_kc_rank = 1
+default_lv_rank = 0
+default_lac_rank = 0
+default_lar_rank = -1
+default_mia_rank = 0
+default_min_rank = 3
+default_ne_rank = 0
+default_no_rank = -3
+default_nyg_rank = 0
+default_nyj_rank = 4
+default_phi_rank = 0
+default_pit_rank = -2
+default_sf_rank = 0
+default_sea_rank = 1
+default_tb_rank = 0
+default_ten_rank = 5
+default_was_rank = 0
+
 team_rankings = [
-    0,-15,-14.5,-14,-13.5,-13,-12.5,-12,-11.5,-11,-10.5,-10,-9.5,-9,-8.5,-8,-7.5,
+    "Default", 0,-15,-14.5,-14,-13.5,-13,-12.5,-12,-11.5,-11,-10.5,-10,-9.5,-9,-8.5,-8,-7.5,
     -7,-6.5,-6,-5.5,-5,-4.5,-4,-3.5,-3,-2.5,-2,-1.5,-1,-.5,.5,1,1.5,2,2.5,3,3.5,4,
     4.5,5,5.5,6,6.5,7,7.5,8,8.5,9,9.5,10,10.5,11,11.5,12,12.5,13,13.5,14,14.5,15
 ]
 az_rank = st.selectbox("Arizona Cardinals Ranking:", options=team_rankings)
+st.write(f'Default Arizona Cardinals Ranking: {default_az_rank}')
 atl_rank = st.selectbox("Atlanta Falcons Ranking:", options=team_rankings)
+st.write(f'Default Atlanta Falcons Ranking: {default_atl_rank}')
 bal_rank = st.selectbox("Baltimore Ravens Ranking:", options=team_rankings)
+st.write(f'Default Baltimore Ravens Ranking: {default_bal_rank}')
 buf_rank = st.selectbox("Buffalo Bills Ranking:", options=team_rankings)
+st.write(f'Default Buffalo Bills Ranking: {default_buf_rank}')
 car_rank = st.selectbox("Carolina Panthers Ranking:", options=team_rankings)
+st.write(f'Default Carolina Panthers Ranking: {default_car_rank}')
 chi_rank = st.selectbox("Chicago Bears Ranking:", options=team_rankings)
+st.write(f'Default Chicago Bears Ranking: {default_chi_rank}')
 cin_rank = st.selectbox("Cincinatti Bengals Ranking:", options=team_rankings)
+st.write(f'Default Cincinatti Bengals Ranking: {default_cin_rank}')
 cle_rank = st.selectbox("Cleveland Browns Ranking:", options=team_rankings)
+st.write(f'Default Cleveland Browns Ranking: {default_was_rank}')
 dal_rank = st.selectbox("Dallas Cowboys Ranking:", options=team_rankings)
+st.write(f'Default Dallas Cowboys Ranking: {default_dal_rank}')
 den_rank = st.selectbox("Denver Broncos Ranking:", options=team_rankings)
+st.write(f'Default Denver Broncos Ranking: {default_den_rank}')
 det_rank = st.selectbox("Detroit Lions Ranking:", options=team_rankings)
+st.write(f'Default Detroit Lions Ranking: {default_det_rank}')
 gb_rank = st.selectbox("Green Bay Packers Ranking:", options=team_rankings)
+st.write(f'Default Green Bay Packers Ranking: {default_gb_rank}')
 hou_rank = st.selectbox("Houston Texans Ranking:", options=team_rankings)
+st.write(f'Default Houston Texans Ranking: {default_hou_rank}')
 ind_rank = st.selectbox("Indianapoils Colts Ranking:", options=team_rankings)
+st.write(f'Default Indianapoils Colts Ranking: {default_ind_rank}')
 jax_rank = st.selectbox("Jacksonville Jaguars Ranking:", options=team_rankings)
+st.write(f'Default Jacksonville Jaguars Ranking: {default_jax_rank}')
 kc_rank = st.selectbox("Kansas City Chiefs Ranking:", options=team_rankings)
+st.write(f'Default Kansas City Chiefs Ranking: {default_kc_rank}')
 lv_rank = st.selectbox("Las Vegas Raiders Ranking:", options=team_rankings)
+st.write(f'Default Las Vegas Raiders Ranking: {default_lv_rank}')
 lac_rank = st.selectbox("Los Angeles Chargers Ranking:", options=team_rankings)
+st.write(f'Default Los Angeles Chargers Ranking: {default_lac_rank}')
 lar_rank = st.selectbox("Los Angeles Rams Ranking:", options=team_rankings)
+st.write(f'Default Los Angeles Rams Ranking: {default_lar_rank}')
 mia_rank = st.selectbox("Miami Dolphins Ranking:", options=team_rankings)
+st.write(f'Default Miami Dolphins Ranking: {default_mia_rank}')
 min_rank = st.selectbox("Minnesota Vikings Ranking:", options=team_rankings)
+st.write(f'Default Minnesota Vikings Ranking: {default_min_rank}')
 ne_rank = st.selectbox("New England Patriots Ranking:", options=team_rankings)
+st.write(f'Default New England Patriots Ranking: {default_ne_rank}')
 no_rank = st.selectbox("New Orleans Saints Ranking:", options=team_rankings)
+st.write(f'Default New Orleans Saints Ranking: {default_no_rank}')
 nyg_rank = st.selectbox("New York Giants Ranking:", options=team_rankings)
+st.write(f'Default New York Giants Ranking: {default_nyg_rank}')
 nyj_rank = st.selectbox("New York Jets Ranking:", options=team_rankings)
+st.write(f'Default New York Jets Ranking: {default_nyj_rank}')
 phi_rank = st.selectbox("Philadelphia Eagles Ranking:", options=team_rankings)
+st.write(f'Default Philadelphia Eagles Ranking: {default_phi_rank}')
 pit_rank = st.selectbox("Pittsburgh Steelers Ranking:", options=team_rankings)
+st.write(f'Default Pittsburgh Steelers Ranking: {default_pit_rank}')
 sf_rank = st.selectbox("San Francisco 49ers Ranking:", options=team_rankings)
+st.write(f'Default San Francisco 49ers Ranking: {default_sf_rank}')
 sea_rank = st.selectbox("Seattle Seahawks Ranking:", options=team_rankings)
+st.write(f'Default Seattle Seahawks Ranking: {default_sea_rank}')
 tb_rank = st.selectbox("Tampa Bay Buccaneers Ranking:", options=team_rankings)
+st.write(f'Default Tampa Bay Buccaneers Ranking: {default_tb_rank}')
 ten_rank = st.selectbox("Tennessee Titans Ranking:", options=team_rankings)
+st.write(f'Default Tennessee Titans Ranking: {default_ten_rank}')
 was_rank = st.selectbox("Washington Commanders Ranking:", options=team_rankings)
+st.write(f'Default Washington Commanders Ranking: {default_was_rank}')
+
+# Update the rank values if "Default" is selected
+if atl_rank == "Default":
+    atl_rank = default_atl_rank
+if bal_rank == "Default":
+    bal_rank = default_bal_rank
+if buf_rank == "Default":
+    buf_rank = default_buf_rank
+if car_rank == "Default":
+    car_rank = default_car_rank
+if chi_rank == "Default":
+    chi_rank = default_chi_rank
+if cin_rank == "Default":
+    cin_rank = default_cin_rank
+if cle_rank == "Default":
+    cle_rank = default_cle_rank
+if dal_rank == "Default":
+    dal_rank = default_dal_rank
+if den_rank == "Default":
+    den_rank = default_den_rank
+if det_rank == "Default":
+    det_rank = default_det_rank
+if gb_rank == "Default":
+    gb_rank = default_gb_rank
+if hou_rank == "Default":
+    hou_rank = default_hou_rank
+if ind_rank == "Default":
+    ind_rank = default_ind_rank
+if jax_rank == "Default":
+    jax_rank = default_jax_rank
+if kc_rank == "Default":
+    kc_rank = default_kc_rank
+if lv_rank == "Default":
+    lv_rank = default_lv_rank
+if lac_rank == "Default":
+    lac_rank = default_lac_rank
+if lar_rank == "Default":
+    lar_rank = default_lar_rank
+if mia_rank == "Default":
+    mia_rank = default_mia_rank
+if min_rank == "Default":
+    min_rank = default_min_rank
+if ne_rank == "Default":
+    ne_rank = default_ne_rank
+if no_rank == "Default":
+    no_rank = default_no_rank
+if nyg_rank == "Default":
+    nyg_rank = default_nyg_rank
+if nyj_rank == "Default":
+    nyj_rank = default_nyj_rank
+if phi_rank == "Default":
+    phi_rank = default_phi_rank
+if pit_rank == "Default":
+    pit_rank = default_pit_rank
+if sf_rank == "Default":
+    sf_rank = default_sf_rank
+if sea_rank == "Default":
+    sea_rank = default_sea_rank
+if tb_rank == "Default":
+    tb_rank = default_tb_rank
+if ten_rank == "Default":
+    ten_rank = default_ten_rank
+if was_rank == "Default":
+    was_rank = default_was_rank
 
 
 st.write('')

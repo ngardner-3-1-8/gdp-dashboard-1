@@ -1276,10 +1276,11 @@ def create_nfl_app():
     ending_week_options = range(starting_week, 21)
     ending_week = st.selectbox("Select Ending Week:", options=ending_week_options)
     ending_week = ending_week + 1
+    return starting_week, ending_week, picked_teams
     #if ending_week:
         #st.write(f"Selected Ending Week: {ending_week}")
 if __name__ == "__main__":
-    create_nfl_app()
+    starting_week, ending_week, picked_teams = create_nfl_app()
 st.write('')
 st.write('')
 st.write('')
@@ -1327,46 +1328,45 @@ st.write('')
 st.subheader('NFL Team Rankings')
 st.text('The Ranking represents how much a team would either win (positive number) or lose (negative number) by to an average NFL team. 0 means the team is perfectly average')
 st.write('')
-def create_nfl_rankings():
-    team_rankings = [
-        0,-15,-14.5,-14,-13.5,-13,-12.5,-12,-11.5,-11,-10.5,-10,-9.5,-9,-8.5,-8,-7.5,
-        -7,-6.5,-6,-5.5,-5,-4.5,-4,-3.5,-3,-2.5,-2,-1.5,-1,-.5,.5,1,1.5,2,2.5,3,3.5,4,
-        4.5,5,5.5,6,6.5,7,7.5,8,8.5,9,9.5,10,10.5,11,11.5,12,12.5,13,13.5,14,14.5,15
-    ]
-    az_rank = st.selectbox("Arizona Cardinals Ranking:", options=team_rankings)
-    atl_rank = st.selectbox("Atlanta Falcons Ranking:", options=team_rankings)
-    bal_rank = st.selectbox("Baltimore Ravens Ranking:", options=team_rankings)
-    buf_rank = st.selectbox("Buffalo Bills Ranking:", options=team_rankings)
-    car_rank = st.selectbox("Carolina Panthers Ranking:", options=team_rankings)
-    chi_rank = st.selectbox("Chicago Bears Ranking:", options=team_rankings)
-    cin_rank = st.selectbox("Cincinatti Bengals Ranking:", options=team_rankings)
-    cle_rank = st.selectbox("Cleveland Browns Ranking:", options=team_rankings)
-    dal_rank = st.selectbox("Dallas Cowboys Ranking:", options=team_rankings)
-    den_rank = st.selectbox("Denver Broncos Ranking:", options=team_rankings)
-    det_rank = st.selectbox("Detroit Lions Ranking:", options=team_rankings)
-    gb_rank = st.selectbox("Green Bay Packers Ranking:", options=team_rankings)
-    hou_rank = st.selectbox("Houston Texans Ranking:", options=team_rankings)
-    ind_rank = st.selectbox("Indianapoils Colts Ranking:", options=team_rankings)
-    jax_rank = st.selectbox("Jacksonville Jaguars Ranking:", options=team_rankings)
-    kc_rank = st.selectbox("Kansas City Chiefs Ranking:", options=team_rankings)
-    lv_rank = st.selectbox("Las Vegas Raiders Ranking:", options=team_rankings)
-    lac_rank = st.selectbox("Los Angeles Chargers Ranking:", options=team_rankings)
-    lar_rank = st.selectbox("Los Angeles Rams Ranking:", options=team_rankings)
-    mia_rank = st.selectbox("Miami Dolphins Ranking:", options=team_rankings)
-    min_rank = st.selectbox("Minnesota Vikings Ranking:", options=team_rankings)
-    ne_rank = st.selectbox("New England Patriots Ranking:", options=team_rankings)
-    no_rank = st.selectbox("New Orleans Saints Ranking:", options=team_rankings)
-    nyg_rank = st.selectbox("New York Giants Ranking:", options=team_rankings)
-    nyj_rank = st.selectbox("New York Jets Ranking:", options=team_rankings)
-    phi_rank = st.selectbox("Philadelphia Eagles Ranking:", options=team_rankings)
-    pit_rank = st.selectbox("Pittsburgh Steelers Ranking:", options=team_rankings)
-    sf_rank = st.selectbox("San Francisco 49ers Ranking:", options=team_rankings)
-    sea_rank = st.selectbox("Seattle Seahawks Ranking:", options=team_rankings)
-    tb_rank = st.selectbox("Tampa Bay Buccaneers Ranking:", options=team_rankings)
-    ten_rank = st.selectbox("Tennessee Titans Ranking:", options=team_rankings)
-    was_rank = st.selectbox("Washington Commanders Ranking:", options=team_rankings)
-if __name__ == "__main__":
-    create_nfl_rankings()
+
+team_rankings = [
+    0,-15,-14.5,-14,-13.5,-13,-12.5,-12,-11.5,-11,-10.5,-10,-9.5,-9,-8.5,-8,-7.5,
+    -7,-6.5,-6,-5.5,-5,-4.5,-4,-3.5,-3,-2.5,-2,-1.5,-1,-.5,.5,1,1.5,2,2.5,3,3.5,4,
+    4.5,5,5.5,6,6.5,7,7.5,8,8.5,9,9.5,10,10.5,11,11.5,12,12.5,13,13.5,14,14.5,15
+]
+az_rank = st.selectbox("Arizona Cardinals Ranking:", options=team_rankings)
+atl_rank = st.selectbox("Atlanta Falcons Ranking:", options=team_rankings)
+bal_rank = st.selectbox("Baltimore Ravens Ranking:", options=team_rankings)
+buf_rank = st.selectbox("Buffalo Bills Ranking:", options=team_rankings)
+car_rank = st.selectbox("Carolina Panthers Ranking:", options=team_rankings)
+chi_rank = st.selectbox("Chicago Bears Ranking:", options=team_rankings)
+cin_rank = st.selectbox("Cincinatti Bengals Ranking:", options=team_rankings)
+cle_rank = st.selectbox("Cleveland Browns Ranking:", options=team_rankings)
+dal_rank = st.selectbox("Dallas Cowboys Ranking:", options=team_rankings)
+den_rank = st.selectbox("Denver Broncos Ranking:", options=team_rankings)
+det_rank = st.selectbox("Detroit Lions Ranking:", options=team_rankings)
+gb_rank = st.selectbox("Green Bay Packers Ranking:", options=team_rankings)
+hou_rank = st.selectbox("Houston Texans Ranking:", options=team_rankings)
+ind_rank = st.selectbox("Indianapoils Colts Ranking:", options=team_rankings)
+jax_rank = st.selectbox("Jacksonville Jaguars Ranking:", options=team_rankings)
+kc_rank = st.selectbox("Kansas City Chiefs Ranking:", options=team_rankings)
+lv_rank = st.selectbox("Las Vegas Raiders Ranking:", options=team_rankings)
+lac_rank = st.selectbox("Los Angeles Chargers Ranking:", options=team_rankings)
+lar_rank = st.selectbox("Los Angeles Rams Ranking:", options=team_rankings)
+mia_rank = st.selectbox("Miami Dolphins Ranking:", options=team_rankings)
+min_rank = st.selectbox("Minnesota Vikings Ranking:", options=team_rankings)
+ne_rank = st.selectbox("New England Patriots Ranking:", options=team_rankings)
+no_rank = st.selectbox("New Orleans Saints Ranking:", options=team_rankings)
+nyg_rank = st.selectbox("New York Giants Ranking:", options=team_rankings)
+nyj_rank = st.selectbox("New York Jets Ranking:", options=team_rankings)
+phi_rank = st.selectbox("Philadelphia Eagles Ranking:", options=team_rankings)
+pit_rank = st.selectbox("Pittsburgh Steelers Ranking:", options=team_rankings)
+sf_rank = st.selectbox("San Francisco 49ers Ranking:", options=team_rankings)
+sea_rank = st.selectbox("Seattle Seahawks Ranking:", options=team_rankings)
+tb_rank = st.selectbox("Tampa Bay Buccaneers Ranking:", options=team_rankings)
+ten_rank = st.selectbox("Tennessee Titans Ranking:", options=team_rankings)
+was_rank = st.selectbox("Washington Commanders Ranking:", options=team_rankings)
+
 
 st.write('')
 st.write('')

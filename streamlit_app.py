@@ -1195,8 +1195,8 @@ def calculate_ev():
     # Add "Week" to the beginning of each value in the 'Week' column
     nfl_schedule_circa_pick_percentages_df['Week'] = nfl_schedule_circa_pick_percentages_df['Week'].apply(lambda x: f"Week {x}")
 
-    starting_week = 1
-    ending_week = 20
+    #starting_week = 1
+    #ending_week = 20
     
     # --- Option 1: Using st.empty for text updates ---
     #progress_bar = st.empty()  # Create an empty placeholder
@@ -1240,7 +1240,7 @@ st.write('')
 st.write('')
 st.write('')
 st.subheader('Picked Teams:')
-st.text('Select the teams that you have already used in the Survivor contest, or teams that you just do not want to pick in the enirety of the contest')
+st.write('Select the teams that you have already used in the Survivor contest, or teams that you just do not want to pick in the enirety of the contest')
 def create_nfl_app():
     """Creates a Streamlit app with NFL teams and dependent week select boxes."""
 
@@ -1275,12 +1275,52 @@ def create_nfl_app():
     st.write('')
     ending_week_options = range(starting_week, 21)
     ending_week = st.selectbox("Select Ending Week:", options=ending_week_options)
+    ending_week = ending_week + 1
     #if ending_week:
         #st.write(f"Selected Ending Week: {ending_week}")
-
-
 if __name__ == "__main__":
     create_nfl_app()
+st.write('')
+st.write('')
+st.write('')
+st.subtitle('Teams That Have to Be Picked')
+st.write('Select the week in which the algorithm has to pick that team. If you do not, want the team to be required to be used, select 0')
+required_week_options = [0] + list(range(starting_week, ending_week))
+
+az_req_week = st.selectbox("Arizona Cardinals Week Required to Be Picked:", options=required_week_options)
+atl_req_week = st.selectbox("Atlanta Falcons Week Required to Be Picked:", options=required_week_options)
+bal_req_week = st.selectbox("Baltimore Ravens Week Required to Be Picked:", options=required_week_options)
+buf_req_week = st.selectbox("Buffalo Bills Week Required to Be Picked:", options=required_week_options)
+car_req_week = st.selectbox("Carolina Panthers Week Required to Be Picked:", options=required_week_options)
+chi_req_week = st.selectbox("Chicago Bears Week Required to Be Picked:", options=required_week_options)
+cin_req_week = st.selectbox("Cincinatti Bengals Week Required to Be Picked:", options=required_week_options)
+cle_req_week = st.selectbox("Cleveland Browns Week Required to Be Picked:", options=required_week_options)
+dal_req_week = st.selectbox("Dallas Cowboys Week Required to Be Picked:", options=required_week_options)
+den_req_week = st.selectbox("Denver Broncos Week Required to Be Picked:", options=required_week_options)
+det_req_week = st.selectbox("Detroit Lions Week Required to Be Picked:", options=required_week_options)
+gb_req_week = st.selectbox("Green Bay Packers Week Required to Be Picked:", options=required_week_options)
+hou_req_week = st.selectbox("Houston Texans Week Required to Be Picked:", options=required_week_options)
+ind_req_week = st.selectbox("Indianapoils Colts Week Required to Be Picked:", options=required_week_options)
+jax_req_week = st.selectbox("Jacksonville Jaguars Week Required to Be Picked:", options=required_week_options)
+kc_req_week = st.selectbox("Kansas City Chiefs Week Required to Be Picked:", options=required_week_options)
+lv_req_week = st.selectbox("Las Vegas Raiders Week Required to Be Picked:", options=required_week_options)
+lac_req_week = st.selectbox("Los Angeles Chargers Week Required to Be Picked:", options=required_week_options)
+lar_req_week = st.selectbox("Los Angeles Rams Week Required to Be Picked:", options=required_week_options)
+mia_req_week = st.selectbox("Miami Dolphins Week Required to Be Picked:", options=required_week_options)
+min_req_week = st.selectbox("Minnesota Vikings Week Required to Be Picked:", options=required_week_options)
+ne_req_week = st.selectbox("New England Patriots Week Required to Be Picked:", options=required_week_options)
+no_req_week = st.selectbox("New Orleans Saints Week Required to Be Picked:", options=required_week_options)
+nyg_req_week = st.selectbox("New York Giants Week Required to Be Picked:", options=required_week_options)
+nyj_req_week = st.selectbox("New York Jets Week Required to Be Picked:", options=required_week_options)
+phi_req_week = st.selectbox("Philadelphia Eagles Week Required to Be Picked:", options=required_week_options)
+pit_req_week = st.selectbox("Pittsburgh Steelers Week Required to Be Picked:", options=required_week_options)
+sf_req_week = st.selectbox("San Francisco 49ers Week Required to Be Picked:", options=required_week_options)
+sea_req_week = st.selectbox("Seattle Seahawks Week Required to Be Picked:", options=required_week_options)
+tb_req_week = st.selectbox("Tampa Bay Buccaneers Week Required to Be Picked:", options=required_week_options)
+ten_req_week = st.selectbox("Tennessee Titans Week Required to Be Picked:", options=required_week_options)
+was_req_week = st.selectbox("Washington Commanders Week Required to Be Picked:", options=required_week_options)
+
+st.write('')
 st.write('')
 st.write('')
 

@@ -1385,165 +1385,164 @@ team_rankings = [
     4.5,5,5.5,6,6.5,7,7.5,8,8.5,9,9.5,10,10.5,11,11.5,12,12.5,13,13.5,14,14.5,15
 ]
 az_rank = st.selectbox("Arizona Cardinals Ranking:", options=team_rankings)
-st.write(f'Default Arizona Cardinals Ranking: {default_az_rank}')
+if az_rank == "Default":
+    az_rank = default_atl_rank
+st.write(f'Current Arizona Cardinals Ranking: {az_rank}')
 st.write('')
 atl_rank = st.selectbox("Atlanta Falcons Ranking:", options=team_rankings)
-st.write(f'Default Atlanta Falcons Ranking: {default_atl_rank}')
-st.write('')
-bal_rank = st.selectbox("Baltimore Ravens Ranking:", options=team_rankings)
-st.write(f'Default Baltimore Ravens Ranking: {default_bal_rank}')
-st.write('')
-buf_rank = st.selectbox("Buffalo Bills Ranking:", options=team_rankings)
-st.write(f'Default Buffalo Bills Ranking: {default_buf_rank}')
-st.write('')
-car_rank = st.selectbox("Carolina Panthers Ranking:", options=team_rankings)
-st.write(f'Default Carolina Panthers Ranking: {default_car_rank}')
-st.write('')
-chi_rank = st.selectbox("Chicago Bears Ranking:", options=team_rankings)
-st.write(f'Default Chicago Bears Ranking: {default_chi_rank}')
-st.write('')
-cin_rank = st.selectbox("Cincinatti Bengals Ranking:", options=team_rankings)
-st.write(f'Default Cincinatti Bengals Ranking: {default_cin_rank}')
-st.write('')
-cle_rank = st.selectbox("Cleveland Browns Ranking:", options=team_rankings)
-st.write(f'Default Cleveland Browns Ranking: {default_was_rank}')
-st.write('')
-dal_rank = st.selectbox("Dallas Cowboys Ranking:", options=team_rankings)
-st.write(f'Default Dallas Cowboys Ranking: {default_dal_rank}')
-st.write('')
-den_rank = st.selectbox("Denver Broncos Ranking:", options=team_rankings)
-st.write(f'Default Denver Broncos Ranking: {default_den_rank}')
-st.write('')
-det_rank = st.selectbox("Detroit Lions Ranking:", options=team_rankings)
-st.write(f'Default Detroit Lions Ranking: {default_det_rank}')
-st.write('')
-gb_rank = st.selectbox("Green Bay Packers Ranking:", options=team_rankings)
-st.write(f'Default Green Bay Packers Ranking: {default_gb_rank}')
-st.write('')
-hou_rank = st.selectbox("Houston Texans Ranking:", options=team_rankings)
-st.write(f'Default Houston Texans Ranking: {default_hou_rank}')
-st.write('')
-ind_rank = st.selectbox("Indianapoils Colts Ranking:", options=team_rankings)
-st.write(f'Default Indianapoils Colts Ranking: {default_ind_rank}')
-st.write('')
-jax_rank = st.selectbox("Jacksonville Jaguars Ranking:", options=team_rankings)
-st.write(f'Default Jacksonville Jaguars Ranking: {default_jax_rank}')
-st.write('')
-kc_rank = st.selectbox("Kansas City Chiefs Ranking:", options=team_rankings)
-st.write(f'Default Kansas City Chiefs Ranking: {default_kc_rank}')
-st.write('')
-lv_rank = st.selectbox("Las Vegas Raiders Ranking:", options=team_rankings)
-st.write(f'Default Las Vegas Raiders Ranking: {default_lv_rank}')
-st.write('')
-lac_rank = st.selectbox("Los Angeles Chargers Ranking:", options=team_rankings)
-st.write(f'Default Los Angeles Chargers Ranking: {default_lac_rank}')
-st.write('')
-lar_rank = st.selectbox("Los Angeles Rams Ranking:", options=team_rankings)
-st.write(f'Default Los Angeles Rams Ranking: {default_lar_rank}')
-st.write('')
-mia_rank = st.selectbox("Miami Dolphins Ranking:", options=team_rankings)
-st.write(f'Default Miami Dolphins Ranking: {default_mia_rank}')
-st.write('')
-min_rank = st.selectbox("Minnesota Vikings Ranking:", options=team_rankings)
-st.write(f'Default Minnesota Vikings Ranking: {default_min_rank}')
-st.write('')
-ne_rank = st.selectbox("New England Patriots Ranking:", options=team_rankings)
-st.write(f'Default New England Patriots Ranking: {default_ne_rank}')
-st.write('')
-no_rank = st.selectbox("New Orleans Saints Ranking:", options=team_rankings)
-st.write(f'Default New Orleans Saints Ranking: {default_no_rank}')
-st.write('')
-nyg_rank = st.selectbox("New York Giants Ranking:", options=team_rankings)
-st.write(f'Default New York Giants Ranking: {default_nyg_rank}')
-st.write('')
-nyj_rank = st.selectbox("New York Jets Ranking:", options=team_rankings)
-st.write(f'Default New York Jets Ranking: {default_nyj_rank}')
-st.write('')
-phi_rank = st.selectbox("Philadelphia Eagles Ranking:", options=team_rankings)
-st.write(f'Default Philadelphia Eagles Ranking: {default_phi_rank}')
-st.write('')
-pit_rank = st.selectbox("Pittsburgh Steelers Ranking:", options=team_rankings)
-st.write(f'Default Pittsburgh Steelers Ranking: {default_pit_rank}')
-st.write('')
-sf_rank = st.selectbox("San Francisco 49ers Ranking:", options=team_rankings)
-st.write(f'Default San Francisco 49ers Ranking: {default_sf_rank}')
-st.write('')
-sea_rank = st.selectbox("Seattle Seahawks Ranking:", options=team_rankings)
-st.write(f'Default Seattle Seahawks Ranking: {default_sea_rank}')
-st.write('')
-tb_rank = st.selectbox("Tampa Bay Buccaneers Ranking:", options=team_rankings)
-st.write(f'Default Tampa Bay Buccaneers Ranking: {default_tb_rank}')
-st.write('')
-ten_rank = st.selectbox("Tennessee Titans Ranking:", options=team_rankings)
-st.write(f'Default Tennessee Titans Ranking: {default_ten_rank}')
-st.write('')
-was_rank = st.selectbox("Washington Commanders Ranking:", options=team_rankings)
-st.write(f'Default Washington Commanders Ranking: {default_was_rank}')
-
-# Update the rank values if "Default" is selected
 if atl_rank == "Default":
     atl_rank = default_atl_rank
+st.write(f'Current Atlanta Falcons Ranking: {atl_rank}')
+st.write('')
+bal_rank = st.selectbox("Baltimore Ravens Ranking:", options=team_rankings)
 if bal_rank == "Default":
     bal_rank = default_bal_rank
+st.write(f'Current Baltimore Ravens Ranking: {bal_rank}')
+st.write('')
+buf_rank = st.selectbox("Buffalo Bills Ranking:", options=team_rankings)
 if buf_rank == "Default":
     buf_rank = default_buf_rank
+st.write(f'Current Buffalo Bills Ranking: {buf_rank}')
+st.write('')
+car_rank = st.selectbox("Carolina Panthers Ranking:", options=team_rankings)
 if car_rank == "Default":
     car_rank = default_car_rank
+st.write(f'Current Carolina Panthers Ranking: {car_rank}')
+st.write('')
+chi_rank = st.selectbox("Chicago Bears Ranking:", options=team_rankings)
 if chi_rank == "Default":
     chi_rank = default_chi_rank
+st.write(f'Current Chicago Bears Ranking: {chi_rank}')
+st.write('')
+cin_rank = st.selectbox("Cincinatti Bengals Ranking:", options=team_rankings)
 if cin_rank == "Default":
     cin_rank = default_cin_rank
+st.write(f'Current Cincinatti Bengals Ranking: {cin_rank}')
+st.write('')
+cle_rank = st.selectbox("Cleveland Browns Ranking:", options=team_rankings)
 if cle_rank == "Default":
     cle_rank = default_cle_rank
+st.write(f'Current Cleveland Browns Ranking: {was_rank}')
+st.write('')
+dal_rank = st.selectbox("Dallas Cowboys Ranking:", options=team_rankings)
 if dal_rank == "Default":
     dal_rank = default_dal_rank
+st.write(f'Current Dallas Cowboys Ranking: {dal_rank}')
+st.write('')
+den_rank = st.selectbox("Denver Broncos Ranking:", options=team_rankings)
 if den_rank == "Default":
     den_rank = default_den_rank
+st.write(f'Current Denver Broncos Ranking: {den_rank}')
+st.write('')
+det_rank = st.selectbox("Detroit Lions Ranking:", options=team_rankings)
 if det_rank == "Default":
     det_rank = default_det_rank
+st.write(f'Current Detroit Lions Ranking: {det_rank}')
+st.write('')
+gb_rank = st.selectbox("Green Bay Packers Ranking:", options=team_rankings)
 if gb_rank == "Default":
     gb_rank = default_gb_rank
+st.write(f'Current Green Bay Packers Ranking: {gb_rank}')
+st.write('')
+hou_rank = st.selectbox("Houston Texans Ranking:", options=team_rankings)
 if hou_rank == "Default":
     hou_rank = default_hou_rank
+st.write(f'Current Houston Texans Ranking: {hou_rank}')
+st.write('')
+ind_rank = st.selectbox("Indianapoils Colts Ranking:", options=team_rankings)
 if ind_rank == "Default":
     ind_rank = default_ind_rank
+st.write(f'Current Indianapoils Colts Ranking: {ind_rank}')
+st.write('')
+jax_rank = st.selectbox("Jacksonville Jaguars Ranking:", options=team_rankings)
 if jax_rank == "Default":
     jax_rank = default_jax_rank
+st.write(f'Current Jacksonville Jaguars Ranking: {jax_rank}')
+st.write('')
+kc_rank = st.selectbox("Kansas City Chiefs Ranking:", options=team_rankings)
 if kc_rank == "Default":
     kc_rank = default_kc_rank
+st.write(f'Current Kansas City Chiefs Ranking: {kc_rank}')
+st.write('')
+lv_rank = st.selectbox("Las Vegas Raiders Ranking:", options=team_rankings)
 if lv_rank == "Default":
     lv_rank = default_lv_rank
+st.write(f'Current Las Vegas Raiders Ranking: {lv_rank}')
+st.write('')
+lac_rank = st.selectbox("Los Angeles Chargers Ranking:", options=team_rankings)
 if lac_rank == "Default":
     lac_rank = default_lac_rank
+st.write(f'Current Los Angeles Chargers Ranking: {lac_rank}')
+st.write('')
+lar_rank = st.selectbox("Los Angeles Rams Ranking:", options=team_rankings)
 if lar_rank == "Default":
     lar_rank = default_lar_rank
+st.write(f'Current Los Angeles Rams Ranking: {lar_rank}')
+st.write('')
+mia_rank = st.selectbox("Miami Dolphins Ranking:", options=team_rankings)
 if mia_rank == "Default":
     mia_rank = default_mia_rank
+st.write(f'Current Miami Dolphins Ranking: {mia_rank}')
+st.write('')
+min_rank = st.selectbox("Minnesota Vikings Ranking:", options=team_rankings)
 if min_rank == "Default":
     min_rank = default_min_rank
+st.write(f'Current Minnesota Vikings Ranking: {min_rank}')
+st.write('')
+ne_rank = st.selectbox("New England Patriots Ranking:", options=team_rankings)
 if ne_rank == "Default":
     ne_rank = default_ne_rank
+st.write(f'Current New England Patriots Ranking: {ne_rank}')
+st.write('')
+no_rank = st.selectbox("New Orleans Saints Ranking:", options=team_rankings)
 if no_rank == "Default":
     no_rank = default_no_rank
+st.write(f'Current New Orleans Saints Ranking: {no_rank}')
+st.write('')
+nyg_rank = st.selectbox("New York Giants Ranking:", options=team_rankings)
 if nyg_rank == "Default":
     nyg_rank = default_nyg_rank
+st.write(f'Current New York Giants Ranking: {nyg_rank}')
+st.write('')
+nyj_rank = st.selectbox("New York Jets Ranking:", options=team_rankings)
 if nyj_rank == "Default":
     nyj_rank = default_nyj_rank
+st.write(f'Current New York Jets Ranking: {nyj_rank}')
+st.write('')
+phi_rank = st.selectbox("Philadelphia Eagles Ranking:", options=team_rankings)
 if phi_rank == "Default":
     phi_rank = default_phi_rank
+st.write(f'Current Philadelphia Eagles Ranking: {phi_rank}')
+st.write('')
+pit_rank = st.selectbox("Pittsburgh Steelers Ranking:", options=team_rankings)
 if pit_rank == "Default":
     pit_rank = default_pit_rank
+st.write(f'Current Pittsburgh Steelers Ranking: {pit_rank}')
+st.write('')
+sf_rank = st.selectbox("San Francisco 49ers Ranking:", options=team_rankings)
 if sf_rank == "Default":
     sf_rank = default_sf_rank
+st.write(f'Current San Francisco 49ers Ranking: {sf_rank}')
+st.write('')
+sea_rank = st.selectbox("Seattle Seahawks Ranking:", options=team_rankings)
 if sea_rank == "Default":
     sea_rank = default_sea_rank
+st.write(f'Current Seattle Seahawks Ranking: {sea_rank}')
+st.write('')
+tb_rank = st.selectbox("Tampa Bay Buccaneers Ranking:", options=team_rankings)
 if tb_rank == "Default":
     tb_rank = default_tb_rank
+st.write(f'Current Tampa Bay Buccaneers Ranking: {tb_rank}')
+st.write('')
+ten_rank = st.selectbox("Tennessee Titans Ranking:", options=team_rankings)
 if ten_rank == "Default":
     ten_rank = default_ten_rank
+st.write(f'Current Tennessee Titans Ranking: {ten_rank}')
+st.write('')
+was_rank = st.selectbox("Washington Commanders Ranking:", options=team_rankings)
 if was_rank == "Default":
     was_rank = default_was_rank
-
+st.write(f'Current Washington Commanders Ranking: {was_rank}')
 
 st.write('')
 st.write('')

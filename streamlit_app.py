@@ -1394,7 +1394,7 @@ st.write('')
 st.subheader('Use Saved Expected Value')
 st.write('Warning, this data is NOT up to date. It will save several hours of processing but will only be partially accurate. :red[Use carefully]')
 st.write('Last Update: :green[9/16/2024]')
-st.checkbox('Use Cached Expected Value')
+use_cached_expected_value = 1 if st.checkbox('Use Cached Expected Value') else 0
 st.write('')
 st.write('')
 st.write('')

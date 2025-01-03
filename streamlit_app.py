@@ -1230,7 +1230,7 @@ def calculate_ev():
 
 st.title("NFL Survivor Optimization")
 st.subheader("The second best Circa Survivor Contest optimizer")
-st.text("Alright, clowns. This site is built to help you optimize your picks for the Circa Survivor contest (Eventually other contests). :red[This tool is just for informational use. It does not take into account injuries or certain other factors. Do not use this tool as your only source of information.] Simply input which week you're in, your team rankings, constraints, etc... and the algorithm will do the rest. For a full season, Running the algorith will take up to 5 hours or more. Good luck!")
+st.write("Alright, clowns. This site is built to help you optimize your picks for the Circa Survivor contest (Eventually other contests). :red[This tool is just for informational use. It does not take into account injuries or certain other factors. Do not use this tool as your only source of information.] Simply input which week you're in, your team rankings, constraints, etc... and the algorithm will do the rest. For a full season, Running the algorith will take up to 5 hours or more. Good luck!")
 st.write('')
 st.write('')
 st.subheader('Picked Teams:')

@@ -1231,7 +1231,8 @@ def calculate_ev():
 st.title("NFL Survivor Optimization")
 st.subheader("The second best Circa Survivor Contest optimizer")
 st.text("Alright, clowns. This site is built to help you optimize your picks for the Circa Survivor contest (Eventually other contests). Simply input which week you're in, your team rankings, and the algorithm will do the rest. For a full season, Running the algorith will take up to 5 hours or more. Good luck!")
-
+st.write('')
+st.write('')
 def create_nfl_app():
     """Creates a Streamlit app with NFL teams and dependent week select boxes."""
 

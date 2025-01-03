@@ -1233,6 +1233,8 @@ st.subheader("The second best Circa Survivor Contest optimizer")
 st.text("Alright, clowns. This site is built to help you optimize your picks for the Circa Survivor contest (Eventually other contests). Simply input which week you're in, your team rankings, and the algorithm will do the rest. For a full season, Running the algorith will take up to 5 hours or more. Good luck!")
 st.write('')
 st.write('')
+st.subheader('Picked Teams:')
+st.text('Select the teams that you have already used in the Survivor contest, or teams that you just do not want to pick in the enirety of the contest')
 def create_nfl_app():
     """Creates a Streamlit app with NFL teams and dependent week select boxes."""
 
@@ -1257,7 +1259,9 @@ def create_nfl_app():
       st.write("No teams selected")
     st.write('')
     st.write('')
-    st.text("Week 13 is Thanksgiving/Black Friday Week and Week 18 is Christmas Week")
+    st.subheader('Remaining Weeks:')
+    st.text('Select the upcoming week for the starting week. Select the week you want the algorithm to stop at. If yiu select one week, it will take about 20 minutes. All 20 weeks will take 5-6 hours. Ending Week must be greater than or equa to Starting Week.')
+    st.text(":red[Week 13 is Thanksgiving/Black Friday Week and Week 18 is Christmas Week]")
     starting_week = st.selectbox("Select Starting Week:", options=range(1, 21))
     if starting_week:
         st.write(f"Selected Starting Week: {starting_week}")

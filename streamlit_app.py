@@ -1269,6 +1269,7 @@ def create_nfl_app():
       st.write("No teams selected")
     st.write('')
     st.write('')
+    st.write('')
     st.subheader('Remaining Weeks:')
     st.text('Select the upcoming week for the starting week. Select the week you want the algorithm to stop at. If yiu select one week, it will take about 20 minutes. All 20 weeks will take 5-6 hours. Ending Week must be greater than or equa to Starting Week.')
     st.write(":red[Week 13 is Thanksgiving/Black Friday Week and Week 18 is Christmas Week]")

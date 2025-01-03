@@ -1331,7 +1331,7 @@ st.write('')
 st.write('')
 
 st.subheader('NFL Team Rankings')
-st.text('The Ranking represents how much a team would either win (positive number) or lose (negative number) by to an average NFL team. 0 means the team is perfectly average')
+st.write('The Ranking represents :red[how much a team would either win (positive number) or lose (negative number) by to an average NFL team]. 0 means the team is perfectly average')
 st.write('')
 
 team_rankings = [

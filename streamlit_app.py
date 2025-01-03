@@ -1270,7 +1270,12 @@ def create_nfl_app():
 
 if __name__ == "__main__":
     create_nfl_app()
+st.write('')
+st.write('')
 
+st.subtitle('NFL Team Rankings')
+st.text('The Ranking represents how much a team would either win (positive number) or lose (negative number) by to an average NFL team. 0 means the team is perfectly average')
+st.write('')
 def create_nfl_rankings():
     team_rankings = [
         0,-15,-14.5,-14,-13.5,-13,-12.5,-12,-11.5,-11,-10.5,-10,-9.5,-9,-8.5,-8,-7.5,

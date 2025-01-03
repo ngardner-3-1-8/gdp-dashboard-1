@@ -1346,6 +1346,7 @@ st.subheader('NFL Team Rankings')
 st.write('The Ranking represents :red[how much a team would either win (positive number) or lose (negative number) by to an average NFL team]. 0 means the team is perfectly average')
 st.write('')
 
+default_az_rank = 1
 default_atl_rank = 1
 default_bal_rank = 0
 default_buf_rank = 7

@@ -1249,22 +1249,24 @@ def create_nfl_app():
 
     selected_teams = st.multiselect("Prohibited Picks:", options=nfl_teams)
     picked_teams = selected_teams if selected_teams else []
-    st.text("Week 13 is Thanksgiving/Black Friday Week and Week 18 is Christmas Week")
-    starting_week = st.selectbox("Select Starting Week:", options=range(1, 21))
-
-    # Create a dynamic range for ending week based on starting week
-    ending_week_options = range(starting_week, 21)
-    ending_week = st.selectbox("Select Ending Week:", options=ending_week_options)
-
-
     if picked_teams:
         st.write("You selected:")
         for team in picked_teams:
             st.write(f"- {team}")
-        st.write(f"Starting Week: {starting_week}")
-        st.write(f"Ending Week: {ending_week}")
     else:
       st.write("No teams selected")
+    st.write('')
+    st.write('')
+    st.text("Week 13 is Thanksgiving/Black Friday Week and Week 18 is Christmas Week")
+    starting_week = st.selectbox("Select Starting Week:", options=range(1, 21))
+    if starting_week:
+        st.write(f"Starting Week: {starting_week}")
+    # Create a dynamic range for ending week based on starting week
+    ending_week_options = range(starting_week, 21)
+    ending_week = st.selectbox("Select Ending Week:", options=ending_week_options)
+    if ending_week:
+        st.write(f"Ending Week: {ending_week}")
+
 
 if __name__ == "__main__":
     create_nfl_app()

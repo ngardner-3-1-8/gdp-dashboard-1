@@ -43,40 +43,40 @@ def collect_schedule_travel_ranking_data(pd):
     last_away_game = {}
     # Initialize dictionaries to store cumulative rest advantage for each team
     cumulative_advantage = {}
-    # 0: Stadium | 1: Lattitude | 2: Longitude | 3: Timezone | 4: Division | 5: Start of 2023 Season Rank | 6: Current Rank | 7: Average points better than Average Team (Used for Spread and Odds Calculation)
+    # 0: Stadium | 1: Lattitude | 2: Longitude | 3: Timezone | 4: Division | 5: Start of 2023 Season Rank | 6: Current Rank | 7: Average points better than Average Team (Used for Spread and Odds Calculation) | 8: Home Advantage | 9: Reduction of Home Advantage when Away Team #Calculated here: https://nfllines.com/nfl-2023-home-field-advantage-values/
     stadiums = {
-        'Arizona Cardinals': ['State Farm Stadium', 33.5277, -112.262608, 'America/Denver', 'NFC West', 26, 24, az_rank],
-        'Atlanta Falcons': ['Mercedez-Benz Stadium', 33.757614, -84.400972, 'America/New_York', 'NFC South', 13, 18, atl_rank],
-        'Baltimore Ravens': ['M&T Stadium', 39.277969, -76.622767, 'America/New_York', 'AFC North', 3, 3, bal_rank],
-        'Buffalo Bills': ['Highmark Stadium', 42.773739, -78.786978, 'America/New_York', 'AFC East', 5, 7, buf_rank],
-        'Carolina Panthers': ['Bank of America Stadium', 35.225808, -80.852861, 'America/New_York', 'NFC South', 32, 32, car_rank],
-        'Chicago Bears': ['Soldier Field', 41.862306, -87.616672, 'America/Chicago', 'NFC North', 15, 19, chi_rank],
-        'Cincinnati Bengals': ['Paycor Stadium', 39.095442, -84.516039, 'America/New_York', 'AFC North', 6, 11, cin_rank],
-        'Cleveland Browns': ['Cleveland Browns Stadium', 41.506022, -81.699564, 'America/New_York', 'AFC North', 17, 20, cle_rank],
-        'Dallas Cowboys': ['AT&T Stadium', 32.747778, -97.092778, 'America/Chicago', 'NFC East', 9, 6, dal_rank],
-        'Denver Broncos': ['Empower Field at Mile High', 39.743936, -105.020097, 'America/Denver', 'AFC West', 29, 29, den_rank],
-        'Detroit Lions': ['Ford Field', 42.340156, -83.045808, 'America/New_York', 'NFC North', 4, 5, det_rank],
-        'Green Bay Packers': ['Lambeau Field', 44.501306, -88.062167, 'America/Chicago', 'NFC North', 10, 12, gb_rank],
-        'Houston Texans': ['NRG Stadium', 29.684781, -95.410956, 'America/Chicago', 'AFC South', 7, 8, hou_rank],
-        'Indianapolis Colts': ['Lucas Oil Stadium', 39.760056, -86.163806, 'America/New_York', 'AFC South', 20, 19, ind_rank],
-        'Jacksonville Jaguars': ['Everbank Stadium', 30.323925, -81.637356, 'America/New_York', 'AFC South', 18, 17, jax_rank],
-        'Kansas City Chiefs': ['Arrowhead Stadium', 39.048786, -94.484566, 'America/Chicago', 'AFC West', 1, 1, kc_rank],
-        'Las Vegas Raiders': ['Allegiant Stadium', 36.090794, -115.183952, 'America/Los_Angeles', 'AFC West', 28, 26, lv_rank],
-        'Los Angeles Chargers': ['SoFi Stadium', 33.953587, -118.33963, 'America/Los_Angeles', 'AFC West', 14, 17, lac_rank],
-        'Los Angeles Rams': ['SoFi Stadium', 33.953587, -118.33963, 'America/Los_Angeles', 'NFC West', 16, 15, lar_rank],
-        'Miami Dolphins': ['Hard Rock Stadium', 25.957919, -80.238842, 'America/New_York', 'AFC East', 12, 11, mia_rank],
-        'Minnesota Vikings': ['U.S Bank Stadium', 44.973881, -93.258094, 'America/Chicago', 'NFC North', 24, 22, min_rank],
-        'New England Patriots': ['Gillette Stadium', 42.090925, -71.26435, 'America/New_York', 'AFC East', 31, 27, ne_rank],
-        'New Orleans Saints': ['Caesars Superdome', 29.950931, -90.081364, 'America/Chicago', 'NFC South', 23, 16, no_rank],
-        'New York Giants': ['MetLife Stadium', 40.812194, -74.076983, 'America/New_York', 'NFC East', 27, 31, nyg_rank],
-        'New York Jets': ['MetLife Stadium', 40.812194, -74.076983, 'America/New_York', 'AFC East', 11, 13, nyj_rank],
-        'Philadelphia Eagles': ['Lincoln Financial Field', 39.900775, -75.167453, 'America/New_York', 'NFC East', 8, 4, phi_rank],
-        'Pittsburgh Steelers': ['Acrisure Stadium', 40.446786, -80.015761, 'America/New_York', 'AFC North', 19, 16, pit_rank],
-        'San Francisco 49ers': ['Levi\'s Stadium', 37.713486, -122.386256, 'America/Los_Angeles', 'NFC West', 2, 1.5, sf_rank],
-        'Seattle Seahawks': ['Lumen Field', 47.595153, -122.331625, 'America/Los_Angeles', 'NFC West', 22, 19, sea_rank],
-        'Tampa Bay Buccaneers': ['Raymomd James Stadium', 27.975967, -82.50335, 'America/New_York', 'NFC South', 21, 21, tb_rank],
-        'Tennessee Titans': ['Nissan Stadium', 36.166461, -86.771289, 'America/Chicago', 'AFC South', 20, 24, ten_rank],
-        'Washington Commanders': ['FedExField', 38.907697, -76.864517, 'America/New_York', 'NFC East', 25, 28, was_rank]
+        'Arizona Cardinals': ['State Farm Stadium', 33.5277, -112.262608, 'America/Denver', 'NFC West', 26, 24, az_rank, az_home_adv, az_away_adj],
+        'Atlanta Falcons': ['Mercedez-Benz Stadium', 33.757614, -84.400972, 'America/New_York', 'NFC South', 13, 18, atl_rank, atl_home_adv, atl_away_adj],
+        'Baltimore Ravens': ['M&T Stadium', 39.277969, -76.622767, 'America/New_York', 'AFC North', 3, 3, bal_rank, bal_home_adv, bal_away_adj],
+        'Buffalo Bills': ['Highmark Stadium', 42.773739, -78.786978, 'America/New_York', 'AFC East', 5, 7, buf_rank, buf_home_adv, buf_away_adj],
+        'Carolina Panthers': ['Bank of America Stadium', 35.225808, -80.852861, 'America/New_York', 'NFC South', 32, 32, car_rank, car_home_adv, car_away_adj],
+        'Chicago Bears': ['Soldier Field', 41.862306, -87.616672, 'America/Chicago', 'NFC North', 15, 19, chi_rank, chi_home_adv, chi_away_adj],
+        'Cincinnati Bengals': ['Paycor Stadium', 39.095442, -84.516039, 'America/New_York', 'AFC North', 6, 11, cin_rank, cin_home_adv, cin_away_adj],
+        'Cleveland Browns': ['Cleveland Browns Stadium', 41.506022, -81.699564, 'America/New_York', 'AFC North', 17, 20, cle_rank, cle_home_adv, cle_away_adj],
+        'Dallas Cowboys': ['AT&T Stadium', 32.747778, -97.092778, 'America/Chicago', 'NFC East', 9, 6, dal_rank, dal_home_adv, dal_away_adj],
+        'Denver Broncos': ['Empower Field at Mile High', 39.743936, -105.020097, 'America/Denver', 'AFC West', 29, 29, den_rank, den_home_adv, den_away_adj],
+        'Detroit Lions': ['Ford Field', 42.340156, -83.045808, 'America/New_York', 'NFC North', 4, 5, det_rank, det_home_adv, det_away_adj],
+        'Green Bay Packers': ['Lambeau Field', 44.501306, -88.062167, 'America/Chicago', 'NFC North', 10, 12, gb_rank, gb_home_adv, gb_away_adj],
+        'Houston Texans': ['NRG Stadium', 29.684781, -95.410956, 'America/Chicago', 'AFC South', 7, 8, hou_rank, hou_home_adv, hou_away_adj],
+        'Indianapolis Colts': ['Lucas Oil Stadium', 39.760056, -86.163806, 'America/New_York', 'AFC South', 20, 19, ind_rank, ind_home_adv, ind_away_adj],
+        'Jacksonville Jaguars': ['Everbank Stadium', 30.323925, -81.637356, 'America/New_York', 'AFC South', 18, 17, jax_rank, jax_home_adv, jax_away_adj],
+        'Kansas City Chiefs': ['Arrowhead Stadium', 39.048786, -94.484566, 'America/Chicago', 'AFC West', 1, 1, kc_rank, kc_home_adv, kc_away_adj],
+        'Las Vegas Raiders': ['Allegiant Stadium', 36.090794, -115.183952, 'America/Los_Angeles', 'AFC West', 28, 26, lv_rank, lv_home_adv, lv_away_adj],
+        'Los Angeles Chargers': ['SoFi Stadium', 33.953587, -118.33963, 'America/Los_Angeles', 'AFC West', 14, 17, lac_rank, lac_home_adv, lac_away_adj],
+        'Los Angeles Rams': ['SoFi Stadium', 33.953587, -118.33963, 'America/Los_Angeles', 'NFC West', 16, 15, lar_rank, lar_home_adv, lar_away_adj],
+        'Miami Dolphins': ['Hard Rock Stadium', 25.957919, -80.238842, 'America/New_York', 'AFC East', 12, 11, mia_rank, mia_home_adv, mia_away_adj],
+        'Minnesota Vikings': ['U.S Bank Stadium', 44.973881, -93.258094, 'America/Chicago', 'NFC North', 24, 22, min_rank, min_home_adv, min_away_adj],
+        'New England Patriots': ['Gillette Stadium', 42.090925, -71.26435, 'America/New_York', 'AFC East', 31, 27, ne_rank, ne_home_adv, ne_away_adj],
+        'New Orleans Saints': ['Caesars Superdome', 29.950931, -90.081364, 'America/Chicago', 'NFC South', 23, 16, no_rank, no_home_adv, no_away_adj],
+        'New York Giants': ['MetLife Stadium', 40.812194, -74.076983, 'America/New_York', 'NFC East', 27, 31, nyg_ran, nyg_home_adv, nyg_away_adjk],
+        'New York Jets': ['MetLife Stadium', 40.812194, -74.076983, 'America/New_York', 'AFC East', 11, 13, nyj_rank, nyj_home_adv, nyj_away_adj],
+        'Philadelphia Eagles': ['Lincoln Financial Field', 39.900775, -75.167453, 'America/New_York', 'NFC East', 8, 4, phi_rank, phi_home_adv, phi_away_adj],
+        'Pittsburgh Steelers': ['Acrisure Stadium', 40.446786, -80.015761, 'America/New_York', 'AFC North', 19, 16, pit_rank, pit_home_adv, pit_away_adj],
+        'San Francisco 49ers': ['Levi\'s Stadium', 37.713486, -122.386256, 'America/Los_Angeles', 'NFC West', 2, 1.5, sf_rank, sf_home_adv, sf_away_adj],
+        'Seattle Seahawks': ['Lumen Field', 47.595153, -122.331625, 'America/Los_Angeles', 'NFC West', 22, 19, sea_rank, sea_home_adv, sea_away_adj],
+        'Tampa Bay Buccaneers': ['Raymomd James Stadium', 27.975967, -82.50335, 'America/New_York', 'NFC South', 21, 21, tb_rank, tb_home_adv, tb_away_adj],
+        'Tennessee Titans': ['Nissan Stadium', 36.166461, -86.771289, 'America/Chicago', 'AFC South', 20, 24, ten_rank, ten_home_adv, ten_away_adj],
+        'Washington Commanders': ['FedExField', 38.907697, -76.864517, 'America/New_York', 'NFC East', 25, 28, was_rank, was_home_adv, was_away_adj]
     }
 
     #Get the distances traveled
@@ -317,20 +317,20 @@ def collect_schedule_travel_ranking_data(pd):
     df['Preseason Winner'] = df.apply(lambda row: row['Away Team'] if row['Away Team Preseason Rank'] < row['Home Team Preseason Rank'] else (row['Home Team'] if row['Away Team Preseason Rank'] > row['Home Team Preseason Rank'] else 'Tie'), axis=1)
     df['Preseason Difference'] = abs(df['Away Team Preseason Rank'] - df['Home Team Preseason Rank'])
 
-    df['Away Team Adjusted Preseason Rank'] = df['Away Team'].map(lambda team: stadiums[team][5]) + np.where((df['Away Travel Advantage'] < -100) & (df['Home Stadium'] == df['Actual Stadium']), 1.5, 0) - pd.to_numeric(df['Away Timezone Advantage'], errors='coerce').fillna(0) - pd.to_numeric(df['Weekly Away Rest Advantage'], errors='coerce').fillna(0) - .125*df['Away Team Current Week Cumulative Rest Advantage']
-    df['Home Team Adjusted Preseason Rank'] = df['Home Team'].map(lambda team: stadiums[team][5]) - np.where((df['Away Travel Advantage'] < -100) & (df['Home Stadium'] == df['Actual Stadium']), 1.5, 0) - pd.to_numeric(df['Home Timezone Advantage'], errors='coerce').fillna(0) - pd.to_numeric(df['Weekly Home Rest Advantage'], errors='coerce').fillna(0) - .125*df['Home Team Current Week Cumulative Rest Advantage']
+    df['Away Team Adjusted Preseason Rank'] = df['Away Team'].map(lambda team: stadiums[team][5]) + np.where((df['Away Travel Advantage'] < -100) & (df['Home Stadium'] == df['Actual Stadium']), -.125, 0) - pd.to_numeric(df['Away Timezone Advantage']*.25, errors='coerce').fillna(0)-pd.to_numeric(df['Weekly Away Rest Advantage'], errors='coerce').fillna(0)-.125*df['Away Team Current Week Cumulative Rest Advantage' - np.where((df['Away Team'].map(lambda team: stadiums[team][1])] != df['Home Team'].map(lambda team: stadiums[team][1])]), df['Away Team'].map(lambda team: stadiums[team][9])], 0)]
+    df['Home Team Adjusted Preseason Rank'] = df['Home Team'].map(lambda team: stadiums[team][5]) - np.where((df['Away Travel Advantage'] < -100) & (df['Home Stadium'] == df['Actual Stadium']), .125, 0) - pd.to_numeric(df['Home Timezone Advantage']*.25, errors='coerce').fillna(0)-pd.to_numeric(df['Weekly Home Rest Advantage'], errors='coerce').fillna(0)-.125*df['Home Team Current Week Cumulative Rest Advantage'+ np.where((df['Away Team'].map(lambda team: stadiums[team][1])] != df['Home Team'].map(lambda team: stadiums[team][1])]), df['Home Team'].map(lambda team: stadiums[team][8])]
 
     df['Adjusted Preseason Winner'] = df.apply(lambda row: row['Away Team'] if row['Away Team Adjusted Preseason Rank'] < row['Home Team Adjusted Preseason Rank'] else (row['Home Team'] if row['Away Team Adjusted Preseason Rank'] > row['Home Team Adjusted Preseason Rank'] else 'Tie'), axis=1)
     df['Adjusted Preseason Difference'] = abs(df['Away Team Adjusted Preseason Rank'] - df['Home Team Adjusted Preseason Rank'])
 
-    df['Away Team Current Rank'] = df['Away Team'].map(lambda team: stadiums[team][6] if team in stadiums else 'NA')
-    df['Home Team Current Rank'] = df['Home Team'].map(lambda team: stadiums[team][6] if team in stadiums else 'NA')
+    df['Away Team Current Rank'] = df['Away Team'].map(lambda team: stadiums[team][7] if team in stadiums else 'NA')
+    df['Home Team Current Rank'] = df['Home Team'].map(lambda team: stadiums[team][7] if team in stadiums else 'NA')
 
     df['Current Winner'] = df.apply(lambda row: row['Away Team'] if row['Away Team Current Rank'] < row['Home Team Current Rank'] else (row['Home Team'] if row['Away Team Current Rank'] > row['Home Team Current Rank'] else 'Tie'), axis=1)
     df['Current Difference'] = abs(df['Away Team Current Rank'] - df['Home Team Current Rank'])
 
-    df['Away Team Adjusted Current Rank'] = df['Away Team'].map(lambda team: stadiums[team][6]) + np.where((df['Away Travel Advantage'] < -100) & (df['Home Stadium'] == df['Actual Stadium']), 1.5, 0) - pd.to_numeric(df['Away Timezone Advantage'], errors='coerce').fillna(0)-pd.to_numeric(df['Weekly Away Rest Advantage'], errors='coerce').fillna(0)-.125*df['Away Team Current Week Cumulative Rest Advantage']
-    df['Home Team Adjusted Current Rank'] = df['Home Team'].map(lambda team: stadiums[team][6]) - np.where((df['Away Travel Advantage'] < -100) & (df['Home Stadium'] == df['Actual Stadium']), 1.5, 0) - pd.to_numeric(df['Home Timezone Advantage'], errors='coerce').fillna(0)-pd.to_numeric(df['Weekly Home Rest Advantage'], errors='coerce').fillna(0)-.125*df['Home Team Current Week Cumulative Rest Advantage']
+    df['Away Team Adjusted Current Rank'] = df['Away Team'].map(lambda team: stadiums[team][7]) + np.where((df['Away Travel Advantage'] < -100) & (df['Home Stadium'] == df['Actual Stadium']), -.125, 0) - pd.to_numeric(df['Away Timezone Advantage']*.25, errors='coerce').fillna(0)-pd.to_numeric(df['Weekly Away Rest Advantage'], errors='coerce').fillna(0)-.125*df['Away Team Current Week Cumulative Rest Advantage' - np.where((df['Away Team'].map(lambda team: stadiums[team][1])] != df['Home Team'].map(lambda team: stadiums[team][1])]), df['Away Team'].map(lambda team: stadiums[team][9])], 0)]
+    df['Home Team Adjusted Current Rank'] = df['Home Team'].map(lambda team: stadiums[team][7]) - np.where((df['Away Travel Advantage'] < -100) & (df['Home Stadium'] == df['Actual Stadium']), .125, 0) - pd.to_numeric(df['Home Timezone Advantage']*.25, errors='coerce').fillna(0)-pd.to_numeric(df['Weekly Home Rest Advantage'], errors='coerce').fillna(0)-.125*df['Home Team Current Week Cumulative Rest Advantage'+ np.where((df['Away Team'].map(lambda team: stadiums[team][1])] != df['Home Team'].map(lambda team: stadiums[team][1])]), df['Home Team'].map(lambda team: stadiums[team][8])]
 
     df['Adjusted Current Winner'] = df.apply(lambda row: row['Away Team'] if row['Away Team Adjusted Current Rank'] < row['Home Team Adjusted Current Rank'] else (row['Home Team'] if row['Away Team Adjusted Current Rank'] > row['Home Team Adjusted Current Rank'] else 'Tie'), axis=1)
     df['Adjusted Current Difference'] = abs(df['Away Team Adjusted Current Rank'] - df['Home Team Adjusted Current Rank'])
@@ -1378,6 +1378,76 @@ default_sea_rank = 1
 default_tb_rank = 0
 default_ten_rank = 5
 default_was_rank = 0
+
+
+az_home_adv = 1.5
+atl_home_adv = 2.3
+bal_home_adv = 3.8
+buf_home_adv = 3.6
+car_home_adv = 1.9
+chi_home_adv = 1.5
+cin_home_adv = 2.1
+cle_home_adv = 1.3
+dal_home_adv = 3.7
+den_home_adv = 2.6
+det_home_adv = 2.1
+gb_home_adv = 3.8
+hou_home_adv = 1.9
+ind_home_adv = 2.6
+jax_home_adv = 1.4
+kc_home_adv = 3.8
+lv_home_adv = 1.4
+lac_home_adv = 2.6
+lar_home_adv = 2.6
+mia_home_adv = 2.3
+min_home_adv = 3.1
+ne_home_adv = 3.9
+no_home_adv = 3.1
+nyg_home_adv = 1.1
+nyj_home_adv = 1.2
+phi_home_adv = 3.3
+pit_home_adv = 3.5
+sf_home_adv = 3.6
+sea_home_adv = 2.6
+tb_home_adv = 2.0
+ten_home_adv = 2.1
+was_home_adv = 1.3
+
+
+az_away_adj = -.3
+atl_away_adj = .2
+bal_away_adj = -1.5
+buf_away_adj = -1.1
+car_away_adj = .5
+chi_away_adj = 1
+cin_away_adj = -.2
+cle_away_adj = 1.5
+dal_away_adj = -1.2
+den_away_adj = .6
+det_away_adj = .7
+gb_away_adj = -.1
+hou_away_adj = .7
+ind_away_adj = -.2
+jax_away_adj = 1.6
+kc_away_adj = -1.6
+lv_away_adj = -.3
+lac_away_adj = -.8
+lar_away_adj = 1.3
+mia_away_adj = 1.4
+min_away_adj = -.5
+ne_away_adj = -1.8
+no_away_adj = -1.6
+nyg_away_adj = .9
+nyj_away_adj = 1.9
+phi_away_adj = -.2
+pit_away_adj = -.2
+sf_away_adj = -1.1
+sea_away_adj = -.4
+tb_away_adj = -.1
+ten_away_adj = .4
+was_away_adj = .6
+
+
 
 team_rankings = [
     "Default", 0,-15,-14.5,-14,-13.5,-13,-12.5,-12,-11.5,-11,-10.5,-10,-9.5,-9,-8.5,-8,-7.5,

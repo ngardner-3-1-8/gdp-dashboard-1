@@ -1261,16 +1261,16 @@ def create_nfl_app():
     st.write('')
     st.subheader('Remaining Weeks:')
     st.text('Select the upcoming week for the starting week. Select the week you want the algorithm to stop at. If yiu select one week, it will take about 20 minutes. All 20 weeks will take 5-6 hours. Ending Week must be greater than or equa to Starting Week.')
-    st.text(":red[Week 13 is Thanksgiving/Black Friday Week and Week 18 is Christmas Week]")
+    st.write(":red[Week 13 is Thanksgiving/Black Friday Week and Week 18 is Christmas Week]")
     starting_week = st.selectbox("Select Starting Week:", options=range(1, 21))
-    if starting_week:
-        st.write(f"Selected Starting Week: {starting_week}")
+    #if starting_week:
+        #st.write(f"Selected Starting Week: {starting_week}")
     # Create a dynamic range for ending week based on starting week
     st.write('')
     ending_week_options = range(starting_week, 21)
     ending_week = st.selectbox("Select Ending Week:", options=ending_week_options)
-    if ending_week:
-        st.write(f"Selected Ending Week: {ending_week}")
+    #if ending_week:
+        #st.write(f"Selected Ending Week: {ending_week}")
 
 
 if __name__ == "__main__":

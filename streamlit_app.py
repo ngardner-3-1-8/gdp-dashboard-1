@@ -1378,16 +1378,16 @@ st.write('')
 st.write('')
 st.subheader('Select Constraints')
 st.write('These constraints will not work 100% of the time (For example in week 18, all Games are divisional matchups). However, it will require a team to be so heavily favored that the impact of the constrained factor should be minimal.')
-st.checkbox('Avoid Away Teams on Short Rest')
-st.checkbox('Avoid Close Divisional Matchups')
-st.checkbox('Avoid 3 games in 10 days')
-st.checkbox('Avoid 4 games in 17 days')  
-st.checkbox('Avoid Away Teams in Close Games')
-st.checkbox('Avoid Rest Disadvantage')
-st.checkbox('Avoid Thursday Night Games')
-st.checkbox('Avoid Teams on Back to Back Away Games')
-st.checkbox('Avoid International Games')
-st.checkbox('Avoid Teams with Rest Disadvantage')
+avoid_away_teams_on_short_rest = 1 if st.checkbox('Avoid Away Teams on Short Rest') else 0
+avoid_close_divisional_matchups = 1 if st.checkbox('Avoid Close Divisional Matchups') else 0
+avoid_3_games_in_10_days = 1 if st.checkbox('Avoid 3 games in 10 days') else 0
+avoid_4_games_in_17_days = 1 if st.checkbox('Avoid 4 games in 17 days') else 0
+avoid_away_teams_in_close_matchups = 1 if st.checkbox('Avoid Away Teams in Close Games') else 0
+avoid_cumulative_rest_disadvantage = 1 if st.checkbox('Avoid Cumulative Rest Disadvantage') else 0
+avoid_thursday_night = 1 if st.checkbox('Avoid Thursday Night Games') else 0
+avoid_back_to_back_away = 1 if st.checkbox('Avoid Teams on Back to Back Away Games') else 0
+avoid_international_game = 1 if st.checkbox('Avoid International Games') else 0
+avoid_teams_with_rest_disadvantage = 1 if st.checkbox('Avoid Teams with Rest Disadvantage') else 0
 st.write('')
 st.write('')
 st.write('')

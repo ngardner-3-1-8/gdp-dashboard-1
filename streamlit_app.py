@@ -1230,7 +1230,7 @@ def calculate_ev():
 
 st.title("NFL Survivor Optimization")
 st.subheader("The second best Circa Survivor Contest optimizer")
-st.text("Alright, clowns. This site is built to help you optimize your picks for the Circa Survivor contest (Eventually other contests). Simply input which week you're in, your team rankings, and the algorithm will do the rest. For a full season, Running the algorith will take up to 5 hours or more. Good luck!")
+st.text("Alright, clowns. This site is built to help you optimize your picks for the Circa Survivor contest (Eventually other contests). :red[This tool is just for informational use. It does not take into account injuries or certain other factors. Do not use this tool as your only source of information.] Simply input which week you're in, your team rankings, constraints, etc... and the algorithm will do the rest. For a full season, Running the algorith will take up to 5 hours or more. Good luck!")
 st.write('')
 st.write('')
 st.subheader('Picked Teams:')
@@ -1322,6 +1322,27 @@ def create_nfl_rankings():
 if __name__ == "__main__":
     create_nfl_rankings()
 
+st.write('')
+st.write('')
+st.write('')
+st.subheader('Select Constraints')
+st.write('Avoid Away Games')
+st.write('Avoid Home Games')
+st.write('Avoid 3 games in 10 days')
+st.write('Avoid 4 games in 17 days')  
+st.write('Avoid Short Rest')
+st.write('Avoid Rest Disadvantage')
+
+st.write('')
+st.write('')
+st.write('')
+st.subheader('Get Optimized Survivor Picks')
+st.text('This button will find the best picks for each week. It will pump out 200 solutions.')
+st.write('The first 100 will be :red[based purely on EV]. that is a complicated formula based on predicted pick percentage of each team in each week, and their chances of winning that week.')
+st.write('The second 100 solutions will be based on the :red[rankings and constraints you provided]')
+st.write('All solutions will abide by the prohibited teams and the weeks you selected')
+st.write('')
+st.write('')
 schedule_data_retrieved = False #Initialize on first run
 
 if st.button("Get Optimized Survivor Picks"):

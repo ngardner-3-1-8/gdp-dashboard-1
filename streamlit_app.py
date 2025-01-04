@@ -1704,10 +1704,15 @@ if st.button("Get Optimized Survivor Picks"):
         st.write("Step 3 Completed: Public Pick Percentages Predicted")
         #nfl_schedule_circa_df_2 = manually_adjust_pick_predictions()
         st.write("Step 4/9: Calculating Expected Value (Could take several hours)...")
-        with st.spinner('Processing...'):
-            full_df_with_ev = calculate_ev()
-            st.write("Processing Complete!")
-            st.dataframe(full_df_with_ev)
+        if use_cached_expected_value == 1:
+            st.write('- Using Cached Expected Values...')
+            full_df_with_ev = pd.read_csv('NFL Schedule with full ev_circa.csv')
+        else:
+            sy.write('- Calculating Live EV...')
+            with st.spinner('Processing...'):
+                full_df_with_ev = calculate_ev()
+                st.write("Processing Complete!")
+                st.dataframe(full_df_with_ev)
         st.write("Step 4 Completed: Expected Value Calculated")
         #get_survivor_picks_based_on_ev()
         #get_survivor_picks_based_on_internal_rankings()

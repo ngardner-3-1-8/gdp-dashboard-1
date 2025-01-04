@@ -1708,7 +1708,7 @@ if st.button("Get Optimized Survivor Picks"):
             st.write('- Using Cached Expected Values...')
             full_df_with_ev = pd.read_csv('NFL Schedule with full ev_circa.csv')
         else:
-            sy.write('- Calculating Live EV...')
+            st.write('- Calculating Live EV...')
             with st.spinner('Processing...'):
                 full_df_with_ev = calculate_ev()
                 st.write("Processing Complete!")

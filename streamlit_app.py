@@ -1222,7 +1222,174 @@ def calculate_ev():
     nfl_schedule_circa_pick_percentages_df.to_csv("NFL Schedule with full ev_circa.csv", index=False)
     return nfl_schedule_circa_pick_percentages_df
 
+def get_survivor_picks_based_on_ev():
+    # Loop through 100 iterations
+    for iteration in range(100):
+        df = full_df_with_ev
+        df['Week'] = df['Week'].str.extract('(\d+)').astype(int)
 
+
+
+        #Number of weeks that have already been played
+        weeks_completed = 0
+
+        # Teams already picked - Team name in quotes and separated by commas
+
+        # Filter out weeks that have already been played and reset index
+        df = df[df['Week'] > weeks_completed].reset_index(drop=True)
+
+        # Filter out already picked teams
+        df = df[~df['Adjusted Current Winner'].isin(picked_teams)].reset_index(drop=True)
+        #print(df)
+        # Create the solver
+        solver = pywraplp.Solver.CreateSolver('SCIP')
+
+        # Create binary variables to represent the picks, and store them in a dictionary for easy lookup
+        picks = {}
+        for i in range(len(df)):
+            picks[i] = solver.IntVar(0, 1, 'pick_%i' % i)
+
+        # Add the constraints
+        for week in df['Week'].unique():
+            # One team per week
+            solver.Add(solver.Sum([picks[i] for i in range(len(df)) if df.loc[i, 'Week'] == week]) == 1)
+
+        for team in df['Adjusted Current Winner'].unique():
+            # Can't pick a team more than once
+            solver.Add(solver.Sum([picks[i] for i in range(len(df)) if df.loc[i, 'Adjusted Current Winner'] == team]) <= 1)
+
+        for i in range(len(df)):
+            # Must pick from 'Adjusted Current Winner'
+            #if df.loc[i, 'Adjusted Current Winner'] != df.loc[i, 'Home Team']:
+                #solver.Add(picks[i] == 0)
+
+            # Must pick from 'Same Winner?'
+            if df.loc[i, 'Same Winner?'] != 'Same':
+                solver.Add(picks[i] == 0)
+
+            # Can only pick an away team if 'Adjusted Current Difference' > 10
+            if df.loc[i, 'Away Team'] == df.loc[i, 'Adjusted Current Winner'] and df.loc[i, 'Adjusted Current Difference'] < 10:
+                solver.Add(picks[i] == 0)
+            #if df.loc[i, 'Away Team'] == df.loc[i, 'Adjusted Current Winner'] and df.loc[i, 'Divisional Matchup?'] == 'Divisional':
+                #solver.Add(picks[i] == 0)
+            if df.loc[i, 'Away Team'] == df.loc[i, 'Adjusted Current Winner'] and df.loc[i, 'Back to Back Away Games'] == 'True':
+                solver.Add(picks[i] == 0)
+
+            # If 'Divisional Matchup?' is "Divisional", can only pick if 'Adjusted Current Difference' > 10
+            if df.loc[i, 'Divisional Matchup?'] == 'Divisional' and df.loc[i, 'Adjusted Current Difference'] < 10:
+                solver.Add(picks[i] == 0)
+            # Constraints for short rest and 4 games in 17 days (only if team is the Adjusted Current Winner)
+            if df.loc[i, 'Away Team Short Rest'] == 'Yes' and df.loc[i, 'Away Team'] == df.loc[i, 'Adjusted Current Winner']:
+                solver.Add(picks[i] == 0)
+            if df.loc[i, 'Home Team 4 games in 17 days'] == 'Yes' and df.loc[i, 'Home Team'] == df.loc[i, 'Adjusted Current Winner'] and df.loc[i, 'Away Team 4 games in 17 days'] == 'No':
+                solver.Add(picks[i] == 0)
+            if df.loc[i, 'Away Team 4 games in 17 days'] == 'Yes' and df.loc[i, 'Away Team'] == df.loc[i, 'Adjusted Current Winner'] and df.loc[i, 'Home Team 4 games in 17 days'] == 'No':
+                solver.Add(picks[i] == 0)
+            if df.loc[i, 'Home Team 3 games in 10 days'] == 'Yes' and df.loc[i, 'Home Team'] == df.loc[i, 'Adjusted Current Winner'] and df.loc[i, 'Away Team 3 games in 10 days'] == 'No':
+                solver.Add(picks[i] == 0)
+            if df.loc[i, 'Away Team 3 games in 10 days'] == 'Yes' and df.loc[i, 'Away Team'] == df.loc[i, 'Adjusted Current Winner'] and df.loc[i, 'Home Team 3 games in 10 days'] == 'No':
+                solver.Add(picks[i] == 0)
+            if df.loc[i, 'Adjusted Current Winner'] in picked_teams:
+                solver.Add(picks[i] == 0)
+        # Dynamically create the forbidden solution list
+        forbidden_solutions_1 = []
+        if iteration > 0: 
+            for previous_iteration in range(iteration):
+                # Load the picks from the previous iteration
+                previous_picks_df = pd.read_csv(f"picks_ev_circa_{previous_iteration + 1}.csv")
+
+                # Extract the forbidden solution for this iteration
+                forbidden_solution_1 = previous_picks_df['Adjusted Current Winner'].tolist()
+                forbidden_solutions_1.append(forbidden_solution_1)
+
+        # Add constraints for all forbidden solutions
+        for forbidden_solution_1 in forbidden_solutions_1:
+            # Get the indices of the forbidden solution in the DataFrame
+            forbidden_indices_1 = []
+            for i in range(len(df)):
+                week_index = df.loc[i, 'Week'] - (weeks_completed + 1)
+                if week_index >= 0 and week_index < len(forbidden_solution_1):
+                    if (df.loc[i, 'Adjusted Current Winner'] == forbidden_solution_1[week_index]):
+                        forbidden_indices_1.append(i)
+
+            # Add the constraint that at least one of these picks should not be selected
+            solver.Add(solver.Sum([1 - picks[i] for i in forbidden_indices_1]) >= 1)
+
+
+        # Add the constraint for San Francisco 49ers in week 11
+    #    for i in range(len(df)):
+    #        if df.loc[i, 'Home Team'] == 'San Francisco 49ers' and df.loc[i, 'Week'] == 15:
+    #            solver.Add(picks[i] == 0)
+
+        # Objective: maximize the sum of Adjusted Current Difference of each game picked
+        solver.Maximize(solver.Sum([picks[i] * (df.loc[i, 'Home Team EV'] if df.loc[i, 'Adjusted Current Winner'] == df.loc[i, 'Home Team'] else df.loc[i, 'Away Team EV']) for i in range(len(df))]))
+
+        # Solve the problem and print the solution
+        status = solver.Solve()
+
+        if status == pywraplp.Solver.OPTIMAL:
+            print('Solution found!')
+            print('Objective value =', solver.Objective().Value())
+
+            # Initialize sums
+            sum_preseason_difference = 0
+            sum_adjusted_preseason_difference = 0
+            sum_current_difference = 0
+            sum_adjusted_current_difference = 0
+            sum_ev = 0
+
+            # Initialize picks_df
+            picks_df = pd.DataFrame(columns=df.columns)
+
+            for i in range(len(df)):
+                if picks[i].solution_value() > 0:
+                    # Determine if it's a divisional game and if the picked team is the home team
+                    divisional_game = '(Divisional)' if df.loc[i, 'Divisional Matchup?'] == 'Divisional' else ''
+                    home_team = '(Home Team)' if df.loc[i, 'Adjusted Current Winner'] == df.loc[i, 'Home Team'] else '(Away Team)'
+
+                    # Get differences
+                    preseason_difference = df.loc[i, 'Preseason Difference']
+                    adjusted_preseason_difference = df.loc[i, 'Adjusted Preseason Difference']
+                    current_difference = df.loc[i, 'Current Difference']
+                    adjusted_current_difference = df.loc[i, 'Adjusted Current Difference']
+                    # Calculate EV for this game
+                    ev = (df.loc[i, 'Home Team EV'] if df.loc[i, 'Adjusted Current Winner'] == df.loc[i, 'Home Team'] else df.loc[i, 'Away Team EV'])
+
+
+                    print('Week %i: Pick %s %s %s (%i, %i, %i, %i, %.4f)' % (df.loc[i, 'Week'], df.loc[i, 'Adjusted Current Winner'], divisional_game, home_team,
+                                                                       preseason_difference, adjusted_preseason_difference,
+                                                                       current_difference, adjusted_current_difference, ev))
+
+                    # Add differences to sums
+                    sum_preseason_difference += preseason_difference
+                    sum_adjusted_preseason_difference += adjusted_preseason_difference
+                    sum_current_difference += current_difference
+                    sum_adjusted_current_difference += adjusted_current_difference
+                    sum_ev += ev
+                    picks_df = pd.concat([picks_df, df.loc[[i]]], ignore_index=True)
+
+
+            # Add row to picks_df
+    #        picks_df = pd.concat([picks_df, df.loc[[i]]], ignore_index=True)
+            #print(picks_df)
+            # Print sums
+            st.write(f'**Solution Based on EV: {iteration}**')
+            st.write('\nPreseason Difference:', sum_preseason_difference)
+            st.write('Adjusted Preseason Difference:', sum_adjusted_preseason_difference)
+            st.write('Current Difference:', sum_current_difference)
+            st.write('Adjusted Current Difference:', sum_adjusted_current_difference)
+            st.write(f'Total EV: :red[{sum_ev}]')
+        else:
+            st.write('No solution found.')
+        st.write("")
+        st.write("")
+
+            # Save the picks to a CSV file for the current iteration
+        picks_df.to_csv(f'picks_ev_circa_{iteration + 1}.csv', index=False)
+        
+        # Append the new forbidden solution to the list
+        forbidden_solutions_1.append(picks_df['Adjusted Current Winner'].tolist())
+        #print(forbidden_solutions)
 
 
 
@@ -1667,7 +1834,7 @@ st.write('')
 st.write('')
 st.subheader('Use Saved Expected Value')
 st.write('Warning, this data is NOT up to date. It will save several hours of processing but will only be partially accurate. :red[Use carefully]')
-st.write('Last Update: :green[9/16/2024]')
+st.write('Last Update: :green[9/20/2024]')
 use_cached_expected_value = 1 if st.checkbox('Use Cached Expected Value') else 0
 st.write('')
 st.write('')

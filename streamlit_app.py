@@ -1359,10 +1359,134 @@ def get_survivor_picks_based_on_ev():
 
 
         # Add the constraint for San Francisco 49ers in week 11
-    #    for i in range(len(df)):
-    #        if df.loc[i, 'Home Team'] == 'San Francisco 49ers' and df.loc[i, 'Week'] == 15:
-    #            solver.Add(picks[i] == 0)
-
+        if sf_req_week > 0:        
+            for i in range(len(df)):
+                if (df.loc[i, 'Home Team'] == 'San Francisco 49ers' or df.loc[i, 'Away Team'] == 'San Francisco 49ers') and df.loc[i, 'Week'] == sf_req_week:
+                    solver.Add(picks[i] == 1)
+        if az_req_week > 0:        
+            for i in range(len(df)):
+                if (df.loc[i, 'Home Team'] == 'Arizona Cardinals' or df.loc[i, 'Away Team'] == 'Arizona Cardinals') and df.loc[i, 'Week'] == az_req_week:
+                    solver.Add(picks[i] == 1)
+        if atl_req_week > 0:        
+            for i in range(len(df)):
+                if (df.loc[i, 'Home Team'] == 'Atlanta Falcons' or df.loc[i, 'Away Team'] == 'Atlanta Falcons') and df.loc[i, 'Week'] == atl_req_week:
+                    solver.Add(picks[i] == 1)
+        if bal_req_week > 0:        
+            for i in range(len(df)):
+                if (df.loc[i, 'Home Team'] == 'Baltimore Ravens' or df.loc[i, 'Away Team'] == 'Baltimore Ravens') and df.loc[i, 'Week'] == bal_req_week:
+                    solver.Add(picks[i] == 1)
+        if buf_req_week > 0:        
+            for i in range(len(df)):
+                if (df.loc[i, 'Home Team'] == 'Buffalo Bills' or df.loc[i, 'Away Team'] == 'Buffalo Bills') and df.loc[i, 'Week'] == buf_req_week:
+                    solver.Add(picks[i] == 1)
+        if car_req_week > 0:        
+            for i in range(len(df)):
+                if (df.loc[i, 'Home Team'] == 'Carolina Panthers' or df.loc[i, 'Away Team'] == 'Carolina Panthers') and df.loc[i, 'Week'] == car_req_week:
+                    solver.Add(picks[i] == 1)
+        if chi_req_week > 0:        
+            for i in range(len(df)):
+                if (df.loc[i, 'Home Team'] == 'Chicago Bears' or df.loc[i, 'Away Team'] == 'Chicago Bears') and df.loc[i, 'Week'] == chi_req_week:
+                    solver.Add(picks[i] == 1)
+        if cin_req_week > 0:        
+            for i in range(len(df)):
+                if (df.loc[i, 'Home Team'] == 'Cincinatti Bengals' or df.loc[i, 'Away Team'] == 'Cincinatti Bengals') and df.loc[i, 'Week'] == cin_req_week:
+                    solver.Add(picks[i] == 1)
+        if cle_req_week > 0:        
+            for i in range(len(df)):
+                if (df.loc[i, 'Home Team'] == 'Cleveland Browns' or df.loc[i, 'Away Team'] == 'Cleveland Browns') and df.loc[i, 'Week'] == cle_req_week:
+                    solver.Add(picks[i] == 1)
+        if dal_req_week > 0:        
+            for i in range(len(df)):
+                if (df.loc[i, 'Home Team'] == 'Dallas Cowboys' or df.loc[i, 'Away Team'] == 'Dallas Cowboys') and df.loc[i, 'Week'] == dal_req_week:
+                    solver.Add(picks[i] == 1)
+        if den_req_week > 0:        
+            for i in range(len(df)):
+                if (df.loc[i, 'Home Team'] == 'Denver Broncos' or df.loc[i, 'Away Team'] == 'Denver Broncos') and df.loc[i, 'Week'] == den_req_week:
+                    solver.Add(picks[i] == 1)
+        if det_req_week > 0:        
+            for i in range(len(df)):
+                if (df.loc[i, 'Home Team'] == 'Detroit Lions' or df.loc[i, 'Away Team'] == 'Detroit Lions') and df.loc[i, 'Week'] == det_req_week:
+                    solver.Add(picks[i] == 1)
+        if gb_req_week > 0:        
+            for i in range(len(df)):
+                if (df.loc[i, 'Home Team'] == 'Green Bay Packers' or df.loc[i, 'Away Team'] == 'Green Bay Packers') and df.loc[i, 'Week'] == gb_req_week:
+                    solver.Add(picks[i] == 1)
+        if hou_req_week > 0:        
+            for i in range(len(df)):
+                if (df.loc[i, 'Home Team'] == 'Houston Texans' or df.loc[i, 'Away Team'] == 'Houston Texans') and df.loc[i, 'Week'] == hou_req_week:
+                    solver.Add(picks[i] == 1)
+        if ind_req_week > 0:        
+            for i in range(len(df)):
+                if (df.loc[i, 'Home Team'] == 'Indianapolis Colts' or df.loc[i, 'Away Team'] == 'Indianapolis Colts') and df.loc[i, 'Week'] == ind_req_week:
+                    solver.Add(picks[i] == 1)
+        if jax_req_week > 0:        
+            for i in range(len(df)):
+                if (df.loc[i, 'Home Team'] == 'Jacksonville Jaguars' or df.loc[i, 'Away Team'] == 'Jacksonville Jaguars') and df.loc[i, 'Week'] == jax_req_week:
+                    solver.Add(picks[i] == 1)
+        if kc_req_week > 0:        
+            for i in range(len(df)):
+                if (df.loc[i, 'Home Team'] == 'Kansas City Chiefs' or df.loc[i, 'Away Team'] == 'Kansas City Chiefs') and df.loc[i, 'Week'] == kc_req_week:
+                    solver.Add(picks[i] == 1)
+        if lv_req_week > 0:        
+            for i in range(len(df)):
+                if (df.loc[i, 'Home Team'] == 'Las Vegas Raiders' or df.loc[i, 'Away Team'] == 'Las Vegas Raiders') and df.loc[i, 'Week'] == lv_req_week:
+                    solver.Add(picks[i] == 1)
+        if lac_req_week > 0:        
+            for i in range(len(df)):
+                if (df.loc[i, 'Home Team'] == 'Los Angeles Chargers' or df.loc[i, 'Away Team'] == 'Los Angeles Chargers') and df.loc[i, 'Week'] == lac_req_week:
+                    solver.Add(picks[i] == 1)
+        if lar_req_week > 0:        
+            for i in range(len(df)):
+                if (df.loc[i, 'Home Team'] == 'Los Angeles Rams' or df.loc[i, 'Away Team'] == 'Los Angeles Rams') and df.loc[i, 'Week'] == lar_req_week:
+                    solver.Add(picks[i] == 1)
+        if mia_req_week > 0:        
+            for i in range(len(df)):
+                if (df.loc[i, 'Home Team'] == 'Miami Dolphins' or df.loc[i, 'Away Team'] == 'Miami Dolphins') and df.loc[i, 'Week'] == mia_req_week:
+                    solver.Add(picks[i] == 1)
+        if min_req_week > 0:        
+            for i in range(len(df)):
+                if (df.loc[i, 'Home Team'] == 'Minnesota Vikings' or df.loc[i, 'Away Team'] == 'Minnesota Vikings') and df.loc[i, 'Week'] == min_req_week:
+                    solver.Add(picks[i] == 1)
+        if ne_req_week > 0:        
+            for i in range(len(df)):
+                if (df.loc[i, 'Home Team'] == 'New England Patriots' or df.loc[i, 'Away Team'] == 'New England Patriots') and df.loc[i, 'Week'] == ne_req_week:
+                    solver.Add(picks[i] == 1)
+        if no_req_week > 0:        
+            for i in range(len(df)):
+                if (df.loc[i, 'Home Team'] == 'New Orleans Saints' or df.loc[i, 'Away Team'] == 'New Orleans Saints') and df.loc[i, 'Week'] == no_req_week:
+                    solver.Add(picks[i] == 1)
+        if nyg_req_week > 0:        
+            for i in range(len(df)):
+                if (df.loc[i, 'Home Team'] == 'New York Giants' or df.loc[i, 'Away Team'] == 'New York Giants') and df.loc[i, 'Week'] == nyg_req_week:
+                    solver.Add(picks[i] == 1)
+        if nyj_req_week > 0:        
+            for i in range(len(df)):
+                if (df.loc[i, 'Home Team'] == 'New York Jets' or df.loc[i, 'Away Team'] == 'New York Jets') and df.loc[i, 'Week'] == nyj_req_week:
+                    solver.Add(picks[i] == 1)
+        if phi_req_week > 0:        
+            for i in range(len(df)):
+                if (df.loc[i, 'Home Team'] == 'Philadelphia Eagles' or df.loc[i, 'Away Team'] == 'Philadelphia Eagles') and df.loc[i, 'Week'] == phi_req_week:
+                    solver.Add(picks[i] == 1)
+        if pit_req_week > 0:        
+            for i in range(len(df)):
+                if (df.loc[i, 'Home Team'] == 'Pittsburgh Steelers' or df.loc[i, 'Away Team'] == 'Pittsburgh Steelers') and df.loc[i, 'Week'] == pit_req_week:
+                    solver.Add(picks[i] == 1)
+        if sea_req_week > 0:        
+            for i in range(len(df)):
+                if (df.loc[i, 'Home Team'] == 'Seattle Seahawks' or df.loc[i, 'Away Team'] == 'Seattle Seahawks') and df.loc[i, 'Week'] == sea_req_week:
+                    solver.Add(picks[i] == 1)
+        if tb_req_week > 0:        
+            for i in range(len(df)):
+                if (df.loc[i, 'Home Team'] == 'Tampa Bay Buccaneers' or df.loc[i, 'Away Team'] == 'Tampa Bay Buccaneers') and df.loc[i, 'Week'] == tb_req_week:
+                    solver.Add(picks[i] == 1)
+        if ten_req_week > 0:        
+            for i in range(len(df)):
+                if (df.loc[i, 'Home Team'] == 'Tennessee Titans' or df.loc[i, 'Away Team'] == 'Tennessee Titans') and df.loc[i, 'Week'] == ten_req_week:
+                    solver.Add(picks[i] == 1)
+        if was_req_week > 0:        
+            for i in range(len(df)):
+                if (df.loc[i, 'Home Team'] == 'Washington Commanders' or df.loc[i, 'Away Team'] == 'Washington Commanders') and df.loc[i, 'Week'] == was_req_week:
+                    solver.Add(picks[i] == 1)
         # Objective: maximize the sum of Adjusted Current Difference of each game picked
         solver.Maximize(solver.Sum([picks[i] * (df.loc[i, 'Home Team EV'] if df.loc[i, 'Adjusted Current Winner'] == df.loc[i, 'Home Team'] else df.loc[i, 'Away Team EV']) for i in range(len(df))]))
 

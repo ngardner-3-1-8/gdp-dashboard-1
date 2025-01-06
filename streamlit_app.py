@@ -336,6 +336,14 @@ def collect_schedule_travel_ranking_data(pd):
     df['Adjusted Current Difference'] = abs(df['Away Team Adjusted Current Rank'] - df['Home Team Adjusted Current Rank'])
 
     df['Same Winner?'] = df.apply(lambda row: 'Same' if row['Preseason Winner'] == row['Adjusted Preseason Winner'] == row['Current Winner'] == row['Adjusted Current Winner'] else 'Different', axis=1)
+    df['Same Adjusted Preseason Winner?'] = df.apply(lambda row: 'Same' if row['Adjusted Preseason Winner'] == row['Adjusted Current Winner'] else 'Different', axis=1)
+    df['Same Current and Adjusted Current Winner?'] = df.apply(lambda row: 'Same' if row['Current Winner'] == row['Adjusted Current Winner'] else 'Different', axis=1)
+
+    
+    df['Thursday Night Game'] = 'False'
+    df["Thursday Night Game"] = df.apply(lambda row: 'True' if (row['Date'].weekday() == 3) and (row['Date'] != pd.to_datetime('2024-11-28')) and (row['Date'] != pd.to_datetime('2024-12-26'))  else row["Thursday Night Game"], axis =1)
+
+
     df['Home Team Winner?'] = df.apply(lambda row: 'Home Team' if row['Adjusted Current Winner'] == row['Home Team'] else 'Away Team', axis=1)
     #df['Divisional Matchup?'] = df.apply(lambda row: 'Divisional' if row['Home Team Division'] == row['Away Team Division'] else 'Non-divisional', axis=1)
     df['Divisional Matchup?'] = (df['Home Team Division'] == df['Away Team Division']).astype(int)
@@ -1260,33 +1268,69 @@ def get_survivor_picks_based_on_ev():
             # Must pick from 'Adjusted Current Winner'
             #if df.loc[i, 'Adjusted Current Winner'] != df.loc[i, 'Home Team']:
                 #solver.Add(picks[i] == 0)
-
             # Must pick from 'Same Winner?'
-            if df.loc[i, 'Same Winner?'] != 'Same':
-                solver.Add(picks[i] == 0)
-
+            if use_same_winners_across_all_4_metrics == 1:
+                if df.loc[i, 'Same Winner?'] != 'Same':
+                    solver.Add(picks[i] == 0)
+            elif  use_same_current_and_adjusted_current_winners == 1:
+                if df.loc[i, 'Same Current and Adjusted Current Winner?'] != 'Same':
+                    solver.Add(picks[i] == 0)
+            elif  use_same_adj_preseason_and_adj_current_winner == 1:   
+                if df.loc[i, 'Same Adjusted Preseason Winner?'] != 'Same':
+                    solver.Add(picks[i] == 0)
             # Can only pick an away team if 'Adjusted Current Difference' > 10
-            if df.loc[i, 'Away Team'] == df.loc[i, 'Adjusted Current Winner'] and df.loc[i, 'Adjusted Current Difference'] < 10:
-                solver.Add(picks[i] == 0)
+            if avoid_away_teams_in_close_matchups == 1:
+                if df.loc[i, 'Away Team'] == df.loc[i, 'Adjusted Current Winner'] and df.loc[i, 'Adjusted Current Difference'] < 10:
+                    solver.Add(picks[i] == 0)
             #if df.loc[i, 'Away Team'] == df.loc[i, 'Adjusted Current Winner'] and df.loc[i, 'Divisional Matchup?'] == 'Divisional':
                 #solver.Add(picks[i] == 0)
-            if df.loc[i, 'Away Team'] == df.loc[i, 'Adjusted Current Winner'] and df.loc[i, 'Back to Back Away Games'] == 'True':
-                solver.Add(picks[i] == 0)
+            if avoid_back_to_back_away == 1:
+                if df.loc[i, 'Away Team'] == df.loc[i, 'Adjusted Current Winner'] and df.loc[i, 'Back to Back Away Games'] == 'True':
+                    solver.Add(picks[i] == 0)
 
             # If 'Divisional Matchup?' is "Divisional", can only pick if 'Adjusted Current Difference' > 10
-            if df.loc[i, 'Divisional Matchup?'] == 'Divisional' and df.loc[i, 'Adjusted Current Difference'] < 10:
-                solver.Add(picks[i] == 0)
+            if avoid_close_divisional_matchups == 1:
+                if df.loc[i, 'Divisional Matchup?'] == 'Divisional' and df.loc[i, 'Adjusted Current Difference'] < 10:
+                    solver.Add(picks[i] == 0)
             # Constraints for short rest and 4 games in 17 days (only if team is the Adjusted Current Winner)
-            if df.loc[i, 'Away Team Short Rest'] == 'Yes' and df.loc[i, 'Away Team'] == df.loc[i, 'Adjusted Current Winner']:
-                solver.Add(picks[i] == 0)
-            if df.loc[i, 'Home Team 4 games in 17 days'] == 'Yes' and df.loc[i, 'Home Team'] == df.loc[i, 'Adjusted Current Winner'] and df.loc[i, 'Away Team 4 games in 17 days'] == 'No':
-                solver.Add(picks[i] == 0)
-            if df.loc[i, 'Away Team 4 games in 17 days'] == 'Yes' and df.loc[i, 'Away Team'] == df.loc[i, 'Adjusted Current Winner'] and df.loc[i, 'Home Team 4 games in 17 days'] == 'No':
-                solver.Add(picks[i] == 0)
-            if df.loc[i, 'Home Team 3 games in 10 days'] == 'Yes' and df.loc[i, 'Home Team'] == df.loc[i, 'Adjusted Current Winner'] and df.loc[i, 'Away Team 3 games in 10 days'] == 'No':
-                solver.Add(picks[i] == 0)
-            if df.loc[i, 'Away Team 3 games in 10 days'] == 'Yes' and df.loc[i, 'Away Team'] == df.loc[i, 'Adjusted Current Winner'] and df.loc[i, 'Home Team 3 games in 10 days'] == 'No':
-                solver.Add(picks[i] == 0)
+            if avoid_away_teams_on_short_rest == 1:
+                if df.loc[i, 'Away Team Short Rest'] == 'Yes' and df.loc[i, 'Away Team'] == df.loc[i, 'Adjusted Current Winner']:
+                    solver.Add(picks[i] == 0)
+            if avoid_4_games_in_17_days == 1:
+                if df.loc[i, 'Home Team 4 games in 17 days'] == 'Yes' and df.loc[i, 'Home Team'] == df.loc[i, 'Adjusted Current Winner'] and df.loc[i, 'Away Team 4 games in 17 days'] == 'No':
+                    solver.Add(picks[i] == 0)
+                if df.loc[i, 'Away Team 4 games in 17 days'] == 'Yes' and df.loc[i, 'Away Team'] == df.loc[i, 'Adjusted Current Winner'] and df.loc[i, 'Home Team 4 games in 17 days'] == 'No':
+                    solver.Add(picks[i] == 0)
+            if avoid_3_games_in_10_days == 1:
+                if df.loc[i, 'Home Team 3 games in 10 days'] == 'Yes' and df.loc[i, 'Home Team'] == df.loc[i, 'Adjusted Current Winner'] and df.loc[i, 'Away Team 3 games in 10 days'] == 'No':
+                    solver.Add(picks[i] == 0)
+                if df.loc[i, 'Away Team 3 games in 10 days'] == 'Yes' and df.loc[i, 'Away Team'] == df.loc[i, 'Adjusted Current Winner'] and df.loc[i, 'Home Team 3 games in 10 days'] == 'No':
+                    solver.Add(picks[i] == 0)
+            if avoid_international_game == 1:    
+                if df.loc[i, 'City'] == 'London, UK' and df.loc[i, 'Home Team'] == df.loc[i, 'Adjusted Current Winner']:
+                    solver.Add(picks[i] == 0)
+                if df.loc[i, 'City'] == 'London, UK' and df.loc[i, 'Away Team'] == df.loc[i, 'Adjusted Current Winner']:
+                    solver.Add(picks[i] == 0)
+            if avoid_thursday_night == 1:
+                if df.loc[i, 'Thursday Night Game'] == 'True':
+                    solver.Add(picks[i] == 0)
+            if avoid_away_thursday_night == 1:
+                if df.loc[i, 'Thursday Night Game'] == 'True' and df.loc[i, 'Away Team'] == df.loc[i, 'Adjusted Current Winner']:
+                    solver.Add(picks[i] == 0)
+            if avoid_teams_with_weekly_rest_disadvantage == 1:
+                if df.loc[i, 'Home Team Weekly Rest'] < df.loc [i, 'Away Team Weekly Rest'] and df.loc[i, 'Home Team'] == df.loc[i, 'Adjusted Current Winner']:
+                    solver.Add(picks[i] == 0)
+                if df.loc[i, 'Away Team Weekly Rest'] < df.loc [i, 'Home Team Weekly Rest'] and df.loc[i, 'Away Team'] == df.loc[i, 'Adjusted Current Winner']:
+                    solver.Add(picks[i] == 0)
+            if avoid_cumulative_rest_disadvantage == 1:
+                if df.loc[i, 'Away Team Current Week Cumulative Rest Advantage'] < -10 and df.loc[i, 'Away Team'] == df.loc[i, 'Adjusted Current Winner']:
+                    solver.Add(picks[i] == 0)
+                if df.loc[i, 'Home Team Current Week Cumulative Rest Advantage'] < -5 and df.loc[i, 'Home Team'] == df.loc[i, 'Adjusted Current Winner']:
+                    solver.Add(picks[i] == 0)
+            if 
+                if df.loc[i, 'Away Travel Advantage'] < -850 and df.loc[i, 'Away Team'] == df.loc[i, 'Adjusted Current Winner']:
+                    solver.Add(picks[i] == 0)
+            
             if df.loc[i, 'Adjusted Current Winner'] in picked_teams:
                 solver.Add(picks[i] == 0)
         # Dynamically create the forbidden solution list
@@ -1344,6 +1388,18 @@ def get_survivor_picks_based_on_ev():
                     # Determine if it's a divisional game and if the picked team is the home team
                     divisional_game = '(Divisional)' if df.loc[i, 'Divisional Matchup?'] == 'Divisional' else ''
                     home_team = '(Home Team)' if df.loc[i, 'Adjusted Current Winner'] == df.loc[i, 'Home Team'] else '(Away Team)'
+                    weekly_rest = 'a'
+                    weekly_rest_advantage = 'b'
+                    cumulative_rest = 'c'
+                    cumulative_rest_advantage = 'd'
+                    travel_advantage = 'e'
+                    back_to_back_away_games = 'f'
+                    international_game = 'g'
+                    previous_opponent = 'h'
+                    previous_game_location = 'i'
+                    next_opponent = 'j'
+                    next_game_location = 'k'
+                    
 
                     # Get differences
                     preseason_difference = df.loc[i, 'Preseason Difference']
@@ -1823,10 +1879,24 @@ avoid_3_games_in_10_days = 1 if st.checkbox('Avoid 3 games in 10 days') else 0
 avoid_4_games_in_17_days = 1 if st.checkbox('Avoid 4 games in 17 days') else 0
 avoid_away_teams_in_close_matchups = 1 if st.checkbox('Avoid Away Teams in Close Games') else 0
 avoid_cumulative_rest_disadvantage = 1 if st.checkbox('Avoid Cumulative Rest Disadvantage') else 0
-avoid_thursday_night = 1 if st.checkbox('Avoid Thursday Night Games') else 0
+avoid_thursday_night = 1 if st.checkbox('Avoid :red[ALL TEAMS] in Thursday Night Games') else 0
+avoid_away_thursday_night = 1 if st.checkbox('Avoid :red[ONLY AWAY TEAMS] in Thursday Night Games') else 0
 avoid_back_to_back_away = 1 if st.checkbox('Avoid Teams on Back to Back Away Games') else 0
 avoid_international_game = 1 if st.checkbox('Avoid International Games') else 0
-avoid_teams_with_rest_disadvantage = 1 if st.checkbox('Avoid Teams with Rest Disadvantage') else 0
+avoid_teams_with_weekly_rest_disadvantage = 1 if st.checkbox('Avoid Teams with Rest Disadvantage') else 0
+avoid_away_teams_with_travel_disadvantage = 1 if st.checkbox('Avoid Teams with Travel Disadvatage') else 0
+bayesian_and_travel_options = [
+    "Selected team must have been projected to win based on preseason rankings, current rankings, and with and without travel/rest adjustments",
+    "Selected team must be projected to win with and without travel and rest impact based on current rankings",
+    "Selected team must have been projected to win based on preseason rankings in addition to current rankings",
+]
+    
+use_same_winners_across_all_4_metrics = 1 if st.selectbox('Bayesian, Rest, and Travel Impact:', options = bayesian_and_travel_options) == "Selected team must have been projected to win based on preseason rankings, current rankings, and with and without travel/rest adjustments" else 0
+use_same_current_and_adjusted_current_winners = 1 if st.selectbox('Bayesian, Rest, and Travel Impact:', options = bayesian_and_travel_options) == "Selected team must be projected to win with and without travel and rest impact based on current rankings" else 0
+use_same_adj_preseason_and_adj_current_winner = 1 if st.selectbox('Bayesian, Rest, and Travel Impact:', options = bayesian_and_travel_options) == "Selected team must have been projected to win based on preseason rankings in addition to current rankings" else 0
+
+
+
 st.write('')
 st.write('')
 st.write('')

@@ -2142,10 +2142,6 @@ tb_req_week = 0
 ten_req_week = 0
 was_req_week = 0
 starting_week = 1
-if selected_contest == "DraftKings":
-	ending_week = 19
-else:
-	ending_week = 21
 az_rank = default_az_rank
 atl_rank = default_atl_rank
 bal_rank = default_bal_rank
@@ -2210,6 +2206,10 @@ st.write('- Christmas Week will be week 18 on this site (If you select Circa)')
 st.write('- In Circa, a tie eliminates you, but in Draftkings, you move on with a tie')
 st.write('- Players in Circa tend to be sharper, making it more difficult to play contrarian')
 selected_contest = st.selectbox('Choose Contest:', options = contest_options)
+if selected_contest == "DraftKings":
+	ending_week = 19
+else:
+	ending_week = 21
 st.write('')
 st.write('')
 st.write('')

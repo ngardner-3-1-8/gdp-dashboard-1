@@ -2195,7 +2195,7 @@ contest_options = [
     "Circa", "DraftKings"
 ]
 st.write("Alright, clowns. This site is built to help you optimize your picks for the Circa Survivor contest (Eventually other contests). :red[This tool is just for informational use. It does not take into account injuries or certain other factors. Do not use this tool as your only source of information.] Simply input which week you're in, your team rankings, constraints, etc... and the algorithm will do the rest.")
-st.write('Caluclating EV will take the longest in this process. For a full season, this step will take up to 5 hours or more. Good luck!')
+st.write('Caluclating EV will take the longest in this process. For a full season, this step will take up to 5 hours or more. For that reason, we recommend using the saved Expected Value Calculations Good luck!')
 st.write('')
 st.write('')
 st.subheader('Select Contest')
@@ -2246,7 +2246,7 @@ st.write('')
 st.subheader('Remaining Weeks:')
 yes_i_would_like_to_choose_weeks = st.checkbox('Would you like to choose a range of weeks, instead of the entire season?')
 if yes_i_would_like_to_choose_weeks:
-    st.text('Select the upcoming week for the starting week. Select the week you want the algorithm to stop at. If you select one week, it will take about 30-45 minutes. All 20 weeks will take 5-6 hours. Ending Week must be greater than or equal to Starting Week.')
+    st.text('Select the upcoming week for the starting week. Select the week you want the algorithm to stop at. If you select one week, Calculating EV can take up to 30-45 minutes (If you do not use the Saved EV calculations). All 20 weeks will take 5-6 hours. Ending Week must be greater than or equal to Starting Week.')
     if selected_contest == "DraftKings":
         starting_week = st.selectbox("Select Starting Week:", options=range(1, 19))
     else:
@@ -2595,7 +2595,7 @@ st.write('')
 st.write('')
 st.write('')
 
-use_cached_expected_value = 0
+use_cached_expected_value = 1
 
 if yes_i_have_customized_rankings:
 	st.subheader('Use Saved Expected Value')

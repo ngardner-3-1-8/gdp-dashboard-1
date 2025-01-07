@@ -210,7 +210,9 @@ def collect_schedule_travel_ranking_data(pd):
     df['Date'] = pd.to_datetime(df['Date'], format='%b %d, %Y')
     # Adjust January games to 2025 in the DataFrame
     df['Date'] = df['Date'].apply(lambda x: x.replace(year=2025) if x.month == 1 else x)
+    df['Week_Num'] = df['Week'].str.replace('Week ', '').astype(int)
     df['Week'] = df['Week'].str.replace('Week ', '', regex=False).astype(int)
+    
 
     # Increment 'Week' for games on or after 2024-11-30
     df.loc[df['Date'] >= pd.to_datetime('2024-11-30'), 'Week'] += 1
@@ -233,6 +235,81 @@ def collect_schedule_travel_ranking_data(pd):
     df['Home Stadium TimeZone'] = df['Home Team'].map(lambda team: stadiums[team][3] if team in stadiums else 'NA')
     df.loc[df['Actual Stadium'] == '', 'Actual Stadium'] = df['Home Stadium']
 
+    df['Away Team Previous Opponent'] = 'BYE'
+    df['Home Team Previous Opponent'] = 'BYE'
+    df['Away Team Previous Location'] = 'BYE'
+    df['Home Team Previous Location'] = 'BYE'
+    df['Away Team Next Opponent'] = 'BYE'
+    df['Home Team Next Opponent'] = 'BYE'
+    df['Away Team Next Location'] = 'BYE'
+    df['Home Team Next Location'] = 'BYE'
+
+    team_last_opponent = {}
+    team_last_location = {}
+
+    for index, row in df.iterrows():
+        away_team = row['Away Team']
+        home_team = row['Home Team']
+        week_num = row['Week_Num']
+        away_stadium = row['Actual Stadium']
+        home_stadium = row['Actual Stadium']
+        
+        # Check if its not the first week
+        if week_num > 1:
+            # Get the previous opponents from the dictionary
+            if away_team in team_last_opponent:
+                df.loc[index, 'Away Team Previous Opponent'] = team_last_opponent[away_team]
+            if home_team in team_last_opponent:
+                 df.loc[index, 'Home Team Previous Opponent'] = team_last_opponent[home_team]
+            
+            # Get the previous locations from the dictionary
+            if away_team in team_last_location:
+                df.loc[index, 'Away Team Previous Location'] = team_last_location[away_team]
+            if home_team in team_last_location:
+                 df.loc[index, 'Home Team Previous Location'] = team_last_location[home_team]
+    
+        # Update team last opponent dictionary
+        team_last_opponent[home_team] = away_team
+        team_last_opponent[away_team] = home_team
+       
+        # Update team last location dictionary
+        team_last_location[home_team] = home_stadium
+        team_last_location[away_team] = away_stadium
+    
+
+    team_next_opponent = {}
+    team_next_location = {}
+
+    # Iterate through the DataFrame in reverse order
+    for index in reversed(df.index):
+        row = df.loc[index]
+        away_team = row['Away Team']
+        home_team = row['Home Team']
+        week_num = row['Week_Num']
+        away_stadium = row['Actual Stadium']
+        home_stadium = row['Actual Stadium']
+        
+        # Check if its not the last week
+        if week_num < df['Week_Num'].max():
+            # Get the previous opponents from the dictionary
+            if away_team in team_next_opponent:
+                df.loc[index, 'Away Team Next Opponent'] = team_next_opponent[away_team]
+            if home_team in team_next_opponent:
+                 df.loc[index, 'Home Team Next Opponent'] = team_next_opponent[home_team]
+            
+            # Get the previous locations from the dictionary
+            if away_team in team_next_location:
+                df.loc[index, 'Away Team Next Location'] = team_next_location[away_team]
+            if home_team in team_next_location:
+                 df.loc[index, 'Home Team Next Location'] = team_next_location[home_team]
+
+        # Update team next opponent dictionary
+        team_next_opponent[home_team] = away_team
+        team_next_opponent[away_team] = home_team
+       
+        # Update team next location dictionary
+        team_next_location[home_team] = home_stadium
+        team_next_location[away_team] = away_stadium
     #df['Home Team'] = df['Home Team'].str.replace(' *', '')
     #df.to_csv('test.csv', index=False)
 
@@ -1814,10 +1891,10 @@ def get_survivor_picks_based_on_ev():
                     back_to_back_away_games = 'No Back to Back Away Games' if df.loc[i, 'Adjusted Current Winner'] == df.loc[i, 'Away Team'] and df.loc[i, 'Back to Back Away Games'] == 'True' else 'Back to Back Away Games'
                     thursday_night_game = 'Thursday Night Game' if df.loc[i, "Thursday Night Game"] == 'True' else 'Sunday/Monday Game'
                     international_game = 'International Game' if df.loc[i, 'Adjusted Current Winner'] == df.loc[i, 'Home Team'] else 'Domestic Game'
-                    previous_opponent = 'h'
-                    previous_game_location = 'i'
-                    next_opponent = 'j'
-                    next_game_location = 'k'
+                    previous_opponent = df.loc[i, 'Home Team Previous Opponent'] if df.loc[i, 'Adjusted Current Winner'] == df.loc[i, 'Home Team'] else df.loc[i, 'Away Team Previous Opponent']
+                    previous_game_location = df.loc[i, 'Home Team Previous Location'] if df.loc[i, 'Adjusted Current Winner'] == df.loc[i, 'Home Team'] else df.loc[i, 'Away Team Previous Location']
+                    next_opponent = df.loc[i, 'Home Team Next Opponent'] if df.loc[i, 'Adjusted Current Winner'] == df.loc[i, 'Home Team'] else df.loc[i, 'Away Team Next Opponent']
+                    next_game_location = df.loc[i, 'Home Team Next Location'] if df.loc[i, 'Adjusted Current Winner'] == df.loc[i, 'Home Team'] else df.loc[i, 'Away Team Next Location']
                     
 
                     # Get differences

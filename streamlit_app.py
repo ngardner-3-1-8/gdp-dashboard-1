@@ -1967,9 +1967,9 @@ st.write('')
 st.write('')
 st.write('')
 st.subheader('Picked Teams:')
-st.write('Select the teams that you have already used in the Survivor contest, or teams that you just do not want to pick in the enirety of the contest')
+yes_i_have_picked_teams = st.checkbox('Have you already used any teams in the contest, or want to prevent the alogorithm from using any specific teams?')
+#st.write('Select the teams that you have already used in the Survivor contest, or teams that you just do not want to pick in the enirety of the contest')
 #def create_nfl_app():
-"""Creates a Streamlit app with NFL teams and dependent week select boxes."""
 
 nfl_teams = [
     "Arizona Cardinals", "Atlanta Falcons", "Baltimore Ravens", "Buffalo Bills",
@@ -1981,15 +1981,15 @@ nfl_teams = [
     "New York Jets", "Philadelphia Eagles", "Pittsburgh Steelers", "San Francisco 49ers",
     "Seattle Seahawks", "Tampa Bay Buccaneers", "Tennessee Titans", "Washington Commanders"
 ]
-
-selected_teams = st.multiselect("Prohibited Picks:", options=nfl_teams)
-picked_teams = selected_teams if selected_teams else []
-if picked_teams:
-    st.write("You selected:")
-    for team in picked_teams:
-        st.write(f"- {team}")
-else:
-  st.write("No teams selected")
+if yes_i_have_picked_teams:
+    selected_teams = st.multiselect("Prohibited Picks:", options=nfl_teams)
+    picked_teams = selected_teams if selected_teams else []
+    if picked_teams:
+        st.write("You selected:")
+        for team in picked_teams:
+            st.write(f"- {team}")
+    else:
+      st.write("No teams selected")
 st.write('')
 st.write('')
 st.write('')

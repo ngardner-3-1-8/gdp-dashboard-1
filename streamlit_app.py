@@ -1688,38 +1688,70 @@ st.write('')
 st.write('')
 
 
-az_prohibited_weeks = st.multiselect("Arizona Cardinals Week Required to Be Excluded:", options=required_week_options)
-atl_prohibited_weeks = st.multiselect("Atlanta Falcons Week Required to Be Excluded:", options=required_week_options)
-bal_prohibited_weeks = st.multiselect("Baltimore Ravens Week Required to Be Excluded:", options=required_week_options)
-buf_prohibited_weeks = st.multiselect("Buffalo Bills Week Required to Be Excluded:", options=required_week_options)
-car_prohibited_weeks = st.multiselect("Carolina Panthers Week Required to Be Excluded:", options=required_week_options)
-chi_prohibited_weeks = st.multiselect("Chicago Bears Week Required to Be Excluded:", options=required_week_options)
-cin_prohibited_weeks = st.multiselect("Cincinatti Bengals Week Required to Be Excluded:", options=required_week_options)
-cle_prohibited_weeks = st.multiselect("Cleveland Browns Week Required to Be Excluded:", options=required_week_options)
-dal_prohibited_weeks = st.multiselect("Dallas Cowboys Week Required to Be Excluded:", options=required_week_options)
-den_prohibited_weeks = st.multiselect("Denver Broncos Week Required to Be Excluded:", options=required_week_options)
-det_prohibited_weeks = st.multiselect("Detroit Lions Week Required to Be Excluded:", options=required_week_options)
-gb_prohibited_weeks = st.multiselect("Green Bay Packers Week Required to Be Excluded:", options=required_week_options)
-hou_prohibited_weeks = st.multiselect("Houston Texans Week Required to Be Excluded:", options=required_week_options)
-ind_prohibited_weeks = st.multiselect("Indianapoils Colts Week Required to Be Excluded:", options=required_week_options)
-jax_prohibited_weeks = st.multiselect("Jacksonville Jaguars Week Required to Be Excluded:", options=required_week_options)
-kc_prohibited_weeks = st.multiselect("Kansas City Chiefs Week Required to Be Excluded:", options=required_week_options)
-lv_prohibited_weeks = st.multiselect("Las Vegas Raiders Week Required to Be Excluded:", options=required_week_options)
-lac_prohibited_weeks = st.multiselect("Los Angeles Chargers Week Required to Be Excluded:", options=required_week_options)
-lar_prohibited_weeks = st.multiselect("Los Angeles Rams Week Required to Be Excluded:", options=required_week_options)
-mia_prohibited_weeks = st.multiselect("Miami Dolphins Week Required to Be Excluded:", options=required_week_options)
-min_prohibited_weeks = st.multiselect("Minnesota Vikings Week Required to Be Excluded:", options=required_week_options)
-ne_prohibited_weeks = st.multiselect("New England Patriots Week Required to Be Excluded:", options=required_week_options)
-no_prohibited_weeks = st.multiselect("New Orleans Saints Week Required to Be Excluded:", options=required_week_options)
-nyg_prohibited_weeks = st.multiselect("New York Giants Week Required to Be Excluded:", options=required_week_options)
-nyj_prohibited_weeks = st.multiselect("New York Jets Week Required to Be Excluded:", options=required_week_options)
-phi_prohibited_weeks = st.multiselect("Philadelphia Eagles Week Required to Be Excluded:", options=required_week_options)
-pit_prohibited_weeks = st.multiselect("Pittsburgh Steelers Week Required to Be Excluded:", options=required_week_options)
-sf_prohibited_weeks = st.multiselect("San Francisco 49ers Week Required to Be Excluded:", options=required_week_options)
-sea_prohibited_weeks = st.multiselect("Seattle Seahawks Week Required to Be Excluded:", options=required_week_options)
-tb_prohibited_weeks = st.multiselect("Tampa Bay Buccaneers Week Required to Be Excluded:", options=required_week_options)
-ten_prohibited_weeks = st.multiselect("Tennessee Titans Week Required to Be Excluded:", options=required_week_options)
-was_prohibited_weeks = st.multiselect("Washington Commanders Week Required to Be Excluded:", options=required_week_options)
+az_prohibited_weeks = st.multiselect("Arizona Cardinals Week to Be Excluded:", options=required_week_options)
+atl_prohibited_weeks = st.multiselect("Atlanta Falcons Week to Be Excluded:", options=required_week_options)
+bal_prohibited_weeks = st.multiselect("Baltimore Ravens Week to Be Excluded:", options=required_week_options)
+buf_prohibited_weeks = st.multiselect("Buffalo Bills Week to Be Excluded:", options=required_week_options)
+car_prohibited_weeks = st.multiselect("Carolina Panthers Week to Be Excluded:", options=required_week_options)
+chi_prohibited_weeks = st.multiselect("Chicago Bears Week to Be Excluded:", options=required_week_options)
+cin_prohibited_weeks = st.multiselect("Cincinatti Bengals Week to Be Excluded:", options=required_week_options)
+cle_prohibited_weeks = st.multiselect("Cleveland Browns Week to Be Excluded:", options=required_week_options)
+dal_prohibited_weeks = st.multiselect("Dallas Cowboys Week to Be Excluded:", options=required_week_options)
+den_prohibited_weeks = st.multiselect("Denver Broncos Week to Be Excluded:", options=required_week_options)
+det_prohibited_weeks = st.multiselect("Detroit Lions Week to Be Excluded:", options=required_week_options)
+gb_prohibited_weeks = st.multiselect("Green Bay Packers Week to Be Excluded:", options=required_week_options)
+hou_prohibited_weeks = st.multiselect("Houston Texans Week to Be Excluded:", options=required_week_options)
+ind_prohibited_weeks = st.multiselect("Indianapoils Colts Week to Be Excluded:", options=required_week_options)
+jax_prohibited_weeks = st.multiselect("Jacksonville Jaguars Week to Be Excluded:", options=required_week_options)
+kc_prohibited_weeks = st.multiselect("Kansas City Chiefs Week to Be Excluded:", options=required_week_options)
+lv_prohibited_weeks = st.multiselect("Las Vegas Raiders Week to Be Excluded:", options=required_week_options)
+lac_prohibited_weeks = st.multiselect("Los Angeles Chargers Week to Be Excluded:", options=required_week_options)
+lar_prohibited_weeks = st.multiselect("Los Angeles Rams Week to Be Excluded:", options=required_week_options)
+mia_prohibited_weeks = st.multiselect("Miami Dolphins Week to Be Excluded:", options=required_week_options)
+min_prohibited_weeks = st.multiselect("Minnesota Vikings Week to Be Excluded:", options=required_week_options)
+ne_prohibited_weeks = st.multiselect("New England Patriots Week to Be Excluded:", options=required_week_options)
+no_prohibited_weeks = st.multiselect("New Orleans Saints Week to Be Excluded:", options=required_week_options)
+nyg_prohibited_weeks = st.multiselect("New York Giants Week to Be Excluded:", options=required_week_options)
+nyj_prohibited_weeks = st.multiselect("New York Jets Week to Be Excluded:", options=required_week_options)
+phi_prohibited_weeks = st.multiselect("Philadelphia Eagles Week to Be Excluded:", options=required_week_options)
+pit_prohibited_weeks = st.multiselect("Pittsburgh Steelers Week to Be Excluded:", options=required_week_options)
+sf_prohibited_weeks = st.multiselect("San Francisco 49ers Week to Be Excluded:", options=required_week_options)
+sea_prohibited_weeks = st.multiselect("Seattle Seahawks Week to Be Excluded:", options=required_week_options)
+tb_prohibited_weeks = st.multiselect("Tampa Bay Buccaneers Week to Be Excluded:", options=required_week_options)
+ten_prohibited_weeks = st.multiselect("Tennessee Titans Week to Be Excluded:", options=required_week_options)
+was_prohibited_weeks = st.multiselect("Washington Commanders Week to Be Excluded:", options=required_week_options)
+az_excluded_weeks = az_prohibited_weeks if az_prohibited_weeks else []
+atl_excluded_weeks = atl_prohibited_weeks if atl_prohibited_weeks else []
+bal_excluded_weeks = bal_prohibited_weeks if bal_prohibited_weeks else []
+buf_excluded_weeks = buf_prohibited_weeks if buf_prohibited_weeks else []
+car_excluded_weeks = car_prohibited_weeks if car_prohibited_weeks else []
+chi_excluded_weeks = chi_prohibited_weeks if chi_prohibited_weeks else []
+cin_excluded_weeks = cin_prohibited_week if cin_prohibited_weeks else []
+cle_excluded_weeks = cle_prohibited_weeks if cle_prohibited_weeks else []
+dal_excluded_weeks = dal_prohibited_weeks if dal_prohibited_weeks else []
+den_excluded_weeks = den_prohibited_weeks if den_prohibited_weeks else []
+det_excluded_weeks = det_prohibited_weeks if det_prohibited_weeks else []
+gb_excluded_weeks = gb_prohibited_weeks if gb_prohibited_weeks else []
+hou_excluded_weeks = hou_prohibited_weeks if hou_prohibited_weeks else []
+ind_excluded_weeks = ind_prohibited_weeks if ind_prohibited_weeks else []
+jax_excluded_weeks = jax_prohibited_weeks if jax_prohibited_weeks else []
+kc_excluded_weeks = kc_prohibited_weeks if kc_prohibited_weeks else []
+lv_excluded_weeks = lv_prohibited_weeks if lv_prohibited_weeks else []
+lac_excluded_weeks = lac_prohibited_weeks if lac_prohibited_weeks else []
+lar_excluded_weeks = lar_prohibited_weeks if lar_prohibited_weeks else []
+mia_excluded_weeks = mia_prohibited_weeks if mia_prohibited_weeks else []
+min_excluded_weeks = min_prohibited_weeks if min_prohibited_weeks else []
+ne_excluded_weeks = ne_prohibited_weeks if ne_prohibited_weeks else []
+no_excluded_weeks = no_prohibited_weeks if no_prohibited_weeks else []
+nyg_excluded_weeks = nyg_prohibited_weeks if nyg_prohibited_weeks else []
+nyj_excluded_weeks = nyj_prohibited_weeks if nyj_prohibited_weeks else []
+phi_excluded_weeks = phi_prohibited_weeks if phi_prohibited_weeks else []
+pit_excluded_weeks = pit_prohibited_weeks if pit_prohibited_weeks else []
+sf_excluded_weeks = sf_prohibited_weeks if sf_prohibited_weeks else []
+sea_excluded_weeks = sea_prohibited_weeks if sea_prohibited_weeks else []
+tb_excluded_weeks = tb_prohibited_weeks if tb_prohibited_weeks else []
+ten_excluded_weeks = ten_prohibited_weeks if ten_prohibited_weeks else []
+was_excluded_weeks = was_prohibited_weeks if was_prohibited_weeks else []
 
 
 st.write('')

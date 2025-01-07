@@ -2453,16 +2453,32 @@ avoid_international_game = 1 if st.checkbox('Avoid International Games') else 0
 avoid_teams_with_weekly_rest_disadvantage = 1 if st.checkbox('Avoid Teams with Rest Disadvantage') else 0
 avoid_away_teams_with_travel_disadvantage = 1 if st.checkbox('Avoid Teams with Travel Disadvatage') else 0
 bayesian_and_travel_options = [
+    "No Rest, Bayesian, and Travel Constraints",
     "Selected team must have been projected to win based on preseason rankings, current rankings, and with and without travel/rest adjustments",
     "Selected team must be projected to win with and without travel and rest impact based on current rankings",
     "Selected team must have been projected to win based on preseason rankings in addition to current rankings",
 ]
     
-use_same_winners_across_all_4_metrics = 1 if st.selectbox('Bayesian, Rest, and Travel Impact:', options = bayesian_and_travel_options) == "Selected team must have been projected to win based on preseason rankings, current rankings, and with and without travel/rest adjustments" else 0
-use_same_current_and_adjusted_current_winners = 1 if st.selectbox('Bayesian, Rest, and Travel Impact:', options = bayesian_and_travel_options) == "Selected team must be projected to win with and without travel and rest impact based on current rankings" else 0
-use_same_adj_preseason_and_adj_current_winner = 1 if st.selectbox('Bayesian, Rest, and Travel Impact:', options = bayesian_and_travel_options) == "Selected team must have been projected to win based on preseason rankings in addition to current rankings" else 0
+#use_same_winners_across_all_4_metrics = 1 if st.selectbox('Bayesian, Rest, and Travel Impact:', options = bayesian_and_travel_options) == "Selected team must have been projected to win based on preseason rankings, current rankings, and with and without travel/rest adjustments" else 0
+#use_same_current_and_adjusted_current_winners = 1 if st.selectbox('Bayesian, Rest, and Travel Impact:', options = bayesian_and_travel_options) == "Selected team must be projected to win with and without travel and rest impact based on current rankings" else 0
+#use_same_adj_preseason_and_adj_current_winner = 1 if st.selectbox('Bayesian, Rest, and Travel Impact:', options = bayesian_and_travel_options) == "Selected team must have been projected to win based on preseason rankings in addition to current rankings" else 0
 
-
+if st.selectbox('Bayesian, Rest, and Travel Impact:', options = bayesian_and_travel_options) == "Selected team must have been projected to win based on preseason rankings, current rankings, and with and without travel/rest adjustments":
+    use_same_winners_across_all_4_metrics = 1
+    use_same_current_and_adjusted_current_winners = 0
+    use_same_adj_preseason_and_adj_current_winner = 0
+elif st.selectbox('Bayesian, Rest, and Travel Impact:', options = bayesian_and_travel_options) == "Selected team must be projected to win with and without travel and rest impact based on current rankings":
+    use_same_current_and_adjusted_current_winners = 1
+    use_same_winners_across_all_4_metrics = 0
+    use_same_adj_preseason_and_adj_current_winner = 0
+elif st.selectbox('Bayesian, Rest, and Travel Impact:', options = bayesian_and_travel_options) == "Selected team must have been projected to win based on preseason rankings in addition to current rankings":
+    use_same_adj_preseason_and_adj_current_winner = 1
+    use_same_winners_across_all_4_metrics = 0
+    use_same_current_and_adjusted_current_winners = 0
+else:
+    use_same_winners_across_all_4_metrics = 0
+    use_same_current_and_adjusted_current_winners = 0
+    use_same_adj_preseason_and_adj_current_winner = 0
 
 st.write('')
 st.write('')

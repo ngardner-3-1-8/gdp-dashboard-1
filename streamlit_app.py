@@ -1917,7 +1917,10 @@ def get_survivor_picks_based_on_ev():
                     sum_adjusted_current_difference += adjusted_current_difference
                     sum_ev += ev
                     picks_df = pd.concat([picks_df, df.loc[[i]]], ignore_index=True)
-
+		    picks_df =
+		
+			
+			
 
             # Add row to picks_df
     #        picks_df = pd.concat([picks_df, df.loc[[i]]], ignore_index=True)

@@ -2619,9 +2619,10 @@ st.text(f'This button will find the best picks for each week. It will pump out {
 st.write(f'- The first {number_solutions} will be :red[based purely on EV] that is a complicated formula based on predicted pick percentage of each team in each week, and their chances of winning that week.')
 st.write('- This will use the rankings defined above to determine win probability and thus pick percentage for each team. If you provide your own rankings, :red[you CANNOT use the cached version of EV]. If you use the default rankings, the cached version will be fine') 
 st.write(f'- The second {number_solutions} solutions will be based on the :red[rankings and constraints you provided]')
-st.write('- This will use the rankings defined above to determine win probability for each team. Because this :red[does not use predicted pick percentage nor EV], you can use the cached version of EV to speed things up. ') 
+st.write('- This will use the rankings defined above to determine win probability for each team. Because this :red[does not use predicted pick percentage nor EV], you can use the cached version of EV to speed things up.') 
 st.write('- All solutions will abide by the prohibited teams and the weeks you selected')
 st.write('- If you have too many constraints, or the solution is impossible, you will see an error')
+st.write("- :green[Mathematically, EV is most likely to win, however, using your own rankings has advantages as well, which is why we provide both solutions (Sometimes it's just preposterous to Pick the Jets)]")
 
 
 st.write('')
@@ -2647,10 +2648,11 @@ if st.button("Get Optimized Survivor Picks"):
         st.write("Step 2 Complete: Travel, Ranking, Odds, and Rest Data Retrieved!")
         st.write(collect_schedule_travel_ranking_data_df)
         st.write("Step 3/9: Predicting Future Pick Percentages of Public...")
-        nfl_schedule_circa_pick_percentages_df = get_predicted_pick_percentages(pd)
-        st.write("Step 3 Completed: Public Pick Percentages Predicted")
-        #nfl_schedule_circa_df_2 = manually_adjust_pick_predictions()
-        st.write("Step 4/9: Calculating Expected Value (Could take several hours)...")
+	if use_cached_expected_value == 0
+	        nfl_schedule_circa_pick_percentages_df = get_predicted_pick_percentages(pd)
+	        st.write("Step 3 Completed: Public Pick Percentages Predicted")
+	        #nfl_schedule_circa_df_2 = manually_adjust_pick_predictions()
+	        st.write("Step 4/9: Calculating Expected Value (Could take several hours)...")
         if use_cached_expected_value == 1:
             st.write('- Using Cached Expected Values...')
             full_df_with_ev = pd.read_csv('NFL Schedule with full ev_circa.csv')
@@ -2661,8 +2663,21 @@ if st.button("Get Optimized Survivor Picks"):
                 st.write("Processing Complete!")
                 st.dataframe(full_df_with_ev)
         st.write("Step 4 Completed: Expected Value Calculated")
-        #get_survivor_picks_based_on_ev()
-        #get_survivor_picks_based_on_internal_rankings()
+	st.write('Step 5/9: Calculating Best Comnbination of Picks Based on EV...')
+	st.subheader('EV Calculations')
+        get_survivor_picks_based_on_ev()
+	st.write('Step 5 Completed: Top Picks Determined')
+	if yes_i_have_customized_rankings:
+		st.write('Step 6/6: Calculating Best Comnbination of Picks Based on Customized Rankings...')
+		st.subheader('Customized Ranking Calculations')
+		get_survivor_picks_based_on_internal_rankings()
+		st.write('Step 6 Completed: Top Picks Determined Based on Customized Rankings')
+    	else:
+		st.write('Step 6/6: Calculating Best Comnbination of Picks Based on Default Rankings...')
+		st.subheader('Default Ranking Calculations')
+		get_survivor_picks_based_on_internal_rankings()
+		st.write('Step 6 Completed: Top Picks Determined Based on Default Rankings')
+       
     else:
          st.write("Error. Could not find the rows")
          schedule_data_retrieved = False #Set flag to False on error

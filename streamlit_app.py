@@ -1943,197 +1943,6 @@ def get_survivor_picks_based_on_ev():
 
 
 
-
-
-st.title("NFL Survivor Optimization")
-st.subheader("The second best Circa Survivor Contest optimizer")
-contest_options = [
-    "Circa", "DraftKings"
-]
-st.write("Alright, clowns. This site is built to help you optimize your picks for the Circa Survivor contest (Eventually other contests). :red[This tool is just for informational use. It does not take into account injuries or certain other factors. Do not use this tool as your only source of information.] Simply input which week you're in, your team rankings, constraints, etc... and the algorithm will do the rest. For a full season, Running the algorith will take up to 5 hours or more. Good luck!")
-st.write('')
-st.write('')
-st.subheader('Select Contest')
-st.write('Choose the contest you are using this algorithm for: Circa (Advanced) or Draftkings (Traditional and Pathetic)')
-st.write('The biggest differences between the two contests:')
-st.write('- Circa has 20 Weeks (Christmas and Thanksgiving/Black Friday act as their own indivdual weeks)')
-st.write('- Thanksgiving/Black Friday week will be Week 13 on this site (If you select Circa)')
-st.write('- Christmas Week will be week 18 on this site (If you select Circa)')
-st.write('- In Circa, a tie eliminates you, but in Draftkings, you move on with a tie')
-st.write('- Players in Circa tend to be sharper, making it more difficult to play contrarian')
-selected_contest = st.selectbox('Choose Contest:', options = contest_options)
-st.write('')
-st.write('')
-st.write('')
-st.write('')
-st.subheader('Picked Teams:')
-yes_i_have_picked_teams = st.checkbox('Have you already used any teams in the contest, or want to prevent the alogorithm from using any specific teams?')
-#st.write('Select the teams that you have already used in the Survivor contest, or teams that you just do not want to pick in the enirety of the contest')
-#def create_nfl_app():
-
-nfl_teams = [
-    "Arizona Cardinals", "Atlanta Falcons", "Baltimore Ravens", "Buffalo Bills",
-    "Carolina Panthers", "Chicago Bears", "Cincinnati Bengals", "Cleveland Browns",
-    "Dallas Cowboys", "Denver Broncos", "Detroit Lions", "Green Bay Packers",
-    "Houston Texans", "Indianapolis Colts", "Jacksonville Jaguars", "Kansas City Chiefs",
-    "Las Vegas Raiders", "Los Angeles Chargers", "Los Angeles Rams", "Miami Dolphins",
-    "Minnesota Vikings", "New England Patriots", "New Orleans Saints", "New York Giants",
-    "New York Jets", "Philadelphia Eagles", "Pittsburgh Steelers", "San Francisco 49ers",
-    "Seattle Seahawks", "Tampa Bay Buccaneers", "Tennessee Titans", "Washington Commanders"
-]
-if yes_i_have_picked_teams:
-    selected_teams = st.multiselect("Prohibited Picks:", options=nfl_teams)
-    picked_teams = selected_teams if selected_teams else []
-    if picked_teams:
-        st.write("You selected:")
-        for team in picked_teams:
-            st.write(f"- {team}")
-    else:
-      st.write("No teams selected")
-st.write('')
-st.write('')
-st.write('')
-st.subheader('Remaining Weeks:')
-st.text('Select the upcoming week for the starting week. Select the week you want the algorithm to stop at. If you select one week, it will take about 30-45 minutes. All 20 weeks will take 5-6 hours. Ending Week must be greater than or equal to Starting Week.')
-if selected_contest == "DraftKings":
-    starting_week = st.selectbox("Select Starting Week:", options=range(1, 19))
-else:
-    st.write(":red[Week 13 is Thanksgiving/Black Friday Week and Week 18 is Christmas Week]")
-    starting_week = st.selectbox("Select Starting Week:", options=range(1, 21))
-#if starting_week:
-    #st.write(f"Selected Starting Week: {starting_week}")
-# Create a dynamic range for ending week based on starting week
-st.write('')
-if selected_contest == "DraftKings":
-    ending_week_options = range(starting_week, 19)
-else:
-    ending_week_options = range(starting_week, 21)
-ending_week = st.selectbox("Select Ending Week:", options=ending_week_options)
-ending_week = ending_week + 1
-#return starting_week, ending_week, picked_teams
-    #if ending_week:
-        #st.write(f"Selected Ending Week: {ending_week}")
-#if __name__ == "__main__":
-#    starting_week, ending_week, picked_teams = create_nfl_app()
-st.write('')
-st.write('')
-st.write('')
-st.subheader('Teams That Have to Be Picked')
-st.write('Select the week in which the algorithm has to pick that team. If you do not want the team to be :red[required] to be used, select 0')
-required_week_options = [0] + list(range(starting_week, ending_week))
-
-az_req_week = st.selectbox("Arizona Cardinals Week Required to Be Picked:", options=required_week_options)
-atl_req_week = st.selectbox("Atlanta Falcons Week Required to Be Picked:", options=required_week_options)
-bal_req_week = st.selectbox("Baltimore Ravens Week Required to Be Picked:", options=required_week_options)
-buf_req_week = st.selectbox("Buffalo Bills Week Required to Be Picked:", options=required_week_options)
-car_req_week = st.selectbox("Carolina Panthers Week Required to Be Picked:", options=required_week_options)
-chi_req_week = st.selectbox("Chicago Bears Week Required to Be Picked:", options=required_week_options)
-cin_req_week = st.selectbox("Cincinnati Bengals Week Required to Be Picked:", options=required_week_options)
-cle_req_week = st.selectbox("Cleveland Browns Week Required to Be Picked:", options=required_week_options)
-dal_req_week = st.selectbox("Dallas Cowboys Week Required to Be Picked:", options=required_week_options)
-den_req_week = st.selectbox("Denver Broncos Week Required to Be Picked:", options=required_week_options)
-det_req_week = st.selectbox("Detroit Lions Week Required to Be Picked:", options=required_week_options)
-gb_req_week = st.selectbox("Green Bay Packers Week Required to Be Picked:", options=required_week_options)
-hou_req_week = st.selectbox("Houston Texans Week Required to Be Picked:", options=required_week_options)
-ind_req_week = st.selectbox("Indianapoils Colts Week Required to Be Picked:", options=required_week_options)
-jax_req_week = st.selectbox("Jacksonville Jaguars Week Required to Be Picked:", options=required_week_options)
-kc_req_week = st.selectbox("Kansas City Chiefs Week Required to Be Picked:", options=required_week_options)
-lv_req_week = st.selectbox("Las Vegas Raiders Week Required to Be Picked:", options=required_week_options)
-lac_req_week = st.selectbox("Los Angeles Chargers Week Required to Be Picked:", options=required_week_options)
-lar_req_week = st.selectbox("Los Angeles Rams Week Required to Be Picked:", options=required_week_options)
-mia_req_week = st.selectbox("Miami Dolphins Week Required to Be Picked:", options=required_week_options)
-min_req_week = st.selectbox("Minnesota Vikings Week Required to Be Picked:", options=required_week_options)
-ne_req_week = st.selectbox("New England Patriots Week Required to Be Picked:", options=required_week_options)
-no_req_week = st.selectbox("New Orleans Saints Week Required to Be Picked:", options=required_week_options)
-nyg_req_week = st.selectbox("New York Giants Week Required to Be Picked:", options=required_week_options)
-nyj_req_week = st.selectbox("New York Jets Week Required to Be Picked:", options=required_week_options)
-phi_req_week = st.selectbox("Philadelphia Eagles Week Required to Be Picked:", options=required_week_options)
-pit_req_week = st.selectbox("Pittsburgh Steelers Week Required to Be Picked:", options=required_week_options)
-sf_req_week = st.selectbox("San Francisco 49ers Week Required to Be Picked:", options=required_week_options)
-sea_req_week = st.selectbox("Seattle Seahawks Week Required to Be Picked:", options=required_week_options)
-tb_req_week = st.selectbox("Tampa Bay Buccaneers Week Required to Be Picked:", options=required_week_options)
-ten_req_week = st.selectbox("Tennessee Titans Week Required to Be Picked:", options=required_week_options)
-was_req_week = st.selectbox("Washington Commanders Week Required to Be Picked:", options=required_week_options)
-
-st.write('')
-st.write('')
-st.write('')
-
-
-az_prohibited_weeks = st.multiselect("Arizona Cardinals Week to Be Excluded:", options=required_week_options)
-atl_prohibited_weeks = st.multiselect("Atlanta Falcons Week to Be Excluded:", options=required_week_options)
-bal_prohibited_weeks = st.multiselect("Baltimore Ravens Week to Be Excluded:", options=required_week_options)
-buf_prohibited_weeks = st.multiselect("Buffalo Bills Week to Be Excluded:", options=required_week_options)
-car_prohibited_weeks = st.multiselect("Carolina Panthers Week to Be Excluded:", options=required_week_options)
-chi_prohibited_weeks = st.multiselect("Chicago Bears Week to Be Excluded:", options=required_week_options)
-cin_prohibited_weeks = st.multiselect("Cincinnati Bengals Week to Be Excluded:", options=required_week_options)
-cle_prohibited_weeks = st.multiselect("Cleveland Browns Week to Be Excluded:", options=required_week_options)
-dal_prohibited_weeks = st.multiselect("Dallas Cowboys Week to Be Excluded:", options=required_week_options)
-den_prohibited_weeks = st.multiselect("Denver Broncos Week to Be Excluded:", options=required_week_options)
-det_prohibited_weeks = st.multiselect("Detroit Lions Week to Be Excluded:", options=required_week_options)
-gb_prohibited_weeks = st.multiselect("Green Bay Packers Week to Be Excluded:", options=required_week_options)
-hou_prohibited_weeks = st.multiselect("Houston Texans Week to Be Excluded:", options=required_week_options)
-ind_prohibited_weeks = st.multiselect("Indianapoils Colts Week to Be Excluded:", options=required_week_options)
-jax_prohibited_weeks = st.multiselect("Jacksonville Jaguars Week to Be Excluded:", options=required_week_options)
-kc_prohibited_weeks = st.multiselect("Kansas City Chiefs Week to Be Excluded:", options=required_week_options)
-lv_prohibited_weeks = st.multiselect("Las Vegas Raiders Week to Be Excluded:", options=required_week_options)
-lac_prohibited_weeks = st.multiselect("Los Angeles Chargers Week to Be Excluded:", options=required_week_options)
-lar_prohibited_weeks = st.multiselect("Los Angeles Rams Week to Be Excluded:", options=required_week_options)
-mia_prohibited_weeks = st.multiselect("Miami Dolphins Week to Be Excluded:", options=required_week_options)
-min_prohibited_weeks = st.multiselect("Minnesota Vikings Week to Be Excluded:", options=required_week_options)
-ne_prohibited_weeks = st.multiselect("New England Patriots Week to Be Excluded:", options=required_week_options)
-no_prohibited_weeks = st.multiselect("New Orleans Saints Week to Be Excluded:", options=required_week_options)
-nyg_prohibited_weeks = st.multiselect("New York Giants Week to Be Excluded:", options=required_week_options)
-nyj_prohibited_weeks = st.multiselect("New York Jets Week to Be Excluded:", options=required_week_options)
-phi_prohibited_weeks = st.multiselect("Philadelphia Eagles Week to Be Excluded:", options=required_week_options)
-pit_prohibited_weeks = st.multiselect("Pittsburgh Steelers Week to Be Excluded:", options=required_week_options)
-sf_prohibited_weeks = st.multiselect("San Francisco 49ers Week to Be Excluded:", options=required_week_options)
-sea_prohibited_weeks = st.multiselect("Seattle Seahawks Week to Be Excluded:", options=required_week_options)
-tb_prohibited_weeks = st.multiselect("Tampa Bay Buccaneers Week to Be Excluded:", options=required_week_options)
-ten_prohibited_weeks = st.multiselect("Tennessee Titans Week to Be Excluded:", options=required_week_options)
-was_prohibited_weeks = st.multiselect("Washington Commanders Week to Be Excluded:", options=required_week_options)
-az_excluded_weeks = az_prohibited_weeks if az_prohibited_weeks else []
-atl_excluded_weeks = atl_prohibited_weeks if atl_prohibited_weeks else []
-bal_excluded_weeks = bal_prohibited_weeks if bal_prohibited_weeks else []
-buf_excluded_weeks = buf_prohibited_weeks if buf_prohibited_weeks else []
-car_excluded_weeks = car_prohibited_weeks if car_prohibited_weeks else []
-chi_excluded_weeks = chi_prohibited_weeks if chi_prohibited_weeks else []
-cin_excluded_weeks = cin_prohibited_week if cin_prohibited_weeks else []
-cle_excluded_weeks = cle_prohibited_weeks if cle_prohibited_weeks else []
-dal_excluded_weeks = dal_prohibited_weeks if dal_prohibited_weeks else []
-den_excluded_weeks = den_prohibited_weeks if den_prohibited_weeks else []
-det_excluded_weeks = det_prohibited_weeks if det_prohibited_weeks else []
-gb_excluded_weeks = gb_prohibited_weeks if gb_prohibited_weeks else []
-hou_excluded_weeks = hou_prohibited_weeks if hou_prohibited_weeks else []
-ind_excluded_weeks = ind_prohibited_weeks if ind_prohibited_weeks else []
-jax_excluded_weeks = jax_prohibited_weeks if jax_prohibited_weeks else []
-kc_excluded_weeks = kc_prohibited_weeks if kc_prohibited_weeks else []
-lv_excluded_weeks = lv_prohibited_weeks if lv_prohibited_weeks else []
-lac_excluded_weeks = lac_prohibited_weeks if lac_prohibited_weeks else []
-lar_excluded_weeks = lar_prohibited_weeks if lar_prohibited_weeks else []
-mia_excluded_weeks = mia_prohibited_weeks if mia_prohibited_weeks else []
-min_excluded_weeks = min_prohibited_weeks if min_prohibited_weeks else []
-ne_excluded_weeks = ne_prohibited_weeks if ne_prohibited_weeks else []
-no_excluded_weeks = no_prohibited_weeks if no_prohibited_weeks else []
-nyg_excluded_weeks = nyg_prohibited_weeks if nyg_prohibited_weeks else []
-nyj_excluded_weeks = nyj_prohibited_weeks if nyj_prohibited_weeks else []
-phi_excluded_weeks = phi_prohibited_weeks if phi_prohibited_weeks else []
-pit_excluded_weeks = pit_prohibited_weeks if pit_prohibited_weeks else []
-sf_excluded_weeks = sf_prohibited_weeks if sf_prohibited_weeks else []
-sea_excluded_weeks = sea_prohibited_weeks if sea_prohibited_weeks else []
-tb_excluded_weeks = tb_prohibited_weeks if tb_prohibited_weeks else []
-ten_excluded_weeks = ten_prohibited_weeks if ten_prohibited_weeks else []
-was_excluded_weeks = was_prohibited_weeks if was_prohibited_weeks else []
-
-
-st.write('')
-st.write('')
-st.write('')
-
-st.subheader('NFL Team Rankings')
-st.write('The Ranking represents :red[how much a team would either win (positive number) or lose (negative number) by to an average NFL team] on a neutral field. 0 means the team is perfectly average. If you leave the "Default" value, the default rankings will be used.')
-st.write('')
-
 default_az_rank = -.5
 default_atl_rank = .5
 default_bal_rank = 9
@@ -2268,202 +2077,518 @@ tb_away_adj = -.1
 ten_away_adj = .4
 was_away_adj = .6
 
+az_excluded_weeks = []
+atl_excluded_weeks = []
+bal_excluded_weeks = []
+buf_excluded_weeks = []
+car_excluded_weeks = []
+chi_excluded_weeks = []
+cin_excluded_weeks = []
+cle_excluded_weeks = []
+dal_excluded_weeks = []
+den_excluded_weeks = []
+det_excluded_weeks = []
+gb_excluded_weeks = []
+hou_excluded_weeks = []
+ind_excluded_weeks = []
+jax_excluded_weeks = []
+kc_excluded_weeks = []
+lv_excluded_weeks = []
+lac_excluded_weeks = []
+lar_excluded_weeks = []
+mia_excluded_weeks = []
+min_excluded_weeks = []
+ne_excluded_weeks = []
+no_excluded_weeks = []
+nyg_excluded_weeks = []
+nyj_excluded_weeks = []
+phi_excluded_weeks = []
+pit_excluded_weeks = []
+sf_excluded_weeks = []
+sea_excluded_weeks = []
+tb_excluded_weeks = []
+ten_excluded_weeks = []
+was_excluded_weeks = []
+az_req_week = 0
+atl_req_week = 0
+bal_req_week = 0
+buf_req_week = 0
+car_req_week = 0
+chi_req_week = 0
+cin_req_week = 0
+cle_req_week = 0
+dal_req_week = 0
+den_req_week = 0
+det_req_week = 0
+gb_req_week = 0
+hou_req_week = 0
+ind_req_week = 0
+jax_req_week = 0
+kc_req_week = 0
+lv_req_week = 0
+lac_req_week = 0
+lar_req_week = 0
+mia_req_week = 0
+min_req_week = 0
+ne_req_week = 0
+no_req_week = 0
+nyg_req_week = 0
+nyj_req_week = 0
+phi_req_week = 0
+pit_req_week = 0
+sf_req_week = 0
+sea_req_week = 0
+tb_req_week = 0
+ten_req_week = 0
+was_req_week = 0
+starting_week = 1
+if selected_contest == "DraftKings":
+	ending_week = 19
+else:
+	ending_week = 21
+az_rank = default_az_rank
+atl_rank = default_atl_rank
+bal_rank = default_bal_rank
+buf_rank = default_buf_rank
+car_rank = default_car_rank
+chi_rank = default_chi_rank
+cin_rank = default_cin_rank
+cle_rank = default_cle_rank
+dal_rank = default_dal_rank
+den_rank = default_den_rank
+det_rank = default_det_rank
+gb_rank = default_gb_rank
+hou_rank = default_hou_rank
+ind_rank = default_ind_rank
+jax_rank = default_jax_rank
+kc_rank = default_kc_rank
+lv_rank = default_lv_rank
+lac_rank = default_lac_rank
+lar_rank = default_lar_rank
+mia_rank = default_mia_rank
+min_rank = default_min_rank
+ne_rank = default_ne_rank
+no_rank = default_no_rank
+nyg_rank = default_nyg_rank
+nyj_rank = default_nyj_rank
+phi_rank = default_phi_rank
+pit_rank = default_pit_rank
+sf_rank = default_sf_rank
+sea_rank = default_sea_rank
+tb_rank = default_tb_rank
+ten_rank = default_ten_rank
+was_rank = default_was_rank
+avoid_away_teams_on_short_rest = 0
+avoid_close_divisional_matchups = 0
+avoid_3_games_in_10_days = 0
+avoid_4_games_in_17_days = 0
+avoid_away_teams_in_close_matchups = 0
+avoid_cumulative_rest_disadvantage = 0
+avoid_thursday_night = 0
+avoid_away_thursday_night = 0
+avoid_back_to_back_away = 0
+avoid_international_game = 0
+avoid_teams_with_weekly_rest_disadvantage = 0
+avoid_away_teams_with_travel_disadvantage = 0
+bayesian_rest_travel_constraint = "No Rest, Bayesian, and Travel Constraints" 
+number_solutions = 1
 
-
-team_rankings = [
-    "Default", 0,-15,-14.5,-14,-13.5,-13,-12.5,-12,-11.5,-11,-10.5,-10,-9.5,-9,-8.5,-8,-7.5,
-    -7,-6.5,-6,-5.5,-5,-4.5,-4,-3.5,-3,-2.5,-2,-1.5,-1,-.5,.5,1,1.5,2,2.5,3,3.5,4,
-    4.5,5,5.5,6,6.5,7,7.5,8,8.5,9,9.5,10,10.5,11,11.5,12,12.5,13,13.5,14,14.5,15
+st.title("NFL Survivor Optimization")
+st.subheader("The second best Circa Survivor Contest optimizer")
+contest_options = [
+    "Circa", "DraftKings"
 ]
-az_rank = st.selectbox("Arizona Cardinals Ranking:", options=team_rankings)
-if az_rank == "Default":
-    az_rank = default_atl_rank
-st.write(f'Current Arizona Cardinals Ranking: {az_rank}')
+st.write("Alright, clowns. This site is built to help you optimize your picks for the Circa Survivor contest (Eventually other contests). :red[This tool is just for informational use. It does not take into account injuries or certain other factors. Do not use this tool as your only source of information.] Simply input which week you're in, your team rankings, constraints, etc... and the algorithm will do the rest. For a full season, Running the algorith will take up to 5 hours or more. Good luck!")
 st.write('')
-atl_rank = st.selectbox("Atlanta Falcons Ranking:", options=team_rankings)
-if atl_rank == "Default":
-    atl_rank = default_atl_rank
-st.write(f'Current Atlanta Falcons Ranking: {atl_rank}')
 st.write('')
-bal_rank = st.selectbox("Baltimore Ravens Ranking:", options=team_rankings)
-if bal_rank == "Default":
-    bal_rank = default_bal_rank
-st.write(f'Current Baltimore Ravens Ranking: {bal_rank}')
+st.subheader('Select Contest')
+st.write('Choose the contest you are using this algorithm for: Circa (Advanced) or Draftkings (Traditional and Pathetic)')
+st.write('The biggest differences between the two contests:')
+st.write('- Circa has 20 Weeks (Christmas and Thanksgiving/Black Friday act as their own indivdual weeks)')
+st.write('- Thanksgiving/Black Friday week will be Week 13 on this site (If you select Circa)')
+st.write('- Christmas Week will be week 18 on this site (If you select Circa)')
+st.write('- In Circa, a tie eliminates you, but in Draftkings, you move on with a tie')
+st.write('- Players in Circa tend to be sharper, making it more difficult to play contrarian')
+selected_contest = st.selectbox('Choose Contest:', options = contest_options)
 st.write('')
-buf_rank = st.selectbox("Buffalo Bills Ranking:", options=team_rankings)
-if buf_rank == "Default":
-    buf_rank = default_buf_rank
-st.write(f'Current Buffalo Bills Ranking: {buf_rank}')
 st.write('')
-car_rank = st.selectbox("Carolina Panthers Ranking:", options=team_rankings)
-if car_rank == "Default":
-    car_rank = default_car_rank
-st.write(f'Current Carolina Panthers Ranking: {car_rank}')
 st.write('')
-chi_rank = st.selectbox("Chicago Bears Ranking:", options=team_rankings)
-if chi_rank == "Default":
-    chi_rank = default_chi_rank
-st.write(f'Current Chicago Bears Ranking: {chi_rank}')
 st.write('')
-cin_rank = st.selectbox("Cincinnati Bengals Ranking:", options=team_rankings)
-if cin_rank == "Default":
-    cin_rank = default_cin_rank
-st.write(f'Current Cincinnati Bengals Ranking: {cin_rank}')
+st.subheader('Picked Teams:')
+yes_i_have_picked_teams = st.checkbox('Have you already used any teams in the contest, or want to prevent the alogorithm from using any specific teams?')
+
+#def create_nfl_app():
+
+nfl_teams = [
+    "Arizona Cardinals", "Atlanta Falcons", "Baltimore Ravens", "Buffalo Bills",
+    "Carolina Panthers", "Chicago Bears", "Cincinnati Bengals", "Cleveland Browns",
+    "Dallas Cowboys", "Denver Broncos", "Detroit Lions", "Green Bay Packers",
+    "Houston Texans", "Indianapolis Colts", "Jacksonville Jaguars", "Kansas City Chiefs",
+    "Las Vegas Raiders", "Los Angeles Chargers", "Los Angeles Rams", "Miami Dolphins",
+    "Minnesota Vikings", "New England Patriots", "New Orleans Saints", "New York Giants",
+    "New York Jets", "Philadelphia Eagles", "Pittsburgh Steelers", "San Francisco 49ers",
+    "Seattle Seahawks", "Tampa Bay Buccaneers", "Tennessee Titans", "Washington Commanders"
+]
+if yes_i_have_picked_teams:
+    st.write('Select the teams that you have already used in the Survivor contest, or teams that you just do not want to pick in the enirety of the contest')
+    selected_teams = st.multiselect("Prohibited Picks:", options=nfl_teams)
+    picked_teams = selected_teams if selected_teams else []
+    if picked_teams:
+        st.write("You selected:")
+        for team in picked_teams:
+            st.write(f"- {team}")
+    else:
+      st.write("No teams selected")
 st.write('')
-cle_rank = st.selectbox("Cleveland Browns Ranking:", options=team_rankings)
-if cle_rank == "Default":
-    cle_rank = default_cle_rank
-st.write(f'Current Cleveland Browns Ranking: {cle_rank}')
 st.write('')
-dal_rank = st.selectbox("Dallas Cowboys Ranking:", options=team_rankings)
-if dal_rank == "Default":
-    dal_rank = default_dal_rank
-st.write(f'Current Dallas Cowboys Ranking: {dal_rank}')
 st.write('')
-den_rank = st.selectbox("Denver Broncos Ranking:", options=team_rankings)
-if den_rank == "Default":
-    den_rank = default_den_rank
-st.write(f'Current Denver Broncos Ranking: {den_rank}')
+st.subheader('Remaining Weeks:')
+yes_i_would_like_to_choose_weeks = st.checkbox('Would you like to choose a range of weeks, instead of the entire season?')
+if yes_i_would_like_to_choose_weeks:
+    st.text('Select the upcoming week for the starting week. Select the week you want the algorithm to stop at. If you select one week, it will take about 30-45 minutes. All 20 weeks will take 5-6 hours. Ending Week must be greater than or equal to Starting Week.')
+    if selected_contest == "DraftKings":
+        starting_week = st.selectbox("Select Starting Week:", options=range(1, 19))
+    else:
+        st.write(":red[Week 13 is Thanksgiving/Black Friday Week and Week 18 is Christmas Week]")
+        starting_week = st.selectbox("Select Starting Week:", options=range(1, 21))
+    #if starting_week:
+        #st.write(f"Selected Starting Week: {starting_week}")
+    # Create a dynamic range for ending week based on starting week
+    st.write('')
+    if selected_contest == "DraftKings":
+        ending_week_options = range(starting_week, 19)
+    else:
+        ending_week_options = range(starting_week, 21)
+    ending_week = st.selectbox("Select Ending Week:", options=ending_week_options)
+    ending_week = ending_week + 1
+#return starting_week, ending_week, picked_teams
+    #if ending_week:
+        #st.write(f"Selected Ending Week: {ending_week}")
+#if __name__ == "__main__":
+#    starting_week, ending_week, picked_teams = create_nfl_app()
 st.write('')
-det_rank = st.selectbox("Detroit Lions Ranking:", options=team_rankings)
-if det_rank == "Default":
-    det_rank = default_det_rank
-st.write(f'Current Detroit Lions Ranking: {det_rank}')
 st.write('')
-gb_rank = st.selectbox("Green Bay Packers Ranking:", options=team_rankings)
-if gb_rank == "Default":
-    gb_rank = default_gb_rank
-st.write(f'Current Green Bay Packers Ranking: {gb_rank}')
 st.write('')
-hou_rank = st.selectbox("Houston Texans Ranking:", options=team_rankings)
-if hou_rank == "Default":
-    hou_rank = default_hou_rank
-st.write(f'Current Houston Texans Ranking: {hou_rank}')
+st.subheader('Teams That Have to Be Picked')
+yes_i_have_a_required_team = st.checkbox('Do you have a team that you requirew to be used in a specific week?')
+if yes_i_have_a_required_team:
+    st.write('Select the week in which the algorithm has to pick that team. If you do not want the team to be :red[required] to be used, select 0')
+    required_week_options = [0] + list(range(starting_week, ending_week))
+    
+    az_req_week = st.selectbox("Arizona Cardinals Week Required to Be Picked:", options=required_week_options)
+    atl_req_week = st.selectbox("Atlanta Falcons Week Required to Be Picked:", options=required_week_options)
+    bal_req_week = st.selectbox("Baltimore Ravens Week Required to Be Picked:", options=required_week_options)
+    buf_req_week = st.selectbox("Buffalo Bills Week Required to Be Picked:", options=required_week_options)
+    car_req_week = st.selectbox("Carolina Panthers Week Required to Be Picked:", options=required_week_options)
+    chi_req_week = st.selectbox("Chicago Bears Week Required to Be Picked:", options=required_week_options)
+    cin_req_week = st.selectbox("Cincinnati Bengals Week Required to Be Picked:", options=required_week_options)
+    cle_req_week = st.selectbox("Cleveland Browns Week Required to Be Picked:", options=required_week_options)
+    dal_req_week = st.selectbox("Dallas Cowboys Week Required to Be Picked:", options=required_week_options)
+    den_req_week = st.selectbox("Denver Broncos Week Required to Be Picked:", options=required_week_options)
+    det_req_week = st.selectbox("Detroit Lions Week Required to Be Picked:", options=required_week_options)
+    gb_req_week = st.selectbox("Green Bay Packers Week Required to Be Picked:", options=required_week_options)
+    hou_req_week = st.selectbox("Houston Texans Week Required to Be Picked:", options=required_week_options)
+    ind_req_week = st.selectbox("Indianapoils Colts Week Required to Be Picked:", options=required_week_options)
+    jax_req_week = st.selectbox("Jacksonville Jaguars Week Required to Be Picked:", options=required_week_options)
+    kc_req_week = st.selectbox("Kansas City Chiefs Week Required to Be Picked:", options=required_week_options)
+    lv_req_week = st.selectbox("Las Vegas Raiders Week Required to Be Picked:", options=required_week_options)
+    lac_req_week = st.selectbox("Los Angeles Chargers Week Required to Be Picked:", options=required_week_options)
+    lar_req_week = st.selectbox("Los Angeles Rams Week Required to Be Picked:", options=required_week_options)
+    mia_req_week = st.selectbox("Miami Dolphins Week Required to Be Picked:", options=required_week_options)
+    min_req_week = st.selectbox("Minnesota Vikings Week Required to Be Picked:", options=required_week_options)
+    ne_req_week = st.selectbox("New England Patriots Week Required to Be Picked:", options=required_week_options)
+    no_req_week = st.selectbox("New Orleans Saints Week Required to Be Picked:", options=required_week_options)
+    nyg_req_week = st.selectbox("New York Giants Week Required to Be Picked:", options=required_week_options)
+    nyj_req_week = st.selectbox("New York Jets Week Required to Be Picked:", options=required_week_options)
+    phi_req_week = st.selectbox("Philadelphia Eagles Week Required to Be Picked:", options=required_week_options)
+    pit_req_week = st.selectbox("Pittsburgh Steelers Week Required to Be Picked:", options=required_week_options)
+    sf_req_week = st.selectbox("San Francisco 49ers Week Required to Be Picked:", options=required_week_options)
+    sea_req_week = st.selectbox("Seattle Seahawks Week Required to Be Picked:", options=required_week_options)
+    tb_req_week = st.selectbox("Tampa Bay Buccaneers Week Required to Be Picked:", options=required_week_options)
+    ten_req_week = st.selectbox("Tennessee Titans Week Required to Be Picked:", options=required_week_options)
+    was_req_week = st.selectbox("Washington Commanders Week Required to Be Picked:", options=required_week_options)
+
 st.write('')
-ind_rank = st.selectbox("Indianapoils Colts Ranking:", options=team_rankings)
-if ind_rank == "Default":
-    ind_rank = default_ind_rank
-st.write(f'Current Indianapoils Colts Ranking: {ind_rank}')
 st.write('')
-jax_rank = st.selectbox("Jacksonville Jaguars Ranking:", options=team_rankings)
-if jax_rank == "Default":
-    jax_rank = default_jax_rank
-st.write(f'Current Jacksonville Jaguars Ranking: {jax_rank}')
 st.write('')
-kc_rank = st.selectbox("Kansas City Chiefs Ranking:", options=team_rankings)
-if kc_rank == "Default":
-    kc_rank = default_kc_rank
-st.write(f'Current Kansas City Chiefs Ranking: {kc_rank}')
+st.subheader('Prohibited Teams')
+yes_i_have_prohibited_teams = st.checkbox('Do you have teams that you want to prohibit the alogrithm from choosing ina specifc week?')
+if yes_i_have_prohibited_teams:
+    st.write('Choose which week you do :red[NOT] want a team to be picked. If, for example, you think the 49ers have a bad matchup in Week 15, and you do not want them to be used then, select "15" for the San Francisco 49ers')
+
+    az_prohibited_weeks = st.multiselect("Arizona Cardinals Week to Be Excluded:", options=required_week_options)
+    atl_prohibited_weeks = st.multiselect("Atlanta Falcons Week to Be Excluded:", options=required_week_options)
+    bal_prohibited_weeks = st.multiselect("Baltimore Ravens Week to Be Excluded:", options=required_week_options)
+    buf_prohibited_weeks = st.multiselect("Buffalo Bills Week to Be Excluded:", options=required_week_options)
+    car_prohibited_weeks = st.multiselect("Carolina Panthers Week to Be Excluded:", options=required_week_options)
+    chi_prohibited_weeks = st.multiselect("Chicago Bears Week to Be Excluded:", options=required_week_options)
+    cin_prohibited_weeks = st.multiselect("Cincinnati Bengals Week to Be Excluded:", options=required_week_options)
+    cle_prohibited_weeks = st.multiselect("Cleveland Browns Week to Be Excluded:", options=required_week_options)
+    dal_prohibited_weeks = st.multiselect("Dallas Cowboys Week to Be Excluded:", options=required_week_options)
+    den_prohibited_weeks = st.multiselect("Denver Broncos Week to Be Excluded:", options=required_week_options)
+    det_prohibited_weeks = st.multiselect("Detroit Lions Week to Be Excluded:", options=required_week_options)
+    gb_prohibited_weeks = st.multiselect("Green Bay Packers Week to Be Excluded:", options=required_week_options)
+    hou_prohibited_weeks = st.multiselect("Houston Texans Week to Be Excluded:", options=required_week_options)
+    ind_prohibited_weeks = st.multiselect("Indianapoils Colts Week to Be Excluded:", options=required_week_options)
+    jax_prohibited_weeks = st.multiselect("Jacksonville Jaguars Week to Be Excluded:", options=required_week_options)
+    kc_prohibited_weeks = st.multiselect("Kansas City Chiefs Week to Be Excluded:", options=required_week_options)
+    lv_prohibited_weeks = st.multiselect("Las Vegas Raiders Week to Be Excluded:", options=required_week_options)
+    lac_prohibited_weeks = st.multiselect("Los Angeles Chargers Week to Be Excluded:", options=required_week_options)
+    lar_prohibited_weeks = st.multiselect("Los Angeles Rams Week to Be Excluded:", options=required_week_options)
+    mia_prohibited_weeks = st.multiselect("Miami Dolphins Week to Be Excluded:", options=required_week_options)
+    min_prohibited_weeks = st.multiselect("Minnesota Vikings Week to Be Excluded:", options=required_week_options)
+    ne_prohibited_weeks = st.multiselect("New England Patriots Week to Be Excluded:", options=required_week_options)
+    no_prohibited_weeks = st.multiselect("New Orleans Saints Week to Be Excluded:", options=required_week_options)
+    nyg_prohibited_weeks = st.multiselect("New York Giants Week to Be Excluded:", options=required_week_options)
+    nyj_prohibited_weeks = st.multiselect("New York Jets Week to Be Excluded:", options=required_week_options)
+    phi_prohibited_weeks = st.multiselect("Philadelphia Eagles Week to Be Excluded:", options=required_week_options)
+    pit_prohibited_weeks = st.multiselect("Pittsburgh Steelers Week to Be Excluded:", options=required_week_options)
+    sf_prohibited_weeks = st.multiselect("San Francisco 49ers Week to Be Excluded:", options=required_week_options)
+    sea_prohibited_weeks = st.multiselect("Seattle Seahawks Week to Be Excluded:", options=required_week_options)
+    tb_prohibited_weeks = st.multiselect("Tampa Bay Buccaneers Week to Be Excluded:", options=required_week_options)
+    ten_prohibited_weeks = st.multiselect("Tennessee Titans Week to Be Excluded:", options=required_week_options)
+    was_prohibited_weeks = st.multiselect("Washington Commanders Week to Be Excluded:", options=required_week_options)
+    az_excluded_weeks = az_prohibited_weeks if az_prohibited_weeks else []
+    atl_excluded_weeks = atl_prohibited_weeks if atl_prohibited_weeks else []
+    bal_excluded_weeks = bal_prohibited_weeks if bal_prohibited_weeks else []
+    buf_excluded_weeks = buf_prohibited_weeks if buf_prohibited_weeks else []
+    car_excluded_weeks = car_prohibited_weeks if car_prohibited_weeks else []
+    chi_excluded_weeks = chi_prohibited_weeks if chi_prohibited_weeks else []
+    cin_excluded_weeks = cin_prohibited_week if cin_prohibited_weeks else []
+    cle_excluded_weeks = cle_prohibited_weeks if cle_prohibited_weeks else []
+    dal_excluded_weeks = dal_prohibited_weeks if dal_prohibited_weeks else []
+    den_excluded_weeks = den_prohibited_weeks if den_prohibited_weeks else []
+    det_excluded_weeks = det_prohibited_weeks if det_prohibited_weeks else []
+    gb_excluded_weeks = gb_prohibited_weeks if gb_prohibited_weeks else []
+    hou_excluded_weeks = hou_prohibited_weeks if hou_prohibited_weeks else []
+    ind_excluded_weeks = ind_prohibited_weeks if ind_prohibited_weeks else []
+    jax_excluded_weeks = jax_prohibited_weeks if jax_prohibited_weeks else []
+    kc_excluded_weeks = kc_prohibited_weeks if kc_prohibited_weeks else []
+    lv_excluded_weeks = lv_prohibited_weeks if lv_prohibited_weeks else []
+    lac_excluded_weeks = lac_prohibited_weeks if lac_prohibited_weeks else []
+    lar_excluded_weeks = lar_prohibited_weeks if lar_prohibited_weeks else []
+    mia_excluded_weeks = mia_prohibited_weeks if mia_prohibited_weeks else []
+    min_excluded_weeks = min_prohibited_weeks if min_prohibited_weeks else []
+    ne_excluded_weeks = ne_prohibited_weeks if ne_prohibited_weeks else []
+    no_excluded_weeks = no_prohibited_weeks if no_prohibited_weeks else []
+    nyg_excluded_weeks = nyg_prohibited_weeks if nyg_prohibited_weeks else []
+    nyj_excluded_weeks = nyj_prohibited_weeks if nyj_prohibited_weeks else []
+    phi_excluded_weeks = phi_prohibited_weeks if phi_prohibited_weeks else []
+    pit_excluded_weeks = pit_prohibited_weeks if pit_prohibited_weeks else []
+    sf_excluded_weeks = sf_prohibited_weeks if sf_prohibited_weeks else []
+    sea_excluded_weeks = sea_prohibited_weeks if sea_prohibited_weeks else []
+    tb_excluded_weeks = tb_prohibited_weeks if tb_prohibited_weeks else []
+    ten_excluded_weeks = ten_prohibited_weeks if ten_prohibited_weeks else []
+    was_excluded_weeks = was_prohibited_weeks if was_prohibited_weeks else []
+
+
 st.write('')
-lv_rank = st.selectbox("Las Vegas Raiders Ranking:", options=team_rankings)
-if lv_rank == "Default":
-    lv_rank = default_lv_rank
-st.write(f'Current Las Vegas Raiders Ranking: {lv_rank}')
 st.write('')
-lac_rank = st.selectbox("Los Angeles Chargers Ranking:", options=team_rankings)
-if lac_rank == "Default":
-    lac_rank = default_lac_rank
-st.write(f'Current Los Angeles Chargers Ranking: {lac_rank}')
 st.write('')
-lar_rank = st.selectbox("Los Angeles Rams Ranking:", options=team_rankings)
-if lar_rank == "Default":
-    lar_rank = default_lar_rank
-st.write(f'Current Los Angeles Rams Ranking: {lar_rank}')
-st.write('')
-mia_rank = st.selectbox("Miami Dolphins Ranking:", options=team_rankings)
-if mia_rank == "Default":
-    mia_rank = default_mia_rank
-st.write(f'Current Miami Dolphins Ranking: {mia_rank}')
-st.write('')
-min_rank = st.selectbox("Minnesota Vikings Ranking:", options=team_rankings)
-if min_rank == "Default":
-    min_rank = default_min_rank
-st.write(f'Current Minnesota Vikings Ranking: {min_rank}')
-st.write('')
-ne_rank = st.selectbox("New England Patriots Ranking:", options=team_rankings)
-if ne_rank == "Default":
-    ne_rank = default_ne_rank
-st.write(f'Current New England Patriots Ranking: {ne_rank}')
-st.write('')
-no_rank = st.selectbox("New Orleans Saints Ranking:", options=team_rankings)
-if no_rank == "Default":
-    no_rank = default_no_rank
-st.write(f'Current New Orleans Saints Ranking: {no_rank}')
-st.write('')
-nyg_rank = st.selectbox("New York Giants Ranking:", options=team_rankings)
-if nyg_rank == "Default":
-    nyg_rank = default_nyg_rank
-st.write(f'Current New York Giants Ranking: {nyg_rank}')
-st.write('')
-nyj_rank = st.selectbox("New York Jets Ranking:", options=team_rankings)
-if nyj_rank == "Default":
-    nyj_rank = default_nyj_rank
-st.write(f'Current New York Jets Ranking: {nyj_rank}')
-st.write('')
-phi_rank = st.selectbox("Philadelphia Eagles Ranking:", options=team_rankings)
-if phi_rank == "Default":
-    phi_rank = default_phi_rank
-st.write(f'Current Philadelphia Eagles Ranking: {phi_rank}')
-st.write('')
-pit_rank = st.selectbox("Pittsburgh Steelers Ranking:", options=team_rankings)
-if pit_rank == "Default":
-    pit_rank = default_pit_rank
-st.write(f'Current Pittsburgh Steelers Ranking: {pit_rank}')
-st.write('')
-sf_rank = st.selectbox("San Francisco 49ers Ranking:", options=team_rankings)
-if sf_rank == "Default":
-    sf_rank = default_sf_rank
-st.write(f'Current San Francisco 49ers Ranking: {sf_rank}')
-st.write('')
-sea_rank = st.selectbox("Seattle Seahawks Ranking:", options=team_rankings)
-if sea_rank == "Default":
-    sea_rank = default_sea_rank
-st.write(f'Current Seattle Seahawks Ranking: {sea_rank}')
-st.write('')
-tb_rank = st.selectbox("Tampa Bay Buccaneers Ranking:", options=team_rankings)
-if tb_rank == "Default":
-    tb_rank = default_tb_rank
-st.write(f'Current Tampa Bay Buccaneers Ranking: {tb_rank}')
-st.write('')
-ten_rank = st.selectbox("Tennessee Titans Ranking:", options=team_rankings)
-if ten_rank == "Default":
-    ten_rank = default_ten_rank
-st.write(f'Current Tennessee Titans Ranking: {ten_rank}')
-st.write('')
-was_rank = st.selectbox("Washington Commanders Ranking:", options=team_rankings)
-if was_rank == "Default":
-    was_rank = default_was_rank
-st.write(f'Current Washington Commanders Ranking: {was_rank}')
+
+st.subheader('NFL Team Rankings')
+yes_i_have_customized_rankings = st.checkbox('Wopuld you like to use custoimized rankings instead of our default rankings?')
+if yes_i_have_customized_rankings:
+    st.write('The Ranking represents :red[how much a team would either win (positive number) or lose (negative number) by to an average NFL team] on a neutral field. 0 means the team is perfectly average. If you leave the "Default" value, the default rankings will be used.')
+    st.write('')
+    
+    
+    team_rankings = [
+        "Default", 0,-15,-14.5,-14,-13.5,-13,-12.5,-12,-11.5,-11,-10.5,-10,-9.5,-9,-8.5,-8,-7.5,
+        -7,-6.5,-6,-5.5,-5,-4.5,-4,-3.5,-3,-2.5,-2,-1.5,-1,-.5,.5,1,1.5,2,2.5,3,3.5,4,
+        4.5,5,5.5,6,6.5,7,7.5,8,8.5,9,9.5,10,10.5,11,11.5,12,12.5,13,13.5,14,14.5,15
+    ]
+    az_rank = st.selectbox("Arizona Cardinals Ranking:", options=team_rankings)
+    if az_rank == "Default":
+        az_rank = default_atl_rank
+    st.write(f'Current Arizona Cardinals Ranking: {az_rank}')
+    st.write('')
+    atl_rank = st.selectbox("Atlanta Falcons Ranking:", options=team_rankings)
+    if atl_rank == "Default":
+        atl_rank = default_atl_rank
+    st.write(f'Current Atlanta Falcons Ranking: {atl_rank}')
+    st.write('')
+    bal_rank = st.selectbox("Baltimore Ravens Ranking:", options=team_rankings)
+    if bal_rank == "Default":
+        bal_rank = default_bal_rank
+    st.write(f'Current Baltimore Ravens Ranking: {bal_rank}')
+    st.write('')
+    buf_rank = st.selectbox("Buffalo Bills Ranking:", options=team_rankings)
+    if buf_rank == "Default":
+        buf_rank = default_buf_rank
+    st.write(f'Current Buffalo Bills Ranking: {buf_rank}')
+    st.write('')
+    car_rank = st.selectbox("Carolina Panthers Ranking:", options=team_rankings)
+    if car_rank == "Default":
+        car_rank = default_car_rank
+    st.write(f'Current Carolina Panthers Ranking: {car_rank}')
+    st.write('')
+    chi_rank = st.selectbox("Chicago Bears Ranking:", options=team_rankings)
+    if chi_rank == "Default":
+        chi_rank = default_chi_rank
+    st.write(f'Current Chicago Bears Ranking: {chi_rank}')
+    st.write('')
+    cin_rank = st.selectbox("Cincinnati Bengals Ranking:", options=team_rankings)
+    if cin_rank == "Default":
+        cin_rank = default_cin_rank
+    st.write(f'Current Cincinnati Bengals Ranking: {cin_rank}')
+    st.write('')
+    cle_rank = st.selectbox("Cleveland Browns Ranking:", options=team_rankings)
+    if cle_rank == "Default":
+        cle_rank = default_cle_rank
+    st.write(f'Current Cleveland Browns Ranking: {cle_rank}')
+    st.write('')
+    dal_rank = st.selectbox("Dallas Cowboys Ranking:", options=team_rankings)
+    if dal_rank == "Default":
+        dal_rank = default_dal_rank
+    st.write(f'Current Dallas Cowboys Ranking: {dal_rank}')
+    st.write('')
+    den_rank = st.selectbox("Denver Broncos Ranking:", options=team_rankings)
+    if den_rank == "Default":
+        den_rank = default_den_rank
+    st.write(f'Current Denver Broncos Ranking: {den_rank}')
+    st.write('')
+    det_rank = st.selectbox("Detroit Lions Ranking:", options=team_rankings)
+    if det_rank == "Default":
+        det_rank = default_det_rank
+    st.write(f'Current Detroit Lions Ranking: {det_rank}')
+    st.write('')
+    gb_rank = st.selectbox("Green Bay Packers Ranking:", options=team_rankings)
+    if gb_rank == "Default":
+        gb_rank = default_gb_rank
+    st.write(f'Current Green Bay Packers Ranking: {gb_rank}')
+    st.write('')
+    hou_rank = st.selectbox("Houston Texans Ranking:", options=team_rankings)
+    if hou_rank == "Default":
+        hou_rank = default_hou_rank
+    st.write(f'Current Houston Texans Ranking: {hou_rank}')
+    st.write('')
+    ind_rank = st.selectbox("Indianapoils Colts Ranking:", options=team_rankings)
+    if ind_rank == "Default":
+        ind_rank = default_ind_rank
+    st.write(f'Current Indianapoils Colts Ranking: {ind_rank}')
+    st.write('')
+    jax_rank = st.selectbox("Jacksonville Jaguars Ranking:", options=team_rankings)
+    if jax_rank == "Default":
+        jax_rank = default_jax_rank
+    st.write(f'Current Jacksonville Jaguars Ranking: {jax_rank}')
+    st.write('')
+    kc_rank = st.selectbox("Kansas City Chiefs Ranking:", options=team_rankings)
+    if kc_rank == "Default":
+        kc_rank = default_kc_rank
+    st.write(f'Current Kansas City Chiefs Ranking: {kc_rank}')
+    st.write('')
+    lv_rank = st.selectbox("Las Vegas Raiders Ranking:", options=team_rankings)
+    if lv_rank == "Default":
+        lv_rank = default_lv_rank
+    st.write(f'Current Las Vegas Raiders Ranking: {lv_rank}')
+    st.write('')
+    lac_rank = st.selectbox("Los Angeles Chargers Ranking:", options=team_rankings)
+    if lac_rank == "Default":
+        lac_rank = default_lac_rank
+    st.write(f'Current Los Angeles Chargers Ranking: {lac_rank}')
+    st.write('')
+    lar_rank = st.selectbox("Los Angeles Rams Ranking:", options=team_rankings)
+    if lar_rank == "Default":
+        lar_rank = default_lar_rank
+    st.write(f'Current Los Angeles Rams Ranking: {lar_rank}')
+    st.write('')
+    mia_rank = st.selectbox("Miami Dolphins Ranking:", options=team_rankings)
+    if mia_rank == "Default":
+        mia_rank = default_mia_rank
+    st.write(f'Current Miami Dolphins Ranking: {mia_rank}')
+    st.write('')
+    min_rank = st.selectbox("Minnesota Vikings Ranking:", options=team_rankings)
+    if min_rank == "Default":
+        min_rank = default_min_rank
+    st.write(f'Current Minnesota Vikings Ranking: {min_rank}')
+    st.write('')
+    ne_rank = st.selectbox("New England Patriots Ranking:", options=team_rankings)
+    if ne_rank == "Default":
+        ne_rank = default_ne_rank
+    st.write(f'Current New England Patriots Ranking: {ne_rank}')
+    st.write('')
+    no_rank = st.selectbox("New Orleans Saints Ranking:", options=team_rankings)
+    if no_rank == "Default":
+        no_rank = default_no_rank
+    st.write(f'Current New Orleans Saints Ranking: {no_rank}')
+    st.write('')
+    nyg_rank = st.selectbox("New York Giants Ranking:", options=team_rankings)
+    if nyg_rank == "Default":
+        nyg_rank = default_nyg_rank
+    st.write(f'Current New York Giants Ranking: {nyg_rank}')
+    st.write('')
+    nyj_rank = st.selectbox("New York Jets Ranking:", options=team_rankings)
+    if nyj_rank == "Default":
+        nyj_rank = default_nyj_rank
+    st.write(f'Current New York Jets Ranking: {nyj_rank}')
+    st.write('')
+    phi_rank = st.selectbox("Philadelphia Eagles Ranking:", options=team_rankings)
+    if phi_rank == "Default":
+        phi_rank = default_phi_rank
+    st.write(f'Current Philadelphia Eagles Ranking: {phi_rank}')
+    st.write('')
+    pit_rank = st.selectbox("Pittsburgh Steelers Ranking:", options=team_rankings)
+    if pit_rank == "Default":
+        pit_rank = default_pit_rank
+    st.write(f'Current Pittsburgh Steelers Ranking: {pit_rank}')
+    st.write('')
+    sf_rank = st.selectbox("San Francisco 49ers Ranking:", options=team_rankings)
+    if sf_rank == "Default":
+        sf_rank = default_sf_rank
+    st.write(f'Current San Francisco 49ers Ranking: {sf_rank}')
+    st.write('')
+    sea_rank = st.selectbox("Seattle Seahawks Ranking:", options=team_rankings)
+    if sea_rank == "Default":
+        sea_rank = default_sea_rank
+    st.write(f'Current Seattle Seahawks Ranking: {sea_rank}')
+    st.write('')
+    tb_rank = st.selectbox("Tampa Bay Buccaneers Ranking:", options=team_rankings)
+    if tb_rank == "Default":
+        tb_rank = default_tb_rank
+    st.write(f'Current Tampa Bay Buccaneers Ranking: {tb_rank}')
+    st.write('')
+    ten_rank = st.selectbox("Tennessee Titans Ranking:", options=team_rankings)
+    if ten_rank == "Default":
+        ten_rank = default_ten_rank
+    st.write(f'Current Tennessee Titans Ranking: {ten_rank}')
+    st.write('')
+    was_rank = st.selectbox("Washington Commanders Ranking:", options=team_rankings)
+    if was_rank == "Default":
+        was_rank = default_was_rank
+    st.write(f'Current Washington Commanders Ranking: {was_rank}')
 
 st.write('')
 st.write('')
 st.write('')
 st.subheader('Select Constraints')
-st.write('These constraints will not work 100% of the time (For example in week 18, all Games are divisional matchups). However, it will require a team to be so heavily favored that the impact of the constrained factor should be minimal.')
-avoid_away_teams_on_short_rest = 1 if st.checkbox('Avoid Away Teams on Short Rest') else 0
-avoid_close_divisional_matchups = 1 if st.checkbox('Avoid Close Divisional Matchups') else 0
-avoid_3_games_in_10_days = 1 if st.checkbox('Avoid 3 games in 10 days') else 0
-avoid_4_games_in_17_days = 1 if st.checkbox('Avoid 4 games in 17 days') else 0
-avoid_away_teams_in_close_matchups = 1 if st.checkbox('Avoid Away Teams in Close Games') else 0
-avoid_cumulative_rest_disadvantage = 1 if st.checkbox('Avoid Cumulative Rest Disadvantage') else 0
-avoid_thursday_night = 1 if st.checkbox('Avoid :red[ALL TEAMS] in Thursday Night Games') else 0
-avoid_away_thursday_night = 1 if st.checkbox('Avoid :red[ONLY AWAY TEAMS] in Thursday Night Games') else 0
-avoid_back_to_back_away = 1 if st.checkbox('Avoid Teams on Back to Back Away Games') else 0
-avoid_international_game = 1 if st.checkbox('Avoid International Games') else 0
-avoid_teams_with_weekly_rest_disadvantage = 1 if st.checkbox('Avoid Teams with Rest Disadvantage') else 0
-avoid_away_teams_with_travel_disadvantage = 1 if st.checkbox('Avoid Teams with Travel Disadvatage') else 0
-bayesian_and_travel_options = [
-    "No Rest, Bayesian, and Travel Constraints",
-    "Selected team must have been projected to win based on preseason rankings, current rankings, and with and without travel/rest adjustments",
-    "Selected team must be projected to win with and without travel and rest impact based on current rankings",
-    "Selected team must have been projected to win based on preseason rankings in addition to current rankings",
-]
+yes_i_have_constraints = st.checkbox('Would youy like to add constraints? For example, "Avoid Teams on Short Rest"')
+if yes_i_have_constraints:
+    st.write('These constraints will not work 100% of the time (For example in week 18, all Games are divisional matchups). However, it will require a team to be so heavily favored that the impact of the constrained factor should be minimal.')
+    avoid_away_teams_on_short_rest = 1 if st.checkbox('Avoid Away Teams on Short Rest') else 0
+    avoid_close_divisional_matchups = 1 if st.checkbox('Avoid Close Divisional Matchups') else 0
+    avoid_3_games_in_10_days = 1 if st.checkbox('Avoid 3 games in 10 days') else 0
+    avoid_4_games_in_17_days = 1 if st.checkbox('Avoid 4 games in 17 days') else 0
+    avoid_away_teams_in_close_matchups = 1 if st.checkbox('Avoid Away Teams in Close Games') else 0
+    avoid_cumulative_rest_disadvantage = 1 if st.checkbox('Avoid Cumulative Rest Disadvantage') else 0
+    avoid_thursday_night = 1 if st.checkbox('Avoid :red[ALL TEAMS] in Thursday Night Games') else 0
+    avoid_away_thursday_night = 1 if st.checkbox('Avoid :red[ONLY AWAY TEAMS] in Thursday Night Games') else 0
+    avoid_back_to_back_away = 1 if st.checkbox('Avoid Teams on Back to Back Away Games') else 0
+    avoid_international_game = 1 if st.checkbox('Avoid International Games') else 0
+    avoid_teams_with_weekly_rest_disadvantage = 1 if st.checkbox('Avoid Teams with Rest Disadvantage') else 0
+    avoid_away_teams_with_travel_disadvantage = 1 if st.checkbox('Avoid Teams with Travel Disadvatage') else 0
+    bayesian_and_travel_options = [
+        "No Rest, Bayesian, and Travel Constraints",
+        "Selected team must have been projected to win based on preseason rankings, current rankings, and with and without travel/rest adjustments",
+        "Selected team must be projected to win with and without travel and rest impact based on current rankings",
+        "Selected team must have been projected to win based on preseason rankings in addition to current rankings",
+    ]
+        
+    #use_same_winners_across_all_4_metrics = 1 if st.selectbox('Bayesian, Rest, and Travel Impact:', options = bayesian_and_travel_options) == "Selected team must have been projected to win based on preseason rankings, current rankings, and with and without travel/rest adjustments" else 0
+    #use_same_current_and_adjusted_current_winners = 1 if st.selectbox('Bayesian, Rest, and Travel Impact:', options = bayesian_and_travel_options) == "Selected team must be projected to win with and without travel and rest impact based on current rankings" else 0
+    #use_same_adj_preseason_and_adj_current_winner = 1 if st.selectbox('Bayesian, Rest, and Travel Impact:', options = bayesian_and_travel_options) == "Selected team must have been projected to win based on preseason rankings in addition to current rankings" else 0
     
-#use_same_winners_across_all_4_metrics = 1 if st.selectbox('Bayesian, Rest, and Travel Impact:', options = bayesian_and_travel_options) == "Selected team must have been projected to win based on preseason rankings, current rankings, and with and without travel/rest adjustments" else 0
-#use_same_current_and_adjusted_current_winners = 1 if st.selectbox('Bayesian, Rest, and Travel Impact:', options = bayesian_and_travel_options) == "Selected team must be projected to win with and without travel and rest impact based on current rankings" else 0
-#use_same_adj_preseason_and_adj_current_winner = 1 if st.selectbox('Bayesian, Rest, and Travel Impact:', options = bayesian_and_travel_options) == "Selected team must have been projected to win based on preseason rankings in addition to current rankings" else 0
-
-bayesian_rest_travel_constraint = st.selectbox('Bayesian, Rest, and Travel Impact:', options = bayesian_and_travel_options)
+    bayesian_rest_travel_constraint = st.selectbox('Bayesian, Rest, and Travel Impact:', options = bayesian_and_travel_options)
 
 st.write('')
 st.write('')

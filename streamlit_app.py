@@ -2194,7 +2194,8 @@ st.subheader("The second best Circa Survivor Contest optimizer")
 contest_options = [
     "Circa", "DraftKings"
 ]
-st.write("Alright, clowns. This site is built to help you optimize your picks for the Circa Survivor contest (Eventually other contests). :red[This tool is just for informational use. It does not take into account injuries or certain other factors. Do not use this tool as your only source of information.] Simply input which week you're in, your team rankings, constraints, etc... and the algorithm will do the rest. For a full season, Running the algorith will take up to 5 hours or more. Good luck!")
+st.write("Alright, clowns. This site is built to help you optimize your picks for the Circa Survivor contest (Eventually other contests). :red[This tool is just for informational use. It does not take into account injuries or certain other factors. Do not use this tool as your only source of information.] Simply input which week you're in, your team rankings, constraints, etc... and the algorithm will do the rest.")
+st.write('Caluclating EV will take the longest in this process. For a full season, this step will take up to 5 hours or more. Good luck!')
 st.write('')
 st.write('')
 st.subheader('Select Contest')
@@ -2598,7 +2599,10 @@ use_cached_expected_value = 0
 
 if yes_i_have_customized_rankings:
 	st.subheader('Use Saved Expected Value')
-	st.write('Warning, this data is NOT up to date. It will save several hours of processing but will only be partially accurate. :red[Use carefully]')
+	st.write('Warning, this data may not be nup to date.')
+	st.write('- Checking this box will ensure the process is fast, (Less than 1 minute, compared to 5+ hours) and will prevent the risk of crashing')
+	st.write('- This will not use your customized rankings in the EV calculation process')
+	st.write('- This will NOT have an impact on your customized ranking output, just the EV output')
 	st.write('Last Update: :green[9/20/2024]')
 	use_cached_expected_value = 1 if st.checkbox('Use Cached Expected Value') else 0
 	st.write('')

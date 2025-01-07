@@ -1330,6 +1330,77 @@ def get_survivor_picks_based_on_ev():
             if 
                 if df.loc[i, 'Away Travel Advantage'] < -850 and df.loc[i, 'Away Team'] == df.loc[i, 'Adjusted Current Winner']:
                     solver.Add(picks[i] == 0)
+
+
+            
+            if df.loc[i, 'Adjusted Current Winner'] == 'Arizona Cardinals' and df.loc[i, 'Week'] in az_excluded_weeks:
+                    solver.Add(picks[i] == 0)
+            if df.loc[i, 'Adjusted Current Winner'] == 'Atlanta Falcons' and df.loc[i, 'Week'] in atl_excluded_weeks:
+                    solver.Add(picks[i] == 0)
+            if df.loc[i, 'Adjusted Current Winner'] == 'Baltimore Ravens' and df.loc[i, 'Week'] in bal_excluded_weeks:
+                    solver.Add(picks[i] == 0)
+            if df.loc[i, 'Adjusted Current Winner'] == 'Buffalo Bills' and df.loc[i, 'Week'] in buf_excluded_weeks:
+                    solver.Add(picks[i] == 0)
+            if df.loc[i, 'Adjusted Current Winner'] == 'Carolina Panthers' and df.loc[i, 'Week'] in car_excluded_weeks:
+                    solver.Add(picks[i] == 0)
+            if df.loc[i, 'Adjusted Current Winner'] == 'Chicago Bears' and df.loc[i, 'Week'] in chi_excluded_weeks:
+                    solver.Add(picks[i] == 0)
+            if df.loc[i, 'Adjusted Current Winner'] == 'Cincinatti Bengals' and df.loc[i, 'Week'] in cin_excluded_weeks:
+                    solver.Add(picks[i] == 0)
+            if df.loc[i, 'Adjusted Current Winner'] == 'Cleveland Browns' and df.loc[i, 'Week'] in cle_excluded_weeks:
+                    solver.Add(picks[i] == 0)
+            if df.loc[i, 'Adjusted Current Winner'] == 'Dallas Cowboys' and df.loc[i, 'Week'] in dal_excluded_weeks:
+                    solver.Add(picks[i] == 0)
+            if df.loc[i, 'Adjusted Current Winner'] == 'Denver Broncos' and df.loc[i, 'Week'] in den_excluded_weeks:
+                    solver.Add(picks[i] == 0)
+            if df.loc[i, 'Adjusted Current Winner'] == 'Detroit Lions' and df.loc[i, 'Week'] in det_excluded_weeks:
+                    solver.Add(picks[i] == 0)
+            if df.loc[i, 'Adjusted Current Winner'] == 'AGreen Bay Packers' and df.loc[i, 'Week'] in gb_excluded_weeks:
+                    solver.Add(picks[i] == 0)
+            if df.loc[i, 'Adjusted Current Winner'] == 'Houston Texans' and df.loc[i, 'Week'] in hou_excluded_weeks:
+                    solver.Add(picks[i] == 0)
+            if df.loc[i, 'Adjusted Current Winner'] == 'Indianapolis Colts' and df.loc[i, 'Week'] in ind_excluded_weeks:
+                    solver.Add(picks[i] == 0)
+            if df.loc[i, 'Adjusted Current Winner'] == 'Jacksonville Jaguars' and df.loc[i, 'Week'] in jax_excluded_weeks:
+                    solver.Add(picks[i] == 0)
+            if df.loc[i, 'Adjusted Current Winner'] == 'Kansas City Chiefs' and df.loc[i, 'Week'] in kc_excluded_weeks:
+                    solver.Add(picks[i] == 0)
+            if df.loc[i, 'Adjusted Current Winner'] == 'Las vegas Raiders' and df.loc[i, 'Week'] in lv_excluded_weeks:
+                    solver.Add(picks[i] == 0)
+            if df.loc[i, 'Adjusted Current Winner'] == 'Los Angeles Chargers' and df.loc[i, 'Week'] in lac_excluded_weeks:
+                    solver.Add(picks[i] == 0)
+            if df.loc[i, 'Adjusted Current Winner'] == 'Los Angeles Rams' and df.loc[i, 'Week'] in lar_excluded_weeks:
+                    solver.Add(picks[i] == 0)
+            if df.loc[i, 'Adjusted Current Winner'] == 'Miami Dolphins' and df.loc[i, 'Week'] in mia_excluded_weeks:
+                    solver.Add(picks[i] == 0)
+            if df.loc[i, 'Adjusted Current Winner'] == 'Minnesota Vikings' and df.loc[i, 'Week'] in min_excluded_weeks:
+                    solver.Add(picks[i] == 0)
+            if df.loc[i, 'Adjusted Current Winner'] == 'New England Patriots' and df.loc[i, 'Week'] in ne_excluded_weeks:
+                    solver.Add(picks[i] == 0)
+            if df.loc[i, 'Adjusted Current Winner'] == 'New Orleans Saints' and df.loc[i, 'Week'] in no_excluded_weeks:
+                    solver.Add(picks[i] == 0)
+            if df.loc[i, 'Adjusted Current Winner'] == 'New York Giants' and df.loc[i, 'Week'] in nyg_excluded_weeks:
+                    solver.Add(picks[i] == 0)
+            if df.loc[i, 'Adjusted Current Winner'] == 'New York Jets' and df.loc[i, 'Week'] in nyj_excluded_weeks:
+                    solver.Add(picks[i] == 0)
+            if df.loc[i, 'Adjusted Current Winner'] == 'Philadelphia Eagles' and df.loc[i, 'Week'] in phi_excluded_weeks:
+                    solver.Add(picks[i] == 0)
+            if df.loc[i, 'Adjusted Current Winner'] == 'Pittsburgh Steelers' and df.loc[i, 'Week'] in pit_excluded_weeks:
+                    solver.Add(picks[i] == 0)
+            if df.loc[i, 'Adjusted Current Winner'] == 'Seattle Seahawks' and df.loc[i, 'Week'] in sea_excluded_weeks:
+                    solver.Add(picks[i] == 0)
+            if df.loc[i, 'Adjusted Current Winner'] == 'Tampa Bay Buccaneers' and df.loc[i, 'Week'] in tb_excluded_weeks:
+                    solver.Add(picks[i] == 0)
+            if df.loc[i, 'Adjusted Current Winner'] == 'Tennessee Titans' and df.loc[i, 'Week'] in ten_excluded_weeks:
+                    solver.Add(picks[i] == 0)
+            if df.loc[i, 'Adjusted Current Winner'] == 'Washington Commanders' and df.loc[i, 'Week'] in was_excluded_weeks:
+                    solver.Add(picks[i] == 0)
+            if df.loc[i, 'Adjusted Current Winner'] == 'San Francisco 49ers' and df.loc[i, 'Week'] in sf_excluded_weeks:
+                    solver.Add(picks[i] == 0)
+
+
+
+
             
             if df.loc[i, 'Adjusted Current Winner'] in picked_teams:
                 solver.Add(picks[i] == 0)

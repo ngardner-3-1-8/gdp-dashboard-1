@@ -1327,7 +1327,7 @@ def get_survivor_picks_based_on_ev():
                     solver.Add(picks[i] == 0)
                 if df.loc[i, 'Home Team Current Week Cumulative Rest Advantage'] < -5 and df.loc[i, 'Home Team'] == df.loc[i, 'Adjusted Current Winner']:
                     solver.Add(picks[i] == 0)
-            if 
+            if avoid_away_teams_with_travel_disadvantage == 1:
                 if df.loc[i, 'Away Travel Advantage'] < -850 and df.loc[i, 'Away Team'] == df.loc[i, 'Adjusted Current Winner']:
                     solver.Add(picks[i] == 0)
 

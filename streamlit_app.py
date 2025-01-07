@@ -2593,13 +2593,17 @@ if yes_i_have_constraints:
 st.write('')
 st.write('')
 st.write('')
-st.subheader('Use Saved Expected Value')
-st.write('Warning, this data is NOT up to date. It will save several hours of processing but will only be partially accurate. :red[Use carefully]')
-st.write('Last Update: :green[9/20/2024]')
-use_cached_expected_value = 1 if st.checkbox('Use Cached Expected Value') else 0
-st.write('')
-st.write('')
-st.write('')
+
+use_cached_expected_value = 0
+
+if yes_i_have_customized_rankings:
+	st.subheader('Use Saved Expected Value')
+	st.write('Warning, this data is NOT up to date. It will save several hours of processing but will only be partially accurate. :red[Use carefully]')
+	st.write('Last Update: :green[9/20/2024]')
+	use_cached_expected_value = 1 if st.checkbox('Use Cached Expected Value') else 0
+	st.write('')
+	st.write('')
+	st.write('')
 st.subheader('Get Optimized Survivor Picks')
 number_of_solutions_options = [
     1,5,10,25,50,100

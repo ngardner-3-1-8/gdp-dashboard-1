@@ -1806,13 +1806,14 @@ def get_survivor_picks_based_on_ev():
                     # Determine if it's a divisional game and if the picked team is the home team
                     divisional_game = '(Divisional)' if df.loc[i, 'Divisional Matchup?'] == 'Divisional' else ''
                     home_team = '(Home Team)' if df.loc[i, 'Adjusted Current Winner'] == df.loc[i, 'Home Team'] else '(Away Team)'
-                    weekly_rest = 'a'
-                    weekly_rest_advantage = 'b'
-                    cumulative_rest = 'c'
-                    cumulative_rest_advantage = 'd'
-                    travel_advantage = 'e'
-                    back_to_back_away_games = 'f'
-                    international_game = 'g'
+                    weekly_rest = df.loc[i, 'Home Team Weekly Rest'] if df.loc[i, 'Adjusted Current Winner'] == df.loc[i, 'Home Team'] else df.loc[i, 'Away Team Weekly Rest']
+                    weekly_rest_advantage = df.loc[i, 'Weekly Home Rest Advantage'] if df.loc[i, 'Adjusted Current Winner'] == df.loc[i, 'Home Team'] else df.loc[i, 'Weekly Away Rest Advantage']
+                    cumulative_rest = df.loc[i, 'Home Cumulative Rest Advantage'] if df.loc[i, 'Adjusted Current Winner'] == df.loc[i, 'Home Team'] else df.loc[i, 'Away Cumulative Rest Advantage']
+                    cumulative_rest_advantage = df.loc[i, 'Home Team Current Week Cumulative Rest Advantage'] if df.loc[i, 'Adjusted Current Winner'] == df.loc[i, 'Home Team'] else df.loc[i, 'Away Team Current Week Cumulative Rest Advantage']
+                    travel_advantage = df.loc[i, 'Home Travel Advantage'] if df.loc[i, 'Adjusted Current Winner'] == df.loc[i, 'Home Team'] else df.loc[i, 'Away Travel Advantage']
+                    back_to_back_away_games = 'No Back to Back Away Games' if df.loc[i, 'Adjusted Current Winner'] == df.loc[i, 'Away Team'] and df.loc[i, 'Back to Back Away Games'] == 'True' else 'Back to Back Away Games'
+                    thursday_night_game = 'Thursday Night Game' if df.loc[i, "Thursday Night Game"] == 'True' else 'Sunday/Monday Game'
+                    international_game = 'International Game' if df.loc[i, 'Adjusted Current Winner'] == df.loc[i, 'Home Team'] else 'Domestic Game'
                     previous_opponent = 'h'
                     previous_game_location = 'i'
                     next_opponent = 'j'

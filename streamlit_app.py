@@ -2475,10 +2475,19 @@ st.write('')
 st.write('')
 st.write('')
 st.subheader('Get Optimized Survivor Picks')
-st.text('This button will find the best picks for each week. It will pump out 200 solutions.')
-st.write('- The first 100 will be :red[based purely on EV] that is a complicated formula based on predicted pick percentage of each team in each week, and their chances of winning that week.')
-st.write('- The second 100 solutions will be based on the :red[rankings and constraints you provided]')
+number_of_solutions_options = [
+    1,5,10,25,50,100
+]
+st.write('How many solutions would you like from each solver?')
+number_solutions = st.selectbox('Number of Solutions', options = number_of_solutions_options)
+double_number_solutions = number_solutions * 2
+st.text(f'This button will find the best picks for each week. It will pump out {double_number_solutions} solutions.')
+st.write(f'- The first {number_solutions} will be :red[based purely on EV] that is a complicated formula based on predicted pick percentage of each team in each week, and their chances of winning that week.')
+st.write(f'- The second {number_solutions} solutions will be based on the :red[rankings and constraints you provided]')
 st.write('- All solutions will abide by the prohibited teams and the weeks you selected')
+st.write('- If you have too many constraints, or the solution is impossible, you will see an error')
+
+
 st.write('')
 st.write('')
 schedule_data_retrieved = False #Initialize on first run

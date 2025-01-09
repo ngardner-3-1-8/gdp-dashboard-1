@@ -4023,7 +4023,14 @@ avoid_international_game = 0
 avoid_teams_with_weekly_rest_disadvantage = 0
 avoid_away_teams_with_travel_disadvantage = 0
 bayesian_rest_travel_constraint = "No Rest, Bayesian, and Travel Constraints" 
-number_solutions = 1
+number_solutions = 5
+selected_contest = 'Circa'
+starting_week = 1
+if selected_contest == 'Circa':
+	ending_week = 21
+else:
+	ending_week = 19
+
 
 st.title("NFL Survivor Optimization")
 st.subheader("The second best Circa Survivor Contest optimizer")
@@ -4500,7 +4507,11 @@ if st.button("Get Optimized Survivor Picks"):
             st.dataframe(full_df_with_ev)
     st.write("Step 4 Completed: Expected Value Calculated")
     st.write('Step 5/9: Calculating Best Comnbination of Picks Based on EV...')
-    st.subheader('EV Calculations')
+    ending_week_2 = ending_Week - 1	
+    if selected_contest == 'Circa':
+        st.subheader(f'Optimal Picks for Draftkings: Weeks {starting_week} through {ending_week_2}')
+    else:
+        st.subheader(f'Optimal Picks for Draftkings: Weeks {starting_week} through {ending_week_2}')
     get_survivor_picks_based_on_ev()
     st.write('Step 5 Completed: Top Picks Determined Based on EV')
     if yes_i_have_customized_rankings:

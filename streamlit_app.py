@@ -950,7 +950,8 @@ def collect_schedule_travel_ranking_data(pd):
         # Find Week 13 games and winners
         week13_df = df[df["Week"] == "Week 13"]
         week13_winners = week13_df["Adjusted Current Winner"].unique()
-
+	
+        st.write(week13_winners)
         # Create new columns and mark Thanksgiving Favorites
         week_df["Away Team Thanksgiving Favorite"] = week_df.apply(
             lambda row: True

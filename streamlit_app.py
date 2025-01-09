@@ -2683,7 +2683,7 @@ if st.button("Get Optimized Survivor Picks"):
         st.write("Step 2 Complete: Travel, Ranking, Odds, and Rest Data Retrieved!")
         st.write(collect_schedule_travel_ranking_data_df)
         st.write("Step 3/9: Predicting Future Pick Percentages of Public...")
-    if use_cached_expected_value == 0
+    if use_cached_expected_value == 0:
             nfl_schedule_circa_pick_percentages_df = get_predicted_pick_percentages(pd)
             st.write("Step 3 Completed: Public Pick Percentages Predicted")
             #nfl_schedule_circa_df_2 = manually_adjust_pick_predictions()

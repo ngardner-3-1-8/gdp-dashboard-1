@@ -29,6 +29,7 @@ def get_schedule():
     # Find all rows in the table with a white background
     rows = table.find_all('tr', attrs={'bgcolor': '#ffffff'})
     print("Schedule Data Retrieved")
+	st.write(rows)
     return table, rows
 
 def collect_schedule_travel_ranking_data(pd):

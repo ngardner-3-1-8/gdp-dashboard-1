@@ -707,12 +707,13 @@ def collect_schedule_travel_ranking_data(pd):
 
         live_odds_df = live_scraped_odds_df
         
-        print(live_odds_df)
+        st.write(live_odds_df)
 
         #df.to_csv('TEST Manual Odds.csv', index = False)
         # Load the CSV data
         csv_df = df
-        print(csv_df)
+	st.write('csv_df')
+        st.write(csv_df)
         # Update CSV data with scraped odds
         for index, row in csv_df.iterrows():
             matching_row = live_odds_df[
@@ -726,7 +727,7 @@ def collect_schedule_travel_ranking_data(pd):
         # Only apply calculations if the 'Home Odds' column is empty
         if mask.any():
             # Adjust Average Points Difference for Favorite/Underdog Determination
-            csv_df['Adjusted Home Points'] = csv_df['Away Team Adjusted Current Rank']
+            csv_df['Adjusted Home Points'] = csv_df['Home Team Adjusted Current Rank']
             csv_df['Adjusted Away Points'] = csv_df['Home Team Adjusted Current Rank']
 
             csv_df['Preseason Spread'] = abs(csv_df['Away Team Adjusted Preseason Rank'] - csv_df['Home Team Adjusted Preseason Rank'])

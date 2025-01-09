@@ -752,8 +752,8 @@ def collect_schedule_travel_ranking_data(pd):
             csv_df['Preseason Spread'] = abs(csv_df['Away Team Adjusted Preseason Rank'] - csv_df['Home Team Adjusted Preseason Rank'])
 
             # Determine Favorite and Underdog
-            csv_df['Favorite'] = csv_df['Home Team'] if row['Home Team Adjusted Current Rank'] > row['Away Team Adjusted Current Rank'] else csv_df['Away Team']
-            csv_df['Underdog'] = csv_df['Home Team'] if row['Home Team Adjusted Current Rank'] > row['Away Team Adjusted Current Rank'] else csv_df['Away Team']
+            csv_df['Favorite'] = csv_df['Home Team'] if row['Home Team Adjusted Current Rank'] >= row['Away Team Adjusted Current Rank'] else csv_df['Away Team']
+            csv_df['Underdog'] = csv_df['Home Team'] if row['Home Team Adjusted Current Rank'] < row['Away Team Adjusted Current Rank'] else csv_df['Away Team']
 
             # Adjust Spread based on Favorite
             csv_df['Adjusted Spread'] = abs(csv_df['Away Team Adjusted Current Rank'] - csv_df['Home Team Adjusted Current Rank'])

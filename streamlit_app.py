@@ -1874,14 +1874,14 @@ def get_survivor_picks_based_on_ev():
 
             # Initialize picks_df
             picks_df = pd.DataFrame(columns=df.columns)
-			picks_rows_2 = []
+            picks_rows_2 = []
 
             for i in range(len(df)):
                 if picks[i].solution_value() > 0:
                     # Determine if it's a divisional game and if the picked team is the home team
-					
+
                     pick = df.loc[i,'Adjusted Current Winner']
-					divisional_game = '(Divisional)' if df.loc[i, 'Divisional Matchup?'] == 'Divisional' else ''
+                    divisional_game = '(Divisional)' if df.loc[i, 'Divisional Matchup?'] == 'Divisional' else ''
                     home_team = '(Home Team)' if df.loc[i, 'Adjusted Current Winner'] == df.loc[i, 'Home Team'] else '(Away Team)'
                     weekly_rest = df.loc[i, 'Home Team Weekly Rest'] if df.loc[i, 'Adjusted Current Winner'] == df.loc[i, 'Home Team'] else df.loc[i, 'Away Team Weekly Rest']
                     weekly_rest_advantage = df.loc[i, 'Weekly Home Rest Advantage'] if df.loc[i, 'Adjusted Current Winner'] == df.loc[i, 'Home Team'] else df.loc[i, 'Weekly Away Rest Advantage']
@@ -1909,30 +1909,30 @@ def get_survivor_picks_based_on_ev():
                     print('Week %i: Pick %s %s %s (%i, %i, %i, %i, %.4f)' % (df.loc[i, 'Week'], df.loc[i, 'Adjusted Current Winner'], divisional_game, home_team,
                                                                        preseason_difference, adjusted_preseason_difference,
                                                                        current_difference, adjusted_current_difference, ev))
-					new_row_2 = {
-	                    'Pick': pick,
-	                    'Divisional Game': divisional_game,
-	                    'Home Team Status': home_team,
-	                    'Weekly Rest': weekly_rest,
-	                    'Weekly Rest Advantage': weekly_rest_advantage,
-	                    'Cumulative Rest': cumulative_rest,
-	                    'Cumulative Rest Advantage': cumulative_rest_advantage,
-	                    'Travel Advantage': travel_advantage,
-	                    'Back to Back Away Games': back_to_back_away_games,
-	                    'Thursday Night Game': thursday_night_game,
-	                    'International Game': international_game,
-	                    'Previous Opponent': previous_opponent,
-	                    'Previous Game Location': previous_game_location,
-	                    'Next Opponent': next_opponent,
-	                    'Next Game Location': next_game_location,
-	                    'Preseason Difference': preseason_difference,
-	                    'Adjusted Preseason Difference': adjusted_preseason_difference,
-	                    'Current Difference': current_difference,
-	                    'Adjusted Current Difference': adjusted_current_difference,
-	                    'EV': ev
-                	}
-	                picks_rows_2.append(new_row_2)
-					
+                    new_row_2 = {
+                        'Pick': pick,
+                        'Divisional Game': divisional_game,
+                        'Home Team Status': home_team,
+                        'Weekly Rest': weekly_rest,
+                        'Weekly Rest Advantage': weekly_rest_advantage,
+                        'Cumulative Rest': cumulative_rest,
+                        'Cumulative Rest Advantage': cumulative_rest_advantage,
+                        'Travel Advantage': travel_advantage,
+                        'Back to Back Away Games': back_to_back_away_games,
+                        'Thursday Night Game': thursday_night_game,
+                        'International Game': international_game,
+                        'Previous Opponent': previous_opponent,
+                        'Previous Game Location': previous_game_location,
+                        'Next Opponent': next_opponent,
+                        'Next Game Location': next_game_location,
+                        'Preseason Difference': preseason_difference,
+                        'Adjusted Preseason Difference': adjusted_preseason_difference,
+                        'Current Difference': current_difference,
+                        'Adjusted Current Difference': adjusted_current_difference,
+                        'EV': ev
+                    }
+                    picks_rows_2.append(new_row_2)
+
 
                     # Add differences to sums
                     sum_preseason_difference += preseason_difference
@@ -1941,23 +1941,23 @@ def get_survivor_picks_based_on_ev():
                     sum_adjusted_current_difference += adjusted_current_difference
                     sum_ev += ev
                     picks_df = pd.concat([picks_df, df.loc[[i]]], ignore_index=True)
-		    		picks_df['Divisional Matchup?'] = divisional_game
-			summarized_picks_df = pd.DataFrame(picks_rows_2)
-		    
+                    picks_df['Divisional Matchup?'] = divisional_game
+            summarized_picks_df = pd.DataFrame(picks_rows_2)
+   
 
-		
-			
-			
 
-        	# Add row to picks_df
-    #        picks_df = pd.concat([picks_df, df.loc[[i]]], ignore_index=True)
+
+
+
+            # Add row to picks_df
+            #picks_df = pd.concat([picks_df, df.loc[[i]]], ignore_index=True)
             #print(picks_df)
             # Print sums
-			
+
             st.write(f'**Solution Based on EV: {iteration}**')
 
-			st.write(summarized_picks_df)
-			st.write('')
+            st.write(summarized_picks_df)
+            st.write('')
             st.write('\nPreseason Difference:', sum_preseason_difference)
             st.write('Adjusted Preseason Difference:', sum_adjusted_preseason_difference)
             st.write('Current Difference:', sum_current_difference)
@@ -1970,7 +1970,7 @@ def get_survivor_picks_based_on_ev():
 
             # Save the picks to a CSV file for the current iteration
         picks_df.to_csv(f'picks_ev_circa_{iteration + 1}.csv', index=False)
-		summarized_picks_df.to_csv(f'picks_ev_subset_{iteration + 1}.csv', index=False)
+        summarized_picks_df.to_csv(f'picks_ev_subset_{iteration + 1}.csv', index=False)
         
         # Append the new forbidden solution to the list
         forbidden_solutions_1.append(picks_df['Adjusted Current Winner'].tolist())
@@ -2698,21 +2698,20 @@ if st.button("Get Optimized Survivor Picks"):
                 st.write("Processing Complete!")
                 st.dataframe(full_df_with_ev)
         st.write("Step 4 Completed: Expected Value Calculated")
-	st.write('Step 5/9: Calculating Best Comnbination of Picks Based on EV...')
-	st.subheader('EV Calculations')
+    st.write('Step 5/9: Calculating Best Comnbination of Picks Based on EV...')
+    st.subheader('EV Calculations')
         get_survivor_picks_based_on_ev()
-	st.write('Step 5 Completed: Top Picks Determined')
-	if yes_i_have_customized_rankings:
-		st.write('Step 6/6: Calculating Best Comnbination of Picks Based on Customized Rankings...')
-		st.subheader('Customized Ranking Calculations')
-		get_survivor_picks_based_on_internal_rankings()
+    st.write('Step 5 Completed: Top Picks Determined')
+    if yes_i_have_customized_rankings:
+        st.write('Step 6/6: Calculating Best Comnbination of Picks Based on Customized Rankings...')
+        st.subheader('Customized Ranking Calculations')
+        get_survivor_picks_based_on_internal_rankings()
 		st.write('Step 6 Completed: Top Picks Determined Based on Customized Rankings')
-    	else:
-		st.write('Step 6/6: Calculating Best Comnbination of Picks Based on Default Rankings...')
-		st.subheader('Default Ranking Calculations')
-		get_survivor_picks_based_on_internal_rankings()
-		st.write('Step 6 Completed: Top Picks Determined Based on Default Rankings')
-       
     else:
-        st.write("Error. Could not find the rows")
-        schedule_data_retrieved = False #Set flag to False on error
+        st.write('Step 6/6: Calculating Best Comnbination of Picks Based on Default Rankings...')
+        st.subheader('Default Ranking Calculations')
+        get_survivor_picks_based_on_internal_rankings()
+        st.write('Step 6 Completed: Top Picks Determined Based on Default Rankings')
+else:
+    st.write("Error. Could not find the rows")
+    schedule_data_retrieved = False #Set flag to False on error

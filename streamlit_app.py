@@ -1874,13 +1874,13 @@ def get_survivor_picks_based_on_ev():
 
             # Initialize picks_df
             picks_df = pd.DataFrame(columns=df.columns)
-picks_rows_2 = []
+			picks_rows_2 = []
 			picks_rows_2 = []
 
             for i in range(len(df)):
                 if picks[i].solution_value() > 0:
                     # Determine if it's a divisional game and if the picked team is the home team
-					pick = df.loc[i, 'Adjusted Current Winner']
+					
                     pick = df.loc[i,'Adjusted Current Winner']
 					divisional_game = '(Divisional)' if df.loc[i, 'Divisional Matchup?'] == 'Divisional' else ''
                     home_team = '(Home Team)' if df.loc[i, 'Adjusted Current Winner'] == df.loc[i, 'Home Team'] else '(Away Team)'

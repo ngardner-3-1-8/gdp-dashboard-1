@@ -770,6 +770,41 @@ def collect_schedule_travel_ranking_data_circa(pd):
             csv_df['Home Team Moneyline'] = csv_df.apply(lambda row: odds[(round(row['Adjusted Spread'] * 2) / 2)][0] if row['Favorite'] == row['Home Team'] else odds[(round(row['Adjusted Spread'] * 2) / 2)][1], axis=1)
             csv_df['Away Team Moneyline'] = csv_df.apply(lambda row: odds[(round(row['Adjusted Spread'] * 2) / 2)][0] if row['Favorite'] == row['Away Team'] else odds[(round(row['Adjusted Spread'] * 2) / 2)][1], axis=1)
 
+        def get_moneyline(row, odds, team_type):
+            spread = round(row['Adjusted Spread'] * 2) / 2
+            try:
+                moneyline_tuple = odds[spread]
+                if team_type == 'home':
+                    if row['Favorite'] == row['Home Team']:
+                        return moneyline_tuple[0]
+                    else:
+                        return moneyline_tuple[1]
+                elif team_type == 'away':
+                    if row['Favorite'] == row['Away Team']:
+                        return moneyline_tuple[0]
+                    else:
+                        return moneyline_tuple[1]
+
+            except KeyError:
+                if team_type == 'home':
+                    if row['Favorite'] == row['Home Team']:
+                        return -10000
+                    else:
+                        return 2000
+                elif team_type == 'away':
+                    if row['Favorite'] == row['Away Team']:
+                        return -10000
+                    else:
+                        return 2000
+
+        csv_df['Internal Ranking Home Team Moneyline'] = csv_df.apply(
+            lambda row: get_moneyline(row, odds, 'home'), axis=1
+        )
+
+        csv_df['Internal Ranking Away Team Moneyline'] = csv_df.apply(
+            lambda row: get_moneyline(row, odds, 'away'), axis=1
+        )
+
         for index, row in csv_df.iterrows():
             # Implied Odds
             if row['Away Team Moneyline'] > 0:

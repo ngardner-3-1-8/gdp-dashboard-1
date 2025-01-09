@@ -730,8 +730,6 @@ def collect_schedule_travel_ranking_data(pd):
         #df.to_csv('TEST Manual Odds.csv', index = False)
         # Load the CSV data
         csv_df = df
-        st.write('csv_df')
-        st.write(csv_df)
         # Update CSV data with scraped odds
         for index, row in csv_df.iterrows():
             matching_row = live_odds_df[
@@ -741,7 +739,6 @@ def collect_schedule_travel_ranking_data(pd):
                 csv_df.loc[index, 'Away Team Moneyline'] = matching_row.iloc[0]['Away Odds']
                 csv_df.loc[index, 'Home Team Moneyline'] = matching_row.iloc[0]['Home Odds']
                 # Create the mask for where there is no 'Home Odds'
-        st.write(csv_df)
         mask = csv_df['Home Team Moneyline'].isna()
         # Only apply calculations if the 'Home Odds' column is empty
         if mask.any():
@@ -789,6 +786,7 @@ def collect_schedule_travel_ranking_data(pd):
             csv_df.loc[index, 'Home Team Fair Odds'] = round(csv_df.loc[index, 'Home Team Fair Odds'], 4)
         # Save the updated CSV
         csv_df.to_csv('nfl_schedule_circa.csv', index=False)
+	st.write(csv_df)
         main_df_with_odds_df = csv_df
         return main_df_with_odds_df
     

@@ -268,6 +268,11 @@ def collect_schedule_travel_ranking_data_circa(pd):
                 df.loc[index, 'Away Team Previous Location'] = team_last_location[away_team]
             if home_team in team_last_location:
                  df.loc[index, 'Home Team Previous Location'] = team_last_location[home_team]
+        elif week_num == 1:
+            df.loc[index, 'Away Team Previous Opponent'] = 'Preseason'
+            df.loc[index, 'Home Team Previous Opponent'] = 'Preseason'
+            df.loc[index, 'Away Team Previous Location'] = 'Preseason'
+            df.loc[index, 'Home Team Previous Location'] = 'Preseason'
     
         # Update team last opponent dictionary
         team_last_opponent[home_team] = away_team
@@ -303,6 +308,11 @@ def collect_schedule_travel_ranking_data_circa(pd):
                 df.loc[index, 'Away Team Next Location'] = team_next_location[away_team]
             if home_team in team_next_location:
                  df.loc[index, 'Home Team Next Location'] = team_next_location[home_team]
+        else:
+            df.loc[index, 'Away Team Next Opponent'] = "Playoffs?"
+            df.loc[index, 'Away Team Next Opponent'] = "Playoffs?"
+            df.loc[index, 'Away Team Next Location'] = "Playoffs?"
+            df.loc[index, 'Home Team Next Location'] = "Playoffs?"
 
         # Update team next opponent dictionary
         team_next_opponent[home_team] = away_team
@@ -998,9 +1008,7 @@ def collect_schedule_travel_ranking_data_circa(pd):
     
     return collect_schedule_travel_ranking_data_nfl_schedule_df
 
-#This Cell Uses original training datato determine Predicted pick percentages
 
-#THIS CELL PREDICTS THE PICK PERCENTAGES
 
 def get_predicted_pick_percentages_circa(pd):
     # Load your historical data (replace 'historical_pick_data_FV_circa.csv' with your actual file path)

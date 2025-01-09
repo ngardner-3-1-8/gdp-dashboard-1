@@ -786,7 +786,7 @@ def collect_schedule_travel_ranking_data(pd):
             csv_df.loc[index, 'Home Team Fair Odds'] = round(csv_df.loc[index, 'Home Team Fair Odds'], 4)
         # Save the updated CSV
         csv_df.to_csv('nfl_schedule_circa.csv', index=False)
-	st.write(csv_df)
+        st.write(csv_df)
         main_df_with_odds_df = csv_df
         return main_df_with_odds_df
     

@@ -760,7 +760,7 @@ def collect_schedule_travel_ranking_data(pd):
 
             # Overwrite Odds based on Spread and Favorite/Underdog
             csv_df['Home Team Moneyline'] = csv_df.apply(lambda row: odds[(round(row['Adjusted Spread'] * 2) / 2)][0] if row['Favorite'] == row['Home Team'] else odds[(round(row['Adjusted Spread'] * 2) / 2)][1], axis=1)
-            csv_df['Away Team Moneyline'] = csv_df.apply(lambda row: odds[(round(row['Adjusted Spread'] * 2) / 2)][1] if row['Favorite'] == row['Away Team'] else odds[(round(row['Adjusted Spread'] * 2) / 2)][0], axis=1)
+            csv_df['Away Team Moneyline'] = csv_df.apply(lambda row: odds[(round(row['Adjusted Spread'] * 2) / 2)][0] if row['Favorite'] == row['Away Team'] else odds[(round(row['Adjusted Spread'] * 2) / 2)][1], axis=1)
 
         for index, row in csv_df.iterrows():
             # Implied Odds

@@ -1874,7 +1874,7 @@ def get_survivor_picks_based_on_ev():
 
             # Initialize picks_df
             picks_df = pd.DataFrame(columns=df.columns)
-			picks_rows_2 = []
+picks_rows_2 = []
 
             for i in range(len(df)):
                 if picks[i].solution_value() > 0:

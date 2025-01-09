@@ -752,6 +752,33 @@ def collect_schedule_travel_ranking_data_circa(pd):
                 # Create the mask for where there is no 'Home Odds'
         mask = csv_df['Home Team Moneyline'].isna()
         # Only apply calculations if the 'Home Odds' column is empty
+        def get_moneyline_masked(row, odds, team_type):
+            spread = round(row['Adjusted Spread'] * 2) / 2
+            try:
+                moneyline_tuple = odds[spread]
+                if team_type == 'home':
+                    if row['Favorite'] == row['Home Team']:
+                        return moneyline_tuple[0]
+                    else:
+                        return moneyline_tuple[1]
+                elif team_type == 'away':
+                    if row['Favorite'] == row['Away Team']:
+                        return moneyline_tuple[0]
+                    else:
+                        return moneyline_tuple[1]
+
+            except KeyError:
+                if team_type == 'home':
+                    if row['Favorite'] == row['Home Team']:
+                        return -10000
+                    else:
+                        return 2000
+                elif team_type == 'away':
+                    if row['Favorite'] == row['Away Team']:
+                        return -10000
+                    else:
+                        return 2000
+
         if mask.any():
             # Adjust Average Points Difference for Favorite/Underdog Determination
             csv_df['Adjusted Home Points'] = csv_df['Home Team Adjusted Current Rank']
@@ -767,8 +794,12 @@ def collect_schedule_travel_ranking_data_circa(pd):
             csv_df['Adjusted Spread'] = abs(csv_df['Away Team Adjusted Current Rank'] - csv_df['Home Team Adjusted Current Rank'])
 
             # Overwrite Odds based on Spread and Favorite/Underdog
-            csv_df['Home Team Moneyline'] = csv_df.apply(lambda row: odds[(round(row['Adjusted Spread'] * 2) / 2)][0] if row['Favorite'] == row['Home Team'] else odds[(round(row['Adjusted Spread'] * 2) / 2)][1], axis=1)
-            csv_df['Away Team Moneyline'] = csv_df.apply(lambda row: odds[(round(row['Adjusted Spread'] * 2) / 2)][0] if row['Favorite'] == row['Away Team'] else odds[(round(row['Adjusted Spread'] * 2) / 2)][1], axis=1)
+            csv_df['Home Team Moneyline'] = csv_df.apply(
+               lambda row: get_moneyline_masked(row, odds, 'home'), axis=1
+            )
+            csv_df['Away Team Moneyline'] = csv_df.apply(
+                lambda row: get_moneyline_masked(row, odds, 'away'), axis=1
+            )
 
         def get_moneyline(row, odds, team_type):
             spread = round(row['Adjusted Spread'] * 2) / 2

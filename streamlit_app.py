@@ -15,6 +15,7 @@ from tqdm import tqdm
 from ortools.linear_solver import pywraplp
 
 def get_schedule():
+    print("Gathering Schedule Data...")
     # Make a request to the website
     r = requests.get('https://www.fftoday.com/nfl/schedule.php')
     r_html = r.text
@@ -859,7 +860,7 @@ def collect_schedule_travel_ranking_data(pd):
         if week_df.empty:
             max_val = 0
         else:
-           max_val = max(week_df["Away Team Cumulative Win Percentage"].max(),
+            max_val = max(week_df["Away Team Cumulative Win Percentage"].max(),
                          week_df["Home Team Cumulative Win Percentage"].max())
 
         # Check if the calculated max_val is NaN and replace with 1 if so
@@ -2273,7 +2274,7 @@ if yes_i_have_picked_teams:
         for team in picked_teams:
             st.write(f"- {team}")
     else:
-      st.write("No teams selected")
+        st.write("No teams selected")
 st.write('')
 st.write('')
 st.write('')
@@ -2672,8 +2673,8 @@ if st.button("Get Optimized Survivor Picks"):
         schedule_table = schedule_table #Store table data into session state
         schedule_rows = schedule_rows #Store rows data into session state # ADD THIS LINE
     else:
-         st.write("Error. Could not find the table.")
-         schedule_data_retrieved = False #Set flag to False on error
+        st.write("Error. Could not find the table.")
+        schedule_data_retrieved = False #Set flag to False on error
          
     if schedule_rows:
         st.write(f"Number of Schedule Rows: {len(schedule_rows)}") #Display row length
@@ -2713,7 +2714,5 @@ if st.button("Get Optimized Survivor Picks"):
 		st.write('Step 6 Completed: Top Picks Determined Based on Default Rankings')
        
     else:
-         st.write("Error. Could not find the rows")
-         schedule_data_retrieved = False #Set flag to False on error
-
-
+        st.write("Error. Could not find the rows")
+        schedule_data_retrieved = False #Set flag to False on error

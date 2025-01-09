@@ -2111,7 +2111,10 @@ def collect_schedule_travel_ranking_data_draftkings(pd):
 
 def get_predicted_pick_percentages_circa(pd):
     # Load your historical data (replace 'historical_pick_data_FV_circa.csv' with your actual file path)
-    df = pd.read_csv('Circa_historical_data.csv')
+    if selected_contest == 'Circa':
+        df = pd.read_csv('Circa_historical_data.csv')
+    else:
+        df = pd.read_csv('historical_pick_data_FV.csv')
     df.rename(columns={"Week": "Date"}, inplace=True)
     # Remove percentage sign and convert to float
     #df['Win %'] = df['Win %'].str.rstrip('%').astype(float) / 100

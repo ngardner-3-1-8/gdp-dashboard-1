@@ -2684,24 +2684,24 @@ if st.button("Get Optimized Survivor Picks"):
         st.write(collect_schedule_travel_ranking_data_df)
         st.write("Step 3/9: Predicting Future Pick Percentages of Public...")
     if use_cached_expected_value == 0:
-            nfl_schedule_circa_pick_percentages_df = get_predicted_pick_percentages(pd)
-            st.write("Step 3 Completed: Public Pick Percentages Predicted")
-            #nfl_schedule_circa_df_2 = manually_adjust_pick_predictions()
-            st.write("Step 4/9: Calculating Expected Value (Could take several hours)...")
-        if use_cached_expected_value == 1:
-            st.write('- Using Cached Expected Values...')
-            full_df_with_ev = pd.read_csv('NFL Schedule with full ev_circa.csv')
-        else:
-            st.write('- Calculating Live EV...')
-            with st.spinner('Processing...'):
-                full_df_with_ev = calculate_ev()
-                st.write("Processing Complete!")
-                st.dataframe(full_df_with_ev)
-        st.write("Step 4 Completed: Expected Value Calculated")
+        nfl_schedule_circa_pick_percentages_df = get_predicted_pick_percentages(pd)
+        st.write("Step 3 Completed: Public Pick Percentages Predicted")
+        #nfl_schedule_circa_df_2 = manually_adjust_pick_predictions()
+        st.write("Step 4/9: Calculating Expected Value (Could take several hours)...")
+    if use_cached_expected_value == 1:
+        st.write('- Using Cached Expected Values...')
+        full_df_with_ev = pd.read_csv('NFL Schedule with full ev_circa.csv')
+    else:
+        st.write('- Calculating Live EV...')
+        with st.spinner('Processing...'):
+            full_df_with_ev = calculate_ev()
+            st.write("Processing Complete!")
+            st.dataframe(full_df_with_ev)
+    st.write("Step 4 Completed: Expected Value Calculated")
     st.write('Step 5/9: Calculating Best Comnbination of Picks Based on EV...')
     st.subheader('EV Calculations')
-        get_survivor_picks_based_on_ev()
-    st.write('Step 5 Completed: Top Picks Determined')
+    get_survivor_picks_based_on_ev()
+    st.write('Step 5 Completed: Top Picks Determined Based on EV')
     if yes_i_have_customized_rankings:
         st.write('Step 6/6: Calculating Best Comnbination of Picks Based on Customized Rankings...')
         st.subheader('Customized Ranking Calculations')

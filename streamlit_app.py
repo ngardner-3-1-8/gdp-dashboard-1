@@ -1323,9 +1323,9 @@ def calculate_ev():
         progress_percent = int((week / ending_week) * 100)
         progress_bar.progress(progress_percent)
     if selected_contest == 'Circa':
-	nfl_schedule_pick_percentages_df.to_csv("NFL Schedule with full ev_circa.csv", index=False)
+        nfl_schedule_pick_percentages_df.to_csv("NFL Schedule with full ev_circa.csv", index=False)
     else:
-	nfl_schedule_pick_percentages_df.to_csv("NFL Schedule with full ev_DraftKings.csv", index=False)
+        nfl_schedule_pick_percentages_df.to_csv("NFL Schedule with full ev_DraftKings.csv", index=False)
     return nfl_schedule_pick_percentages_df
 
 def get_survivor_picks_based_on_ev():

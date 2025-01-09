@@ -1476,9 +1476,6 @@ def get_survivor_picks_based_on_ev():
                     solver.Add(picks[i] == 0)
 
 
-
-
-            
             if df.loc[i, 'Adjusted Current Winner'] in picked_teams:
                 solver.Add(picks[i] == 0)
         # Dynamically create the forbidden solution list
@@ -1865,8 +1862,8 @@ def get_survivor_picks_based_on_ev():
         status = solver.Solve()
 
         if status == pywraplp.Solver.OPTIMAL:
-            print('Solution found!')
-            print('Objective value =', solver.Objective().Value())
+            st.write('Solution found!')
+            st.write('Objective value =', solver.Objective().Value())
 
             # Initialize sums
             sum_preseason_difference = 0
@@ -1877,10 +1874,12 @@ def get_survivor_picks_based_on_ev():
 
             # Initialize picks_df
             picks_df = pd.DataFrame(columns=df.columns)
+			picks_rows_2 = []
 
             for i in range(len(df)):
                 if picks[i].solution_value() > 0:
                     # Determine if it's a divisional game and if the picked team is the home team
+					pick = df.loc[i, 'Adjusted Current Winner']
                     divisional_game = '(Divisional)' if df.loc[i, 'Divisional Matchup?'] == 'Divisional' else ''
                     home_team = '(Home Team)' if df.loc[i, 'Adjusted Current Winner'] == df.loc[i, 'Home Team'] else '(Away Team)'
                     weekly_rest = df.loc[i, 'Home Team Weekly Rest'] if df.loc[i, 'Adjusted Current Winner'] == df.loc[i, 'Home Team'] else df.loc[i, 'Away Team Weekly Rest']
@@ -1909,6 +1908,30 @@ def get_survivor_picks_based_on_ev():
                     print('Week %i: Pick %s %s %s (%i, %i, %i, %i, %.4f)' % (df.loc[i, 'Week'], df.loc[i, 'Adjusted Current Winner'], divisional_game, home_team,
                                                                        preseason_difference, adjusted_preseason_difference,
                                                                        current_difference, adjusted_current_difference, ev))
+					new_row_2 = {
+	                    'Pick': pick,
+	                    'Divisional Game': divisional_game,
+	                    'Home Team Status': home_team,
+	                    'Weekly Rest': weekly_rest,
+	                    'Weekly Rest Advantage': weekly_rest_advantage,
+	                    'Cumulative Rest': cumulative_rest,
+	                    'Cumulative Rest Advantage': cumulative_rest_advantage,
+	                    'Travel Advantage': travel_advantage,
+	                    'Back to Back Away Games': back_to_back_away_games,
+	                    'Thursday Night Game': thursday_night_game,
+	                    'International Game': international_game,
+	                    'Previous Opponent': previous_opponent,
+	                    'Previous Game Location': previous_game_location,
+	                    'Next Opponent': next_opponent,
+	                    'Next Game Location': next_game_location,
+	                    'Preseason Difference': preseason_difference,
+	                    'Adjusted Preseason Difference': adjusted_preseason_difference,
+	                    'Current Difference': current_difference,
+	                    'Adjusted Current Difference': adjusted_current_difference,
+	                    'EV': ev
+                	}
+	                picks_rows_2.append(new_row_2)
+					
 
                     # Add differences to sums
                     sum_preseason_difference += preseason_difference
@@ -1917,28 +1940,36 @@ def get_survivor_picks_based_on_ev():
                     sum_adjusted_current_difference += adjusted_current_difference
                     sum_ev += ev
                     picks_df = pd.concat([picks_df, df.loc[[i]]], ignore_index=True)
-		    picks_df =
+		    		picks_df['Divisional Matchup?'] = divisional_game
+			summarized_picks_df = pd.DataFrame(picks_rows_2)
+		    
+
 		
 			
 			
 
-            # Add row to picks_df
+        	# Add row to picks_df
     #        picks_df = pd.concat([picks_df, df.loc[[i]]], ignore_index=True)
             #print(picks_df)
             # Print sums
+			
             st.write(f'**Solution Based on EV: {iteration}**')
+
+			st.write(summarized_picks_df)
+			st.write('')
             st.write('\nPreseason Difference:', sum_preseason_difference)
             st.write('Adjusted Preseason Difference:', sum_adjusted_preseason_difference)
             st.write('Current Difference:', sum_current_difference)
             st.write('Adjusted Current Difference:', sum_adjusted_current_difference)
             st.write(f'Total EV: :red[{sum_ev}]')
         else:
-            st.write('No solution found.')
+            st.write('No solution found. Consider using fewer constraints. Or you may just be fucked')
         st.write("")
         st.write("")
 
             # Save the picks to a CSV file for the current iteration
         picks_df.to_csv(f'picks_ev_circa_{iteration + 1}.csv', index=False)
+		summarized_picks_df.to_csv(f'picks_ev_subset_{iteration + 1}.csv', index=False)
         
         # Append the new forbidden solution to the list
         forbidden_solutions_1.append(picks_df['Adjusted Current Winner'].tolist())

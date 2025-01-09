@@ -723,6 +723,7 @@ def collect_schedule_travel_ranking_data(pd):
                 csv_df.loc[index, 'Away Team Moneyline'] = matching_row.iloc[0]['Away Odds']
                 csv_df.loc[index, 'Home Team Moneyline'] = matching_row.iloc[0]['Home Odds']
                 # Create the mask for where there is no 'Home Odds'
+        st.write(csv_df)
         mask = csv_df['Home Team Moneyline'].isna()
         # Only apply calculations if the 'Home Odds' column is empty
         if mask.any():

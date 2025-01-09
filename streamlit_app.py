@@ -712,7 +712,7 @@ def collect_schedule_travel_ranking_data(pd):
         #df.to_csv('TEST Manual Odds.csv', index = False)
         # Load the CSV data
         csv_df = df
-	st.write('csv_df')
+        st.write('csv_df')
         st.write(csv_df)
         # Update CSV data with scraped odds
         for index, row in csv_df.iterrows():

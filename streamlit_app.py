@@ -741,8 +741,8 @@ def collect_schedule_travel_ranking_data(pd):
             csv_df['Adjusted Spread'] = abs(csv_df['Away Team Adjusted Current Rank'] - csv_df['Home Team Adjusted Current Rank'])
 
             # Overwrite Odds based on Spread and Favorite/Underdog
-            csv_df['Home Team Moneyline'] = csv_df.apply(lambda row: odds[(round(row['Adjusted Spread'] * 2) / 2)[0] if row['Favorite'] == row['Home Team'] else odds[(round(row['Adjusted Spread'] * 2) / 2)[1], axis=1)
-            csv_df['Away Team Moneyline'] = csv_df.apply(lambda row: odds[(round(row['Adjusted Spread'] * 2) / 2)[1] if row['Favorite'] == row['Home Team'] else odds[(round(row['Adjusted Spread'] * 2) / 2)[0], axis=1)
+            csv_df['Home Team Moneyline'] = csv_df.apply(lambda row: odds[(round(row['Adjusted Spread'] * 2) / 2)][0] if row['Favorite'] == row['Home Team'] else odds[(round(row['Adjusted Spread'] * 2) / 2)][1], axis=1)
+            csv_df['Away Team Moneyline'] = csv_df.apply(lambda row: odds[(round(row['Adjusted Spread'] * 2) / 2)][1] if row['Favorite'] == row['Home Team'] else odds[(round(row['Adjusted Spread'] * 2) / 2)][0], axis=1)
         # Calculate Implied Odds and Fair Odds
         for index, row in csv_df.iterrows():
             # Implied Odds

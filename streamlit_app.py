@@ -1998,7 +1998,7 @@ def get_survivor_picks_based_on_ev():
         forbidden_solutions_1.append(picks_df['Adjusted Current Winner'].tolist())
         #print(forbidden_solutions)
 
-
+picked_teams = []
 
 default_az_rank = -.5
 default_atl_rank = .5

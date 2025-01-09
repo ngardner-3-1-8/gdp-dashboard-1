@@ -738,6 +738,9 @@ def collect_schedule_travel_ranking_data(pd):
             if not matching_row.empty:
                 csv_df.loc[index, 'Away Team Moneyline'] = matching_row.iloc[0]['Away Odds']
                 csv_df.loc[index, 'Home Team Moneyline'] = matching_row.iloc[0]['Home Odds']
+                csv_df.loc[index, 'Favorite'] = csv_df.loc[index, 'Home Team'] if csv_df.loc[index, 'Home Team Moneyline'] <= -110 else csv_df.loc[index, 'Away Team']
+                csv_df.loc[index, 'Underdog'] = csv_df.loc[index, 'Home Team'] if csv_df.loc[index, 'Home Team Moneyline'] > -110 else csv_df.loc[index, 'Away Team']
+		
                 # Create the mask for where there is no 'Home Odds'
         mask = csv_df['Home Team Moneyline'].isna()
         # Only apply calculations if the 'Home Odds' column is empty
@@ -749,8 +752,8 @@ def collect_schedule_travel_ranking_data(pd):
             csv_df['Preseason Spread'] = abs(csv_df['Away Team Adjusted Preseason Rank'] - csv_df['Home Team Adjusted Preseason Rank'])
 
             # Determine Favorite and Underdog
-#            csv_df['Favorite'] = csv_df['Home Team'] if row['Home Team Adjusted Current Rank'] >= row['Away Team Adjusted Current Rank'] else row['Away Team']
-#            csv_df['Underdog'] = csv_df['Home Team'] if row['Home Team Adjusted Current Rank'] < row['Away Team Adjusted Current Rank'] else row['Away Team']
+            csv_df['Favorite'] = csv_df['Home Team'] if row['Home Team Adjusted Current Rank'] > row['Away Team Adjusted Current Rank'] else csv_df['Away Team']
+            csv_df['Underdog'] = csv_df['Home Team'] if row['Home Team Adjusted Current Rank'] > row['Away Team Adjusted Current Rank'] else csv_df['Away Team']
 
             # Adjust Spread based on Favorite
             csv_df['Adjusted Spread'] = abs(csv_df['Away Team Adjusted Current Rank'] - csv_df['Home Team Adjusted Current Rank'])

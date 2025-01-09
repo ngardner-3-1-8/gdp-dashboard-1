@@ -15,7 +15,6 @@ from tqdm import tqdm
 from ortools.linear_solver import pywraplp
 
 def get_schedule():
-    print("Gathering Schedule Data...")
     # Make a request to the website
     r = requests.get('https://www.fftoday.com/nfl/schedule.php')
     r_html = r.text

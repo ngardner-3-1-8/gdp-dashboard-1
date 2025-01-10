@@ -2777,7 +2777,7 @@ st.write('')
 schedule_data_retrieved = False #Initialize on first run
 
 if st.button("Get Optimized Survivor Picks"):
-    st.write("Step 1/9: Fetching Schedule Data...")
+    st.write("Step 1/6: Fetching Schedule Data...")
     schedule_table, schedule_rows = get_schedule() # Call the function   
     if schedule_table:
         st.write("Step 1 Completed: Schedule Data Retrieved!")
@@ -2788,28 +2788,30 @@ if st.button("Get Optimized Survivor Picks"):
          
     if schedule_rows:
         st.write(f"Number of Schedule Rows: {len(schedule_rows)}") #Display row length
-        st.write("Step 2/9: Collecting Travel, Ranking, Odds, and Rest Data...")
+        st.write("Step 2/6: Collecting Travel, Ranking, Odds, and Rest Data...")
         collect_schedule_travel_ranking_data_df = collect_schedule_travel_ranking_data_circa(pd)
         st.write("Step 2 Complete: Travel, Ranking, Odds, and Rest Data Retrieved!")
         #st.write(collect_schedule_travel_ranking_data_df)
-        st.write("Step 3/9: Predicting Future Pick Percentages of Public...")
+        st.write("Step 3/6: Predicting Future Pick Percentages of Public...")
     if use_cached_expected_value == 0:
         nfl_schedule_pick_percentages_df = get_predicted_pick_percentages_circa(pd)
         st.write("Step 3 Completed: Public Pick Percentages Predicted")
         #nfl_schedule_circa_df_2 = manually_adjust_pick_predictions()
         st.write("Step 4/9: Calculating Expected Value (Could take several hours)...")
     if use_cached_expected_value == 1:
-        st.write('- Using Cached Expected Values...')
         full_df_with_ev = pd.read_csv('NFL Schedule with full ev_circa.csv')
+        st.write("Step 3 Completed: Public Pick Percentages Predicted")
+        st.write("Step 4: Calculating Expected Value...")
+        st.write('- Using Cached Expected Values...')
     else:
-        st.write('- Calculating Live EV...')
+        st.write("Step 4/6: Calculating Live Expected Value...")
         with st.spinner('Processing...'):
             full_df_with_ev = calculate_ev()
             st.write("Processing Complete!")
             st.dataframe(full_df_with_ev)
     st.write("Step 4 Completed: Expected Value Calculated")
     st.write(full_df_with_ev)
-    st.write('Step 5/9: Calculating Best Comnbination of Picks Based on EV...')
+    st.write('Step 5/6: Calculating Best Comnbination of Picks Based on EV...')
     st.write('')
 
 

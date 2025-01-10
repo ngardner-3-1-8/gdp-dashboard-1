@@ -1418,9 +1418,9 @@ def get_survivor_picks_based_on_ev():
         # Teams already picked - Team name in quotes and separated by commas
 
         # Filter out weeks that have already been played and reset index
-        st.write(df)
-        df = df[(df['Week_Num'] >= starting_week) & (df['Week_Num'] <= ending_week)].reset_index(drop=True)
 
+        df = df[(df['Week_Num'] >= starting_week) & (df['Week_Num'] <= ending_week)].reset_index(drop=True)
+        st.write(df)
         # Filter out already picked teams
         df = df[~df['Adjusted Current Winner'].isin(picked_teams)].reset_index(drop=True)
         #print(df)

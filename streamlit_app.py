@@ -3683,7 +3683,9 @@ def get_survivor_picks_based_on_internal_rankings():
                 if picks[i].solution_value() > 0:
                     # Determine if it's a divisional game and if the picked team is the home team
 
+                    week = df.loc[i, 'Week']
                     pick = df.loc[i,'Adjusted Current Winner']
+                    opponent = df.loc[i, 'Home Team'] if df.loc[i, 'Adjusted Current Winner'] == df.loc[i, 'Away Team'] else df.loc[i, 'Away Team']
                     divisional_game = 'Divisional' if df.loc[i, 'Divisional Matchup Boolean'] == '1' else ''
                     home_team = '(Home Team)' if df.loc[i, 'Adjusted Current Winner'] == df.loc[i, 'Home Team'] else '(Away Team)'
                     weekly_rest = df.loc[i, 'Home Team Weekly Rest'] if df.loc[i, 'Adjusted Current Winner'] == df.loc[i, 'Home Team'] else df.loc[i, 'Away Team Weekly Rest']
@@ -3698,6 +3700,7 @@ def get_survivor_picks_based_on_internal_rankings():
                     previous_game_location = df.loc[i, 'Home Team Previous Location'] if df.loc[i, 'Adjusted Current Winner'] == df.loc[i, 'Home Team'] else df.loc[i, 'Away Team Previous Location']
                     next_opponent = df.loc[i, 'Home Team Next Opponent'] if df.loc[i, 'Adjusted Current Winner'] == df.loc[i, 'Home Team'] else df.loc[i, 'Away Team Next Opponent']
                     next_game_location = df.loc[i, 'Home Team Next Location'] if df.loc[i, 'Adjusted Current Winner'] == df.loc[i, 'Home Team'] else df.loc[i, 'Away Team Next Location']
+                    win_odds = df.loc[i, 'Home Team Fair Odds'] if df.loc[i, 'Adjusted Current Winner'] == df.loc[i, 'Away Team'] else df.loc[i, 'Away Team fair Odds']
                     
 
                     # Get differences
@@ -3713,7 +3716,11 @@ def get_survivor_picks_based_on_internal_rankings():
                                                                        preseason_difference, adjusted_preseason_difference,
                                                                        current_difference, adjusted_current_difference, ev))
                     new_row_2 = {
+                        'Week': week
                         'Pick': pick,
+                        'Opponent': opponent,
+                        'EV': ev,
+                        'Win Odds': win_odds,
                         'Divisional Game': divisional_game,
                         'Home Team Status': home_team,
                         'Weekly Rest': weekly_rest,
@@ -3731,8 +3738,7 @@ def get_survivor_picks_based_on_internal_rankings():
                         'Preseason Difference': preseason_difference,
                         'Adjusted Preseason Difference': adjusted_preseason_difference,
                         'Current Difference': current_difference,
-                        'Adjusted Current Difference': adjusted_current_difference,
-                        'EV': ev
+                        'Adjusted Current Difference': adjusted_current_difference
                     }
                     picks_rows_2.append(new_row_2)
 

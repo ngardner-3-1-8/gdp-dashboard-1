@@ -2713,7 +2713,7 @@ st.write('')
 st.write('')
 st.write('')
 st.subheader('Select Constraints')
-yes_i_have_constraints = st.checkbox('Would youy like to add constraints? For example, "Avoid Teams on Short Rest"')
+yes_i_have_constraints = st.checkbox('Would you like to add constraints? For example, "Avoid Teams on Short Rest"')
 if yes_i_have_constraints:
     st.write('These constraints will not work 100% of the time (For example in week 18, all Games are divisional matchups). However, it will require a team to be so heavily favored that the impact of the constrained factor should be minimal.')
     avoid_away_teams_on_short_rest = 1 if st.checkbox('Avoid Away Teams on Short Rest') else 0

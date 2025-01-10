@@ -1970,6 +1970,8 @@ def get_survivor_picks_based_on_ev():
             st.write('')
             st.write('Solution found!')
             st.write('Objective value =', solver.Objective().Value())
+            st.write('Test')
+            st.write(df)
 
             # Initialize sums
             sum_preseason_difference = 0

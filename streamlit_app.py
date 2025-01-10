@@ -207,7 +207,7 @@ def collect_schedule_travel_ranking_data_circa(pd):
                                      'Away Team Weekly Rest', 'Home Team Weekly Rest', 
                                      'Weekly Away Rest Advantage', 'Weekly Home Rest Advantage',
                                      'Away Cumulative Rest Advantage', 'Home Cumulative Rest Advantage','Actual Stadium', 'Back to Back Away Games'])
-    st.write(df)
+
 
     df['Date'] = df['Date'].str.replace(r'(\w+)\s(\w+)\s(\d+)', r'\2 \3, 2024', regex=True)
     df['Date'] = pd.to_datetime(df['Date'], format='%b %d, %Y')
@@ -215,7 +215,8 @@ def collect_schedule_travel_ranking_data_circa(pd):
     df['Date'] = df['Date'].apply(lambda x: x.replace(year=2025) if x.month == 1 else x)
     df['Week_Num'] = df['Week'].str.replace('Week ', '').astype(int)
     df['Week'] = df['Week'].str.replace('Week ', '', regex=False).astype(int)
-    
+
+    st.write(df)
 
     # Increment 'Week' for games on or after 2024-11-30
     df.loc[df['Date'] >= pd.to_datetime('2024-11-30'), 'Week'] += 1

@@ -2535,7 +2535,7 @@ st.write('')
 st.write('')
 
 st.subheader('NFL Team Rankings')
-yes_i_have_customized_rankings = st.checkbox('Wopuld you like to use customized rankings instead of our default rankings?')
+yes_i_have_customized_rankings = st.checkbox('Would you like to use customized rankings instead of our default rankings?')
 if yes_i_have_customized_rankings:
     st.write('The Ranking represents :red[how much a team would either win (positive number) or lose (negative number) by to an average NFL team] on a neutral field. 0 means the team is perfectly average. If you leave the "Default" value, the default rankings will be used.')
     st.write('If you use your own rankings, and do NOT select "Use Cached Expected Value", then we will use your internal rankings in two ways:')
@@ -2793,7 +2793,7 @@ if st.button("Get Optimized Survivor Picks"):
         st.write(f"Number of Schedule Rows: {len(schedule_rows)}") #Display row length
         st.write("Step 2/6: Collecting Travel, Ranking, Odds, and Rest Data...")
         collect_schedule_travel_ranking_data_df = collect_schedule_travel_ranking_data_circa(pd)
-        st.write("Step 2 Complete: Travel, Ranking, Odds, and Rest Data Retrieved!")
+        st.write("Step 2 Completed: Travel, Ranking, Odds, and Rest Data Retrieved!")
         #st.write(collect_schedule_travel_ranking_data_df)
         st.write("Step 3/6: Predicting Future Pick Percentages of Public...")
     if use_cached_expected_value == 0:
@@ -2820,10 +2820,10 @@ if st.button("Get Optimized Survivor Picks"):
 
     ending_week_2 = ending_week - 1	
     if selected_contest == 'Circa':
-        st.subheader(f'Optimal Picks for Circa: Weeks {starting_week} through {ending_week_2}')
+        st.subheader(f':blue[Optimal Picks for Circa: Weeks {starting_week} through {ending_week_2}]')
         st.write('')
     else:
-        st.subheader(f'Optimal Picks for Draftkings: Weeks {starting_week} through {ending_week_2}')
+        st.subheader(f':green[Optimal Picks for Draftkings: Weeks {starting_week} through {ending_week_2}]')
         st.write('')
     get_survivor_picks_based_on_ev()
     st.write('Step 5 Completed: Top Picks Determined Based on EV')
@@ -2838,5 +2838,4 @@ if st.button("Get Optimized Survivor Picks"):
         get_survivor_picks_based_on_internal_rankings()
         st.write('Step 6 Completed: Top Picks Determined Based on Default Rankings')
 else:
-    st.write("Error. Could not find the rows")
     schedule_data_retrieved = False #Set flag to False on error

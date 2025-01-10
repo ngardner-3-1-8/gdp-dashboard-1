@@ -2442,7 +2442,8 @@ def get_survivor_picks_based_on_ev():
     # Loop through 100 iterations
     for iteration in range(number_solutions):
         df = full_df_with_ev
-        df['Week'] = df['Week'].str.extract('(\d+)').astype(int)
+	    
+        df['Week'] = df['Week_Num']
 
         #Number of weeks that have already been played
         #weeks_completed = 20 - starting_week
@@ -4509,7 +4510,7 @@ if st.button("Get Optimized Survivor Picks"):
     st.write('Step 5/9: Calculating Best Comnbination of Picks Based on EV...')
     ending_week_2 = ending_week - 1	
     if selected_contest == 'Circa':
-        st.subheader(f'Optimal Picks for Draftkings: Weeks {starting_week} through {ending_week_2}')
+        st.subheader(f'Optimal Picks for Circa: Weeks {starting_week} through {ending_week_2}')
     else:
         st.subheader(f'Optimal Picks for Draftkings: Weeks {starting_week} through {ending_week_2}')
     get_survivor_picks_based_on_ev()

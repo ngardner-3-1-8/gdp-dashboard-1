@@ -137,11 +137,11 @@ def collect_schedule_travel_ranking_data_circa(pd):
                 else:
                     date = date.replace(year=2024)
                 # Adjust week for games on or after November 30th
-                if date >= pd.Timestamp('2024-11-30'):
-                    week += 1
+                #if date >= pd.Timestamp('2024-11-30'):
+                    #week += 1
                 # Adjust week for games on or after December 27th
-                if date >= pd.Timestamp('2024-12-27'):
-                    week += 1
+                #if date >= pd.Timestamp('2024-12-27'):
+                    #week += 1
                 # Calculate the difference in days
                 days_diff = (date - start_date).days
 

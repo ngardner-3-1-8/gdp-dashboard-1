@@ -3706,7 +3706,7 @@ def get_survivor_picks_based_on_internal_rankings():
                                                                        preseason_difference, adjusted_preseason_difference,
                                                                        current_difference, adjusted_current_difference, ev))
                     new_row_2 = {
-                        'Week': week
+                        'Week': week,
                         'Pick': pick,
                         'Opponent': opponent,
                         'EV': ev,

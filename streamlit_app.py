@@ -2446,7 +2446,7 @@ def get_survivor_picks_based_on_ev():
         df['Week'] = df['Week_Num']
 
         #Number of weeks that have already been played
-        #weeks_completed = 20 - starting_week
+        weeks_completed = starting_week -1
 
         # Teams already picked - Team name in quotes and separated by commas
 
@@ -2626,12 +2626,16 @@ def get_survivor_picks_based_on_ev():
             # Get the indices of the forbidden solution in the DataFrame
             forbidden_indices_1 = []
             for i in range(len(df)):
-                week_index = df.loc[i, 'Week'] - (weeks_completed + 1)
-                if week_index >= 0 and week_index < len(forbidden_solution_1):
-                    if (df.loc[i, 'Adjusted Current Winner'] == forbidden_solution_1[week_index]):
+                # Calculate the relative week number within the forbidden solution
+                df_week = df.loc[i, 'Week']
+                relative_week = df_week - starting_week  # Adjust week to be relative to starting week
+
+                #Check if the week is within the range and the solution is forbidden
+                if 0 <= relative_week < len(forbidden_solution_1) and df_week >= starting_week and df_week <= ending_week: #Added this to make sure we are only looking at the range
+                    if (df.loc[i, 'Adjusted Current Winner'] == forbidden_solution_1[relative_week]):
                         forbidden_indices_1.append(i)
 
-            # Add the constraint that at least one of these picks should not be selected
+            # Add the constraint
             solver.Add(solver.Sum([1 - picks[i] for i in forbidden_indices_1]) >= 1)
 
 

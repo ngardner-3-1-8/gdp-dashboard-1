@@ -2442,7 +2442,7 @@ def get_survivor_picks_based_on_ev():
         df = full_df_with_ev
 	    
         if df['Week_Num'].dtype == 'str':
-		df['Week'] = df['Week'].str.replace('Week ', '', regex=False).astype(int)
+            df['Week'] = df['Week'].str.replace('Week ', '', regex=False).astype(int)
 		
 
         #Number of weeks that have already been played

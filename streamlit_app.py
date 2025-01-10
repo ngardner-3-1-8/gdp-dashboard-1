@@ -216,7 +216,6 @@ def collect_schedule_travel_ranking_data_circa(pd):
     df['Week_Num'] = df['Week'].str.replace('Week ', '').astype(int)
     df['Week'] = df['Week'].str.replace('Week ', '', regex=False).astype(int)
 
-    st.write(df)
 
     # Increment 'Week' for games on or after 2024-11-30
     df.loc[df['Date'] >= pd.to_datetime('2024-11-30'), 'Week'] += 1
@@ -1420,7 +1419,6 @@ def get_survivor_picks_based_on_ev():
         # Filter out weeks that have already been played and reset index
 
         df = df[(df['Week_Num'] >= starting_week) & (df['Week_Num'] <= ending_week)].reset_index(drop=True)
-        st.write(df)
         # Filter out already picked teams
         df = df[~df['Adjusted Current Winner'].isin(picked_teams)].reset_index(drop=True)
         #print(df)
@@ -1970,8 +1968,7 @@ def get_survivor_picks_based_on_ev():
             st.write('')
             st.write('Solution found!')
             st.write('Objective value =', solver.Objective().Value())
-            st.write('Test')
-            st.write(df)
+
 
             # Initialize sums
             sum_preseason_difference = 0
@@ -1983,7 +1980,6 @@ def get_survivor_picks_based_on_ev():
             # Initialize picks_df
             picks_df = pd.DataFrame(columns=df.columns)
             picks_rows_2 = []
-            st.write(picks)
             for i in range(len(df)):
                 if picks[i].solution_value() > 0:
                     # Determine if it's a divisional game and if the picked team is the home team
@@ -2794,7 +2790,7 @@ if st.button("Get Optimized Survivor Picks"):
         st.write("Step 2/9: Collecting Travel, Ranking, Odds, and Rest Data...")
         collect_schedule_travel_ranking_data_df = collect_schedule_travel_ranking_data_circa(pd)
         st.write("Step 2 Complete: Travel, Ranking, Odds, and Rest Data Retrieved!")
-        st.write(collect_schedule_travel_ranking_data_df)
+        #st.write(collect_schedule_travel_ranking_data_df)
         st.write("Step 3/9: Predicting Future Pick Percentages of Public...")
     if use_cached_expected_value == 0:
         nfl_schedule_pick_percentages_df = get_predicted_pick_percentages_circa(pd)

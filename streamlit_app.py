@@ -2441,7 +2441,7 @@ def get_survivor_picks_based_on_ev():
     for iteration in range(number_solutions):
         df = full_df_with_ev
 	    
-        if df['Week_Num'].dtype == 'str':
+        if df['Week'].dtype == 'str':
             df['Week'] = df['Week'].str.replace('Week ', '', regex=False).astype(int)
 		
 

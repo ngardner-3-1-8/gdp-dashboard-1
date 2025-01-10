@@ -106,7 +106,8 @@ def collect_schedule_travel_ranking_data_circa(pd):
         return tz1_offset - tz2_offset
 
     # Loop through each row in the table
-    for schedule_row in schedule_table.find_all('tr'):
+    for schedule_row in schedule_rows:
+    #for schedule_row in schedule_table.find_all('tr'):
         # Check if the row has a white background
         if schedule_row.get('bgcolor') == '#ffffff':
             # Find all columns in the row
@@ -2440,7 +2441,9 @@ def get_survivor_picks_based_on_ev():
     for iteration in range(number_solutions):
         df = full_df_with_ev
 	    
-        df['Week'] = df['Week_Num']
+        if df['Week_Num'].dtype == 'str':
+		df['Week'] = df['Week'].str.replace('Week ', '', regex=False).astype(int)
+		
 
         #Number of weeks that have already been played
         #weeks_completed = starting_week -1
@@ -4486,8 +4489,6 @@ if st.button("Get Optimized Survivor Picks"):
     if schedule_table:
         st.write("Step 1 Completed: Schedule Data Retrieved!")
         schedule_data_retrieved = True #Set Flag to True after retrieval
-        schedule_table = schedule_table #Store table data into session state
-        schedule_rows = schedule_rows #Store rows data into session state # ADD THIS LINE
     else:
         st.write("Error. Could not find the table.")
         schedule_data_retrieved = False #Set flag to False on error

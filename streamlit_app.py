@@ -207,6 +207,7 @@ def collect_schedule_travel_ranking_data_circa(pd):
                                      'Away Team Weekly Rest', 'Home Team Weekly Rest', 
                                      'Weekly Away Rest Advantage', 'Weekly Home Rest Advantage',
                                      'Away Cumulative Rest Advantage', 'Home Cumulative Rest Advantage','Actual Stadium', 'Back to Back Away Games'])
+    st.write(df)
 
     df['Date'] = df['Date'].str.replace(r'(\w+)\s(\w+)\s(\d+)', r'\2 \3, 2024', regex=True)
     df['Date'] = pd.to_datetime(df['Date'], format='%b %d, %Y')

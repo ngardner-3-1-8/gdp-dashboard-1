@@ -2014,7 +2014,7 @@ def get_survivor_picks_based_on_ev():
                     ev = (df.loc[i, 'Home Team EV'] if df.loc[i, 'Adjusted Current Winner'] == df.loc[i, 'Home Team'] else df.loc[i, 'Away Team EV'])
 
 
-                    print('Week %i: Pick %s %s %s (%i, %i, %i, %i, %.4f)' % (df.loc[i, 'Week'], df.loc[i, 'Adjusted Current Winner'], divisional_game, home_team,
+                    print('Week %i: Pick %s %s %s (%i, %i, %i, %i, %.4f)' % (df.loc[i, 'Week_Num'], df.loc[i, 'Adjusted Current Winner'], divisional_game, home_team,
                                                                        preseason_difference, adjusted_preseason_difference,
                                                                        current_difference, adjusted_current_difference, ev))
                     new_row_2 = {

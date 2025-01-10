@@ -3015,21 +3015,24 @@ def get_survivor_picks_based_on_ev():
                 if picks[i].solution_value() > 0:
                     # Determine if it's a divisional game and if the picked team is the home team
 
+                    week = df.loc[i, 'Week']
                     pick = df.loc[i,'Adjusted Current Winner']
-                    divisional_game = '(Divisional)' if df.loc[i, 'Divisional Matchup?'] == 'Divisional' else ''
+                    opponent = df.loc[i, 'Home Team'] if df.loc[i, 'Adjusted Current Winner'] == df.loc[i, 'Away Team'] else df.loc[i, 'Away Team']
+                    divisional_game = 'Divisional' if df.loc[i, 'Divisional Matchup Boolean'] == '1' else ''
                     home_team = '(Home Team)' if df.loc[i, 'Adjusted Current Winner'] == df.loc[i, 'Home Team'] else '(Away Team)'
                     weekly_rest = df.loc[i, 'Home Team Weekly Rest'] if df.loc[i, 'Adjusted Current Winner'] == df.loc[i, 'Home Team'] else df.loc[i, 'Away Team Weekly Rest']
                     weekly_rest_advantage = df.loc[i, 'Weekly Home Rest Advantage'] if df.loc[i, 'Adjusted Current Winner'] == df.loc[i, 'Home Team'] else df.loc[i, 'Weekly Away Rest Advantage']
                     cumulative_rest = df.loc[i, 'Home Cumulative Rest Advantage'] if df.loc[i, 'Adjusted Current Winner'] == df.loc[i, 'Home Team'] else df.loc[i, 'Away Cumulative Rest Advantage']
                     cumulative_rest_advantage = df.loc[i, 'Home Team Current Week Cumulative Rest Advantage'] if df.loc[i, 'Adjusted Current Winner'] == df.loc[i, 'Home Team'] else df.loc[i, 'Away Team Current Week Cumulative Rest Advantage']
                     travel_advantage = df.loc[i, 'Home Travel Advantage'] if df.loc[i, 'Adjusted Current Winner'] == df.loc[i, 'Home Team'] else df.loc[i, 'Away Travel Advantage']
-                    back_to_back_away_games = 'No Back to Back Away Games' if df.loc[i, 'Adjusted Current Winner'] == df.loc[i, 'Away Team'] and df.loc[i, 'Back to Back Away Games'] == 'True' else 'Back to Back Away Games'
+                    back_to_back_away_games = 'True' if df.loc[i, 'Adjusted Current Winner'] == df.loc[i, 'Away Team'] and df.loc[i, 'Back to Back Away Games'] == 'True' else 'False'
                     thursday_night_game = 'Thursday Night Game' if df.loc[i, "Thursday Night Game"] == 'True' else 'Sunday/Monday Game'
                     international_game = 'International Game' if df.loc[i, 'Adjusted Current Winner'] == df.loc[i, 'Home Team'] else 'Domestic Game'
                     previous_opponent = df.loc[i, 'Home Team Previous Opponent'] if df.loc[i, 'Adjusted Current Winner'] == df.loc[i, 'Home Team'] else df.loc[i, 'Away Team Previous Opponent']
                     previous_game_location = df.loc[i, 'Home Team Previous Location'] if df.loc[i, 'Adjusted Current Winner'] == df.loc[i, 'Home Team'] else df.loc[i, 'Away Team Previous Location']
                     next_opponent = df.loc[i, 'Home Team Next Opponent'] if df.loc[i, 'Adjusted Current Winner'] == df.loc[i, 'Home Team'] else df.loc[i, 'Away Team Next Opponent']
                     next_game_location = df.loc[i, 'Home Team Next Location'] if df.loc[i, 'Adjusted Current Winner'] == df.loc[i, 'Home Team'] else df.loc[i, 'Away Team Next Location']
+                    win_odds = df.loc[i, 'Home Team Fair Odds'] if df.loc[i, 'Adjusted Current Winner'] == df.loc[i, 'Away Team'] else df.loc[i, 'Away Team fair Odds']
                     
 
                     # Get differences
@@ -3045,7 +3048,11 @@ def get_survivor_picks_based_on_ev():
                                                                        preseason_difference, adjusted_preseason_difference,
                                                                        current_difference, adjusted_current_difference, ev))
                     new_row_2 = {
+                        'Week': week,
                         'Pick': pick,
+                        'Opponent': opponent,
+                        'EV': ev,
+                        'Win Odds': win_odds,
                         'Divisional Game': divisional_game,
                         'Home Team Status': home_team,
                         'Weekly Rest': weekly_rest,
@@ -3063,8 +3070,7 @@ def get_survivor_picks_based_on_ev():
                         'Preseason Difference': preseason_difference,
                         'Adjusted Preseason Difference': adjusted_preseason_difference,
                         'Current Difference': current_difference,
-                        'Adjusted Current Difference': adjusted_current_difference,
-                        'EV': ev
+                        'Adjusted Current Difference': adjusted_current_difference
                     }
                     picks_rows_2.append(new_row_2)
 
@@ -3088,7 +3094,10 @@ def get_survivor_picks_based_on_ev():
             st.write(f'Total EV: :red[{sum_ev}]')
         else:
             st.write('No solution found. Consider using fewer constraints. Or you may just be fucked')
+            st.write('No solution found. Consider using fewer constraints. Or you may just be fucked')
+        st.write("---------------------------------------------------------------------------------------------------------------")
         st.write("")
+        st.write("")	    
         st.write("")
 
             # Save the picks to a CSV file for the current iteration
@@ -3764,9 +3773,10 @@ def get_survivor_picks_based_on_internal_rankings():
             st.write(f'Total EV: :red[{sum_ev}]')
         else:
             st.write('No solution found. Consider using fewer constraints. Or you may just be fucked')
+        st.write("---------------------------------------------------------------------------------------------------------------")
         st.write("")
+        st.write("")	    
         st.write("")
-
             # Save the picks to a CSV file for the current iteration
         picks_df.to_csv(f'picks_ev_{iteration + 1}.csv', index=False)
         summarized_picks_df.to_csv(f'picks_ev_subset_{iteration + 1}.csv', index=False)

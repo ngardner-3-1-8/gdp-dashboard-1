@@ -1964,8 +1964,9 @@ def get_survivor_picks_based_on_ev():
         status = solver.Solve()
 
         if status == pywraplp.Solver.OPTIMAL:
-            st.write(f'**Solution Based on EV: {iteration + 1}**')
             st.write('')
+            st.write(f'**Solution Based on EV: {iteration + 1}**')
+
             st.write('Solution found!')
             st.write('Objective value =', solver.Objective().Value())
 
@@ -2809,11 +2810,16 @@ if st.button("Get Optimized Survivor Picks"):
     st.write("Step 4 Completed: Expected Value Calculated")
     st.write(full_df_with_ev)
     st.write('Step 5/9: Calculating Best Comnbination of Picks Based on EV...')
+    st.write('')
+
+
     ending_week_2 = ending_week - 1	
     if selected_contest == 'Circa':
         st.subheader(f'Optimal Picks for Circa: Weeks {starting_week} through {ending_week_2}')
+        st.write('')
     else:
         st.subheader(f'Optimal Picks for Draftkings: Weeks {starting_week} through {ending_week_2}')
+        st.write('')
     get_survivor_picks_based_on_ev()
     st.write('Step 5 Completed: Top Picks Determined Based on EV')
     if yes_i_have_customized_rankings:

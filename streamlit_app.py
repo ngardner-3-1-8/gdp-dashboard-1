@@ -221,11 +221,11 @@ def collect_schedule_travel_ranking_data_circa(pd):
     # Increment 'Week' for games on or after 2024-11-30
     df.loc[df['Date'] >= pd.to_datetime('2024-11-30'), 'Week'] += 1
     df.loc[df['Date'] >= pd.to_datetime('2024-12-27'), 'Week'] += 1
-    df.loc[df['Week_Num'] >= pd.to_datetime('2024-11-30'), 'Week'] += 1
-    df.loc[df['Week_Num'] >= pd.to_datetime('2024-12-27'), 'Week'] += 1
+    df.loc[df['Date'] >= pd.to_datetime('2024-11-30'), 'Week_Num'] += 1
+    df.loc[df['Date'] >= pd.to_datetime('2024-12-27'), 'Week_Num'] += 1
 
     # Convert 'Week' back to string format if needed
-    #df['Week'] = 'Week ' + df['Week'].astype(str)
+    df['Week'] = 'Week ' + df['Week'].astype(str)
     df['Away Team Current Week Cumulative Rest Advantage'] = pd.to_numeric(df['Away Cumulative Rest Advantage'], errors='coerce').fillna(0) - pd.to_numeric(df['Home Cumulative Rest Advantage'], errors='coerce').fillna(0)
     df['Home Team Current Week Cumulative Rest Advantage'] = pd.to_numeric(df['Home Cumulative Rest Advantage'], errors='coerce').fillna(0) - pd.to_numeric(df['Away Cumulative Rest Advantage'], errors='coerce').fillna(0)
     df['Away Team Division'] = df['Away Team'].map(lambda team: stadiums[team][4] if team in stadiums else 'NA')

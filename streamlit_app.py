@@ -2995,6 +2995,8 @@ def get_survivor_picks_based_on_ev():
         status = solver.Solve()
 
         if status == pywraplp.Solver.OPTIMAL:
+            st.write(f'**Solution Based on EV: {iteration + 1}**')
+            st.write('')
             st.write('Solution found!')
             st.write('Objective value =', solver.Objective().Value())
 
@@ -3076,18 +3078,6 @@ def get_survivor_picks_based_on_ev():
                     picks_df = pd.concat([picks_df, df.loc[[i]]], ignore_index=True)
                     picks_df['Divisional Matchup?'] = divisional_game
             summarized_picks_df = pd.DataFrame(picks_rows_2)
-   
-
-
-
-
-
-            # Add row to picks_df
-            #picks_df = pd.concat([picks_df, df.loc[[i]]], ignore_index=True)
-            #print(picks_df)
-            # Print sums
-
-            st.write(f'**Solution Based on EV: {iteration}**')
 
             st.write(summarized_picks_df)
             st.write('')

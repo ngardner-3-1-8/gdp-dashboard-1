@@ -159,7 +159,7 @@ def collect_schedule_travel_ranking_data_circa(pd):
             elif last_date is not None:
                 cols_text[0] = last_date.strftime('%a %b %d')
             # Add week to the start of cols_text
-            cols_text.insert(0, f'Week {week}')
+            cols_text.insert(0, {week})
 
             # Calculate rest days for away team and add it to cols_text
             away_team = cols_text[3]
@@ -212,8 +212,8 @@ def collect_schedule_travel_ranking_data_circa(pd):
     df['Date'] = pd.to_datetime(df['Date'], format='%b %d, %Y')
     # Adjust January games to 2025 in the DataFrame
     df['Date'] = df['Date'].apply(lambda x: x.replace(year=2025) if x.month == 1 else x)
-    df['Week_Num'] = df['Week'].str.replace('Week ', '').astype(int)
-    df['Week'] = df['Week'].str.replace('Week ', '', regex=False).astype(int)
+    #df['Week_Num'] = df['Week'].str.replace('Week ', '').astype(int)
+    #df['Week'] = df['Week'].str.replace('Week ', '', regex=False).astype(int)
     
 
     # Increment 'Week' for games on or after 2024-11-30
@@ -221,7 +221,7 @@ def collect_schedule_travel_ranking_data_circa(pd):
     df.loc[df['Date'] >= pd.to_datetime('2024-12-27'), 'Week'] += 1
 
     # Convert 'Week' back to string format if needed
-    df['Week'] = 'Week ' + df['Week'].astype(str)
+    #df['Week'] = 'Week ' + df['Week'].astype(str)
     df['Away Team Current Week Cumulative Rest Advantage'] = pd.to_numeric(df['Away Cumulative Rest Advantage'], errors='coerce').fillna(0) - pd.to_numeric(df['Home Cumulative Rest Advantage'], errors='coerce').fillna(0)
     df['Home Team Current Week Cumulative Rest Advantage'] = pd.to_numeric(df['Home Cumulative Rest Advantage'], errors='coerce').fillna(0) - pd.to_numeric(df['Away Cumulative Rest Advantage'], errors='coerce').fillna(0)
     df['Away Team Division'] = df['Away Team'].map(lambda team: stadiums[team][4] if team in stadiums else 'NA')
@@ -1196,7 +1196,7 @@ def collect_schedule_travel_ranking_data_draftkings(pd):
             elif last_date is not None:
                 cols_text[0] = last_date.strftime('%a %b %d')
             # Add week to the start of cols_text
-            cols_text.insert(0, f'Week {week}')
+            cols_text.insert(0, {week})
 
             # Calculate rest days for away team and add it to cols_text
             away_team = cols_text[3]
@@ -1250,11 +1250,11 @@ def collect_schedule_travel_ranking_data_draftkings(pd):
     # Adjust January games to 2025 in the DataFrame
     df['Date'] = df['Date'].apply(lambda x: x.replace(year=2025) if x.month == 1 else x)
     df['Week_Num'] = df['Week'].str.replace('Week ', '').astype(int)
-    df['Week'] = df['Week'].str.replace('Week ', '', regex=False).astype(int)
+    #df['Week'] = df['Week'].str.replace('Week ', '', regex=False).astype(int)
     
 
     # Convert 'Week' back to string format if needed
-    df['Week'] = 'Week ' + df['Week'].astype(str)
+    #df['Week'] = 'Week ' + df['Week'].astype(str)
     df['Away Team Current Week Cumulative Rest Advantage'] = pd.to_numeric(df['Away Cumulative Rest Advantage'], errors='coerce').fillna(0) - pd.to_numeric(df['Home Cumulative Rest Advantage'], errors='coerce').fillna(0)
     df['Home Team Current Week Cumulative Rest Advantage'] = pd.to_numeric(df['Home Cumulative Rest Advantage'], errors='coerce').fillna(0) - pd.to_numeric(df['Away Cumulative Rest Advantage'], errors='coerce').fillna(0)
     df['Away Team Division'] = df['Away Team'].map(lambda team: stadiums[team][4] if team in stadiums else 'NA')
@@ -2290,7 +2290,7 @@ def get_predicted_pick_percentages_circa(pd):
     #print(away_df)
 
     nfl_schedule_df = collect_schedule_travel_ranking_data_df
-    nfl_schedule_df['Week'] = nfl_schedule_df['Week'].str.extract(r'(\d+)').astype(int)
+    #nfl_schedule_df['Week'] = nfl_schedule_df['Week'].str.extract(r'(\d+)').astype(int)
     # Merge the DataFrames based on matching columns
     nfl_schedule_df = pd.merge(nfl_schedule_df, away_df, 
                                left_on=['Week', 'Away Team', 'Home Team'],
@@ -2418,7 +2418,7 @@ def calculate_ev():
     progress_bar = st.progress(0)  # Initialize progress bar at 0%
 
     for week in tqdm(range(starting_week, ending_week), desc="Processing Weeks", leave=False): #########SET THE RANGE TO (1, 21) TO PROCESS THE WHOLE SEASON, or (2,3) to process ONLY WEEK . The rest you can figure out 
-        week_df = nfl_schedule_pick_percentages_df[nfl_schedule_pick_percentages_df['Week'] == f"Week {week}"]
+        week_df = nfl_schedule_pick_percentages_df[nfl_schedule_pick_percentages_df['Week'] == week]
         week_df, all_outcomes, scenario_weights = calculate_all_scenarios(week_df)
 
         # Update nfl_schedule_circa_df_2 using the 'update' method
@@ -2440,9 +2440,6 @@ def get_survivor_picks_based_on_ev():
     # Loop through 100 iterations
     for iteration in range(number_solutions):
         df = full_df_with_ev
-	    
-        if df['Week'].dtype == 'str':
-            df['Week'] = df['Week'].str.replace('Week ', '', regex=False).astype(int)
 		
 
         #Number of weeks that have already been played
@@ -3117,7 +3114,6 @@ def get_survivor_picks_based_on_internal_rankings():
     # Loop through 100 iterations
     for iteration in range(number_solutions):
         df = full_df_with_ev
-        df['Week'] = df['Week'].str.extract('(\d+)').astype(int)
 
         #Number of weeks that have already been played
         #weeks_completed = 20 - starting_week

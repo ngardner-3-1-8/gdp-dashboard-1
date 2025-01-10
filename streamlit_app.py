@@ -2540,7 +2540,7 @@ if yes_i_have_customized_rankings:
     st.write('The Ranking represents :red[how much a team would either win (positive number) or lose (negative number) by to an average NFL team] on a neutral field. 0 means the team is perfectly average. If you leave the "Default" value, the default rankings will be used.')
     st.write('If you use your own rankings, and do NOT select "Use Cached Expected Value", then we will use your internal rankings in two ways:')
     st.write('1. We will use them in the calculation based on internal rankings')
-    st.write('2. We will use public Draftkings ML to predict pick percentages for the EV calculation, but then use your internal rankinsg to predict win percentage and help you find an EV edge based on your internal rankings')
+    st.write('2. We will use public Draftkings ML odds to predict pick percentages for the EV calculation, but then use your internal rankinsg to predict win percentage and help you find an EV edge based on your internal rankings')
     st.write('')
     
     

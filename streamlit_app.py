@@ -2341,8 +2341,8 @@ st.subheader("The second best Circa Survivor Contest optimizer")
 contest_options = [
     "Circa", "DraftKings"
 ]
-st.write("Alright, clowns. This site is built to help you optimize your picks for the Circa Survivor contest (Eventually other contests). :red[This tool is just for informational use. It does not take into account injuries or certain other factors. Do not use this tool as your only source of information.] Simply input which week you're in, your team rankings, constraints, etc... and the algorithm will do the rest.")
-st.write('Caluclating EV will take the longest in this process. For a full season, this step will take up to 5 hours or more. For that reason, we recommend using the saved Expected Value Calculations Good luck!')
+st.write("Alright, clowns. This site is built to help you optimize your picks for the Circa Survivor contest (Eventually other contests). :red[This tool is just for informational use. It does not take into account injuries, weather, resting players, or certain other factors. Do not use this tool as your only source of information.] Simply input which week you're in, your team rankings, constraints, etc... and the algorithm will do the rest.")
+st.write('Caluclating EV will take the longest in this process. For a full season, this step will take up to 5 hours or more. For that reason, :green[we recommend using the saved Expected Value Calculations.] Good luck!')
 st.write('')
 st.write('')
 st.subheader('Select Contest')
@@ -2363,7 +2363,7 @@ st.write('')
 st.write('')
 st.write('')
 st.subheader('Picked Teams:')
-yes_i_have_picked_teams = st.checkbox('Have you already used any teams in the contest, or want to prevent the alogorithm from using any specific teams?')
+yes_i_have_picked_teams = st.checkbox('Have you already used any teams in the contest, or want to prevent the algorithm from using any specific teams?')
 
 #def create_nfl_app():
 
@@ -2378,7 +2378,7 @@ nfl_teams = [
     "Seattle Seahawks", "Tampa Bay Buccaneers", "Tennessee Titans", "Washington Commanders"
 ]
 if yes_i_have_picked_teams:
-    st.write('Select the teams that you have already used in the Survivor contest, or teams that you just do not want to pick in the enirety of the contest')
+    st.write('Select the teams that you have already used in the survivor contest, or teams that you just do not want to pick in the enirety of the contest')
     selected_teams = st.multiselect("Prohibited Picks:", options=nfl_teams)
     picked_teams = selected_teams if selected_teams else []
     if picked_teams:
@@ -2418,7 +2418,7 @@ st.write('')
 st.write('')
 st.write('')
 st.subheader('Teams That Have to Be Picked')
-yes_i_have_a_required_team = st.checkbox('Do you have a team that you requirew to be used in a specific week?')
+yes_i_have_a_required_team = st.checkbox('Do you have a team that you require to be used in a specific week?')
 if yes_i_have_a_required_team:
     st.write('Select the week in which the algorithm has to pick that team. If you do not want the team to be :red[required] to be used, select 0')
     required_week_options = [0] + list(range(starting_week, ending_week))
@@ -2460,7 +2460,7 @@ st.write('')
 st.write('')
 st.write('')
 st.subheader('Prohibited Teams')
-yes_i_have_prohibited_teams = st.checkbox('Do you have teams that you want to prohibit the alogrithm from choosing ina specifc week?')
+yes_i_have_prohibited_teams = st.checkbox('Do you have teams that you want to prohibit the alogrithm from choosing in a specifc week?')
 if yes_i_have_prohibited_teams:
     st.write('Choose which week you do :red[NOT] want a team to be picked. If, for example, you think the 49ers have a bad matchup in Week 15, and you do not want them to be used then, select "15" for the San Francisco 49ers')
 
@@ -2535,9 +2535,12 @@ st.write('')
 st.write('')
 
 st.subheader('NFL Team Rankings')
-yes_i_have_customized_rankings = st.checkbox('Wopuld you like to use custoimized rankings instead of our default rankings?')
+yes_i_have_customized_rankings = st.checkbox('Wopuld you like to use customized rankings instead of our default rankings?')
 if yes_i_have_customized_rankings:
     st.write('The Ranking represents :red[how much a team would either win (positive number) or lose (negative number) by to an average NFL team] on a neutral field. 0 means the team is perfectly average. If you leave the "Default" value, the default rankings will be used.')
+    st.write('If you use your own rankings, and do NOT select "Use Cached Expected Value", then we will use your internal rankings in two ways:')
+    st.write('1. We will use them in the calculation based on internal rankings')
+    st.write('2. We will use public Draftkings ML to predict pick percentages for the EV calculation, but then use your internal rankinsg to predict win percentage and help you find an EV edge based on your internal rankings')
     st.write('')
     
     

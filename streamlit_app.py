@@ -212,8 +212,8 @@ def collect_schedule_travel_ranking_data_circa(pd):
     df['Date'] = pd.to_datetime(df['Date'], format='%b %d, %Y')
     # Adjust January games to 2025 in the DataFrame
     df['Date'] = df['Date'].apply(lambda x: x.replace(year=2025) if x.month == 1 else x)
-    #df['Week_Num'] = df['Week'].str.replace('Week ', '').astype(int)
-    df['Week'] = df['Week'].astype(int)
+    df['Week_Num'] = df['Week'].str.replace('Week ', '').astype(int)
+    df['Week'] = df['Week'].str.replace('Week ', '').astype(int)
     
 
     # Increment 'Week' for games on or after 2024-11-30

@@ -2419,9 +2419,9 @@ st.write('')
 st.write('')
 st.subheader('Teams That Have to Be Picked')
 yes_i_have_a_required_team = st.checkbox('Do you have a team that you require to be used in a specific week?')
+required_week_options = [0] + list(range(starting_week, ending_week))
 if yes_i_have_a_required_team:
     st.write('Select the week in which the algorithm has to pick that team. If you do not want the team to be :red[required] to be used, select 0')
-    required_week_options = [0] + list(range(starting_week, ending_week))
     
     az_req_week = st.selectbox("Arizona Cardinals Week Required to Be Picked:", options=required_week_options)
     atl_req_week = st.selectbox("Atlanta Falcons Week Required to Be Picked:", options=required_week_options)

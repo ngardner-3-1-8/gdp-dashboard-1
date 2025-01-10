@@ -2408,9 +2408,6 @@ def calculate_ev():
 
     # Add "Week" to the beginning of each value in the 'Week' column
     nfl_schedule_pick_percentages_df['Week'] = nfl_schedule_pick_percentages_df['Week'].apply(lambda x: f"Week {x}")
-
-    #starting_week = 1
-    #ending_week = 20
     
     # --- Option 1: Using st.empty for text updates ---
     #progress_bar = st.empty()  # Create an empty placeholder
@@ -2419,7 +2416,7 @@ def calculate_ev():
     st.write("Current Week Progress")
     progress_bar = st.progress(0)  # Initialize progress bar at 0%
 
-    for week in tqdm(range(starting_week, ending_week + 1), desc="Processing Weeks", leave=False): #########SET THE RANGE TO (1, 21) TO PROCESS THE WHOLE SEASON, or (2,3) to process ONLY WEEK . The rest you can figure out 
+    for week in tqdm(range(starting_week, ending_week), desc="Processing Weeks", leave=False): #########SET THE RANGE TO (1, 21) TO PROCESS THE WHOLE SEASON, or (2,3) to process ONLY WEEK . The rest you can figure out 
         week_df = nfl_schedule_pick_percentages_df[nfl_schedule_pick_percentages_df['Week'] == f"Week {week}"]
         week_df, all_outcomes, scenario_weights = calculate_all_scenarios(week_df)
 

@@ -3475,6 +3475,7 @@ if st.button("Get Optimized Survivor Picks"):
         #nfl_schedule_circa_df_2 = manually_adjust_pick_predictions()
         st.write("Step 4/9: Calculating Expected Value (Could take several hours)...")
     if use_cached_expected_value == 1:
+        nfl_schedule_pick_percentages_df = get_predicted_pick_percentages_circa(pd)
         full_df_with_ev = pd.read_csv('NFL Schedule with full ev_circa.csv')
         st.write("Step 3 Completed: Public Pick Percentages Predicted")
         st.write("Step 4: Calculating Expected Value...")

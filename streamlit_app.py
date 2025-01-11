@@ -32,7 +32,7 @@ def get_schedule():
     print("Schedule Data Retrieved")
     return table, rows
 
-def collect_schedule_travel_ranking_data_circa(pd):
+def collect_schedule_travel_ranking_data(pd):
     data = []
     # Initialize a variable to hold the last valid date and week
     last_date = None
@@ -217,11 +217,11 @@ def collect_schedule_travel_ranking_data_circa(pd):
     df['Week'] = df['Week'].str.replace('Week ', '', regex=False).astype(int)
 
 
-    # Increment 'Week' for games on or after 2024-11-30
-    df.loc[df['Date'] >= pd.to_datetime('2024-11-30'), 'Week'] += 1
-    df.loc[df['Date'] >= pd.to_datetime('2024-12-27'), 'Week'] += 1
-    df.loc[df['Date'] >= pd.to_datetime('2024-11-30'), 'Week_Num'] += 1
-    df.loc[df['Date'] >= pd.to_datetime('2024-12-27'), 'Week_Num'] += 1
+    if selected_contest == 'Circa:
+        df.loc[df['Date'] >= pd.to_datetime('2024-11-30'), 'Week'] += 1
+        df.loc[df['Date'] >= pd.to_datetime('2024-12-27'), 'Week'] += 1
+        df.loc[df['Date'] >= pd.to_datetime('2024-11-30'), 'Week_Num'] += 1
+        df.loc[df['Date'] >= pd.to_datetime('2024-12-27'), 'Week_Num'] += 1
 
     # Convert 'Week' back to string format if needed
     df['Week'] = 'Week ' + df['Week'].astype(str)
@@ -1086,7 +1086,11 @@ def collect_schedule_travel_ranking_data_circa(pd):
     consolidated_df.loc[consolidated_df["Divisional Matchup?"] == True, "Divisional Matchup Boolean"] = 1
 
     # Save the consolidated DataFrame to a single CSV file
-    consolidated_csv_file = "nfl_schedule_circa.csv"
+
+    if selected_contest == 'Circa':
+        consolidated_csv_file = "nfl_schedule_circa.csv"
+    else:
+        consolidated_csv_file = "nfl_schedule_dk.csv"
     consolidated_df.to_csv(consolidated_csv_file, index=False)    
     collect_schedule_travel_ranking_data_nfl_schedule_df = consolidated_df
     
@@ -1291,7 +1295,10 @@ def get_predicted_pick_percentages_circa(pd):
     nfl_schedule_df['Away Team EV'] = 0.0  # Initialize with 0.0
 
 
-    nfl_schedule_df.to_csv("Circa_Predicted_Pick_%.csv", index=False)
+    if selected_contest == 'Circa':
+        nfl_schedule_df.to_csv("Circa_Predicted_Pick_%.csv", index=False)
+    else:
+        nfl_schedule_df.to_csv("DK_Predicted_Pick_%.csv", index=False)
     return nfl_schedule_df
 
 
@@ -2096,8 +2103,12 @@ def get_survivor_picks_based_on_ev():
         st.write("")
 
             # Save the picks to a CSV file for the current iteration
-        picks_df.to_csv(f'picks_ev_{iteration + 1}.csv', index=False)
-        summarized_picks_df.to_csv(f'picks_ev_subset_{iteration + 1}.csv', index=False)
+        if selected_contest == 'Circa':
+            picks_df.to_csv(f'circa_picks_ev_{iteration + 1}.csv', index=False)
+            summarized_picks_df.to_csv(f'circa_picks_ev_subset_{iteration + 1}.csv', index=False)
+        else:
+            picks_df.to_csv(f'dk_picks_ev_{iteration + 1}.csv', index=False)
+            summarized_picks_df.to_csv(f'dk_picks_ev_subset_{iteration + 1}.csv', index=False)
         
         # Append the new forbidden solution to the list
         forbidden_solutions_1.append(picks_df['Adjusted Current Winner'].tolist())
@@ -2771,8 +2782,12 @@ def get_survivor_picks_based_on_internal_rankings():
         st.write("")
 
             # Save the picks to a CSV file for the current iteration
-        picks_df.to_csv(f'picks_ir_{iteration + 1}.csv', index=False)
-        summarized_picks_df.to_csv(f'picks_ir_subset_{iteration + 1}.csv', index=False)
+        if selected_contest == 'Circa':
+            picks_df.to_csv(f'circa_picks_ir_{iteration + 1}.csv', index=False)
+            summarized_picks_df.to_csv(f'circa_picks_ir_subset_{iteration + 1}.csv', index=False)
+        else:
+            picks_df.to_csv(f'dk_picks_ir_{iteration + 1}.csv', index=False)
+            summarized_picks_df.to_csv(f'dk_picks_ir_subset_{iteration + 1}.csv', index=False)
         
         # Append the new forbidden solution to the list
         forbidden_solutions_1.append(picks_df['Adjusted Current Winner'].tolist())
@@ -3490,17 +3505,17 @@ if st.button("Get Optimized Survivor Picks"):
     if schedule_rows:
         st.write(f"Number of Schedule Rows: {len(schedule_rows)}") #Display row length
         st.write("Step 2/6: Collecting Travel, Ranking, Odds, and Rest Data...")
-        collect_schedule_travel_ranking_data_df = collect_schedule_travel_ranking_data_circa(pd)
+        collect_schedule_travel_ranking_data_df = collect_schedule_travel_ranking_data(pd)
         st.write("Step 2 Completed: Travel, Ranking, Odds, and Rest Data Retrieved!")
         #st.write(collect_schedule_travel_ranking_data_df)
         st.write("Step 3/6: Predicting Future Pick Percentages of Public...")
     if use_cached_expected_value == 0:
-        nfl_schedule_pick_percentages_df = get_predicted_pick_percentages_circa(pd)
+        nfl_schedule_pick_percentages_df = get_predicted_pick_percentages(pd)
         st.write("Step 3 Completed: Public Pick Percentages Predicted")
         #nfl_schedule_circa_df_2 = manually_adjust_pick_predictions()
         st.write("Step 4/9: Calculating Expected Value (Could take several hours)...")
     if use_cached_expected_value == 1:
-        nfl_schedule_pick_percentages_df = get_predicted_pick_percentages_circa(pd)
+        nfl_schedule_pick_percentages_df = get_predicted_pick_percentages(pd)
         full_df_with_ev = pd.read_csv('NFL Schedule with full ev_circa.csv')
         st.write("Step 3 Completed: Public Pick Percentages Predicted")
         st.write("Step 4: Calculating Expected Value...")

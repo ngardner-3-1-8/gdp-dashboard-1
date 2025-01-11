@@ -3505,12 +3505,18 @@ if st.button("Get Optimized Survivor Picks"):
     st.write('Step 5 Completed: Top Picks Determined Based on EV')
     if yes_i_have_customized_rankings:
         st.write('Step 6/6: Calculating Best Combination of Picks Based on Customized Rankings...')
+        st.write("---------------------------------------------------------------------------------------------------------------")
+        st.write("---------------------------------------------------------------------------------------------------------------")
+        st.write("---------------------------------------------------------------------------------------------------------------")
         st.subheader('Customized Ranking Optimized Picks')
         get_survivor_picks_based_on_internal_rankings()
         st.write('Step 6 Completed: Top Picks Determined Based on Customized Rankings')
     else:
         st.write('Step 6/6: Calculating Best Combination of Picks Based on Default Rankings...')
-        st.subheader('Default Ranking ptimized Picks')
+        st.write("---------------------------------------------------------------------------------------------------------------")
+        st.write("---------------------------------------------------------------------------------------------------------------")
+        st.write("---------------------------------------------------------------------------------------------------------------")
+        st.subheader('Default Ranking Optimized Picks')
         get_survivor_picks_based_on_internal_rankings()
         st.write('Step 6 Completed: Top Picks Determined Based on Default Rankings')
 else:

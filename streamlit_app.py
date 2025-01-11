@@ -2081,7 +2081,7 @@ def get_survivor_picks_based_on_ev():
 def get_survivor_picks_based_on_internal_rankings():
     # Loop through 100 iterations
     for iteration in range(number_solutions):
-        df = full_df_with_ev
+        df = nfl_schedule_pick_percentages_df
 
 
         #Number of weeks that have already been played
@@ -2638,7 +2638,7 @@ def get_survivor_picks_based_on_internal_rankings():
 
         if status == pywraplp.Solver.OPTIMAL:
             st.write('')
-            st.write(f'**Solution Based on EV: {iteration + 1}**')
+            st.write(f'**Solution Based on Internal Rankings: {iteration + 1}**')
 
             st.write('Solution found!')
             st.write('Objective value =', solver.Objective().Value())
@@ -2684,12 +2684,12 @@ def get_survivor_picks_based_on_internal_rankings():
                     current_difference = df.loc[i, 'Current Difference']
                     adjusted_current_difference = df.loc[i, 'Adjusted Current Difference']
                     # Calculate EV for this game
-                    ev = (df.loc[i, 'Home Team EV'] if df.loc[i, 'Adjusted Current Winner'] == df.loc[i, 'Home Team'] else df.loc[i, 'Away Team EV'])
+                    #ev = (df.loc[i, 'Home Team EV'] if df.loc[i, 'Adjusted Current Winner'] == df.loc[i, 'Home Team'] else df.loc[i, 'Away Team EV'])
 
 
-                    print('Week %i: Pick %s %s %s (%i, %i, %i, %i, %.4f)' % (df.loc[i, 'Week_Num'], df.loc[i, 'Adjusted Current Winner'], divisional_game, home_team,
-                                                                       preseason_difference, adjusted_preseason_difference,
-                                                                       current_difference, adjusted_current_difference, ev))
+                    #print('Week %i: Pick %s %s %s (%i, %i, %i, %i, %.4f)' % (df.loc[i, 'Week_Num'], df.loc[i, 'Adjusted Current Winner'], divisional_game, home_team,
+                    #                                                   preseason_difference, adjusted_preseason_difference,
+                    #                                                   current_difference, adjusted_current_difference, ev))
                     new_row_2 = {
                         'Week': week,
                         'Pick': pick,
@@ -2698,7 +2698,7 @@ def get_survivor_picks_based_on_internal_rankings():
                         'Adjusted Preseason Spread (Homefield, Rest, etc...)': adjusted_preseason_difference,
                         'Current Spread': current_difference,
                         'Adjusted Current Spread (Homefield, Rest, etc...)': adjusted_current_difference,
-                        'EV': ev,
+                        #'EV': ev,
                         'Win Odds': win_odds,
                         'Divisional Game': divisional_game,
                         'Home Team Status': home_team,
@@ -2724,14 +2724,14 @@ def get_survivor_picks_based_on_internal_rankings():
                     sum_adjusted_preseason_difference += adjusted_preseason_difference
                     sum_current_difference += current_difference
                     sum_adjusted_current_difference += adjusted_current_difference
-                    sum_ev += ev
+                    #sum_ev += ev
                     picks_df = pd.concat([picks_df, df.loc[[i]]], ignore_index=True)
                     picks_df['Divisional Matchup?'] = divisional_game
             summarized_picks_df = pd.DataFrame(picks_rows_2)
 
             st.write(summarized_picks_df)
             st.write('')
-            st.write(f'Total EV: {sum_ev}')
+            #st.write(f'Total EV: {sum_ev}')
             st.write('\nPreseason Difference:', sum_preseason_difference)
             st.write('Adjusted Preseason Difference:', sum_adjusted_preseason_difference)
             st.write('Current Difference:', sum_current_difference)
@@ -3498,16 +3498,18 @@ if st.button("Get Optimized Survivor Picks"):
     else:
         st.subheader(f':green[Optimal Picks for Draftkings: Weeks {starting_week} through {ending_week_2}]')
         st.write('')
+        st.subheader('Expected Value Optimized Picks')
+
     get_survivor_picks_based_on_ev()
     st.write('Step 5 Completed: Top Picks Determined Based on EV')
     if yes_i_have_customized_rankings:
-        st.write('Step 6/6: Calculating Best Comnbination of Picks Based on Customized Rankings...')
-        st.subheader('Customized Ranking Calculations')
+        st.write('Step 6/6: Calculating Best Combination of Picks Based on Customized Rankings...')
+        st.subheader('Customized Ranking Optimized Picks')
         get_survivor_picks_based_on_internal_rankings()
         st.write('Step 6 Completed: Top Picks Determined Based on Customized Rankings')
     else:
-        st.write('Step 6/6: Calculating Best Comnbination of Picks Based on Default Rankings...')
-        st.subheader('Default Ranking Calculations')
+        st.write('Step 6/6: Calculating Best Combination of Picks Based on Default Rankings...')
+        st.subheader('Default Ranking ptimized Picks')
         get_survivor_picks_based_on_internal_rankings()
         st.write('Step 6 Completed: Top Picks Determined Based on Default Rankings')
 else:

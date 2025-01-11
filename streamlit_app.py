@@ -1434,7 +1434,7 @@ def calculate_ev():
     if selected_contest == 'Circa':
         nfl_schedule_pick_percentages_df.to_csv("NFL Schedule with full ev_circa.csv", index=False)
     else:
-        nfl_schedule_pick_percentages_df.to_csv("NFL Schedule with full ev_DraftKings.csv", index=False)
+        nfl_schedule_pick_percentages_df.to_csv("NFL Schedule with full ev_dk.csv", index=False)
     return nfl_schedule_pick_percentages_df
 
 def get_survivor_picks_based_on_ev():

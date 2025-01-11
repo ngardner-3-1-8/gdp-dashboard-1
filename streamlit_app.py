@@ -1262,11 +1262,11 @@ def get_predicted_pick_percentages_circa(pd):
     #nfl_schedule_df['Week'] = nfl_schedule_df['Week'].str.extract(r'(\d+)').astype(int)
     # Merge the DataFrames based on matching columns
     nfl_schedule_df = pd.merge(nfl_schedule_df, away_df, 
-                               left_on=['Week', 'Away Team', 'Home Team'],
+                               left_on=['Week_Num', 'Away Team', 'Home Team'],
                                right_on=['Week', 'Away Team', 'Home Team'],
                                how='left')
     nfl_schedule_df = pd.merge(nfl_schedule_df, home_df, 
-                               left_on=['Week', 'Away Team', 'Home Team'],
+                               left_on=['Week_Num', 'Away Team', 'Home Team'],
                                right_on=['Week', 'Away Team', 'Home Team'],
                                how='left')
 

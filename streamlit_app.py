@@ -2086,7 +2086,7 @@ def get_survivor_picks_based_on_ev():
             st.write('Adjusted Preseason Difference:', sum_adjusted_preseason_difference)
             st.write('Current Difference:', sum_current_difference)
             st.write('Adjusted Current Difference:', sum_adjusted_current_difference)
-            st.write(f'Total EV: :red[{sum_ev}]')
+            st.write(f'Total EV: :blue[{sum_ev}]')
         else:
             st.write('No solution found. Consider using fewer constraints. Or you may just be fucked')
             st.write('No solution found. Consider using fewer constraints. Or you may just be fucked')
@@ -2760,7 +2760,7 @@ def get_survivor_picks_based_on_internal_rankings():
             st.write('\nPreseason Difference:', sum_preseason_difference)
             st.write('Adjusted Preseason Difference:', sum_adjusted_preseason_difference)
             st.write('Current Difference:', sum_current_difference)
-            st.write(f'Adjusted Current Difference: :red[{sum_adjusted_current_difference}]')
+            st.write(f'Adjusted Current Difference: :blue[{sum_adjusted_current_difference}]')
             
         else:
             st.write('No solution found. Consider using fewer constraints. Or you may just be fucked')

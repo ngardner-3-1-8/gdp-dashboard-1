@@ -1102,7 +1102,7 @@ def get_predicted_pick_percentages(pd):
     if selected_contest == 'Circa':
         df = pd.read_csv('Circa_historical_data.csv')
     else:
-        df = pd.read_csv('historical_pick_data_FV.csv')
+        df = pd.read_csv('DK_historical_data.csv')
     df.rename(columns={"Week": "Date"}, inplace=True)
     # Remove percentage sign and convert to float
     #df['Win %'] = df['Win %'].str.rstrip('%').astype(float) / 100

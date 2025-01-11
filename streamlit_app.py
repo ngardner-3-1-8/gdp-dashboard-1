@@ -2684,7 +2684,7 @@ def get_survivor_picks_based_on_internal_rankings():
                     current_difference = df.loc[i, 'Current Difference']
                     adjusted_current_difference = df.loc[i, 'Adjusted Current Difference']
                     # Calculate EV for this game
-                    ev = (df.loc[i, 'Adjusted Current Difference'] if df.loc[i, 'Adjusted Current Winner'] == df.loc[i, 'Home Team'] else df.loc[i, 'Away Team EV'])
+                    ev = (df.loc[i, 'Home Team EV'] if df.loc[i, 'Adjusted Current Winner'] == df.loc[i, 'Home Team'] else df.loc[i, 'Away Team EV'])
 
 
                     print('Week %i: Pick %s %s %s (%i, %i, %i, %i, %.4f)' % (df.loc[i, 'Week_Num'], df.loc[i, 'Adjusted Current Winner'], divisional_game, home_team,
@@ -2735,7 +2735,7 @@ def get_survivor_picks_based_on_internal_rankings():
             st.write('\nPreseason Difference:', sum_preseason_difference)
             st.write('Adjusted Preseason Difference:', sum_adjusted_preseason_difference)
             st.write('Current Difference:', sum_current_difference)
-            st.write(f'Adjusted Current Difference: :red[sum_adjusted_current_difference]')
+            st.write(f'Adjusted Current Difference: :red[{sum_adjusted_current_difference}]')
             
         else:
             st.write('No solution found. Consider using fewer constraints. Or you may just be fucked')

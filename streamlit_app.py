@@ -217,7 +217,7 @@ def collect_schedule_travel_ranking_data(pd):
     df['Week'] = df['Week'].str.replace('Week ', '', regex=False).astype(int)
 
 
-    if selected_contest == 'Circa:
+    if selected_contest == 'Circa':
         df.loc[df['Date'] >= pd.to_datetime('2024-11-30'), 'Week'] += 1
         df.loc[df['Date'] >= pd.to_datetime('2024-12-27'), 'Week'] += 1
         df.loc[df['Date'] >= pd.to_datetime('2024-11-30'), 'Week_Num'] += 1

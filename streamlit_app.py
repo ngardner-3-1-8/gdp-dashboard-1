@@ -832,11 +832,11 @@ def collect_schedule_travel_ranking_data_circa(pd):
                     else:
                         return 2000
 
-        csv_df['Internal Ranking Home Team Moneyline'] = csv_df.apply(
+        csv_df['Internal Home Team Moneyline'] = csv_df.apply(
             lambda row: get_moneyline(row, odds, 'home'), axis=1
         )
 
-        csv_df['Internal Ranking Away Team Moneyline'] = csv_df.apply(
+        csv_df['Internal Away Team Moneyline'] = csv_df.apply(
             lambda row: get_moneyline(row, odds, 'away'), axis=1
         )
 
@@ -851,12 +851,26 @@ def collect_schedule_travel_ranking_data_circa(pd):
                 csv_df.loc[index, 'Home team Implied Odds to Win'] = 100 / (row['Home Team Moneyline'] + 100)
             else:
                 csv_df.loc[index, 'Home team Implied Odds to Win'] = abs(row['Home Team Moneyline']) / (abs(row['Home Team Moneyline']) + 100)
+            if row['Internal Away Team Moneyline'] > 0:
+                csv_df.loc[index, 'Internal Away Team Implied Odds to Win'] = 100 / (row['Internal Away Team Moneyline'] + 100)
+            else:
+                csv_df.loc[index, 'Internal Away Team Implied Odds to Win'] = abs(row['Internal Away Team Moneyline']) / (abs(row['Internal Away Team Moneyline']) + 100)
+
+            if row['Internal Home Team Moneyline'] > 0:
+                csv_df.loc[index, 'Internal Home team Implied Odds to Win'] = 100 / (row['Internal Home Team Moneyline'] + 100)
+            else:
+                csv_df.loc[index, 'Internal Home team Implied Odds to Win'] = abs(row['Internal Home Team Moneyline']) / (abs(row['Internal Home Team Moneyline']) + 100)
 
             # Fair Odds
             away_implied_odds = csv_df.loc[index, 'Away Team Implied Odds to Win']
             home_implied_odds = csv_df.loc[index, 'Home team Implied Odds to Win']
             csv_df.loc[index, 'Away Team Fair Odds'] = away_implied_odds / (away_implied_odds + home_implied_odds)
             csv_df.loc[index, 'Home Team Fair Odds'] = home_implied_odds / (away_implied_odds + home_implied_odds)
+
+            internal_away_implied_odds = csv_df.loc[index, 'Internal Away Team Implied Odds to Win']
+            internal_home_implied_odds = csv_df.loc[index, 'Internal Home team Implied Odds to Win']
+            csv_df.loc[index, 'Internal Away Team Fair Odds'] = internal_away_implied_odds / (internal_away_implied_odds + internal_home_implied_odds)
+            csv_df.loc[index, 'Internal Home Team Fair Odds'] = internal_home_implied_odds / (internal_away_implied_odds + internal_home_implied_odds)
 
             # Convert to percentage and round to 2 decimal places
             csv_df.loc[index, 'Away Team Implied Odds to Win'] = round(csv_df.loc[index, 'Away Team Implied Odds to Win'], 4)
@@ -1322,15 +1336,26 @@ def calculate_ev():
             scenario_weight = 1.0  # Calculate weight for the current scenario
 
             # Calculate surviving entries for ALL teams in the scenario
-            for j, game_outcome in enumerate(outcome):
-                if game_outcome == 'Home Win':
-                    winning_team = week_df.iloc[j]['Home Team']
-                    surviving_entries += week_df.iloc[j]['Home Pick %']
-                    scenario_weight *= week_df.iloc[j]['Home Team Fair Odds'] 
-                else:
-                    winning_team = week_df.iloc[j]['Away Team']
-                    surviving_entries += week_df.iloc[j]['Away Pick %']
-                    scenario_weight *= week_df.iloc[j]['Away Team Fair Odds']
+            if use_cached_expected_value == 1:
+                for j, game_outcome in enumerate(outcome):
+                    if game_outcome == 'Home Win':
+                        winning_team = week_df.iloc[j]['Home Team']
+                        surviving_entries += week_df.iloc[j]['Home Pick %']
+                        scenario_weight *= week_df.iloc[j]['Home Team Fair Odds'] 
+                    else:
+                        winning_team = week_df.iloc[j]['Away Team']
+                        surviving_entries += week_df.iloc[j]['Away Pick %']
+                        scenario_weight *= week_df.iloc[j]['Away Team Fair Odds']
+            else:
+                for j, game_outcome in enumerate(outcome):
+                    if game_outcome == 'Home Win':
+                        winning_team = week_df.iloc[j]['Home Team']
+                        surviving_entries += week_df.iloc[j]['Home Pick %']
+                        scenario_weight *= week_df.iloc[j]['Internal Home Team Fair Odds'] 
+                    else:
+                        winning_team = week_df.iloc[j]['Away Team']
+                        surviving_entries += week_df.iloc[j]['Away Pick %']
+                        scenario_weight *= week_df.iloc[j]['Internal Away Team Fair Odds']
 
             # Calculate EV for EACH team in the scenario
             for j, game_outcome in enumerate(outcome):

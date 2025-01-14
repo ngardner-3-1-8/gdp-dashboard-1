@@ -1523,7 +1523,7 @@ def get_survivor_picks_based_on_ev():
 
         # Filter out weeks that have already been played and reset index
 
-        df = df[(df['Week_Num'] >= starting_week) & (df['Week_Num'] <= ending_week)].reset_index(drop=True)
+        df = df[(df['Week_Num'] >= starting_week) & (df['Week_Num'] < ending_week)].reset_index(drop=True)
         # Filter out already picked teams
         df = df[~df['Adjusted Current Winner'].isin(picked_teams)].reset_index(drop=True)
         #print(df)
@@ -1705,7 +1705,7 @@ def get_survivor_picks_based_on_ev():
                 relative_week = df_week - starting_week  # Adjust week to be relative to starting week
 
                 #Check if the week is within the range and the solution is forbidden
-                if 0 <= relative_week < len(forbidden_solution_1) and df_week >= starting_week and df_week <= ending_week: #Added this to make sure we are only looking at the range
+                if 0 <= relative_week < len(forbidden_solution_1) and df_week >= starting_week and df_week < ending_week: #Added this to make sure we are only looking at the range
                     if (df.loc[i, 'Adjusted Current Winner'] == forbidden_solution_1[relative_week]):
                         forbidden_indices_1.append(i)
 
@@ -2203,7 +2203,7 @@ def get_survivor_picks_based_on_internal_rankings():
 
         # Filter out weeks that have already been played and reset index
 
-        df = df[(df['Week_Num'] >= starting_week) & (df['Week_Num'] <= ending_week)].reset_index(drop=True)
+        df = df[(df['Week_Num'] >= starting_week) & (df['Week_Num'] < ending_week)].reset_index(drop=True)
         # Filter out already picked teams
         df = df[~df['Adjusted Current Winner'].isin(picked_teams)].reset_index(drop=True)
         #print(df)
@@ -2385,7 +2385,7 @@ def get_survivor_picks_based_on_internal_rankings():
                 relative_week = df_week - starting_week  # Adjust week to be relative to starting week
 
                 #Check if the week is within the range and the solution is forbidden
-                if 0 <= relative_week < len(forbidden_solution_1) and df_week >= starting_week and df_week <= ending_week: #Added this to make sure we are only looking at the range
+                if 0 <= relative_week < len(forbidden_solution_1) and df_week >= starting_week and df_week < ending_week: #Added this to make sure we are only looking at the range
                     if (df.loc[i, 'Adjusted Current Winner'] == forbidden_solution_1[relative_week]):
                         forbidden_indices_1.append(i)
 

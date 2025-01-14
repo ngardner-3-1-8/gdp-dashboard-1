@@ -1322,6 +1322,17 @@ def get_predicted_pick_percentages(pd):
         nfl_schedule_df.loc[nfl_schedule_df['Week'] == week, 'Total Remaining Entries at Start of Week'] = current_week_total
         
     nfl_schedule_df['Expected Eliminated Entries From Game'] = nfl_schedule_df['Total Remaining Entries at Start of Week'] * nfl_schedule_df['Expected Eliminated Entry Percent From Game']
+
+    if selected_contest == 'Circa':
+        if nfl_schedule_df['Home Pick %'] = circa_pick_percentages[nfl_schedule_df['Home Team'][nfl_schedule_df['Week']-1] > -1:
+            nfl_schedule_df['Home Pick %'] = circa_pick_percentages[nfl_schedule_df['Home Team'][nfl_schedule_df['Week']-1]
+        if nfl_schedule_df['Away Pick %'] = circa_pick_percentages[nfl_schedule_df['Away Team'][nfl_schedule_df['Week']-1] > -1:
+            nfl_schedule_df['Away Pick %'] = circa_pick_percentages[nfl_schedule_df['Away Team'][nfl_schedule_df['Week']-1]
+    else:
+        if nfl_schedule_df['Home Pick %'] = dk_pick_percentages[nfl_schedule_df['Home Team'][nfl_schedule_df['Week']-1] > -1:
+            nfl_schedule_df['Home Pick %'] = dk_pick_percentages[nfl_schedule_df['Home Team'][nfl_schedule_df['Week']-1]
+        if nfl_schedule_df['Away Pick %'] = dk_pick_percentages[nfl_schedule_df['Away Team'][nfl_schedule_df['Week']-1] > -1:
+            nfl_schedule_df['Away Pick %'] = dk_pick_percentages[nfl_schedule_df['Away Team'][nfl_schedule_df['Week']-1]
     
     if selected_contest == 'Circa':
         nfl_schedule_df.to_csv("Circa_Predicted_Pick_%.csv", index=False)
@@ -1330,11 +1341,6 @@ def get_predicted_pick_percentages(pd):
     return nfl_schedule_df
 
 
-    if selected_contest == 'Circa':
-        nfl_schedule_df.to_csv("Circa_Predicted_Pick_%.csv", index=False)
-    else:
-        nfl_schedule_df.to_csv("DK_Predicted_Pick_%.csv", index=False)
-    return nfl_schedule_df
 
 
 def calculate_ev():
@@ -3080,7 +3086,9 @@ avoid_back_to_back_away = 0
 avoid_international_game = 0
 avoid_teams_with_weekly_rest_disadvantage = 0
 avoid_away_teams_with_travel_disadvantage = 0
-bayesian_rest_travel_constraint = "No Rest, Bayesian, and Travel Constraints" 
+bayesian_rest_travel_constraint = "No Rest, Bayesian, and Travel Constraints"
+circa_total_entries = 14266
+dk_total_entries = 20000
 number_solutions = 5
 selected_contest = 'Circa'
 starting_week = 1
@@ -3090,73 +3098,73 @@ else:
 	ending_week = 19
 
 dk_pick_percentages = {
-    'Arizona Cardinals': [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-    'Atlanta Falcons': [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-    'Baltimore Ravens': [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-    'Buffalo Bills': [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-    'Carolina Panthers': [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-    'Chicago Bears': [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-    'Cincinnati Bengals': [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-    'Cleveland Browns': [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-    'Dallas Cowboys': [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-    'Denver Broncos': [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-    'Detroit Lions': [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-    'Green Bay Packers': [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-    'Houston Texans': [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-    'Indianapolis Colts': [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-    'Jacksonville Jaguars': [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-    'Kansas City Chiefs': [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-    'Las Vegas Raiders': [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-    'Los Angeles Chargers': [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-    'Los Angeles Rams': [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-    'Miami Dolphins': [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-    'Minnesota Vikings': [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-    'New England Patriots': [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-    'New Orleans Saints': [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-    'New York Giants': [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-    'New York Jets': [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-    'Philadelphia Eagles': [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-    'Pittsburgh Steelers': [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-    'San Francisco 49ers': [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-    'Seattle Seahawks': [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-    'Tampa Bay Buccaneers': [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-    'Tennessee Titans': [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-    'Washington Commanders': [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
+    'Arizona Cardinals': [-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1],
+    'Atlanta Falcons': [-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1],
+    'Baltimore Ravens': [-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1],
+    'Buffalo Bills': [-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1],
+    'Carolina Panthers': [-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1],
+    'Chicago Bears': [-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1],
+    'Cincinnati Bengals': [-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1],
+    'Cleveland Browns': [-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1],
+    'Dallas Cowboys': [-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1],
+    'Denver Broncos': [-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1],
+    'Detroit Lions': [-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1],
+    'Green Bay Packers': [-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1],
+    'Houston Texans': [-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1],
+    'Indianapolis Colts': [-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1],
+    'Jacksonville Jaguars': [-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1],
+    'Kansas City Chiefs': [-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1],
+    'Las Vegas Raiders': [-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1],
+    'Los Angeles Chargers': [-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1],
+    'Los Angeles Rams': [-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1],
+    'Miami Dolphins': [-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1],
+    'Minnesota Vikings': [-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1],
+    'New England Patriots': [-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1],
+    'New Orleans Saints': [-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1],
+    'New York Giants': [-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1],
+    'New York Jets': [-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1],
+    'Philadelphia Eagles': [-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1],
+    'Pittsburgh Steelers': [-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1],
+    'San Francisco 49ers': [-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1],
+    'Seattle Seahawks': [-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1],
+    'Tampa Bay Buccaneers': [-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1],
+    'Tennessee Titans': [-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1],
+    'Washington Commanders': [-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1]
     }
 
 circa_pick_percentages = {
-    'Arizona Cardinals': [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-    'Atlanta Falcons': [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-    'Baltimore Ravens': [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-    'Buffalo Bills': [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-    'Carolina Panthers': [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-    'Chicago Bears': [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-    'Cincinnati Bengals': [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-    'Cleveland Browns': [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-    'Dallas Cowboys': [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-    'Denver Broncos': [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-    'Detroit Lions': [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-    'Green Bay Packers': [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-    'Houston Texans': [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-    'Indianapolis Colts': [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-    'Jacksonville Jaguars': [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-    'Kansas City Chiefs': [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-    'Las Vegas Raiders': [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-    'Los Angeles Chargers': [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-    'Los Angeles Rams': [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-    'Miami Dolphins': [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-    'Minnesota Vikings': [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-    'New England Patriots': [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-    'New Orleans Saints': [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-    'New York Giants': [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-    'New York Jets': [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-    'Philadelphia Eagles': [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-    'Pittsburgh Steelers': [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-    'San Francisco 49ers': [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-    'Seattle Seahawks': [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-    'Tampa Bay Buccaneers': [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-    'Tennessee Titans': [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-    'Washington Commanders': [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
+    'Arizona Cardinals': [-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1],
+    'Atlanta Falcons': [-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1],
+    'Baltimore Ravens': [-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1],
+    'Buffalo Bills': [-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1],
+    'Carolina Panthers': [-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1],
+    'Chicago Bears': [-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1],
+    'Cincinnati Bengals': [-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1],
+    'Cleveland Browns': [-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1],
+    'Dallas Cowboys': [-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1],
+    'Denver Broncos': [-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1],
+    'Detroit Lions': [-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1],
+    'Green Bay Packers': [-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1],
+    'Houston Texans': [-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1],
+    'Indianapolis Colts': [-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1],
+    'Jacksonville Jaguars': [-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1],
+    'Kansas City Chiefs': [-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1],
+    'Las Vegas Raiders': [-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1],
+    'Los Angeles Chargers': [-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1],
+    'Los Angeles Rams': [-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1],
+    'Miami Dolphins': [-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1],
+    'Minnesota Vikings': [-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1],
+    'New England Patriots': [-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1],
+    'New Orleans Saints': [-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1],
+    'New York Giants': [-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1],
+    'New York Jets': [-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1],
+    'Philadelphia Eagles': [-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1],
+    'Pittsburgh Steelers': [-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1],
+    'San Francisco 49ers': [-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1],
+    'Seattle Seahawks': [-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1],
+    'Tampa Bay Buccaneers': [-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1],
+    'Tennessee Titans': [-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1],
+    'Washington Commanders': [-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1]
     }
 
 dk_team availability = {

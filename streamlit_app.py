@@ -1514,8 +1514,8 @@ def get_survivor_picks_based_on_ev():
     # Loop through 100 iterations
     for iteration in range(number_solutions):
         df = full_df_with_ev
-	st.write('TEST DF')
-	st.write(df)
+        st.write('TEST DF')
+        st.write(df)
 
         #Number of weeks that have already been played
         #weeks_completed = starting_week -1

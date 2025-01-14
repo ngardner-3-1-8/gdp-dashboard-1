@@ -3270,11 +3270,12 @@ circa_team_availability = {
     }
 
 circa_remaining_entries = {
-    total_teams: [14266,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1]
+    'Actual Circa Remaining Entries': [14266,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1]
 }
 dk_remaining_entries = {
-    total_teams: [14266,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1]
+    'Actual DK Remaining Entries': [20000,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1]
 }
+
 
 
 st.title("NFL Survivor Optimization")

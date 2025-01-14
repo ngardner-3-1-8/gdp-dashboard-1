@@ -5212,6 +5212,7 @@ if st.button("Get Optimized Survivor Picks"):
             st.write("Processing Complete!")
             st.dataframe(full_df_with_ev)
     st.write("Step 4 Completed: Expected Value Calculated")
+    st.subheader('Full Dataset')
     st.write(full_df_with_ev)
     st.write('Step 5/6: Calculating Best Comnbination of Picks Based on EV...')
     st.write('')

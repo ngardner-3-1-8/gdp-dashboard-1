@@ -3199,7 +3199,7 @@ circa_pick_percentages = {
     'Washington Commanders': [-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1]
     }
 
-dk_team availability = {
+dk_team_availability = {
     'Arizona Cardinals': [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
     'Atlanta Falcons': [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
     'Baltimore Ravens': [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
@@ -3234,7 +3234,7 @@ dk_team availability = {
     'Washington Commanders': [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
     }
 
-circa_team availability = {
+circa_team_availability = {
     'Arizona Cardinals': [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
     'Atlanta Falcons': [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
     'Baltimore Ravens': [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],

@@ -3688,12 +3688,12 @@ st.write('')
 st.write('')
 
 st.subheader('Estimate Pick Percentages')
-yes_i_have_pick percents = st.checkbox('Would you like to add your own estimated pick percentages, instead of using our estimated picks?')
-if yes_i_have_pick percents:
+yes_i_have_pick_percents = st.checkbox('Would you like to add your own estimated pick percentages, instead of using our estimated picks?')
+if yes_i_have_pick_percents:
     st.write('Select your own estimated pick percentages for each team. If you do not change the default value, then it will automatically select our own estimated picks. This tool will be especially useful later in the season'
     st.write('')
     st.write('')
-    week_1_pick percents = st.checkbox('Add Week 1 Pick Percentages?')
+    week_1_pick_percents = st.checkbox('Add Week 1 Pick Percentages?')
     if week_1_pick_percents:
         st.write('')
         st.subheader('Week 1 Estimated Pick Percentages')
@@ -3732,7 +3732,7 @@ if yes_i_have_pick percents:
         was_week_1_pick_% = st.slider("Washington Commanders Estimated Week 1 Pick %:") / 100
     st.write('')
     st.write('')
-    week_2_pick percents = st.checkbox('Add Week 2 Pick Percentages?')
+    week_2_pick_percents = st.checkbox('Add Week 2 Pick Percentages?')
     if week_2_pick_percents:
         st.write('')
         st.subheader('Week 2 Estimated Pick Percentages')
@@ -3771,46 +3771,46 @@ if yes_i_have_pick percents:
         was_week_2_pick_% = st.slider("Washington Commanders Estimated Week 2 Pick %:") / 100
     st.write('')
     st.write('')
-    week_2_pick percents = st.checkbox('Add Week 2 Pick Percentages?')
-    if week_2_pick_percents:
+    week_3_pick_percents = st.checkbox('Add Week 2 Pick Percentages?')
+    if week_3_pick_percents:
         st.write('')
-        st.subheader('Week 2 Estimated Pick Percentages')
+        st.subheader('Week 3 Estimated Pick Percentages')
         st.write('')
-        az_week_2_pick_% = st.slider("Arizona Cardinals Estimated Week 2 Pick %:") / 100
-        atl_week_2_pick_% = st.slider("Atlanta Falcons Estimated Week 2 Pick %:") / 100
-        bal_week_2_pick_% = st.slider("Baltimore Ravens Estimated Week 2 Pick %:") / 100
-        buf_week_2_pick_% = st.slider("Buffalo Bills Estimated Week 2 Pick %:") / 100
-        car_week_2_pick_% = st.slider("Carolina Panthers Estimated Week 2 Pick %:") / 100
-        chi_week_2_pick_% = st.slider("Chicago Bears Estimated Week 2 Pick %:") / 100
-        cin_week_2_pick_% = st.slider("Cincinnati Bengals Estimated Week 2 Pick %:") / 100
-        cle_week_2_pick_% = st.slider("Cleveland Browns Estimated Week 2 Pick %:") / 100
-        dal_week_2_pick_% = st.slider("Dallas Cowboys Estimated Week 2 Pick %:") / 100
-        den_week_2_pick_% = st.slider("Denver Broncos Estimated Week 2 Pick %:") / 100
-        det_week_2_pick_% = st.slider("Detroit Lions Estimated Week 2 Pick %:") / 100
-        gb_week_2_pick_% = st.slider("Green Bay Packers Estimated Week 2 Pick %:") / 100
-        hou_week_2_pick_% = st.slider("Houston Texans Estimated Week 2 Pick %:") / 100
-        ind_week_2_pick_% = st.slider("Indianapoils Colts Estimated Week 2 Pick %:") / 100
-        jax_week_2_pick_% = st.slider("Jacksonville Jaguars Estimated Week 2 Pick %:") / 100
-        kc_week_2_pick_% = st.slider("Kansas City Chiefs Estimated Week 2 Pick %:") / 100
-        lv_week_2_pick_% = st.slider("Las Vegas Raiders Estimated Week 2 Pick %:") / 100
-        lac_week_2_pick_% = st.slider("Los Angeles Chargers Estimated Week 2 Pick %:") / 100
-        lar_week_2_pick_% = st.slider("Los Angeles Rams Estimated Week 2 Pick %:") / 100
-        mia_week_2_pick_% = st.slider("Miami Dolphins Estimated Week 2 Pick %:") / 100
-        min_week_2_pick_% = st.slider("Minnesota Vikings Estimated Week 2 Pick %:") / 100
-        ne_week_2_pick_% = st.slider("New England Patriots Estimated Week 2 Pick %:") / 100
-        no_week_2_pick_% = st.slider("New Orleans Saints Estimated Week 2 Pick %:") / 100
-        nyg_week_2_pick_% = st.slider("New York Giants Estimated Week 2 Pick %:") / 100
-        nyj_week_2_pick_% = st.slider("New York Jets Estimated Week 2 Pick %:") / 100
-        phi_week_2_pick_% = st.slider("Philadelphia Eagles Estimated Week 2 Pick %:") / 100
-        pit_week_2_pick_% = st.slider("Pittsburgh Steelers Estimated Week 2 Pick %:") / 100
-        sf_week_2_pick_% = st.slider("San Francisco 49ers Estimated Week 2 Pick %:") / 100
-        sea_week_2_pick_% = st.slider("Seattle Seahawks Estimated Week 2 Pick %:") / 100
-        tb_week_2_pick_% = st.slider("Tampa Bay Buccaneers Estimated Week 2 Pick %:") / 100
-        ten_week_2_pick_% = st.slider("Tennessee Titans Estimated Week 2 Pick %:") / 100
-        was_week_2_pick_% = st.slider("Washington Commanders Estimated Week 2 Pick %:") / 100
+        az_week_3_pick_% = st.slider("Arizona Cardinals Estimated Week 3 Pick %:") / 100
+        atl_week_3_pick_% = st.slider("Atlanta Falcons Estimated Week 3 Pick %:") / 100
+        bal_week_3_pick_% = st.slider("Baltimore Ravens Estimated Week 3 Pick %:") / 100
+        buf_week_3_pick_% = st.slider("Buffalo Bills Estimated Week 3 Pick %:") / 100
+        car_week_3_pick_% = st.slider("Carolina Panthers Estimated Week 3 Pick %:") / 100
+        chi_week_3_pick_% = st.slider("Chicago Bears Estimated Week 3 Pick %:") / 100
+        cin_week_3_pick_% = st.slider("Cincinnati Bengals Estimated Week 3 Pick %:") / 100
+        cle_week_3_pick_% = st.slider("Cleveland Browns Estimated Week 3 Pick %:") / 100
+        dal_week_3_pick_% = st.slider("Dallas Cowboys Estimated Week 3 Pick %:") / 100
+        den_week_3_pick_% = st.slider("Denver Broncos Estimated Week 3 Pick %:") / 100
+        det_week_3_pick_% = st.slider("Detroit Lions Estimated Week 3 Pick %:") / 100
+        gb_week_3_pick_% = st.slider("Green Bay Packers Estimated Week 3 Pick %:") / 100
+        hou_week_3_pick_% = st.slider("Houston Texans Estimated Week 3 Pick %:") / 100
+        ind_week_3_pick_% = st.slider("Indianapoils Colts Estimated Week 3 Pick %:") / 100
+        jax_week_3_pick_% = st.slider("Jacksonville Jaguars Estimated Week 3 Pick %:") / 100
+        kc_week_3_pick_% = st.slider("Kansas City Chiefs Estimated Week 3 Pick %:") / 100
+        lv_week_3_pick_% = st.slider("Las Vegas Raiders Estimated Week 3 Pick %:") / 100
+        lac_week_3_pick_% = st.slider("Los Angeles Chargers Estimated Week 3 Pick %:") / 100
+        lar_week_3_pick_% = st.slider("Los Angeles Rams Estimated Week 3 Pick %:") / 100
+        mia_week_3_pick_% = st.slider("Miami Dolphins Estimated Week 3 Pick %:") / 100
+        min_week_3_pick_% = st.slider("Minnesota Vikings Estimated Week 3 Pick %:") / 100
+        ne_week_3_pick_% = st.slider("New England Patriots Estimated Week 3 Pick %:") / 100
+        no_week_3_pick_% = st.slider("New Orleans Saints Estimated Week 3 Pick %:") / 100
+        nyg_week_3_pick_% = st.slider("New York Giants Estimated Week 3 Pick %:") / 100
+        nyj_week_3_pick_% = st.slider("New York Jets Estimated Week 3 Pick %:") / 100
+        phi_week_3_pick_% = st.slider("Philadelphia Eagles Estimated Week 3 Pick %:") / 100
+        pit_week_3_pick_% = st.slider("Pittsburgh Steelers Estimated Week 3 Pick %:") / 100
+        sf_week_3_pick_% = st.slider("San Francisco 49ers Estimated Week 3 Pick %:") / 100
+        sea_week_3_pick_% = st.slider("Seattle Seahawks Estimated Week 3 Pick %:") / 100
+        tb_week_3_pick_% = st.slider("Tampa Bay Buccaneers Estimated Week 3 Pick %:") / 100
+        ten_week_3_pick_% = st.slider("Tennessee Titans Estimated Week 3 Pick %:") / 100
+        was_week_3_pick_% = st.slider("Washington Commanders Estimated Week 3 Pick %:") / 100
     st.write('')
     st.write('')
-    week_4_pick percents = st.checkbox('Add Week 4 Pick Percentages?')
+    week_4_pick_percents = st.checkbox('Add Week 4 Pick Percentages?')
     if week_4_pick_percents:
         st.write('')
         st.subheader('Week 4 Estimated Pick Percentages')
@@ -3849,7 +3849,7 @@ if yes_i_have_pick percents:
         was_week_4_pick_% = st.slider("Washington Commanders Estimated Week 4 Pick %:") / 100
     st.write('')
     st.write('')
-    week_5_pick percents = st.checkbox('Add Week 5 Pick Percentages?')
+    week_5_pick_percents = st.checkbox('Add Week 5 Pick Percentages?')
     if week_5_pick_percents:
         st.write('')
         st.subheader('Week 5 Estimated Pick Percentages')
@@ -3888,7 +3888,7 @@ if yes_i_have_pick percents:
         was_week_5_pick_% = st.slider("Washington Commanders Estimated Week 5 Pick %:") / 100
     st.write('')
     st.write('')
-    week_6_pick percents = st.checkbox('Add Week 6 Pick Percentages?')
+    week_6_pick_percents = st.checkbox('Add Week 6 Pick Percentages?')
     if week_6_pick_percents:
         st.write('')
         st.subheader('Week 6 Estimated Pick Percentages')
@@ -3927,7 +3927,7 @@ if yes_i_have_pick percents:
         was_week_6_pick_% = st.slider("Washington Commanders Estimated Week 6 Pick %:") / 100
     st.write('')
     st.write('')
-    week_7_pick percents = st.checkbox('Add Week 7 Pick Percentages?')
+    week_7_pick_percents = st.checkbox('Add Week 7 Pick Percentages?')
     if week_7_pick_percents:
         st.write('')
         st.subheader('Week 7 Estimated Pick Percentages')
@@ -3966,7 +3966,7 @@ if yes_i_have_pick percents:
         was_week_7_pick_% = st.slider("Washington Commanders Estimated Week 7 Pick %:") / 100
     st.write('')
     st.write('')
-    week_8_pick percents = st.checkbox('Add Week 8 Pick Percentages?')
+    week_8_pick_percents = st.checkbox('Add Week 8 Pick Percentages?')
     if week_8_pick_percents:
         st.write('')
         st.subheader('Week 8 Estimated Pick Percentages')
@@ -4005,7 +4005,7 @@ if yes_i_have_pick percents:
         was_week_8_pick_% = st.slider("Washington Commanders Estimated Week 8 Pick %:") / 100
     st.write('')
     st.write('')
-    week_9_pick percents = st.checkbox('Add Week 9 Pick Percentages?')
+    week_9_pick_percents = st.checkbox('Add Week 9 Pick Percentages?')
     if week_9_pick_percents:
         st.write('')
         st.subheader('Week 9 Estimated Pick Percentages')
@@ -4044,7 +4044,7 @@ if yes_i_have_pick percents:
         was_week_9_pick_% = st.slider("Washington Commanders Estimated Week 9 Pick %:") / 100
     st.write('')
     st.write('')
-    week_10_pick percents = st.checkbox('Add Week 10 Pick Percentages?')
+    week_10_pick_percents = st.checkbox('Add Week 10 Pick Percentages?')
     if week_10_pick_percents:
         st.write('')
         st.subheader('Week 10 Estimated Pick Percentages')
@@ -4083,7 +4083,7 @@ if yes_i_have_pick percents:
         was_week_10_pick_% = st.slider("Washington Commanders Estimated Week 10 Pick %:") / 100
     st.write('')
     st.write('')
-    week_11_pick percents = st.checkbox('Add Week 11 Pick Percentages?')
+    week_11_pick_percents = st.checkbox('Add Week 11 Pick Percentages?')
     if week_11_pick_percents:
         st.write('')
         st.subheader('Week 11 Estimated Pick Percentages')
@@ -4122,7 +4122,7 @@ if yes_i_have_pick percents:
         was_week_11_pick_% = st.slider("Washington Commanders Estimated Week 11 Pick %:") / 100
     st.write('')
     st.write('')
-    week_12_pick percents = st.checkbox('Add Week 12 Pick Percentages?')
+    week_12_pick_percents = st.checkbox('Add Week 12 Pick Percentages?')
     if week_12_pick_percents:
         st.write('')
         st.subheader('Week 12 Estimated Pick Percentages')
@@ -4161,7 +4161,7 @@ if yes_i_have_pick percents:
         was_week_12_pick_% = st.slider("Washington Commanders Estimated Week 12 Pick %:") / 100
     st.write('')
     st.write('')
-    week_13_pick percents = st.checkbox('Add Week 13 Pick Percentages?')
+    week_13_pick_percents = st.checkbox('Add Week 13 Pick Percentages?')
     if week_13_pick_percents:
         st.write('')
         st.subheader('Week 13 Estimated Pick Percentages')
@@ -4200,7 +4200,7 @@ if yes_i_have_pick percents:
         was_week_13_pick_% = st.slider("Washington Commanders Estimated Week 13 Pick %:") / 100
     st.write('')
     st.write('')
-    week_14_pick percents = st.checkbox('Add Week 14 Pick Percentages?')
+    week_14_pick_percents = st.checkbox('Add Week 14 Pick Percentages?')
     if week_14_pick_percents:
         st.write('')
         st.subheader('Week 14 Estimated Pick Percentages')
@@ -4239,7 +4239,7 @@ if yes_i_have_pick percents:
         was_week_14_pick_% = st.slider("Washington Commanders Estimated Week 14 Pick %:") / 100
     st.write('')
     st.write('')
-    week_15_pick percents = st.checkbox('Add Week 15 Pick Percentages?')
+    week_15_pick_percents = st.checkbox('Add Week 15 Pick Percentages?')
     if week_15_pick_percents:
         st.write('')
         st.subheader('Week 15 Estimated Pick Percentages')
@@ -4278,7 +4278,7 @@ if yes_i_have_pick percents:
         was_week_15_pick_% = st.slider("Washington Commanders Estimated Week 15 Pick %:") / 100
     st.write('')
     st.write('')
-    week_16_pick percents = st.checkbox('Add Week 16 Pick Percentages?')
+    week_16_pick_percents = st.checkbox('Add Week 16 Pick Percentages?')
     if week_16_pick_percents:
         st.write('')
         st.subheader('Week 16 Estimated Pick Percentages')
@@ -4317,7 +4317,7 @@ if yes_i_have_pick percents:
         was_week_16_pick_% = st.slider("Washington Commanders Estimated Week 16 Pick %:") / 100
     st.write('')
     st.write('')
-    week_17_pick percents = st.checkbox('Add Week 17 Pick Percentages?')
+    week_17_pick_percents = st.checkbox('Add Week 17 Pick Percentages?')
     if week_17_pick_percents:
         st.write('')
         st.subheader('Week 17 Estimated Pick Percentages')
@@ -4356,7 +4356,7 @@ if yes_i_have_pick percents:
         was_week_17_pick_% = st.slider("Washington Commanders Estimated Week 17 Pick %:") / 100
     st.write('')
     st.write('')
-    week_18_pick percents = st.checkbox('Add Week 18 Pick Percentages?')
+    week_18_pick_percents = st.checkbox('Add Week 18 Pick Percentages?')
     if week_18_pick_percents:
         st.write('')
         st.subheader('Week 18 Estimated Pick Percentages')
@@ -4396,7 +4396,7 @@ if yes_i_have_pick percents:
     st.write('')
     st.write('')
     if selected_contest == 'Circa':
-        week_19_pick percents = st.checkbox('Add Week 19 Pick Percentages?')
+        week_19_pick_percents = st.checkbox('Add Week 19 Pick Percentages?')
     if week_19_pick_percents:
         st.write('')
         st.subheader('Week 19 Estimated Pick Percentages')
@@ -4436,7 +4436,7 @@ if yes_i_have_pick percents:
     st.write('')
     st.write('')
     if selected_contest == 'Circa':
-        week_20_pick percents = st.checkbox('Add Week 20 Pick Percentages?')
+        week_20_pick_percents = st.checkbox('Add Week 20 Pick Percentages?')
     if week_20_pick_percents:
         st.write('')
         st.subheader('Week 20 Estimated Pick Percentages')

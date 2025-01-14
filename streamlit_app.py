@@ -1324,7 +1324,7 @@ def get_predicted_pick_percentages(pd):
     nfl_schedule_df['Expected Eliminated Entries From Game'] = nfl_schedule_df['Total Remaining Entries at Start of Week'] * nfl_schedule_df['Expected Eliminated Entry Percent From Game']
 
     def assign_pick_percentages(row, selected_contest, circa_pick_percentages, dk_pick_percentages):
-    """Assigns home and away pick percentages to a row, conditionally overwriting."""
+    #"""Assigns home and away pick percentages to a row, conditionally overwriting."""
 
         home_team = row['Home Team']
         away_team = row['Away Team']

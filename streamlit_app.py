@@ -4333,7 +4333,7 @@ if yes_i_have_pick_percents:
     st.write('Select your own estimated pick percentages for each team. If you do not change the default value of -1, then it will automatically select our own estimated picks. This tool will be especially useful later in the season')
     st.write('')
     st.write('')
-    if starting_week <= 1 and ending_week > 1
+    if starting_week <= 1 and ending_week > 1:
         week_1_pick_percents = st.checkbox('Add Week 1 Pick Percentages?')
     if week_1_pick_percents:
         st.write('')
@@ -4373,7 +4373,7 @@ if yes_i_have_pick_percents:
         was_week_1_pick_percent = st.slider("Washington Commanders Estimated Week 1 Pick %:", -1, 100) / 100
     st.write('')
     st.write('')
-    if starting_week <= 2 and ending_week > 2
+    if starting_week <= 2 and ending_week > 2:
         week_2_pick_percents = st.checkbox('Add Week 2 Pick Percentages?')
     if week_2_pick_percents:
         st.write('')
@@ -4413,7 +4413,7 @@ if yes_i_have_pick_percents:
         was_week_2_pick_percent = st.slider("Washington Commanders Estimated Week 2 Pick %:", -1, 100) / 100
     st.write('')
     st.write('')
-    if starting_week <= 3 and ending_week > 3
+    if starting_week <= 3 and ending_week > 3:
         week_3_pick_percents = st.checkbox('Add Week 3 Pick Percentages?')
     if week_3_pick_percents:
         st.write('')
@@ -4453,7 +4453,7 @@ if yes_i_have_pick_percents:
         was_week_3_pick_percent = st.slider("Washington Commanders Estimated Week 3 Pick %:", -1, 100) / 100
     st.write('')
     st.write('')
-    if starting_week <= 4 and ending_week > 4
+    if starting_week <= 4 and ending_week > 4:
         week_4_pick_percents = st.checkbox('Add Week 4 Pick Percentages?')
     if week_4_pick_percents:
         st.write('')
@@ -4493,7 +4493,7 @@ if yes_i_have_pick_percents:
         was_week_4_pick_percent = st.slider("Washington Commanders Estimated Week 4 Pick %:", -1, 100) / 100
     st.write('')
     st.write('')
-    if starting_week <= 5 and ending_week > 5
+    if starting_week <= 5 and ending_week > 5:
         week_5_pick_percents = st.checkbox('Add Week 5 Pick Percentages?')
     if week_5_pick_percents:
         st.write('')
@@ -4533,7 +4533,7 @@ if yes_i_have_pick_percents:
         was_week_5_pick_percent = st.slider("Washington Commanders Estimated Week 5 Pick %:", -1, 100) / 100
     st.write('')
     st.write('')
-    if starting_week <= 6 and ending_week > 6
+    if starting_week <= 6 and ending_week > 6:
         week_6_pick_percents = st.checkbox('Add Week 6 Pick Percentages?')
     if week_6_pick_percents:
         st.write('')
@@ -4573,7 +4573,7 @@ if yes_i_have_pick_percents:
         was_week_6_pick_percent = st.slider("Washington Commanders Estimated Week 6 Pick %:", -1, 100) / 100
     st.write('')
     st.write('')
-    if starting_week <= 7 and ending_week > 7
+    if starting_week <= 7 and ending_week > 7:
         week_7_pick_percents = st.checkbox('Add Week 7 Pick Percentages?')
     if week_7_pick_percents:
         st.write('')
@@ -4613,7 +4613,7 @@ if yes_i_have_pick_percents:
         was_week_7_pick_percent = st.slider("Washington Commanders Estimated Week 7 Pick %:", -1, 100) / 100
     st.write('')
     st.write('')
-    if starting_week <= 8 and ending_week > 8
+    if starting_week <= 8 and ending_week > 8:
         week_8_pick_percents = st.checkbox('Add Week 8 Pick Percentages?')
     if week_8_pick_percents:
         st.write('')
@@ -4653,7 +4653,7 @@ if yes_i_have_pick_percents:
         was_week_8_pick_percent = st.slider("Washington Commanders Estimated Week 8 Pick %:", -1, 100) / 100
     st.write('')
     st.write('')
-    if starting_week <= 9 and ending_week > 9
+    if starting_week <= 9 and ending_week > 9:
         week_9_pick_percents = st.checkbox('Add Week 9 Pick Percentages?')
     if week_9_pick_percents:
         st.write('')
@@ -4693,7 +4693,7 @@ if yes_i_have_pick_percents:
         was_week_9_pick_percent = st.slider("Washington Commanders Estimated Week 9 Pick %:", -1, 100) / 100
     st.write('')
     st.write('')
-    if starting_week <= 10 and ending_week > 10
+    if starting_week <= 10 and ending_week > 10:
         week_10_pick_percents = st.checkbox('Add Week 10 Pick Percentages?')
     if week_10_pick_percents:
         st.write('')
@@ -4733,7 +4733,7 @@ if yes_i_have_pick_percents:
         was_week_10_pick_percent = st.slider("Washington Commanders Estimated Week 10 Pick %:", -1, 100) / 100
     st.write('')
     st.write('')
-    if starting_week <= 11 and ending_week > 11
+    if starting_week <= 11 and ending_week > 11:
         week_11_pick_percents = st.checkbox('Add Week 11 Pick Percentages?')
     if week_11_pick_percents:
         st.write('')
@@ -4773,7 +4773,7 @@ if yes_i_have_pick_percents:
         was_week_11_pick_percent = st.slider("Washington Commanders Estimated Week 11 Pick %:", -1, 100) / 100
     st.write('')
     st.write('')
-    if starting_week <= 12 and ending_week > 12
+    if starting_week <= 12 and ending_week > 12:
         week_12_pick_percents = st.checkbox('Add Week 12 Pick Percentages?')
     if week_12_pick_percents:
         st.write('')
@@ -4813,7 +4813,7 @@ if yes_i_have_pick_percents:
         was_week_12_pick_percent = st.slider("Washington Commanders Estimated Week 12 Pick %:", -1, 100) / 100
     st.write('')
     st.write('')
-    if starting_week <= 13 and ending_week > 13
+    if starting_week <= 13 and ending_week > 13:
         week_13_pick_percents = st.checkbox('Add Week 13 Pick Percentages?')
     if week_13_pick_percents:
         st.write('')
@@ -4853,7 +4853,7 @@ if yes_i_have_pick_percents:
         was_week_13_pick_percent = st.slider("Washington Commanders Estimated Week 13 Pick %:", -1, 100) / 100
     st.write('')
     st.write('')
-    if starting_week <= 14 and ending_week > 14
+    if starting_week <= 14 and ending_week > 14:
         week_14_pick_percents = st.checkbox('Add Week 14 Pick Percentages?')
     if week_14_pick_percents:
         st.write('')
@@ -4893,7 +4893,7 @@ if yes_i_have_pick_percents:
         was_week_14_pick_percent = st.slider("Washington Commanders Estimated Week 14 Pick %:", -1, 100) / 100
     st.write('')
     st.write('')
-    if starting_week <= 15 and ending_week > 15
+    if starting_week <= 15 and ending_week > 15:
         week_15_pick_percents = st.checkbox('Add Week 15 Pick Percentages?')
     if week_15_pick_percents:
         st.write('')
@@ -4933,7 +4933,7 @@ if yes_i_have_pick_percents:
         was_week_15_pick_percent = st.slider("Washington Commanders Estimated Week 15 Pick %:", -1, 100) / 100
     st.write('')
     st.write('')
-    if starting_week <= 16 and ending_week > 16
+    if starting_week <= 16 and ending_week > 16:
         week_16_pick_percents = st.checkbox('Add Week 16 Pick Percentages?')
     if week_16_pick_percents:
         st.write('')
@@ -4973,7 +4973,7 @@ if yes_i_have_pick_percents:
         was_week_16_pick_percent = st.slider("Washington Commanders Estimated Week 16 Pick %:", -1, 100) / 100
     st.write('')
     st.write('')
-    if starting_week <= 17 and ending_week > 17
+    if starting_week <= 17 and ending_week > 17:
         week_17_pick_percents = st.checkbox('Add Week 17 Pick Percentages?')
     if week_17_pick_percents:
         st.write('')
@@ -5013,7 +5013,7 @@ if yes_i_have_pick_percents:
         was_week_17_pick_percent = st.slider("Washington Commanders Estimated Week 17 Pick %:", -1, 100) / 100
     st.write('')
     st.write('')
-    if starting_week <= 18 and ending_week > 18
+    if starting_week <= 18 and ending_week > 18:
         week_18_pick_percents = st.checkbox('Add Week 18 Pick Percentages?')
     if week_18_pick_percents:
         st.write('')
@@ -5054,7 +5054,7 @@ if yes_i_have_pick_percents:
     st.write('')
     st.write('')
     if selected_contest == 'Circa':
-        if starting_week <= 19 and ending_week > 19
+        if starting_week <= 19 and ending_week > 19:
             week_19_pick_percents = st.checkbox('Add Week 19 Pick Percentages?')
     if week_19_pick_percents:
         st.write('')
@@ -5095,7 +5095,7 @@ if yes_i_have_pick_percents:
     st.write('')
     st.write('')
     if selected_contest == 'Circa':
-        if starting_week <= 20 and ending_week > 20
+        if starting_week <= 20 and ending_week > 20:
             week_20_pick_percents = st.checkbox('Add Week 20 Pick Percentages?')
     if week_20_pick_percents:
         st.write('')

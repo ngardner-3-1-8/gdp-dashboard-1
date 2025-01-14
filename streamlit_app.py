@@ -3269,10 +3269,12 @@ circa_team_availability = {
     'Washington Commanders': [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
     }
 
-circa_remaining_entries
+circa_remaining_entries = {
     total_teams: [14266,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1]
-dk_remaining_entries
+}
+dk_remaining_entries = {
     total_teams: [14266,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1]
+}
 
 
 st.title("NFL Survivor Optimization")

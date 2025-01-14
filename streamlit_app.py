@@ -1323,16 +1323,48 @@ def get_predicted_pick_percentages(pd):
         
     nfl_schedule_df['Expected Eliminated Entries From Game'] = nfl_schedule_df['Total Remaining Entries at Start of Week'] * nfl_schedule_df['Expected Eliminated Entry Percent From Game']
 
-    if selected_contest == 'Circa':
-        if circa_pick_percentages[nfl_schedule_df['Home Team'][nfl_schedule_df['Week']-1] > -1:
-            nfl_schedule_df['Home Pick %'] = circa_pick_percentages[nfl_schedule_df['Home Team'][nfl_schedule_df['Week']-1]
-        if circa_pick_percentages[nfl_schedule_df['Away Team'][nfl_schedule_df['Week']-1] > -1:
-            nfl_schedule_df['Away Pick %'] = circa_pick_percentages[nfl_schedule_df['Away Team'][nfl_schedule_df['Week']-1]
-    else:
-        if dk_pick_percentages[nfl_schedule_df['Home Team'][nfl_schedule_df['Week']-1] > -1:
-            nfl_schedule_df['Home Pick %'] = dk_pick_percentages[nfl_schedule_df['Home Team'][nfl_schedule_df['Week']-1]
-        if dk_pick_percentages[nfl_schedule_df['Away Team'][nfl_schedule_df['Week']-1] > -1:
-            nfl_schedule_df['Away Pick %'] = dk_pick_percentages[nfl_schedule_df['Away Team'][nfl_schedule_df['Week']-1]
+    def assign_pick_percentages(row, selected_contest, circa_pick_percentages, dk_pick_percentages):
+    """Assigns home and away pick percentages to a row, conditionally overwriting."""
+
+        home_team = row['Home Team']
+        away_team = row['Away Team']
+        week = row['Week']
+
+        home_pick_percent = row.get('Home Pick %')  # Get existing value, defaults to None
+        away_pick_percent = row.get('Away Pick %')  # Get existing value, defaults to None
+
+        if selected_contest == 'Circa':
+            if home_team in circa_pick_percentages:
+                home_pick_percent_list = circa_pick_percentages[home_team]
+                week_index = week - 1 #Get index from week
+                if week_index < len(home_pick_percent_list) and home_pick_percent_list[week_index] > -1: #Check if index is in bounds, then verify value is >-1
+                    home_pick_percent = home_pick_percent_list[week_index]
+
+            if away_team in circa_pick_percentages:
+                away_pick_percent_list = circa_pick_percentages[away_team]
+                week_index = week - 1
+                if week_index < len(away_pick_percent_list) and away_pick_percent_list[week_index] > -1:
+                    away_pick_percent = away_pick_percent_list[week_index]
+        else: # assuming it's DraftKings
+            if home_team in dk_pick_percentages:
+                home_pick_percent_list = dk_pick_percentages[home_team]
+                week_index = week - 1
+                if week_index < len(home_pick_percent_list) and home_pick_percent_list[week_index] > -1:
+                    home_pick_percent = home_pick_percent_list[week_index]
+            if away_team in dk_pick_percentages:
+                away_pick_percent_list = dk_pick_percentages[away_team]
+                week_index = week - 1
+                if week_index < len(away_pick_percent_list) and away_pick_percent_list[week_index] > -1:
+                    away_pick_percent = away_pick_percent_list[week_index]
+
+        return pd.Series({'Home Pick %': home_pick_percent, 'Away Pick %': away_pick_percent})
+                                                                 
+
+    nfl_schedule_df[['Home Pick %', 'Away Pick %']] = nfl_schedule_df.apply(
+        assign_pick_percentages, 
+        axis=1, 
+        args=(selected_contest, circa_pick_percentages, dk_pick_percentages)
+    )
     
     if selected_contest == 'Circa':
         nfl_schedule_df.to_csv("Circa_Predicted_Pick_%.csv", index=False)

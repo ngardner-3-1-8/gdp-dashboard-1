@@ -3690,7 +3690,7 @@ st.write('')
 st.subheader('Estimate Pick Percentages')
 yes_i_have_pick_percents = st.checkbox('Would you like to add your own estimated pick percentages, instead of using our estimated picks?')
 if yes_i_have_pick_percents:
-    st.write('Select your own estimated pick percentages for each team. If you do not change the default value, then it will automatically select our own estimated picks. This tool will be especially useful later in the season'
+    st.write('Select your own estimated pick percentages for each team. If you do not change the default value, then it will automatically select our own estimated picks. This tool will be especially useful later in the season')
     st.write('')
     st.write('')
     week_1_pick_percents = st.checkbox('Add Week 1 Pick Percentages?')

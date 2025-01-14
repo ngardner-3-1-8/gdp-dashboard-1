@@ -1324,14 +1324,14 @@ def get_predicted_pick_percentages(pd):
     nfl_schedule_df['Expected Eliminated Entries From Game'] = nfl_schedule_df['Total Remaining Entries at Start of Week'] * nfl_schedule_df['Expected Eliminated Entry Percent From Game']
 
     if selected_contest == 'Circa':
-        if nfl_schedule_df['Home Pick %'] = circa_pick_percentages[nfl_schedule_df['Home Team'][nfl_schedule_df['Week']-1] > -1:
+        if circa_pick_percentages[nfl_schedule_df['Home Team'][nfl_schedule_df['Week']-1] > -1:
             nfl_schedule_df['Home Pick %'] = circa_pick_percentages[nfl_schedule_df['Home Team'][nfl_schedule_df['Week']-1]
-        if nfl_schedule_df['Away Pick %'] = circa_pick_percentages[nfl_schedule_df['Away Team'][nfl_schedule_df['Week']-1] > -1:
+        if circa_pick_percentages[nfl_schedule_df['Away Team'][nfl_schedule_df['Week']-1] > -1:
             nfl_schedule_df['Away Pick %'] = circa_pick_percentages[nfl_schedule_df['Away Team'][nfl_schedule_df['Week']-1]
     else:
-        if nfl_schedule_df['Home Pick %'] = dk_pick_percentages[nfl_schedule_df['Home Team'][nfl_schedule_df['Week']-1] > -1:
+        if dk_pick_percentages[nfl_schedule_df['Home Team'][nfl_schedule_df['Week']-1] > -1:
             nfl_schedule_df['Home Pick %'] = dk_pick_percentages[nfl_schedule_df['Home Team'][nfl_schedule_df['Week']-1]
-        if nfl_schedule_df['Away Pick %'] = dk_pick_percentages[nfl_schedule_df['Away Team'][nfl_schedule_df['Week']-1] > -1:
+        if dk_pick_percentages[nfl_schedule_df['Away Team'][nfl_schedule_df['Week']-1] > -1:
             nfl_schedule_df['Away Pick %'] = dk_pick_percentages[nfl_schedule_df['Away Team'][nfl_schedule_df['Week']-1]
     
     if selected_contest == 'Circa':

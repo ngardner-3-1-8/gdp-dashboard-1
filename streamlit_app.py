@@ -742,6 +742,8 @@ def collect_schedule_travel_ranking_data(pd):
         #df.to_csv('TEST Manual Odds.csv', index = False)
         # Load the CSV data
         csv_df = df
+        csv_df['Home Team Moneyline'] = None 
+        csv_df['Away Team Moneyline'] = None
         # Update CSV data with scraped odds
         for index, row in csv_df.iterrows():
             matching_row = live_odds_df[

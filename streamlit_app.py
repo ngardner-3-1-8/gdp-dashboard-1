@@ -754,6 +754,7 @@ def collect_schedule_travel_ranking_data(pd):
                 csv_df.loc[index, 'Underdog'] = csv_df.loc[index, 'Home Team'] if csv_df.loc[index, 'Home Team Moneyline'] > -110 else csv_df.loc[index, 'Away Team']
 		
                 # Create the mask for where there is no 'Home Odds'
+	st.write(csv_df)
         mask = csv_df['Home Team Moneyline'].isna()
         # Only apply calculations if the 'Home Odds' column is empty
         def get_moneyline_masked(row, odds, team_type):

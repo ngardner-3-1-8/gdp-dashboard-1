@@ -13,7 +13,6 @@ from sklearn.ensemble import RandomForestRegressor
 from sklearn.metrics import mean_absolute_error
 from tqdm import tqdm
 from ortools.linear_solver import pywraplp
-st.server.server_util.set_session_timeout_secs(3600)
 def get_schedule():
     print("Gathering Schedule Data...")
     # Make a request to the website

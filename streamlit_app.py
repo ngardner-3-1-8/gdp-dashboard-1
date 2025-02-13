@@ -1383,6 +1383,7 @@ def get_predicted_pick_percentages(pd):
 def calculate_ev(nfl_schedule_pick_percentages_df, starting_week, ending_week, selected_contest, use_cached_expected_value):
 
     def calculate_all_scenarios(week_df):
+        # ... (This function remains the same as your optimized version)
         num_games = len(week_df)
         teams = week_df['Home Team'].tolist() + week_df['Away Team'].tolist()
         num_teams = len(teams)
@@ -1417,26 +1418,43 @@ def calculate_ev(nfl_schedule_pick_percentages_df, starting_week, ending_week, s
         return weighted_avg_ev, all_outcomes_matrix, scenario_weights  # Return weighted_avg_ev directly
 
 
-    st.write("Current Week Progress")  # Streamlit progress bar
-    progress_bar = st.progress(0)
+    def process_week(week, nfl_schedule_pick_percentages_df, use_cached_expected_value, selected_contest): #Wrapper function for threading
+        week_df = nfl_schedule_pick_percentages_df[nfl_schedule_pick_percentages_df['Week_Num'] == week].copy()
+        weighted_avg_ev, _, _ = calculate_all_scenarios(week_df)
 
-    all_weeks_ev = {} #Store the EV values for each week
-
-    for week in tqdm(range(starting_week, ending_week), desc="Processing Weeks", leave=False):
-        week_df = nfl_schedule_pick_percentages_df[nfl_schedule_pick_percentages_df['Week_Num'] == week].copy() # Create a copy to avoid SettingWithCopyWarning
-        weighted_avg_ev, all_outcomes, scenario_weights = calculate_all_scenarios(week_df)
-
-        #Store the EV values for the current week
-        all_weeks_ev[week] = weighted_avg_ev
-
-        #More efficient way to set the EV values for the current week
         for team in week_df['Home Team'].unique():
             nfl_schedule_pick_percentages_df.loc[(nfl_schedule_pick_percentages_df['Week_Num'] == week) & (nfl_schedule_pick_percentages_df['Home Team'] == team), 'Home Team EV'] = weighted_avg_ev[team]
         for team in week_df['Away Team'].unique():
             nfl_schedule_pick_percentages_df.loc[(nfl_schedule_pick_percentages_df['Week_Num'] == week) & (nfl_schedule_pick_percentages_df['Away Team'] == team), 'Away Team EV'] = weighted_avg_ev[team]
 
-        progress_percent = int((week / ending_week) * 100)
-        progress_bar.progress(progress_percent)
+        return nfl_schedule_pick_percentages_df #Return the updated chunk
+
+    st.write("Current Week Progress")  # Streamlit progress bar
+    progress_bar = st.progress(0)
+
+    if use_cached_expected_value == 1:
+        # ... (Your existing code for handling cached values)
+        pass #No changes needed here
+    else:
+        st.write("Step 4/6: Calculating Live Expected Value...")
+        nfl_schedule_pick_percentages_df = get_predicted_pick_percentages(pd)  # Get pick percentages first
+
+        with st.spinner('Processing...'):
+            with concurrent.futures.ThreadPoolExecutor() as executor:
+                futures = [executor.submit(process_week, week, nfl_schedule_pick_percentages_df, use_cached_expected_value, selected_contest) for week in range(starting_week, ending_week)]
+
+                for i, future in enumerate(concurrent.futures.as_completed(futures)): #Added enumeration
+                    try:
+                        updated_df_chunk = future.result()
+                        nfl_schedule_pick_percentages_df.update(updated_df_chunk)
+                        progress_percent = int(((i+1) / (ending_week - starting_week)) * 100) #Update progress bar based on completed tasks
+                        progress_bar.progress(progress_percent)
+                    except Exception as e:
+                        st.error(f"Error processing a week: {e}")
+
+
+        st.write("Processing Complete!")
+    st.dataframe(nfl_schedule_pick_percentages_df)
 
     if selected_contest == 'Circa':
         nfl_schedule_pick_percentages_df.to_csv("NFL Schedule with full ev_circa.csv", index=False)

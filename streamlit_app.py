@@ -1380,105 +1380,64 @@ def get_predicted_pick_percentages(pd):
 
 
 
-def calculate_ev():
+def calculate_ev(nfl_schedule_pick_percentages_df, starting_week, ending_week, selected_contest, use_cached_expected_value):
+
     def calculate_all_scenarios(week_df):
-        """
-        Calculates the expected value (EV) for each team in a given week,
-        considering all possible game outcomes. EV is calculated as the 
-        inverse of the survival probability of all teams in that scenario.
-
-        Args:
-            week_df: DataFrame for a single week, including 'Home Team', 
-                     'Away Team', 'Home Team Fair Odds', 'Away Team Fair Odds', 
-                     'Home Pick %', and 'Away Pick %' columns.
-
-        Returns:
-            A DataFrame with EVs for all scenarios, all outcomes, and scenario weights.
-        """
-
         num_games = len(week_df)
         teams = week_df['Home Team'].tolist() + week_df['Away Team'].tolist()
         num_teams = len(teams)
 
-        def generate_outcomes(games):
-            if not games:
-                return [[]]
-            else:
-                outcomes = []
-                for outcome in ['Home Win', 'Away Win']:
-                    new_games = games[1:]
-                    new_outcomes = generate_outcomes(new_games)
-                    for new_outcome in new_outcomes:
-                        outcomes.append([outcome] + new_outcome)
-                return outcomes
-
-        all_outcomes = generate_outcomes(list(range(len(week_df))))
         all_outcomes_matrix = np.array(list(itertools.product(['Home Win', 'Away Win'], repeat=num_games)))
-	    
         num_scenarios = all_outcomes_matrix.shape[0]
 
-
-	    
         ev_df = pd.DataFrame(index=range(num_scenarios), columns=teams)
-
         scenario_weights = np.zeros(num_scenarios)
-        for i in range(num_scenarios): # Still need to iterate through the scenarios
+
+        # Vectorized calculations within the scenario loop
+        for i in range(num_scenarios):
             outcome = all_outcomes_matrix[i]
-            winning_teams = np.where(outcome == 'Home Win', week_df['Home Team'], week_df['Away Team'])
-            winning_team_indices = np.isin(teams, winning_teams) # Get the indices of the winning teams in the teams list
+            winning_teams = np.where(outcome == 'Home Win', week_df['Home Team'].values, week_df['Away Team'].values)  # Use .values for numpy array
+            winning_team_indices = np.isin(teams, winning_teams)
 
             if use_cached_expected_value == 1:
-                winning_probs = np.where(outcome == 'Home Win', week_df['Home Team Fair Odds'], week_df['Away Team Fair Odds'])
+                winning_probs = np.where(outcome == 'Home Win', week_df['Home Team Fair Odds'].values, week_df['Away Team Fair Odds'].values) # Use .values for numpy array
             else:
-                winning_probs = np.where(outcome == 'Home Win', week_df['Internal Home Team Fair Odds'], week_df['Internal Away Team Fair Odds'])
+                winning_probs = np.where(outcome == 'Home Win', week_df['Internal Home Team Fair Odds'].values, week_df['Internal Away Team Fair Odds'].values) # Use .values for numpy array
 
-            scenario_weights[i] = np.prod(winning_probs) # Calculate scenario weight
+            scenario_weights[i] = np.prod(winning_probs)
 
-            # Calculate surviving entries (more efficient with numpy)
-            pick_percentages = np.where(outcome == 'Home Win', week_df['Home Pick %'], week_df['Away Pick %'])
+            pick_percentages = np.where(outcome == 'Home Win', week_df['Home Pick %'].values, week_df['Away Pick %'].values) # Use .values for numpy array
             surviving_entries = np.sum(pick_percentages)
 
-            # 4. Vectorized EV Calculation (The Core Improvement)
-            ev_values = np.zeros(num_teams) # Initialize EV values for this scenario
+            ev_values = np.zeros(num_teams)
             ev_values[winning_team_indices] = 1 / surviving_entries if surviving_entries > 0 else 0
             ev_df.iloc[i] = ev_values
 
-        # 5. Calculate Weighted Average EV (Vectorized)
         weighted_avg_ev = (ev_df * scenario_weights[:, np.newaxis]).sum(axis=0) / scenario_weights.sum()
+        return weighted_avg_ev, all_outcomes_matrix, scenario_weights  # Return weighted_avg_ev directly
 
-        # Update week_df with weighted average EVs
-        for i in range(len(week_df)):
-            home_team = week_df.iloc[i]['Home Team']
-            away_team = week_df.iloc[i]['Away Team']
 
-            week_df.loc[i, 'Home Team EV'] = weighted_avg_ev[home_team]
-            week_df.loc[i, 'Away Team EV'] = weighted_avg_ev[away_team]
+    st.write("Current Week Progress")  # Streamlit progress bar
+    progress_bar = st.progress(0)
 
-        return week_df, all_outcomes_matrix, scenario_weights # Return the matrix for progress bar
+    all_weeks_ev = {} #Store the EV values for each week
 
-    # Add "Week" to the beginning of each value in the 'Week' column
-    #nfl_schedule_pick_percentages_df['Week'] = nfl_schedule_pick_percentages_df['Week'].apply(lambda x: f"Week {x}")
-    
-    # --- Option 1: Using st.empty for text updates ---
-    #progress_bar = st.empty()  # Create an empty placeholder
+    for week in tqdm(range(starting_week, ending_week), desc="Processing Weeks", leave=False):
+        week_df = nfl_schedule_pick_percentages_df[nfl_schedule_pick_percentages_df['Week_Num'] == week].copy() # Create a copy to avoid SettingWithCopyWarning
+        weighted_avg_ev, all_outcomes, scenario_weights = calculate_all_scenarios(week_df)
 
-    # --- Option 2: Using st.progress for a bar ---
-    st.write("Current Week Progress")
-    progress_bar = st.progress(0)  # Initialize progress bar at 0%
+        #Store the EV values for the current week
+        all_weeks_ev[week] = weighted_avg_ev
 
-    for week in tqdm(range(starting_week, ending_week), desc="Processing Weeks", leave=False): #########SET THE RANGE TO (1, 21) TO PROCESS THE WHOLE SEASON, or (2,3) to process ONLY WEEK . The rest you can figure out 
-        week_df = nfl_schedule_pick_percentages_df[nfl_schedule_pick_percentages_df['Week_Num'] == week]
-        week_df, all_outcomes, scenario_weights = calculate_all_scenarios(week_df)
+        #More efficient way to set the EV values for the current week
+        for team in week_df['Home Team'].unique():
+            nfl_schedule_pick_percentages_df.loc[(nfl_schedule_pick_percentages_df['Week_Num'] == week) & (nfl_schedule_pick_percentages_df['Home Team'] == team), 'Home Team EV'] = weighted_avg_ev[team]
+        for team in week_df['Away Team'].unique():
+            nfl_schedule_pick_percentages_df.loc[(nfl_schedule_pick_percentages_df['Week_Num'] == week) & (nfl_schedule_pick_percentages_df['Away Team'] == team), 'Away Team EV'] = weighted_avg_ev[team]
 
-        # Update nfl_schedule_circa_df_2 using the 'update' method
-        nfl_schedule_pick_percentages_df.update(week_df[['Home Team EV', 'Away Team EV']])
-
-        # --- Option 1: Update progress text ---
-        #progress_bar.write(f"Processing Week: {week}/{total_weeks}")
-
-        # --- Option 2: Update progress bar ---
         progress_percent = int((week / ending_week) * 100)
         progress_bar.progress(progress_percent)
+
     if selected_contest == 'Circa':
         nfl_schedule_pick_percentages_df.to_csv("NFL Schedule with full ev_circa.csv", index=False)
     else:

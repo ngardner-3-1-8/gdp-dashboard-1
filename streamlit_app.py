@@ -13,6 +13,7 @@ from sklearn.ensemble import RandomForestRegressor
 from sklearn.metrics import mean_absolute_error
 from tqdm import tqdm
 from ortools.linear_solver import pywraplp
+import concurrent.futures
 from concurrent.futures import ProcessPoolExecutor
 import itertools
 

@@ -738,6 +738,7 @@ def collect_schedule_travel_ranking_data(pd):
         }
 
         live_odds_df = live_scraped_odds_df
+        st.write(live_scraped_odds_df)
         
 
         #df.to_csv('TEST Manual Odds.csv', index = False)

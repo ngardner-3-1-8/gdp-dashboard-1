@@ -1420,7 +1420,7 @@ def calculate_ev():
             scenario_weight = 1.0  # Calculate weight for the current scenario
 
             # Calculate surviving entries for ALL teams in the scenario
-            if use_cached_expected_value == 1:
+            if use_live_sportsbook_odds == 1:
                 for j, game_outcome in enumerate(outcome):
                     if game_outcome == 'Home Win':
                         winning_team = week_df.iloc[j]['Home Team']
@@ -5145,6 +5145,7 @@ st.write('')
 st.write('')
 
 use_cached_expected_value = 1
+use_live_sportsbook_odds = 1
 
 if yes_i_have_customized_rankings:
 	st.subheader('Use Saved Expected Value')
@@ -5154,6 +5155,14 @@ if yes_i_have_customized_rankings:
 	st.write('- This will NOT have an impact on your customized ranking output, just the EV output')
 	st.write('Last Update: :green[01/01/2025]')
 	use_cached_expected_value = 1 if st.checkbox('Use Cached Expected Value') else 0
+	st.write('')
+	st.write('')
+	st.write('')
+	if use_cached_expected_value == 0:
+            use_live_sportsbook_odds = 1 if st.checkbox('Use Live Sportsbook Odds to calculate win probability (If Available?') else 0
+            st.write('')
+            st.write("If this is checked, we will use odds from DraftKings to determine a team's win probability. For games where live odds from DraftKings are unavailable, we will use your own internal rankings to determine the predicted spread and win probability.")	
+            st.write('If this is left unchecked, we will use your own internal rankings to determine the predicted spread and win probability for all games.')	
 	st.write('')
 	st.write('')
 	st.write('')

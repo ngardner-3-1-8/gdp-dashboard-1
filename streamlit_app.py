@@ -586,53 +586,53 @@ def collect_schedule_travel_ranking_data(pd):
         # Find all the table rows containing game data
         game_rows = soup.find_all('tr', class_=['break-line', ''])
 
-        games = []
-        game_data = {}  # Temporary dictionary to store game data
+        if game_rows:  # Check if game_rows is not empty (data exists)
+            games = []
+            game_data = {}
 
-        for i, row in enumerate(game_rows):
-            # Extract time only from the first row of a game
-            if 'break-line' in row['class']:
-                time = row.find('span', class_='event-cell__start-time').text
-                game_data['Time'] = time
+            for i, row in enumerate(game_rows):
+                if 'break-line' in row['class']:
+                    time = row.find('span', class_='event-cell__start-time').text
+                    game_data['Time'] = time
 
-            # Extract team and odds - handle potential missing elements
-            team = row.find('div', class_='event-cell__name-text')
-            if team:
-                team = team.text.strip()
-                team = team_name_mapping.get(team, team)
-            else:
-                team = None  # Set team to None if not found
+                team = row.find('div', class_='event-cell__name-text')
+                if team:
+                    team = team.text.strip()
+                    team = team_name_mapping.get(team, team)
+                else:
+                    team = None
 
-            odds_element = row.find('span', class_='sportsbook-odds american no-margin default-color')
-            if odds_element:
-                odds = odds_element.text.strip().replace('−', '-')
-                odds = int(odds)
-            else:
-                odds = None  # Set odds to None if not found
+                odds_element = row.find('span', class_='sportsbook-odds american no-margin default-color')
+                if odds_element:
+                    odds = odds_element.text.strip().replace('−', '-')
+                    try: #handle cases where odds are strings like +100 or -110
+                        odds = int(odds)
+                    except ValueError:
+                        odds = None
+                else:
+                    odds = None
 
-            # Assign team and odds to the appropriate key in the game_data dictionary
-            if i % 2 == 0:  # Even index: Away Team
-                game_data['Away Team'] = team
-                game_data['Away Odds'] = odds
-            else:  # Odd index: Home Team
-                game_data['Home Team'] = team
-                game_data['Home Odds'] = odds
+                if i % 2 == 0:
+                    game_data['Away Team'] = team
+                    game_data['Away Odds'] = odds
+                else:
+                    game_data['Home Team'] = team
+                    game_data['Home Odds'] = odds
 
-                # Append complete game data to the games list and reset game_data
-                games.append(game_data)
-                game_data = {}
+                    games.append(game_data)
+                    game_data = {}
 
-        # Create pandas DataFrame from the extracted data
-        df = pd.DataFrame(games)
+            df = pd.DataFrame(games)
+            print(df)
+            df.to_csv('Live Scraped Odds.csv', index=False)
+            return df
+        else:  # No data found, create an empty DataFrame
+            empty_df = pd.DataFrame(columns=["Away Team", "Away Odds", "Home Team", "Home Odds", "Time"])
+            print("No NFL games found. Returning empty DataFrame.")
+            empty_df.to_csv('Live Scraped Odds.csv', index=False) #still create a csv, even if it is empty
+            return empty_df
 
-        print(df)
-        df.to_csv('Live Scraped Odds.csv', index=False)
-
-        live_scraped_odds_nfl_df = df
-
-        return live_scraped_odds_nfl_df
-            
-    live_scraped_odds_df = get_preseason_odds()    
+    live_scraped_odds_df = get_preseason_odds()
     
     
     def add_odds_to_main_csv():

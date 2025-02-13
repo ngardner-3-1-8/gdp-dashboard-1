@@ -13,7 +13,6 @@ from sklearn.ensemble import RandomForestRegressor
 from sklearn.metrics import mean_absolute_error
 from tqdm import tqdm
 from ortools.linear_solver import pywraplp
-from celery import celery
 from concurrent.futures import ProcessPoolExecutor
 
 def get_schedule():

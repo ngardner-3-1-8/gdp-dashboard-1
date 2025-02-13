@@ -1421,39 +1421,39 @@ def calculate_ev():
         ev_df = pd.DataFrame(index=range(num_scenarios), columns=teams)
 
         scenario_weights = np.zeros(num_scenarios)
-		for i in range(num_scenarios): # Still need to iterate through the scenarios
-			outcome = all_outcomes_matrix[i]
-			winning_teams = np.where(outcome == 'Home Win', week_df['Home Team'], week_df['Away Team'])
-			winning_team_indices = np.isin(teams, winning_teams) # Get the indices of the winning teams in the teams list
-			
-			if use_cached_expected_value == 1:
-				winning_probs = np.where(outcome == 'Home Win', week_df['Home Team Fair Odds'], week_df['Away Team Fair Odds'])
-			else:
-				winning_probs = np.where(outcome == 'Home Win', week_df['Internal Home Team Fair Odds'], week_df['Internal Away Team Fair Odds'])
-			
-			scenario_weights[i] = np.prod(winning_probs) # Calculate scenario weight
-	
-			# Calculate surviving entries (more efficient with numpy)
-			pick_percentages = np.where(outcome == 'Home Win', week_df['Home Pick %'], week_df['Away Pick %'])
-			surviving_entries = np.sum(pick_percentages)
-	
-			# 4. Vectorized EV Calculation (The Core Improvement)
-			ev_values = np.zeros(num_teams) # Initialize EV values for this scenario
-			ev_values[winning_team_indices] = 1 / surviving_entries if surviving_entries > 0 else 0
-			ev_df.iloc[i] = ev_values
-	
-		# 5. Calculate Weighted Average EV (Vectorized)
-		weighted_avg_ev = (ev_df * scenario_weights[:, np.newaxis]).sum(axis=0) / scenario_weights.sum()
-	
-		# Update week_df with weighted average EVs
-		for i in range(len(week_df)):
-			home_team = week_df.iloc[i]['Home Team']
-			away_team = week_df.iloc[i]['Away Team']
-	
-			week_df.loc[i, 'Home Team EV'] = weighted_avg_ev[home_team]
-			week_df.loc[i, 'Away Team EV'] = weighted_avg_ev[away_team]
-	
-		return week_df, all_outcomes_matrix, scenario_weights # Return the matrix for progress bar
+        for i in range(num_scenarios): # Still need to iterate through the scenarios
+            outcome = all_outcomes_matrix[i]
+            winning_teams = np.where(outcome == 'Home Win', week_df['Home Team'], week_df['Away Team'])
+            winning_team_indices = np.isin(teams, winning_teams) # Get the indices of the winning teams in the teams list
+
+            if use_cached_expected_value == 1:
+                winning_probs = np.where(outcome == 'Home Win', week_df['Home Team Fair Odds'], week_df['Away Team Fair Odds'])
+            else:
+                winning_probs = np.where(outcome == 'Home Win', week_df['Internal Home Team Fair Odds'], week_df['Internal Away Team Fair Odds'])
+
+            scenario_weights[i] = np.prod(winning_probs) # Calculate scenario weight
+
+            # Calculate surviving entries (more efficient with numpy)
+            pick_percentages = np.where(outcome == 'Home Win', week_df['Home Pick %'], week_df['Away Pick %'])
+            surviving_entries = np.sum(pick_percentages)
+
+            # 4. Vectorized EV Calculation (The Core Improvement)
+            ev_values = np.zeros(num_teams) # Initialize EV values for this scenario
+            ev_values[winning_team_indices] = 1 / surviving_entries if surviving_entries > 0 else 0
+            ev_df.iloc[i] = ev_values
+
+        # 5. Calculate Weighted Average EV (Vectorized)
+        weighted_avg_ev = (ev_df * scenario_weights[:, np.newaxis]).sum(axis=0) / scenario_weights.sum()
+
+        # Update week_df with weighted average EVs
+        for i in range(len(week_df)):
+            home_team = week_df.iloc[i]['Home Team']
+            away_team = week_df.iloc[i]['Away Team']
+
+            week_df.loc[i, 'Home Team EV'] = weighted_avg_ev[home_team]
+            week_df.loc[i, 'Away Team EV'] = weighted_avg_ev[away_team]
+
+        return week_df, all_outcomes_matrix, scenario_weights # Return the matrix for progress bar
 
     # Add "Week" to the beginning of each value in the 'Week' column
     #nfl_schedule_pick_percentages_df['Week'] = nfl_schedule_pick_percentages_df['Week'].apply(lambda x: f"Week {x}")

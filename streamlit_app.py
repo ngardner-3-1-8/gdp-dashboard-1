@@ -14,6 +14,7 @@ from sklearn.metrics import mean_absolute_error
 from tqdm import tqdm
 from ortools.linear_solver import pywraplp
 from concurrent.futures import ProcessPoolExecutor
+import itertools
 
 def get_schedule():
     print("Gathering Schedule Data...")

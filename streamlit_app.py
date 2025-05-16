@@ -746,7 +746,7 @@ def collect_schedule_travel_ranking_data(pd):
         #df.to_csv('TEST Manual Odds.csv', index = False)
         # Load the CSV data
         csv_df = df
-	st.write(csv_df)
+        st.write(csv_df)
         csv_df['Home Team Moneyline'] = None 
         csv_df['Away Team Moneyline'] = None
         # Update CSV data with scraped odds

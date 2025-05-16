@@ -540,10 +540,6 @@ def collect_schedule_travel_ranking_data(pd):
             # Update the 'Away Team Short Rest' for the specific row
             df.loc[index, 'Away Team Short Rest'] = 'Yes'
 
-
-import requests
-    from bs4 import BeautifulSoup
-    import pandas as pd
     
     def get_preseason_odds():
         url = "https://sportsbook.draftkings.com/leagues/football/nfl"

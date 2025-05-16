@@ -586,7 +586,7 @@ def collect_schedule_travel_ranking_data(pd):
         }
 
         # Find all the table rows containing game data
-        game_rows = soup.find_all('tr', class_=['break-line', ''])
+        game_rows = soup.find_all('tr')
         st.write(game_rows)
         if game_rows:  # Check if game_rows is not empty (data exists)
             games = []

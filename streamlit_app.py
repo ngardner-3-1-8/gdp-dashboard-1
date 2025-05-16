@@ -543,12 +543,21 @@ def collect_schedule_travel_ranking_data(pd):
 
     def get_preseason_odds():
         url = "https://sportsbook.draftkings.com/leagues/football/nfl"
-    
-        headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/102.0.0.0 Safari/537.36'}
-        response = requests.get(url, headers=headers)
+        headers = {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/102.0.0.0 Safari/537.36'
+        }
+        
+        try:
+            response = requests.get(url, headers=headers, timeout=10) # Added timeout
+            print(f"Response Status Code: {response.status_code}")
+            # Optional: Print a small part of the response to check if it's the expected HTML
+            # print(f"Response Text (first 500 chars): {response.text[:500]}") 
+            response.raise_for_status()  # Raises an HTTPError for bad responses (4XX or 5XX)
+        except requests.exceptions.RequestException as e:
+            print(f"Error fetching URL: {e}")
+            return pd.DataFrame()
     
         soup = BeautifulSoup(response.text, 'html.parser')
-    
     
         team_name_mapping = {
             "ARI Cardinals" : "Arizona Cardinals",
@@ -585,56 +594,101 @@ def collect_schedule_travel_ranking_data(pd):
             "WAS Commanders" : 'Washington Commanders'
         }
     
-        # Find all the table rows containing game data
-        game_rows = soup.find_all('tr', class_=['break-line', ''])
-        print(game_rows)
         games = []
-        game_data = {}  # Temporary dictionary to store game data
+        game_data = {} 
     
-        for i, row in enumerate(game_rows):
-            # Extract time only from the first row of a game
-            if 'break-line' in row['class']:
-                time = row.find('span', class_='event-cell__start-time').text
-                game_data['Time'] = time
+        # Find the main table for sports events
+        table = soup.find('table', class_='sportsbook-table')
+        if not table:
+            print("Error: Could not find the main sportsbook table on the page.")
+            return pd.DataFrame()
     
-            # Extract team and odds - handle potential missing elements
-            team = row.find('div', class_='event-cell__name-text')
-            if team:
-                team = team.text.strip()
-                team = team_name_mapping.get(team, team)
-            else:
-                team = None  # Set team to None if not found
+        table_body = table.find('tbody', class_='sportsbook-table__body')
+        if not table_body:
+            print("Error: Could not find the table body.")
+            return pd.DataFrame()
     
+        # Get all <tr> elements directly under <tbody>
+        potential_rows = table_body.find_all('tr', recursive=False)
+        
+        # Filter these rows to get only actual team rows
+        # A team row should contain a 'div' with class 'event-cell__name-text'
+        actual_team_rows = []
+        for row in potential_rows:
+            if row.find('div', class_='event-cell__name-text'):
+                actual_team_rows.append(row)
+        
+        print(f"Found {len(actual_team_rows)} actual team rows to process.")
+    
+        # Process the filtered team rows in pairs (Away, Home)
+        for i, row in enumerate(actual_team_rows):
+            team_name_element = row.find('div', class_='event-cell__name-text')
+            # Moneyline odds are specifically in a span with 'no-margin'
             odds_element = row.find('span', class_='sportsbook-odds american no-margin default-color')
-            if odds_element:
-                odds = odds_element.text.strip().replace('−', '-')
-                odds = int(odds)
-            else:
-                odds = None  # Set odds to None if not found
+            time_element = row.find('span', class_='event-cell__start-time')
     
-            # Assign team and odds to the appropriate key in the game_data dictionary
-            if i % 2 == 0:  # Even index: Away Team
+            # This check should ideally not be needed if actual_team_rows is filtered correctly
+            if not team_name_element:
+                print("Warning: Skipping a row that was expected to be a team row but missing name.")
+                continue
+                
+            team = team_name_element.text.strip()
+            team = team_name_mapping.get(team, team) # Map to full name
+    
+            odds = None
+            if odds_element:
+                odds_text = odds_element.text.strip().replace('−', '-')
+                if odds_text: # Ensure not empty
+                    try:
+                        odds = int(odds_text)
+                    except ValueError:
+                        print(f"Warning: Could not parse odds for {team}: '{odds_text}'")
+                        odds = None # Keep as None if parsing fails
+            
+            if i % 2 == 0:  # This is an Away Team (first team in a pair)
+                game_data = {} # Initialize a new dictionary for the game
+                if time_element:
+                    game_data['Time'] = time_element.text.strip()
+                else:
+                    game_data['Time'] = 'N/A' # Placeholder if time is missing
+                    print(f"Warning: Time element not found for Away Team {team}")
+                
                 game_data['Away Team'] = team
                 game_data['Away Odds'] = odds
-            else:  # Odd index: Home Team
+    
+                # If this is the last row overall and it's an Away team, the game is incomplete
+                if i == len(actual_team_rows) - 1:
+                    print(f"Warning: Game for {team} (Away) is incomplete (missing Home team row).")
+                    # Optionally, you could append this incomplete game if desired:
+                    # games.append(game_data) 
+                    game_data = {} # Clear game_data as it's incomplete
+            
+            else:  # This is a Home Team (second team in a pair)
+                # Check if game_data was initialized by a preceding Away team
+                if 'Away Team' not in game_data:
+                    print(f"Warning: Home team {team} found without a preceding Away team. Skipping this entry.")
+                    game_data = {} # Reset to ensure no carry-over
+                    continue # Skip to the next row
+    
                 game_data['Home Team'] = team
                 game_data['Home Odds'] = odds
-    
-                # Append complete game data to the games list and reset game_data
                 games.append(game_data)
-                game_data = {}
+                game_data = {} # Reset for the next pair (though also reset by Away team logic)
     
-        # Create pandas DataFrame from the extracted data
         df = pd.DataFrame(games)
+        
+        print("--- DataFrame Head ---")
+        print(df.head())
+        print(f"--- Total Games Scraped: {len(df)} ---")
+        
+        # df.to_csv('Live_Scraped_Odds_NFL.csv', index=False) # Corrected filename
+        
+        return df
     
-        st.write(df)
-        df.to_csv('Live Scraped Odds.csv', index=False)
-    
-        live_scraped_odds_nfl_df = df
-    
-        return live_scraped_odds_nfl_df
-            
-    live_scraped_odds_df = get_preseason_odds()
+    if __name__ == '__main__':
+        # This part is for testing the function directly if you run this script
+        print("Fetching NFL preseason odds...")
+        live_scraped_odds_df = get_preseason_odds()
     
     
     def add_odds_to_main_csv():

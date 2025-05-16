@@ -5075,7 +5075,7 @@ st.write('')
 st.write('')
 st.write('')
 
-use_cached_expected_value = 1
+use_cached_expected_value = 0
 use_live_sportsbook_odds = 1
 
 if yes_i_have_customized_rankings:
@@ -5085,11 +5085,11 @@ if yes_i_have_customized_rankings:
 	st.write('- This will not use your customized rankings in the EV calculation process')
 	st.write('- This will NOT have an impact on your customized ranking output, just the EV output')
 	st.write('Last Update: :green[01/01/2025]')
-	use_cached_expected_value = 0 if st.checkbox('Use Cached Expected Value') else 0
+	use_cached_expected_value = 1 if st.checkbox('Use Cached Expected Value') else 0
 	st.write('')
 	st.write('')
 	st.write('')
-	if use_cached_expected_value == 0:
+	if use_cached_expected_value == 1:
             use_live_sportsbook_odds = 1 if st.checkbox('Use Live Sportsbook Odds to calculate win probability (If Available?') else 0
             st.write('')
             st.write("If this is checked, we will use odds from DraftKings to determine a team's win probability. For games where live odds from DraftKings are unavailable, we will use your own internal rankings to determine the predicted spread and win probability.")	

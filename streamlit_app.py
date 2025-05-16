@@ -869,7 +869,7 @@ def collect_schedule_travel_ranking_data(pd):
                 lambda row: get_moneyline_masked(row, odds, 'away'), axis=1
             )
         st.write(csv_df)
-
+        csv_df['Adjusted Spread'] = csv_df['Adjusted Current Difference']
         def get_moneyline(row, odds, team_type):
             spread = round(row['Adjusted Spread'] * 2) / 2
             try:

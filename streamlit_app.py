@@ -625,7 +625,7 @@ def collect_schedule_travel_ranking_data(pd):
                     game_data = {}
 
             df = pd.DataFrame(games)
-            print(df)
+            st.write(df)
             df.to_csv('Live Scraped Odds.csv', index=False)
             return df
         else:  # No data found, create an empty DataFrame
@@ -746,7 +746,7 @@ def collect_schedule_travel_ranking_data(pd):
         #df.to_csv('TEST Manual Odds.csv', index = False)
         # Load the CSV data
         csv_df = df
-        st.write(csv_df)
+
         csv_df['Home Team Moneyline'] = None 
         csv_df['Away Team Moneyline'] = None
         # Update CSV data with scraped odds
@@ -5091,7 +5091,7 @@ if yes_i_have_customized_rankings:
 	st.write('')
 	st.write('')
 	if use_cached_expected_value == 1:
-            use_live_sportsbook_odds = 1 if st.checkbox('Use Live Sportsbook Odds to calculate win probability (If Available?') else 1
+            use_live_sportsbook_odds = 1 if st.checkbox('Use Live Sportsbook Odds to calculate win probability (If Available?') else 0
             st.write('')
             st.write("If this is checked, we will use odds from DraftKings to determine a team's win probability. For games where live odds from DraftKings are unavailable, we will use your own internal rankings to determine the predicted spread and win probability.")	
             st.write('If this is left unchecked, we will use your own internal rankings to determine the predicted spread and win probability for all games.')	
@@ -5134,7 +5134,6 @@ if st.button("Get Optimized Survivor Picks"):
         st.write("Step 2/6: Collecting Travel, Ranking, Odds, and Rest Data...")
         collect_schedule_travel_ranking_data_df = collect_schedule_travel_ranking_data(pd)
         st.write("Step 2 Completed: Travel, Ranking, Odds, and Rest Data Retrieved!")
-        st.write(live_scraped_odds_df)
         st.write("Step 3/6: Predicting Future Pick Percentages of Public...")
     if use_cached_expected_value == 0:
         nfl_schedule_pick_percentages_df = get_predicted_pick_percentages(pd)

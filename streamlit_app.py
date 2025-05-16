@@ -592,68 +592,63 @@ def collect_schedule_travel_ranking_data(pd):
             games = []
             game_data = {}
 
-	    for i, row in enumerate(game_rows):
+            for i, row in enumerate(game_rows):
 	        # --- Key fix for the KeyError ---
 	        # Use .get() to safely access 'class' attribute. It returns an empty list if 'class' is not found.
-	        row_classes = row.get('class', [])
+                row_classes = row.get('class', [])
 	
 	        # Attempt to find essential elements. If not found, this row is likely not a game data row.
-	        team_name_div = row.find('div', class_='event-cell__name-text')
+                team_name_div = row.find('div', class_='event-cell__name-text')
 	        
 	        # If there's no team name, this row isn't part of a game listing in the expected format.
-	        if not team_name_div:
-	            if game_data: # If we were in the middle of parsing a game (e.g., got Away team)
-	                print(f"Skipping row {i} as it's not a team row. Incomplete game data {game_data} discarded.")
-	                game_data = {} # Reset to avoid mispairing
-	            continue # Move to the next row
 	
-	        team = team_name_div.text.strip()
-	        team = team_name_mapping.get(team, team)
+                team = team_name_div.text.strip()
+                team = team_name_mapping.get(team, team)
 	
-	        odds_element = row.find('span', class_='sportsbook-odds american no-margin default-color')
-	        odds = None
-	        if odds_element:
-	            odds_text = odds_element.text.strip().replace('−', '-')
-	            try:
-	                odds = int(odds_text)
-	            except ValueError:
-	                odds = None # Or some other placeholder if conversion fails
+                odds_element = row.find('span', class_='sportsbook-odds american no-margin default-color')
+                odds = None
+                if odds_element:
+                    odds_text = odds_element.text.strip().replace('−', '-')
+                    try:
+                        odds = int(odds_text)
+                    except ValueError:
+                        odds = None # Or some other placeholder if conversion fails
 	
-	        time_span = row.find('span', class_='event-cell__start-time')
-	        current_row_time = None
-	        if time_span:
-	            current_row_time = time_span.text.strip()
+                time_span = row.find('span', class_='event-cell__start-time')
+                current_row_time = None
+                if time_span:
+                    current_row_time = time_span.text.strip()
 	        
 	        # Your original logic used 'break-line' to set the time.
 	        # If 'break-line' is on the second row of a pair, this sets/updates the time for the game.
-	        if 'break-line' in row_classes:
-	            if current_row_time:
-	                game_data['Time'] = current_row_time
+                if 'break-line' in row_classes:
+                    if current_row_time:
+                        game_data['Time'] = current_row_time
 	        
 	        # Logic for pairing teams based on row index (even/odd)
-	        if i % 2 == 0:  # Presumed Away Team (or first team of the pair)
-	            if game_data: # If game_data is not empty, it means the previous pair was incomplete
-	                print(f"Warning: Overwriting incomplete game data: {game_data} with new Away Team: {team}")
-	            game_data = {'Away Team': team, 'Away Odds': odds}
-	            if current_row_time and 'Time' not in game_data: # Set time if not already set by break-line logic from a previous row
-	                game_data['Time'] = current_row_time
-	        else:  # Presumed Home Team (or second team of the pair)
-	            if not game_data or 'Away Team' not in game_data : # We are at an odd row, but no 'Away Team' data started
-	                print(f"Warning: Home team row encountered for '{team}' without prior Away team data. Skipping this row.")
-	                game_data = {} # Reset to avoid carrying over partial data
-	                continue
+                if i % 2 == 0:  # Presumed Away Team (or first team of the pair)
+                    if game_data: # If game_data is not empty, it means the previous pair was incomplete
+                        print(f"Warning: Overwriting incomplete game data: {game_data} with new Away Team: {team}")
+                    game_data = {'Away Team': team, 'Away Odds': odds}
+                    if current_row_time and 'Time' not in game_data: # Set time if not already set by break-line logic from a previous row
+                        game_data['Time'] = current_row_time
+                else:  # Presumed Home Team (or second team of the pair)
+                    if not game_data or 'Away Team' not in game_data : # We are at an odd row, but no 'Away Team' data started
+                        print(f"Warning: Home team row encountered for '{team}' without prior Away team data. Skipping this row.")
+                        game_data = {} # Reset to avoid carrying over partial data
+                        continue
 	
-	            game_data['Home Team'] = team
-	            game_data['Home Odds'] = odds
+                    game_data['Home Team'] = team
+                    game_data['Home Odds'] = odds
 	            
 	            # Ensure 'Time' is set, possibly from this row if not already set.
-	            if current_row_time and 'Time' not in game_data:
-	                game_data['Time'] = current_row_time
-	            elif 'Time' not in game_data: # Fallback if time still not found
-	                 game_data['Time'] = None
+                    if current_row_time and 'Time' not in game_data:
+                         game_data['Time'] = current_row_time
+                    elif 'Time' not in game_data: # Fallback if time still not found
+                        game_data['Time'] = None
 	
-	            games.append(game_data)
-	            game_data = {}  # Reset for the next game
+                    games.append(game_data)
+                    game_data = {}  # Reset for the next game
 
     # Handle any leftover game_data (an unmatched "Away Team")
     if game_data and 'Away Team' in game_data:

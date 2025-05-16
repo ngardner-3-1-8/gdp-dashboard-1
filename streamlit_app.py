@@ -740,7 +740,7 @@ def collect_schedule_travel_ranking_data(pd):
         }
 
         live_odds_df = live_scraped_odds_df
-        st.write(live_scraped_odds_df)
+	st.write(live_odds_df)
         
 
         #df.to_csv('TEST Manual Odds.csv', index = False)
@@ -5134,7 +5134,7 @@ if st.button("Get Optimized Survivor Picks"):
         st.write("Step 2/6: Collecting Travel, Ranking, Odds, and Rest Data...")
         collect_schedule_travel_ranking_data_df = collect_schedule_travel_ranking_data(pd)
         st.write("Step 2 Completed: Travel, Ranking, Odds, and Rest Data Retrieved!")
-        #st.write(collect_schedule_travel_ranking_data_df)
+        st.write(live_scraped_odds_df)
         st.write("Step 3/6: Predicting Future Pick Percentages of Public...")
     if use_cached_expected_value == 0:
         nfl_schedule_pick_percentages_df = get_predicted_pick_percentages(pd)

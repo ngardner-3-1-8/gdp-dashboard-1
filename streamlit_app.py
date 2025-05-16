@@ -5085,7 +5085,7 @@ if yes_i_have_customized_rankings:
 	st.write('- This will not use your customized rankings in the EV calculation process')
 	st.write('- This will NOT have an impact on your customized ranking output, just the EV output')
 	st.write('Last Update: :green[01/01/2025]')
-	use_cached_expected_value = 1 if st.checkbox('Use Cached Expected Value') else 0
+	use_cached_expected_value = 0 if st.checkbox('Use Cached Expected Value') else 0
 	st.write('')
 	st.write('')
 	st.write('')

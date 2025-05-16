@@ -587,7 +587,7 @@ def collect_schedule_travel_ranking_data(pd):
 
         # Find all the table rows containing game data
         game_rows = soup.find_all('tr', class_=['break-line', ''])
-
+        st.write(game_rows)
         if game_rows:  # Check if game_rows is not empty (data exists)
             games = []
             game_data = {}
@@ -625,7 +625,6 @@ def collect_schedule_travel_ranking_data(pd):
                     game_data = {}
 
             df = pd.DataFrame(games)
-            st.write(df)
             df.to_csv('Live Scraped Odds.csv', index=False)
             return df
         else:  # No data found, create an empty DataFrame

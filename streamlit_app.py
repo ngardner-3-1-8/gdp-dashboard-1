@@ -5091,7 +5091,7 @@ if yes_i_have_customized_rankings:
 	st.write('')
 	st.write('')
 	if use_cached_expected_value == 1:
-            use_live_sportsbook_odds = 1 if st.checkbox('Use Live Sportsbook Odds to calculate win probability (If Available?') else 0
+            use_live_sportsbook_odds = 1 if st.checkbox('Use Live Sportsbook Odds to calculate win probability (If Available?') else 1
             st.write('')
             st.write("If this is checked, we will use odds from DraftKings to determine a team's win probability. For games where live odds from DraftKings are unavailable, we will use your own internal rankings to determine the predicted spread and win probability.")	
             st.write('If this is left unchecked, we will use your own internal rankings to determine the predicted spread and win probability for all games.')	

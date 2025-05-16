@@ -693,7 +693,7 @@ def collect_schedule_travel_ranking_data(pd):
         return df
  
     live_scraped_odds_df = get_preseason_odds()
-    
+    st.write(df)
 # Define this function globally or ensure it's accessible
     def add_odds_to_main_csv():
         # 0: Stadium | 1: Lattitude | 2: Longitude | 3: Timezone | 4: Division | 5: Start of 2023 Season Rank | 6: Current Rank | 7: Average points better than Average Team (Used for Spread and Odds Calculation)

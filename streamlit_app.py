@@ -543,13 +543,13 @@ def collect_schedule_travel_ranking_data(pd):
 
     def get_preseason_odds():
         url = "https://sportsbook.draftkings.com/leagues/football/nfl"
-
+    
         headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/102.0.0.0 Safari/537.36'}
         response = requests.get(url, headers=headers)
-
+    
         soup = BeautifulSoup(response.text, 'html.parser')
-
-
+    
+    
         team_name_mapping = {
             "ARI Cardinals" : "Arizona Cardinals",
             "ATL Falcons" : "Atlanta Falcons",
@@ -584,96 +584,56 @@ def collect_schedule_travel_ranking_data(pd):
             "TEN Titans" : 'Tennessee Titans',
             "WAS Commanders" : 'Washington Commanders'
         }
-
-        # Find all the table rows containing game data
-        game_rows = soup.find_all('tr')
-        st.write(game_rows)
-        if game_rows:  # Check if game_rows is not empty (data exists)
-            games = []
-            game_data = {}
-
-            for i, row in enumerate(game_rows):
-	        # --- Key fix for the KeyError ---
-	        # Use .get() to safely access 'class' attribute. It returns an empty list if 'class' is not found.
-                row_classes = row.get('class', [])
-	
-	        # Attempt to find essential elements. If not found, this row is likely not a game data row.
-                team_name_div = row.find('div', class_='event-cell__name-text')
-	        
-	        # If there's no team name, this row isn't part of a game listing in the expected format.
-	
-                team = team_name_div.text.strip()
-                team = team_name_mapping.get(team, team)
-	
-                odds_element = row.find('span', class_='sportsbook-odds american no-margin default-color')
-                odds = None
-                if odds_element:
-                    odds_text = odds_element.text.strip().replace('−', '-')
-                    try:
-                        odds = int(odds_text)
-                    except ValueError:
-                        odds = None # Or some other placeholder if conversion fails
-	
-                time_span = row.find('span', class_='event-cell__start-time')
-                current_row_time = None
-                if time_span:
-                    current_row_time = time_span.text.strip()
-	        
-	        # Your original logic used 'break-line' to set the time.
-	        # If 'break-line' is on the second row of a pair, this sets/updates the time for the game.
-                if 'break-line' in row_classes:
-                    if current_row_time:
-                        game_data['Time'] = current_row_time
-	        
-	        # Logic for pairing teams based on row index (even/odd)
-                if i % 2 == 0:  # Presumed Away Team (or first team of the pair)
-                    if game_data: # If game_data is not empty, it means the previous pair was incomplete
-                        print(f"Warning: Overwriting incomplete game data: {game_data} with new Away Team: {team}")
-                    game_data = {'Away Team': team, 'Away Odds': odds}
-                    if current_row_time and 'Time' not in game_data: # Set time if not already set by break-line logic from a previous row
-                        game_data['Time'] = current_row_time
-                else:  # Presumed Home Team (or second team of the pair)
-                    if not game_data or 'Away Team' not in game_data : # We are at an odd row, but no 'Away Team' data started
-                        print(f"Warning: Home team row encountered for '{team}' without prior Away team data. Skipping this row.")
-                        game_data = {} # Reset to avoid carrying over partial data
-                        continue
-	
-                    game_data['Home Team'] = team
-                    game_data['Home Odds'] = odds
-	            
-	            # Ensure 'Time' is set, possibly from this row if not already set.
-                    if current_row_time and 'Time' not in game_data:
-                         game_data['Time'] = current_row_time
-                    elif 'Time' not in game_data: # Fallback if time still not found
-                        game_data['Time'] = None
-	
-                    games.append(game_data)
-                    game_data = {}  # Reset for the next game
-
-            # Handle any leftover game_data (an unmatched "Away Team")
-            if game_data and 'Away Team' in game_data:
-                print(f"Warning: Unmatched Away Team data at the end: {game_data}. Discarding.")
-                # Optionally, you could append it as an incomplete game:
-                # game_data['Home Team'] = None
-                # game_data['Home Odds'] = None
-                # if 'Time' not in game_data: game_data['Time'] = None
-                # games.append(game_data)
-
-            if not games:
-                print("No complete games were parsed. Returning empty DataFrame.")
-                return pd.DataFrame(columns=["Away Team", "Away Odds", "Home Team", "Home Odds", "Time"])
-        
-            df = pd.DataFrame(games)
     
-            # Ensure 'Time' column exists, even if some games didn't have it.
-            if 'Time' not in df.columns:
-                if not df.empty: # Add column only if df is not empty
-                    df['Time'] = None
-                else: # If df is empty, recreate it with all columns for schema consistency
-                    return pd.DataFrame(columns=["Away Team", "Away Odds", "Home Team", "Home Odds", "Time"])
+        # Find all the table rows containing game data
+        game_rows = soup.find_all('tr', class_=['break-line', ''])
+        print(game_rows)
+        games = []
+        game_data = {}  # Temporary dictionary to store game data
+    
+        for i, row in enumerate(game_rows):
+            # Extract time only from the first row of a game
+            if 'break-line' in row['class']:
+                time = row.find('span', class_='event-cell__start-time').text
+                game_data['Time'] = time
+    
+            # Extract team and odds - handle potential missing elements
+            team = row.find('div', class_='event-cell__name-text')
+            if team:
+                team = team.text.strip()
+                team = team_name_mapping.get(team, team)
+            else:
+                team = None  # Set team to None if not found
+    
+            odds_element = row.find('span', class_='sportsbook-odds american no-margin default-color')
+            if odds_element:
+                odds = odds_element.text.strip().replace('−', '-')
+                odds = int(odds)
+            else:
+                odds = None  # Set odds to None if not found
+    
+            # Assign team and odds to the appropriate key in the game_data dictionary
+            if i % 2 == 0:  # Even index: Away Team
+                game_data['Away Team'] = team
+                game_data['Away Odds'] = odds
+            else:  # Odd index: Home Team
+                game_data['Home Team'] = team
+                game_data['Home Odds'] = odds
+    
+                # Append complete game data to the games list and reset game_data
+                games.append(game_data)
+                game_data = {}
+    
+        # Create pandas DataFrame from the extracted data
+        df = pd.DataFrame(games)
+    
+        st.write(df)
+        df.to_csv('Live Scraped Odds.csv', index=False)
+    
+        live_scraped_odds_nfl_df = df
+    
+        return live_scraped_odds_nfl_df
             
-            return df
-
     live_scraped_odds_df = get_preseason_odds()
     
     

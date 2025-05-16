@@ -5143,9 +5143,9 @@ if st.button("Get Optimized Survivor Picks"):
     if use_cached_expected_value == 1:
         nfl_schedule_pick_percentages_df = get_predicted_pick_percentages(pd)
         if selected_contest == 'Circa':
-            full_df_with_ev = pd.read_csv('NFL Schedule with full ev_circa.csv')
+            full_df_with_ev = nfl_schedule_pick_percentages_df #pd.read_csv('NFL Schedule with full ev_circa.csv')
         else:
-            full_df_with_ev = pd.read_csv('NFL Schedule with full ev_dk.csv')
+            full_df_with_ev = nfl_schedule_pick_percentages_df #pd.read_csv('NFL Schedule with full ev_dk.csv')
         st.write("Step 3 Completed: Public Pick Percentages Predicted")
         st.write("Step 4: Calculating Expected Value...")
         st.write('- Using Cached Expected Values...')

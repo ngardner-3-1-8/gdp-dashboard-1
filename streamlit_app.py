@@ -541,6 +541,10 @@ def collect_schedule_travel_ranking_data(pd):
             df.loc[index, 'Away Team Short Rest'] = 'Yes'
 
 
+import requests
+    from bs4 import BeautifulSoup
+    import pandas as pd
+    
     def get_preseason_odds():
         url = "https://sportsbook.draftkings.com/leagues/football/nfl"
         headers = {
@@ -548,11 +552,11 @@ def collect_schedule_travel_ranking_data(pd):
         }
         
         try:
-            response = requests.get(url, headers=headers, timeout=10) # Added timeout
+            response = requests.get(url, headers=headers, timeout=15) # Increased timeout slightly
             print(f"Response Status Code: {response.status_code}")
             # Optional: Print a small part of the response to check if it's the expected HTML
-            # print(f"Response Text (first 500 chars): {response.text[:500]}") 
-            response.raise_for_status()  # Raises an HTTPError for bad responses (4XX or 5XX)
+            # print(f"Response Text (first 1000 chars): {response.text[:1000]}") 
+            response.raise_for_status()
         except requests.exceptions.RequestException as e:
             print(f"Error fetching URL: {e}")
             return pd.DataFrame()
@@ -595,100 +599,104 @@ def collect_schedule_travel_ranking_data(pd):
         }
     
         games = []
-        game_data = {} 
-    
-        # Find the main table for sports events
-        table = soup.find('table', class_='sportsbook-table')
-        if not table:
-            print("Error: Could not find the main sportsbook table on the page.")
-            return pd.DataFrame()
-    
-        table_body = table.find('tbody', class_='sportsbook-table__body')
-        if not table_body:
-            print("Error: Could not find the table body.")
-            return pd.DataFrame()
-    
-        # Get all <tr> elements directly under <tbody>
-        potential_rows = table_body.find_all('tr', recursive=False)
         
-        # Filter these rows to get only actual team rows
-        # A team row should contain a 'div' with class 'event-cell__name-text'
-        actual_team_rows = []
-        for row in potential_rows:
-            if row.find('div', class_='event-cell__name-text'):
-                actual_team_rows.append(row)
+        # Find all date-specific game cards/sections
+        game_cards = soup.find_all('div', class_='parlay-card-10-a')
+        if not game_cards:
+            print("Error: No game cards (div.parlay-card-10-a) found on the page.")
+            return pd.DataFrame()
         
-        print(f"Found {len(actual_team_rows)} actual team rows to process.")
+        print(f"Found {len(game_cards)} game date cards/sections.")
     
-        # Process the filtered team rows in pairs (Away, Home)
-        for i, row in enumerate(actual_team_rows):
-            team_name_element = row.find('div', class_='event-cell__name-text')
-            # Moneyline odds are specifically in a span with 'no-margin'
-            odds_element = row.find('span', class_='sportsbook-odds american no-margin default-color')
-            time_element = row.find('span', class_='event-cell__start-time')
-    
-            # This check should ideally not be needed if actual_team_rows is filtered correctly
-            if not team_name_element:
-                print("Warning: Skipping a row that was expected to be a team row but missing name.")
+        for card_index, card in enumerate(game_cards):
+            # Find the table within this card
+            table = card.find('table', class_='sportsbook-table')
+            if not table:
+                print(f"Warning: No sportsbook-table found in card {card_index + 1}.")
                 continue
-                
-            team = team_name_element.text.strip()
-            team = team_name_mapping.get(team, team) # Map to full name
     
-            odds = None
-            if odds_element:
-                odds_text = odds_element.text.strip().replace('−', '-')
-                if odds_text: # Ensure not empty
-                    try:
-                        odds = int(odds_text)
-                    except ValueError:
-                        print(f"Warning: Could not parse odds for {team}: '{odds_text}'")
-                        odds = None # Keep as None if parsing fails
+            # Extract the date from the table header
+            current_date = "Unknown Date"
+            thead = table.find('thead')
+            if thead:
+                date_header_title = thead.find('div', class_='sportsbook-table-header__title')
+                if date_header_title:
+                    date_span = date_header_title.find_all('span', recursive=False) # Find direct children spans
+                    if len(date_span) > 0 and date_span[0].find('span'): # Check for nested span
+                         current_date = date_span[0].find('span').text.strip()
+                    elif date_span: # Fallback if no nested span
+                        current_date = date_span[0].text.strip()
+    
+    
+            print(f"\nProcessing table for date: {current_date}")
+    
+            table_body = table.find('tbody', class_='sportsbook-table__body')
+            if not table_body:
+                print(f"Warning: No table body found for table under date {current_date}.")
+                continue
+    
+            potential_rows = table_body.find_all('tr', recursive=False)
+            actual_team_rows = []
+            for row in potential_rows:
+                if row.find('div', class_='event-cell__name-text'):
+                    actual_team_rows.append(row)
             
-            if i % 2 == 0:  # This is an Away Team (first team in a pair)
-                game_data = {} # Initialize a new dictionary for the game
-                if time_element:
-                    game_data['Time'] = time_element.text.strip()
-                else:
-                    game_data['Time'] = 'N/A' # Placeholder if time is missing
-                    print(f"Warning: Time element not found for Away Team {team}")
-                
-                game_data['Away Team'] = team
-                game_data['Away Odds'] = odds
-    
-                # If this is the last row overall and it's an Away team, the game is incomplete
-                if i == len(actual_team_rows) - 1:
-                    print(f"Warning: Game for {team} (Away) is incomplete (missing Home team row).")
-                    # Optionally, you could append this incomplete game if desired:
-                    # games.append(game_data) 
-                    game_data = {} # Clear game_data as it's incomplete
+            print(f"Found {len(actual_team_rows)} actual team rows for {current_date}.")
             
-            else:  # This is a Home Team (second team in a pair)
-                # Check if game_data was initialized by a preceding Away team
-                if 'Away Team' not in game_data:
-                    print(f"Warning: Home team {team} found without a preceding Away team. Skipping this entry.")
-                    game_data = {} # Reset to ensure no carry-over
-                    continue # Skip to the next row
+            game_data = {} # Initialize for each new table/date section
+            for i, row in enumerate(actual_team_rows):
+                team_name_element = row.find('div', class_='event-cell__name-text')
+                odds_element = row.find('span', class_='sportsbook-odds american no-margin default-color')
+                time_element = row.find('span', class_='event-cell__start-time')
     
-                game_data['Home Team'] = team
-                game_data['Home Odds'] = odds
-                games.append(game_data)
-                game_data = {} # Reset for the next pair (though also reset by Away team logic)
+                if not team_name_element:
+                    print("Warning: Skipping a row that was expected to be a team row but missing name.")
+                    continue
+                    
+                team = team_name_element.text.strip()
+                team = team_name_mapping.get(team, team)
+    
+                odds = None
+                if odds_element:
+                    odds_text = odds_element.text.strip().replace('−', '-')
+                    if odds_text:
+                        try:
+                            odds = int(odds_text)
+                        except ValueError:
+                            print(f"Warning: Could not parse odds for {team} on {current_date}: '{odds_text}'")
+                            odds = None
+                
+                if i % 2 == 0:  # Away Team
+                    game_data = {'Date': current_date} # Start new game data, include current_date
+                    if time_element:
+                        game_data['Time'] = time_element.text.strip()
+                    else:
+                        game_data['Time'] = 'N/A'
+                        print(f"Warning: Time element not found for Away Team {team} on {current_date}")
+                    
+                    game_data['Away Team'] = team
+                    game_data['Away Odds'] = odds
+    
+                    if i == len(actual_team_rows) - 1: # Last row is an unmatched Away team
+                        print(f"Warning: Game for {team} (Away) on {current_date} is incomplete.")
+                        # games.append(game_data) # Optionally append incomplete game
+                        game_data = {} 
+                
+                else:  # Home Team
+                    if 'Away Team' not in game_data:
+                        print(f"Warning: Home team {team} on {current_date} found without a preceding Away team. Skipping.")
+                        game_data = {} 
+                        continue
+    
+                    game_data['Home Team'] = team
+                    game_data['Home Odds'] = odds
+                    games.append(game_data)
+                    game_data = {} # Reset for the next pair
     
         df = pd.DataFrame(games)
-        
-        print("--- DataFrame Head ---")
-        print(df.head())
-        print(f"--- Total Games Scraped: {len(df)} ---")
-        
-        # df.to_csv('Live_Scraped_Odds_NFL.csv', index=False) # Corrected filename
-        
         return df
-    
-    if __name__ == '__main__':
-        # This part is for testing the function directly if you run this script
-        print("Fetching NFL preseason odds...")
-        live_scraped_odds_df = get_preseason_odds()
+ 
+    live_scraped_odds_df = get_preseason_odds()
     
     
     def add_odds_to_main_csv():

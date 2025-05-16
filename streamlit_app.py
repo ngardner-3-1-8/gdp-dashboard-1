@@ -798,7 +798,6 @@ def collect_schedule_travel_ranking_data(pd):
         }
 
         live_odds_df = live_scraped_odds_df
-        st.write(live_odds_df)
         
 
         #df.to_csv('TEST Manual Odds.csv', index = False)
@@ -869,6 +868,7 @@ def collect_schedule_travel_ranking_data(pd):
             csv_df['Away Team Moneyline'] = csv_df.apply(
                 lambda row: get_moneyline_masked(row, odds, 'away'), axis=1
             )
+        st.write(csv_df)
 
         def get_moneyline(row, odds, team_type):
             spread = round(row['Adjusted Spread'] * 2) / 2

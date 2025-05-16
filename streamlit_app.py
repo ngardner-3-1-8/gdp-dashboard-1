@@ -39,7 +39,7 @@ def collect_schedule_travel_ranking_data(pd):
     data = []
     # Initialize a variable to hold the last valid date and week
     last_date = None
-    start_date_str = 'September 4, 2024'
+    start_date_str = 'September 3, 2025'
     start_date = parse(start_date_str)
     week = 1
     # Initialize a dictionary to store the last game date for each team
@@ -136,9 +136,9 @@ def collect_schedule_travel_ranking_data(pd):
                 date = parse(date_str)
                 if date.month == 1:
                     # Change the year to 2025
-                    date = date.replace(year=2025)
+                    date = date.replace(year=2026)
                 else:
-                    date = date.replace(year=2024)
+                    date = date.replace(year=2025)
                 # Adjust week for games on or after November 30th
                 #if date >= pd.Timestamp('2024-11-30'):
                     #week += 1
@@ -221,10 +221,10 @@ def collect_schedule_travel_ranking_data(pd):
 
 
     if selected_contest == 'Circa':
-        df.loc[df['Date'] >= pd.to_datetime('2024-11-30'), 'Week'] += 1
-        df.loc[df['Date'] >= pd.to_datetime('2024-12-27'), 'Week'] += 1
-        df.loc[df['Date'] >= pd.to_datetime('2024-11-30'), 'Week_Num'] += 1
-        df.loc[df['Date'] >= pd.to_datetime('2024-12-27'), 'Week_Num'] += 1
+        df.loc[df['Date'] >= pd.to_datetime('2025-11-29'), 'Week'] += 1
+        df.loc[df['Date'] >= pd.to_datetime('2025-12-26'), 'Week'] += 1
+        df.loc[df['Date'] >= pd.to_datetime('2025-11-29'), 'Week_Num'] += 1
+        df.loc[df['Date'] >= pd.to_datetime('2025-12-26'), 'Week_Num'] += 1
 
     # Convert 'Week' back to string format if needed
     df['Week'] = 'Week ' + df['Week'].astype(str)

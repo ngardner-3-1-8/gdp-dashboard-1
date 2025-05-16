@@ -650,29 +650,29 @@ def collect_schedule_travel_ranking_data(pd):
                     games.append(game_data)
                     game_data = {}  # Reset for the next game
 
-    # Handle any leftover game_data (an unmatched "Away Team")
-    if game_data and 'Away Team' in game_data:
-        print(f"Warning: Unmatched Away Team data at the end: {game_data}. Discarding.")
-        # Optionally, you could append it as an incomplete game:
-        # game_data['Home Team'] = None
-        # game_data['Home Odds'] = None
-        # if 'Time' not in game_data: game_data['Time'] = None
-        # games.append(game_data)
+            # Handle any leftover game_data (an unmatched "Away Team")
+            if game_data and 'Away Team' in game_data:
+                print(f"Warning: Unmatched Away Team data at the end: {game_data}. Discarding.")
+                # Optionally, you could append it as an incomplete game:
+                # game_data['Home Team'] = None
+                # game_data['Home Odds'] = None
+                # if 'Time' not in game_data: game_data['Time'] = None
+                # games.append(game_data)
 
-    if not games:
-        print("No complete games were parsed. Returning empty DataFrame.")
-        return pd.DataFrame(columns=["Away Team", "Away Odds", "Home Team", "Home Odds", "Time"])
+            if not games:
+                print("No complete games were parsed. Returning empty DataFrame.")
+                return pd.DataFrame(columns=["Away Team", "Away Odds", "Home Team", "Home Odds", "Time"])
         
-    df = pd.DataFrame(games)
+            df = pd.DataFrame(games)
     
-    # Ensure 'Time' column exists, even if some games didn't have it.
-    if 'Time' not in df.columns:
-        if not df.empty: # Add column only if df is not empty
-            df['Time'] = None
-        else: # If df is empty, recreate it with all columns for schema consistency
-            return pd.DataFrame(columns=["Away Team", "Away Odds", "Home Team", "Home Odds", "Time"])
+            # Ensure 'Time' column exists, even if some games didn't have it.
+            if 'Time' not in df.columns:
+                if not df.empty: # Add column only if df is not empty
+                    df['Time'] = None
+                else: # If df is empty, recreate it with all columns for schema consistency
+                    return pd.DataFrame(columns=["Away Team", "Away Odds", "Home Team", "Home Odds", "Time"])
             
-    return df
+            return df
 
     live_scraped_odds_df = get_preseason_odds()
     

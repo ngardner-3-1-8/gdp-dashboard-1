@@ -693,7 +693,7 @@ def collect_schedule_travel_ranking_data(pd):
         return df
  
     live_scraped_odds_df = get_preseason_odds()
-# Define this function globally or ensure it's accessible
+
     def add_odds_to_main_csv():
         # 0: Stadium | 1: Lattitude | 2: Longitude | 3: Timezone | 4: Division | 5: Start of 2023 Season Rank | 6: Current Rank | 7: Average points better than Average Team (Used for Spread and Odds Calculation)
         stadiums = {
@@ -1425,7 +1425,7 @@ def calculate_ev(nfl_schedule_pick_percentages_df, starting_week, ending_week, s
             winning_teams = np.where(outcome == 'Home Win', week_df['Home Team'].values, week_df['Away Team'].values)  # Use .values for numpy array
             winning_team_indices = np.isin(teams, winning_teams)
 
-            if use_cached_expected_value == 1:
+            if use_live_sportsbook_odds == 1:
                 winning_probs = np.where(outcome == 'Home Win', week_df['Home Team Fair Odds'].values, week_df['Away Team Fair Odds'].values) # Use .values for numpy array
             else:
                 winning_probs = np.where(outcome == 'Home Win', week_df['Internal Home Team Fair Odds'].values, week_df['Internal Away Team Fair Odds'].values) # Use .values for numpy array

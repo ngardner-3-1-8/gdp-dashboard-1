@@ -820,27 +820,27 @@ def collect_schedule_travel_ranking_data(pd):
         mask = csv_df['Home Team Moneyline'].isna()
         # Only apply calculations if the 'Home Odds' column is empty
 
-        if mask.any():
-            # Adjust Average Points Difference for Favorite/Underdog Determination
-            csv_df['Adjusted Home Points'] = csv_df['Home Team Adjusted Current Rank']
-            csv_df['Adjusted Away Points'] = csv_df['Away Team Adjusted Current Rank']
+#        if mask.any():
+        # Adjust Average Points Difference for Favorite/Underdog Determination
+        csv_df['Adjusted Home Points'] = csv_df['Home Team Adjusted Current Rank']
+        csv_df['Adjusted Away Points'] = csv_df['Away Team Adjusted Current Rank']
 
-            csv_df['Preseason Spread'] = abs(csv_df['Away Team Adjusted Preseason Rank'] - csv_df['Home Team Adjusted Preseason Rank'])
+        csv_df['Preseason Spread'] = abs(csv_df['Away Team Adjusted Preseason Rank'] - csv_df['Home Team Adjusted Preseason Rank'])
 
-            # Determine Favorite and Underdog
-            csv_df['Favorite'] = csv_df.apply(lambda row: row['Home Team'] if row['Home Team Adjusted Current Rank'] >= row['Away Team Adjusted Current Rank'] else row['Away Team'], axis=1)
-            csv_df['Underdog'] = csv_df.apply(lambda row: row['Home Team'] if row['Home Team Adjusted Current Rank'] < row['Away Team Adjusted Current Rank'] else row['Away Team'], axis=1)
+        # Determine Favorite and Underdog
+        csv_df['Favorite'] = csv_df.apply(lambda row: row['Home Team'] if row['Home Team Adjusted Current Rank'] >= row['Away Team Adjusted Current Rank'] else row['Away Team'], axis=1)
+        csv_df['Underdog'] = csv_df.apply(lambda row: row['Home Team'] if row['Home Team Adjusted Current Rank'] < row['Away Team Adjusted Current Rank'] else row['Away Team'], axis=1)
 
-            # Adjust Spread based on Favorite
-            csv_df['Adjusted Spread'] = abs(csv_df['Away Team Adjusted Current Rank'] - csv_df['Home Team Adjusted Current Rank'])
+        # Adjust Spread based on Favorite
+        csv_df['Adjusted Spread'] = abs(csv_df['Away Team Adjusted Current Rank'] - csv_df['Home Team Adjusted Current Rank'])
 
-            # Overwrite Odds based on Spread and Favorite/Underdog
-            csv_df['Home Team Moneyline'] = csv_df.apply(
-               lambda row: get_moneyline_masked(row, odds, 'home'), axis=1
-            )
-            csv_df['Away Team Moneyline'] = csv_df.apply(
-                lambda row: get_moneyline_masked(row, odds, 'away'), axis=1
-            )
+        # Overwrite Odds based on Spread and Favorite/Underdog
+        csv_df['Home Team Moneyline'] = csv_df.apply(
+        lambda row: get_moneyline_masked(row, odds, 'home'), axis=1
+        )
+        csv_df['Away Team Moneyline'] = csv_df.apply(
+        lambda row: get_moneyline_masked(row, odds, 'away'), axis=1
+        )
         def get_moneyline(row, odds, team_type):
             spread = round(row['Adjusted Spread'] * 2) / 2
             try:

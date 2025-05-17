@@ -819,7 +819,6 @@ def collect_schedule_travel_ranking_data(pd):
 		
                 # Create the mask for where there is no 'Home Odds'
         mask = csv_df['Home Team Moneyline'].isna()
-        st.write(mask)	
         # Only apply calculations if the 'Home Odds' column is empty
         def get_moneyline_masked(row, odds, team_type):
             spread = round(row['Adjusted Spread'] * 2) / 2
@@ -869,8 +868,6 @@ def collect_schedule_travel_ranking_data(pd):
             csv_df['Away Team Moneyline'] = csv_df.apply(
                 lambda row: get_moneyline_masked(row, odds, 'away'), axis=1
             )
-        st.write(csv_df)
-        csv_df['Adjusted Spread'] = csv_df['Adjusted Current Difference']
         def get_moneyline(row, odds, team_type):
             spread = round(row['Adjusted Spread'] * 2) / 2
             try:

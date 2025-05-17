@@ -1408,7 +1408,7 @@ def get_predicted_pick_percentages(pd):
 
 
 def calculate_ev(nfl_schedule_pick_percentages_df, starting_week, ending_week, selected_contest, use_cached_expected_value):
-
+    
     def calculate_all_scenarios(week_df):
         num_games = len(week_df)
         teams = week_df['Home Team'].tolist() + week_df['Away Team'].tolist()
@@ -1451,6 +1451,9 @@ def calculate_ev(nfl_schedule_pick_percentages_df, starting_week, ending_week, s
 
     for week in tqdm(range(starting_week, ending_week), desc="Processing Weeks", leave=False):
         week_df = nfl_schedule_pick_percentages_df[nfl_schedule_pick_percentages_df['Week_Num'] == week].copy() # Create a copy to avoid SettingWithCopyWarning
+        st.write("Week DF")
+	st.write(week)
+        st.write(week_df)
         weighted_avg_ev, all_outcomes, scenario_weights = calculate_all_scenarios(week_df)
 
         #Store the EV values for the current week

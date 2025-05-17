@@ -212,10 +212,10 @@ def collect_schedule_travel_ranking_data(pd):
                                      'Away Cumulative Rest Advantage', 'Home Cumulative Rest Advantage','Actual Stadium', 'Back to Back Away Games'])
 
 
-    df['Date'] = df['Date'].str.replace(r'(\w+)\s(\w+)\s(\d+)', r'\2 \3, 2024', regex=True)
+    df['Date'] = df['Date'].str.replace(r'(\w+)\s(\w+)\s(\d+)', r'\2 \3, 2025', regex=True)
     df['Date'] = pd.to_datetime(df['Date'], format='%b %d, %Y')
     # Adjust January games to 2025 in the DataFrame
-    df['Date'] = df['Date'].apply(lambda x: x.replace(year=2025) if x.month == 1 else x)
+    df['Date'] = df['Date'].apply(lambda x: x.replace(year=2026) if x.month == 1 else x)
     df['Week_Num'] = df['Week'].str.replace('Week ', '').astype(int)
     df['Week'] = df['Week'].str.replace('Week ', '', regex=False).astype(int)
 
@@ -1165,12 +1165,12 @@ def get_predicted_pick_percentages(pd):
 
     # Read the CSV file into a DataFrame
     
-    df = collect_schedule_travel_ranking_data_df
+    new_df = collect_schedule_travel_ranking_data_df
 
     # Create a new DataFrame with selected columns
     selected_columns = ['Week', 'Away Team', 'Home Team', 'Away Team Fair Odds',
                         'Home Team Fair Odds', 'Away Team Star Rating', 'Home Team Star Rating', 'Divisional Matchup Boolean', 'Away Team Thanksgiving Favorite', 'Home Team Thanksgiving Favorite', 'Away Team Christmas Favorite', 'Home Team Christmas Favorite']
-    new_df = df[selected_columns]
+    new_df = new_df[selected_columns]
 
     # Read the original CSV file into a DataFrame
     #csv_path = 'nfl_Schedule_circa.csv'
@@ -1185,7 +1185,7 @@ def get_predicted_pick_percentages(pd):
         'Away Team Star Rating': 'Future Value (Stars)',
         'Divisional Matchup Boolean': 'Divisional Matchup?'
     })
-    away_df['Year'] = 2024
+    away_df['Year'] = 2025
     away_df['Home/Away'] = 'Away'
     away_df['Away Team'] = 1
     # Add the "Pick %" and "EV" columns (initially empty)
@@ -1209,7 +1209,7 @@ def get_predicted_pick_percentages(pd):
         'Home Team Star Rating': 'Future Value (Stars)',
         'Divisional Matchup Boolean': 'Divisional Matchup?'
     })
-    home_df['Year'] = 2024
+    home_df['Year'] = 2025
     home_df['Home/Away'] = 'Home'
     home_df['Away Team'] = 0
     # Add the "Pick %" and "EV" columns (initially empty)

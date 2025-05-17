@@ -848,15 +848,6 @@ def collect_schedule_travel_ranking_data(pd):
                         return moneyline_tuple[0]
                     else:
                         return moneyline_tuple[1]
-			    
-        # Overwrite Odds based on Spread and Favorite/Underdog
-        csv_df['Home Team Moneyline'] = csv_df.apply(
-        lambda row: get_moneyline(row, odds, 'home'), axis=1
-        )
-        csv_df['Away Team Moneyline'] = csv_df.apply(
-        lambda row: get_moneyline(row, odds, 'away'), axis=1
-        )
-
 
             except KeyError:
                 if team_type == 'home':
@@ -889,6 +880,7 @@ def collect_schedule_travel_ranking_data(pd):
                 csv_df.loc[index, 'Home team Implied Odds to Win'] = 100 / (row['Home Team Moneyline'] + 100)
             else:
                 csv_df.loc[index, 'Home team Implied Odds to Win'] = abs(row['Home Team Moneyline']) / (abs(row['Home Team Moneyline']) + 100)
+		    
             if row['Internal Away Team Moneyline'] > 0:
                 csv_df.loc[index, 'Internal Away Team Implied Odds to Win'] = 100 / (row['Internal Away Team Moneyline'] + 100)
             else:

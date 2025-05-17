@@ -5163,7 +5163,6 @@ if st.button("Get Optimized Survivor Picks"):
         nfl_schedule_pick_percentages_df = get_predicted_pick_percentages(pd)
         st.write("Step 3 Completed: Public Pick Percentages Predicted")
         #nfl_schedule_circa_df_2 = manually_adjust_pick_predictions()
-        st.write("Step 4/9: Calculating Expected Value (Could take several hours)...")
     if use_cached_expected_value == 1:
         nfl_schedule_pick_percentages_df = get_predicted_pick_percentages(pd)
         if selected_contest == 'Circa':
@@ -5171,10 +5170,9 @@ if st.button("Get Optimized Survivor Picks"):
         else:
             full_df_with_ev = nfl_schedule_pick_percentages_df #pd.read_csv('NFL Schedule with full ev_dk.csv')
         st.write("Step 3 Completed: Public Pick Percentages Predicted")
-        st.write("Step 4: Calculating Expected Value...")
         st.write('- Using Cached Expected Values...')
     else:
-        st.write("Step 4/6: Calculating Live Expected Value...")
+        st.write("Step 4/6: Calculating Live Expected Value (Will take 5-10 mins)...")
         with st.spinner('Processing...'):
             full_df_with_ev = calculate_ev(nfl_schedule_pick_percentages_df, starting_week, ending_week, selected_contest, use_cached_expected_value)
             st.write("Processing Complete!")
@@ -5182,7 +5180,7 @@ if st.button("Get Optimized Survivor Picks"):
     st.write("Step 4 Completed: Expected Value Calculated")
     st.subheader('Full Dataset')
     st.write(full_df_with_ev)
-    st.write('Step 5/6: Calculating Best Comnbination of Picks Based on EV...')
+    st.write('Step 5/6: Calculating Best Combination of Picks Based on EV...')
     st.write('')
 
 

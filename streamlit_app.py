@@ -1126,6 +1126,7 @@ def collect_schedule_travel_ranking_data(pd):
     collect_schedule_travel_ranking_data_nfl_schedule_df = consolidated_df
     
     return collect_schedule_travel_ranking_data_nfl_schedule_df
+collect_schedule_travel_ranking_data_nfl_schedule_df = collect_schedule_travel_ranking_data
 st.write(collect_schedule_travel_ranking_data_nfl_schedule_df)
 
 def get_predicted_pick_percentages(pd):

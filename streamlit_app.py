@@ -5158,6 +5158,7 @@ if st.button("Get Optimized Survivor Picks"):
         st.write("Step 2/6: Collecting Travel, Ranking, Odds, and Rest Data...")
         collect_schedule_travel_ranking_data_df = collect_schedule_travel_ranking_data(pd)
         st.write("Step 2 Completed: Travel, Ranking, Odds, and Rest Data Retrieved!")
+        st.write(collect_schedule_travel_ranking_data_df)
         st.write("Step 3/6: Predicting Future Pick Percentages of Public...")
     if use_cached_expected_value == 0:
         nfl_schedule_pick_percentages_df = get_predicted_pick_percentages(pd)
@@ -5166,9 +5167,9 @@ if st.button("Get Optimized Survivor Picks"):
     if use_cached_expected_value == 1:
         nfl_schedule_pick_percentages_df = get_predicted_pick_percentages(pd)
         if selected_contest == 'Circa':
-            full_df_with_ev = nfl_schedule_pick_percentages_df #pd.read_csv('NFL Schedule with full ev_circa.csv')
+            full_df_with_ev = nfl_schedule_pick_percentages_df_circa #pd.read_csv('NFL Schedule with full ev_circa.csv')
         else:
-            full_df_with_ev = nfl_schedule_pick_percentages_df #pd.read_csv('NFL Schedule with full ev_dk.csv')
+            full_df_with_ev = nfl_schedule_pick_percentages_df_dk #pd.read_csv('NFL Schedule with full ev_dk.csv')
         st.write("Step 3 Completed: Public Pick Percentages Predicted")
         st.write('- Using Cached Expected Values...')
     else:

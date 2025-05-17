@@ -693,7 +693,6 @@ def collect_schedule_travel_ranking_data(pd):
         return df
  
     live_scraped_odds_df = get_preseason_odds()
-    st.write(df)
 # Define this function globally or ensure it's accessible
     def add_odds_to_main_csv():
         # 0: Stadium | 1: Lattitude | 2: Longitude | 3: Timezone | 4: Division | 5: Start of 2023 Season Rank | 6: Current Rank | 7: Average points better than Average Team (Used for Spread and Odds Calculation)
@@ -820,32 +819,6 @@ def collect_schedule_travel_ranking_data(pd):
                 # Create the mask for where there is no 'Home Odds'
         mask = csv_df['Home Team Moneyline'].isna()
         # Only apply calculations if the 'Home Odds' column is empty
-        def get_moneyline_masked(row, odds, team_type):
-            spread = round(row['Adjusted Spread'] * 2) / 2
-            try:
-                moneyline_tuple = odds[spread]
-                if team_type == 'home':
-                    if row['Favorite'] == row['Home Team']:
-                        return moneyline_tuple[0]
-                    else:
-                        return moneyline_tuple[1]
-                elif team_type == 'away':
-                    if row['Favorite'] == row['Away Team']:
-                        return moneyline_tuple[0]
-                    else:
-                        return moneyline_tuple[1]
-
-            except KeyError:
-                if team_type == 'home':
-                    if row['Favorite'] == row['Home Team']:
-                        return -10000
-                    else:
-                        return 2000
-                elif team_type == 'away':
-                    if row['Favorite'] == row['Away Team']:
-                        return -10000
-                    else:
-                        return 2000
 
         if mask.any():
             # Adjust Average Points Difference for Favorite/Underdog Determination

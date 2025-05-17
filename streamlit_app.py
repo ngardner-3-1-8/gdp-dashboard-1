@@ -833,14 +833,7 @@ def collect_schedule_travel_ranking_data(pd):
 
         # Adjust Spread based on Favorite
         csv_df['Adjusted Spread'] = abs(csv_df['Away Team Adjusted Current Rank'] - csv_df['Home Team Adjusted Current Rank'])
-
-        # Overwrite Odds based on Spread and Favorite/Underdog
-        csv_df['Home Team Moneyline'] = csv_df.apply(
-        lambda row: get_moneyline_masked(row, odds, 'home'), axis=1
-        )
-        csv_df['Away Team Moneyline'] = csv_df.apply(
-        lambda row: get_moneyline_masked(row, odds, 'away'), axis=1
-        )
+	    
         def get_moneyline(row, odds, team_type):
             spread = round(row['Adjusted Spread'] * 2) / 2
             try:
@@ -855,6 +848,15 @@ def collect_schedule_travel_ranking_data(pd):
                         return moneyline_tuple[0]
                     else:
                         return moneyline_tuple[1]
+			    
+        # Overwrite Odds based on Spread and Favorite/Underdog
+        csv_df['Home Team Moneyline'] = csv_df.apply(
+        lambda row: get_moneyline(row, odds, 'home'), axis=1
+        )
+        csv_df['Away Team Moneyline'] = csv_df.apply(
+        lambda row: get_moneyline(row, odds, 'away'), axis=1
+        )
+
 
             except KeyError:
                 if team_type == 'home':

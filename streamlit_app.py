@@ -1328,6 +1328,8 @@ def get_predicted_pick_percentages(pd):
 
     #Handle Week 1 as before
     nfl_schedule_df.loc[nfl_schedule_df['Week'] == 1, 'Total Remaining Entries at Start of Week'] = circa_total_entries if selected_contest == 'Circa' else dk_total_entries
+    nfl_schedule_df.loc[nfl_schedule_df['Week'] == 1, 'Total Home Team Pick Availability'] = 1
+    nfl_schedule_df.loc[nfl_schedule_df['Week'] == 1, 'Total Away Team Pick Availability'] = 1
 
     nfl_schedule_df['Home Expected Remaining Entry Percent vs Last Week'] = (1 * nfl_schedule_df['Home Team Fair Odds']) + ((1 - nfl_schedule_df['Home Pick %']) * nfl_schedule_df['Away Team Fair Odds'])
     nfl_schedule_df['Away Expected Remaining Entry Percent vs Last Week'] = (1 * nfl_schedule_df['Away Team Fair Odds']) + ((1 - nfl_schedule_df['Away Pick %']) * nfl_schedule_df['Home Team Fair Odds'])
@@ -1354,6 +1356,127 @@ def get_predicted_pick_percentages(pd):
         nfl_schedule_df.loc[nfl_schedule_df['Week'] == week, 'Total Remaining Entries at Start of Week'] = round(previous_week_median - current_week_total)
         
     nfl_schedule_df['Expected Eliminated Entries From Game'] = nfl_schedule_df['Total Remaining Entries at Start of Week'] * nfl_schedule_df['Expected Eliminated Entry Percent From Game']
+    nfl_schedule_df['Expected Home Team Picks'] = nfl_schedule_df['Home Pick %'] * nfl_schedule_df['Total Remaining Entries at Start of Week']
+    nfl_schedule_df['Expected Away Team Picks'] = nfl_schedule_df['Away Pick %'] * nfl_schedule_df['Total Remaining Entries at Start of Week']
+    nfl_schedule_df['Expected Home Team Eliminations'] = nfl_schedule_df['Home Team Picks'] * (1 - nfl_schedule_df['Home Team Fair Odds'])
+    nfl_schedule_df['Expected Home Team Survivors'] = nfl_schedule_df['Home Team Picks'] * nfl_schedule_df['Home Team Fair Odds']
+    nfl_schedule_df['Expected Away Team Eliminations'] = nfl_schedule_df['Away Team Picks'] * (1 - nfl_schedule_df['Home Team Fair Odds'])
+    nfl_schedule_df['Expected Away Team Survivors'] = nfl_schedule_df['Away Team Picks'] * nfl_schedule_df['Away Team Fair Odds']
+
+#CALCULATE ESTIMATED REMAIN ING AVAILABILITY
+    
+    # 1. Initialization
+    all_teams_series = pd.unique(nfl_schedule_df[['Home Team', 'Away Team']].values.ravel('K'))
+    all_teams = [team for team in all_teams_series if pd.notna(team)] # Ensure no NaNs if any
+    
+    # U_prev_week stores U[w][team]: number of entries starting week w that have already used 'team'.
+    U_prev_week = {team: 0.0 for team in all_teams} # Using float for expected counts
+    
+    # Add new columns for availability, initialize
+    nfl_schedule_df['Home Team Expected Availability'] = 1.0
+    nfl_schedule_df['Away Team Expected Availability'] = 1.0
+    
+    max_week_num = 0
+    if not nfl_schedule_df['Week_Num'].empty:
+        max_week_num = nfl_schedule_df['Week_Num'].max()
+        if pd.isna(max_week_num): # Handle case where all Week_Num might be NaN after conversion
+            max_week_num = 0
+    
+    # 2. Loop through Weeks
+    for week_iter_num in range(1, int(max_week_num) + 1):
+        print(f"Calculating availability for Week {week_iter_num}...")
+        current_week_mask = nfl_schedule_df['Week_Num'] == week_iter_num
+        
+        if not current_week_mask.any():
+            print(f"  No games found for Week {week_iter_num}.")
+            # If U_prev_week needs to be carried over an empty week, this might need adjustment,
+            # but typically U_prev_week would just remain the same for the next actual game week.
+            continue
+            
+        week_df_rows = nfl_schedule_df[current_week_mask]
+    
+        # S_w: Total Remaining Entries at Start of Week 'week_iter_num'
+        # This should be a single scalar value for the entire week.
+        S_w_series = week_df_rows['Total Remaining Entries at Start of Week']
+        S_w = 0.0
+        if not S_w_series.empty:
+            S_w = S_w_series.iloc[0]
+            if pd.isna(S_w): S_w = 0.0 # Handle potential NaN
+        else:
+            # This case should ideally not be hit if current_week_mask.any() is true
+            # and data is structured with one 'Total Remaining Entries' value per week.
+            print(f"  Warning: 'Total Remaining Entries at Start of Week' missing or inconsistent for Week {week_iter_num}.")
+    
+        # Calculate Availability for current week's games
+        for idx, row_data in week_df_rows.iterrows():
+            home_team = row_data['Home Team']
+            away_team = row_data['Away Team']
+            
+            home_avail = 1.0
+            away_avail = 1.0
+            
+            if S_w > 0:
+                if pd.notna(home_team):
+                    unavailable_home = U_prev_week.get(home_team, 0.0)
+                    home_avail = (S_w - unavailable_home) / S_w
+                if pd.notna(away_team):
+                    unavailable_away = U_prev_week.get(away_team, 0.0)
+                    away_avail = (S_w - unavailable_away) / S_w
+            
+            nfl_schedule_df.loc[idx, 'Home Team Expected Availability'] = max(0.0, min(1.0, home_avail))
+            nfl_schedule_df.loc[idx, 'Away Team Expected Availability'] = max(0.0, min(1.0, away_avail))
+    
+        # Prepare U for the next week (U_next_week will become U_prev_week for the next iteration)
+        U_next_week = {team: 0.0 for team in all_teams}
+        total_survivors_this_week = 0.0
+        survivors_who_picked_team_this_week = {team: 0.0 for team in all_teams}
+    
+        for idx, row_data in week_df_rows.iterrows():
+            home_team = row_data['Home Team']
+            away_team = row_data['Away Team']
+            
+            home_survivors = row_data.get('Expected Home Team Survivors', 0.0)
+            if pd.isna(home_survivors): home_survivors = 0.0
+            away_survivors = row_data.get('Expected Away Team Survivors', 0.0)
+            if pd.isna(away_survivors): away_survivors = 0.0
+            
+            if pd.notna(home_team):
+                survivors_who_picked_team_this_week[home_team] = survivors_who_picked_team_this_week.get(home_team, 0.0) + home_survivors
+            if pd.notna(away_team):
+                survivors_who_picked_team_this_week[away_team] = survivors_who_picked_team_this_week.get(away_team, 0.0) + away_survivors
+                
+            total_survivors_this_week += home_survivors + away_survivors
+            
+        overall_survival_rate_this_week = 0.0
+        if S_w > 0:
+            overall_survival_rate_this_week = total_survivors_this_week / S_w
+        elif total_survivors_this_week > 0 and S_w == 0:
+            print(f"  Warning: Week {week_iter_num} started with S_w=0 but has total_survivors_this_week={total_survivors_this_week}. Check data consistency.")
+            # If S_w is 0, those in U_prev_week couldn't have existed in that pool to survive.
+            # So, effectively, their survival rate from that S_w pool is 0.
+            overall_survival_rate_this_week = 0.0
+    
+    
+        for team_name in all_teams:
+            val1 = survivors_who_picked_team_this_week.get(team_name, 0.0)
+            
+            num_already_used_team = U_prev_week.get(team_name, 0.0)
+            val2 = num_already_used_team * overall_survival_rate_this_week
+            
+            current_team_used_next_week = val1 + val2
+            
+            if total_survivors_this_week > 0:
+                U_next_week[team_name] = min(current_team_used_next_week, total_survivors_this_week)
+            else: # If no one survived overall, then no one could have used this team and also survived.
+                U_next_week[team_name] = 0.0
+            
+            # Ensure non-negative
+            U_next_week[team_name] = max(0.0, U_next_week[team_name])
+    
+        U_prev_week = U_next_week
+    
+    print("Expected Availability calculation complete.")
+    
 
     def assign_pick_percentages(row, selected_contest, circa_pick_percentages, dk_pick_percentages):
     #"""Assigns home and away pick percentages to a row, conditionally overwriting."""
@@ -1473,6 +1596,280 @@ def calculate_ev(nfl_schedule_pick_percentages_df, starting_week, ending_week, s
     else:
         nfl_schedule_pick_percentages_df.to_csv("NFL Schedule with full ev_dk.csv", index=False)
     return nfl_schedule_pick_percentages_df
+
+def get_predicted_pick_percentages_2(pd):
+    # Load your historical data (replace 'historical_pick_data_FV_circa.csv' with your actual file path)
+    if selected_contest == 'Circa':
+        df = pd.read_csv('Circa_historical_data.csv')
+        df.rename(columns={"Week": "Date"}, inplace=True)
+        # Remove percentage sign and convert to float
+        #df['Win %'] = df['Win %'].str.rstrip('%').astype(float, -1, 100) / 100
+        #df['Pick %'] = df['Pick %'].str.rstrip('%').astype(float, -1, 100) / 100
+        # Extract the numeric part (week number)
+        #df['Week'] = df['Week'].str.extract(r'(\d+)').astype(int)
+        #print(df['Date'])
+        df['Pick %'].fillna(0.0, inplace=True)
+    
+        #print(df)
+        # Split data into input features (X) and target variable (y)
+        X = df[['Win %', 'Future Value (Stars)', 'Date', 'Away Team', 'Divisional Matchup?', 'EV', 'Availability', 'Entry Remaining Percent']]
+        y = df['Pick %']
+    
+        # Split data into training and testing sets
+        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+    
+        # Initialize and train the Random Forest model
+        rf_model = RandomForestRegressor(n_estimators=50, random_state=0)
+        rf_model.fit(X_train, y_train)
+    
+        # Make predictions on the test data
+        y_pred = rf_model.predict(X_test)
+    
+        # Evaluate model performance (MAE)
+        mae = mean_absolute_error(y_test, y_pred)
+        #print(f"Mean Absolute Error: {mae:.2f}")
+    
+        # Read the CSV file into a DataFrame
+        
+        new_df = collect_schedule_travel_ranking_data_df
+    
+        # Create a new DataFrame with selected columns
+        selected_columns = ['Week', 'Away Team', 'Home Team', 'Away Team Fair Odds',
+                            'Home Team Fair Odds', 'Away Team Star Rating', 'Home Team Star Rating', 'Divisional Matchup Boolean', 'Away Team Thanksgiving Favorite', 'Home Team Thanksgiving Favorite', 'Away Team Christmas Favorite', 'Home Team Christmas Favorite']
+        new_df = new_df[selected_columns]
+    
+        # Read the original CSV file into a DataFrame
+        #csv_path = 'nfl_Schedule_circa.csv'
+        #df = pd.read_csv(csv_path)
+    
+        # Create the new DataFrame with modified column names
+        away_df = new_df.rename(columns={
+            'Week': 'Date',
+            'Away Team': 'Team',
+            'Home Team': 'Opponent',
+            'Away Team Fair Odds': 'Win %',
+            'Away Team Star Rating': 'Future Value (Stars)',
+            'Divisional Matchup Boolean': 'Divisional Matchup?'
+        })
+        away_df['Year'] = 2025
+        away_df['Home/Away'] = 'Away'
+        away_df['Away Team'] = 1
+        # Add the "Pick %" and "EV" columns (initially empty)
+        away_df['Pick %'] = None
+        away_df['EV'] = None
+    
+        # Drop the unwanted columns
+        away_df.drop(columns=['Home Team Fair Odds', 'Home Team Star Rating', 'Home Team Thanksgiving Favorite', 'Home Team Christmas Favorite'], inplace=True)
+    
+        # Reorder the columns
+        column_order = ['EV', 'Win %', 'Pick %', 'Team', 'Opponent', 'Future Value (Stars)', 'Year', 'Date', 'Home/Away', 'Away Team', 'Divisional Matchup?', 'Away Team Thanksgiving Favorite', 'Away Team Christmas Favorite']
+        away_df = away_df[column_order]
+    
+    
+        # Create the new DataFrame with modified column names
+        home_df = new_df.rename(columns={
+            'Week': 'Date',
+            'Home Team': 'Team',
+            'Away Team': 'Opponent',
+            'Home Team Fair Odds': 'Win %',
+            'Home Team Star Rating': 'Future Value (Stars)',
+            'Divisional Matchup Boolean': 'Divisional Matchup?'
+        })
+        home_df['Year'] = 2025
+        home_df['Home/Away'] = 'Home'
+        home_df['Away Team'] = 0
+        # Add the "Pick %" and "EV" columns (initially empty)
+        home_df['Pick %'] = None
+        home_df['EV'] = None
+    
+        # Drop the unwanted columns
+        home_df.drop(columns=['Away Team Fair Odds', 'Away Team Star Rating', 'Away Team Thanksgiving Favorite', 'Away Team Christmas Favorite'], inplace=True)
+    
+        # Reorder the columns
+        column_order = ['EV', 'Win %', 'Pick %', 'Team', 'Opponent', 'Future Value (Stars)', 'Year', 'Date', 'Home/Away', 'Away Team', 'Divisional Matchup?', 'Home Team Thanksgiving Favorite', 'Home Team Christmas Favorite']
+        home_df = home_df[column_order]
+    
+        # Now `away_df` contains the desired columns with modified names
+        #print(home_df)
+        home_df['Date'] = home_df['Date'].str.extract(r'(\d+)').astype(int)
+        away_df['Date'] = away_df['Date'].str.extract(r'(\d+)').astype(int)
+    
+        #print(home_df)
+        #print(away_df)
+    
+        predictions = rf_model.predict(away_df[['Win %', 'Future Value (Stars)', 'Date', 'Away Team', 'Divisional Matchup?']])
+        away_df['Pick %'] = predictions
+        #away_df.to_csv('predicted_away_data_circa.csv', index=False)
+    
+        predictions = rf_model.predict(home_df[['Win %', 'Future Value (Stars)', 'Date', 'Away Team', 'Divisional Matchup?']])
+        home_df['Pick %'] = predictions
+        #home_df.to_csv('predicted_home_data_circa.csv', index=False)
+    
+        pick_predictions_df = pd.concat([away_df, home_df], ignore_index=True)
+    
+        # Adjust pick percentages for Thanksgiving Favorites
+        pick_predictions_df["Pick %"] = pick_predictions_df.apply(
+            lambda row: row["Pick %"] / 4 if (row["Date"] != 13 and row["Home Team Thanksgiving Favorite"]) else row["Pick %"],
+            axis=1
+        )
+    
+        pick_predictions_df["Pick %"] = pick_predictions_df.apply(
+            lambda row: row["Pick %"] / 4 if (row["Date"] != 13 and row["Away Team Thanksgiving Favorite"]) else row["Pick %"],
+            axis=1
+        )
+    
+        # Adjust pick percentages for Thanksgiving Favorites
+        pick_predictions_df["Pick %"] = pick_predictions_df.apply(
+            lambda row: row["Pick %"] / 4 if row["Home Team Christmas Favorite"] else row["Pick %"],
+            axis=1
+        )
+    
+        pick_predictions_df["Pick %"] = pick_predictions_df.apply(
+            lambda row: row["Pick %"] / 4 if row["Away Team Christmas Favorite"] else row["Pick %"],
+            axis=1
+        )
+    
+        pick_predictions_df.drop(columns=['Away Team Thanksgiving Favorite', 'Away Team Christmas Favorite', 'Home Team Thanksgiving Favorite', 'Home Team Christmas Favorite'], inplace=True)
+    
+        # Calculate the sum of "Pick %" for each date
+        sum_by_date = pick_predictions_df.groupby('Date')['Pick %'].sum()
+    
+        # Update the "Pick %" column by dividing each value by the corresponding sum
+        pick_predictions_df['Pick %'] = pick_predictions_df.apply(lambda row: row['Pick %'] / sum_by_date[row['Date']], axis=1)
+    
+        pick_predictions_df.to_csv('pick_predictions_df.csv', index = False)
+    
+        # Filter the DataFrame based on the "Home/Away" column
+        home_df = pick_predictions_df[pick_predictions_df["Home/Away"] == "Home"]
+        away_df = pick_predictions_df[pick_predictions_df["Home/Away"] == "Away"]
+    
+    
+        home_df = home_df.rename(columns={
+            'Date': 'Week',
+            'Team': 'Home Team',
+            'Opponent': 'Away Team',
+            'Win %': 'Home Team Fair Odds',
+            'Future Value (Stars)': 'Home Team Star Rating',
+            "Pick %": "Home Pick %",
+            "Away Team": "Home Away Matchup",
+            "Divisional Matchup?": "Home Divisional Matchup Boolean"
+        })
+    
+        away_df = away_df.rename(columns={
+            'Date': 'Week',
+            'Team': 'Away Team',
+            'Opponent': 'Home Team',
+            'Win %': 'Away Team Fair Odds',
+            'Future Value (Stars)': 'Away Team Star Rating',
+            "Pick %": "Away Pick %",
+            "Away Team": "Away Away Matchup",
+            "Divisional Matchup?": "Away Divisional Matchup Boolean"
+        })
+    
+    
+        # Drop the redundant columns from the merged DataFrame
+        away_df.drop(columns=['EV', 'Home/Away', 'Away Team Star Rating', 'Away Team Fair Odds', 'Year'], inplace=True)
+        home_df.drop(columns=['EV', 'Home/Away', 'Home Team Star Rating', 'Home Team Fair Odds', 'Year'], inplace=True)
+    
+        #print(home_df)
+        #print(away_df)
+    
+        nfl_schedule_df = collect_schedule_travel_ranking_data_df
+        #nfl_schedule_df['Week'] = nfl_schedule_df['Week'].str.extract(r'(\d+)').astype(int)
+        # Merge the DataFrames based on matching columns
+        nfl_schedule_df = pd.merge(nfl_schedule_df, away_df, 
+                                   left_on=['Week_Num', 'Away Team', 'Home Team'],
+                                   right_on=['Week', 'Away Team', 'Home Team'],
+                                   how='left')
+        nfl_schedule_df = pd.merge(nfl_schedule_df, home_df, 
+                                   left_on=['Week_Num', 'Away Team', 'Home Team'],
+                                   right_on=['Week', 'Away Team', 'Home Team'],
+                                   how='left')
+    
+        #print(nfl_schedule_circa_df)
+    
+        # Add 'Home Team EV' and 'Away Team EV' columns to nfl_schedule_circa_df
+        nfl_schedule_df['Home Team EV'] = 0.0  # Initialize with 0.0
+        nfl_schedule_df['Away Team EV'] = 0.0  # Initialize with 0.0
+    
+        #Handle Week 1 as before
+        nfl_schedule_df.loc[nfl_schedule_df['Week'] == 1, 'Total Remaining Entries at Start of Week'] = circa_total_entries if selected_contest == 'Circa' else dk_total_entries
+    
+        nfl_schedule_df['Home Expected Remaining Entry Percent vs Last Week'] = (1 * nfl_schedule_df['Home Team Fair Odds']) + ((1 - nfl_schedule_df['Home Pick %']) * nfl_schedule_df['Away Team Fair Odds'])
+        nfl_schedule_df['Away Expected Remaining Entry Percent vs Last Week'] = (1 * nfl_schedule_df['Away Team Fair Odds']) + ((1 - nfl_schedule_df['Away Pick %']) * nfl_schedule_df['Home Team Fair Odds'])
+        nfl_schedule_df['Weighted Average Remaining Entry Percent vs Last Week'] = (nfl_schedule_df['Home Expected Remaining Entry Percent vs Last Week'] * nfl_schedule_df['Home Team Fair Odds']) + (nfl_schedule_df['Away Expected Remaining Entry Percent vs Last Week'] * nfl_schedule_df['Away Team Fair Odds'])
+        nfl_schedule_df['Expected Eliminated Entry Percent From Game'] = 1 - nfl_schedule_df['Weighted Average Remaining Entry Percent vs Last Week']
+    
+    
+    
+        #Iterate through weeks starting from week 2
+        for week in range(2, nfl_schedule_df['Week'].max() + 1):
+            previous_week_df = nfl_schedule_df[nfl_schedule_df['Week'] == week - 1]
+            
+            #Handle potential empty previous week (e.g., if week 1 is missing data for some reason)
+            if previous_week_df.empty:
+                previous_week_median = nfl_schedule_df['Total Remaining Entries at Start of Week'].median() #Fallback to overall median
+            else:    
+                previous_week_median = previous_week_df['Total Remaining Entries at Start of Week'].median()
+    
+            sum_eliminated = previous_week_df['Expected Eliminated Entry Percent From Game'].sum()
+    
+            #Calculate total remaining entries for current week. Handle potential NaN from previous calculations.
+            current_week_total = previous_week_median * sum_eliminated if not np.isnan(previous_week_median * sum_eliminated) else 0 
+    
+            nfl_schedule_df.loc[nfl_schedule_df['Week'] == week, 'Total Remaining Entries at Start of Week'] = round(previous_week_median - current_week_total)
+            
+        nfl_schedule_df['Expected Eliminated Entries From Game'] = nfl_schedule_df['Total Remaining Entries at Start of Week'] * nfl_schedule_df['Expected Eliminated Entry Percent From Game']
+
+    def assign_pick_percentages_2(row, selected_contest, circa_pick_percentages, dk_pick_percentages):
+    #"""Assigns home and away pick percentages to a row, conditionally overwriting."""
+
+        home_team = row['Home Team']
+        away_team = row['Away Team']
+        week = row['Week']
+
+        home_pick_percent = row.get('Home Pick %')  # Get existing value, defaults to None
+        away_pick_percent = row.get('Away Pick %')  # Get existing value, defaults to None
+
+        if selected_contest == 'Circa':
+            if home_team in circa_pick_percentages:
+                home_pick_percent_list = circa_pick_percentages[home_team]
+                week_index = week - 1 #Get index from week
+                if week_index < len(home_pick_percent_list) and home_pick_percent_list[week_index] >= 0: #Check if index is in bounds, then verify value is >-1
+                    home_pick_percent = home_pick_percent_list[week_index]
+
+            if away_team in circa_pick_percentages:
+                away_pick_percent_list = circa_pick_percentages[away_team]
+                week_index = week - 1
+                if week_index < len(away_pick_percent_list) and away_pick_percent_list[week_index] >= 0:
+                    away_pick_percent = away_pick_percent_list[week_index]
+        else: # assuming it's DraftKings
+            if home_team in dk_pick_percentages:
+                home_pick_percent_list = dk_pick_percentages[home_team]
+                week_index = week - 1
+                if week_index < len(home_pick_percent_list) and home_pick_percent_list[week_index] >= 0:
+                    home_pick_percent = home_pick_percent_list[week_index]
+            if away_team in dk_pick_percentages:
+                away_pick_percent_list = dk_pick_percentages[away_team]
+                week_index = week - 1
+                if week_index < len(away_pick_percent_list) and away_pick_percent_list[week_index] >= 0:
+                    away_pick_percent = away_pick_percent_list[week_index]
+
+        return pd.Series({'Home Pick %': home_pick_percent, 'Away Pick %': away_pick_percent})
+                                                                 
+
+    nfl_schedule_df[['Home Pick %', 'Away Pick %']] = nfl_schedule_df.apply(
+        assign_pick_percentages, 
+        axis=1, 
+        args=(selected_contest, circa_pick_percentages, dk_pick_percentages)
+    )
+    
+    if selected_contest == 'Circa':
+        nfl_schedule_df.to_csv("Circa_Predicted_pick_percent.csv", index=False)
+    else:
+        nfl_schedule_df.to_csv("DK_Predicted_pick_percent.csv", index=False)
+    return nfl_schedule_df
+
 
 def get_survivor_picks_based_on_ev():
     # Loop through 100 iterations

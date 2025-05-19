@@ -1363,7 +1363,7 @@ def get_predicted_pick_percentages(pd):
     nfl_schedule_df['Expected Away Team Eliminations'] = nfl_schedule_df['Away Team Picks'] * (1 - nfl_schedule_df['Home Team Fair Odds'])
     nfl_schedule_df['Expected Away Team Survivors'] = nfl_schedule_df['Away Team Picks'] * nfl_schedule_df['Away Team Fair Odds']
 
-#CALCULATE ESTIMATED REMAIN ING AVAILABILITY
+#CALCULATE ESTIMATED REMAINING AVAILABILITY
     
     # 1. Initialization
     all_teams_series = pd.unique(nfl_schedule_df[['Home Team', 'Away Team']].values.ravel('K'))
@@ -1377,15 +1377,15 @@ def get_predicted_pick_percentages(pd):
     nfl_schedule_df['Away Team Expected Availability'] = 1.0
     
     max_week_num = 0
-    if not nfl_schedule_df['Week_Num'].empty:
-        max_week_num = nfl_schedule_df['Week_Num'].max()
+    if not nfl_schedule_df['Week'].empty:
+        max_week_num = nfl_schedule_df['Week'].max()
         if pd.isna(max_week_num): # Handle case where all Week_Num might be NaN after conversion
             max_week_num = 0
     
     # 2. Loop through Weeks
     for week_iter_num in range(1, int(max_week_num) + 1):
         print(f"Calculating availability for Week {week_iter_num}...")
-        current_week_mask = nfl_schedule_df['Week_Num'] == week_iter_num
+        current_week_mask = nfl_schedule_df['Week'] == week_iter_num
         
         if not current_week_mask.any():
             print(f"  No games found for Week {week_iter_num}.")

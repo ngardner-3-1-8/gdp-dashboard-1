@@ -1360,7 +1360,7 @@ def get_predicted_pick_percentages(pd):
     nfl_schedule_df['Expected Away Team Picks'] = nfl_schedule_df['Away Pick %'] * nfl_schedule_df['Total Remaining Entries at Start of Week']
     nfl_schedule_df['Expected Home Team Eliminations'] = nfl_schedule_df['Expected Home Team Picks'] * (1 - nfl_schedule_df['Home Team Fair Odds'])
     nfl_schedule_df['Expected Home Team Survivors'] = nfl_schedule_df['Expected Home Team Picks'] * nfl_schedule_df['Home Team Fair Odds']
-    nfl_schedule_df['Expected Away Team Eliminations'] = nfl_schedule_df['Expected Away Team Picks'] * (1 - nfl_schedule_df['Home Team Fair Odds'])
+    nfl_schedule_df['Expected Away Team Eliminations'] = nfl_schedule_df['Expected Away Team Picks'] * (1 - nfl_schedule_df['Away Team Fair Odds'])
     nfl_schedule_df['Expected Away Team Survivors'] = nfl_schedule_df['Expected Away Team Picks'] * nfl_schedule_df['Away Team Fair Odds']
 
 #CALCULATE ESTIMATED REMAINING AVAILABILITY

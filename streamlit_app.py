@@ -1615,7 +1615,7 @@ def get_predicted_pick_percentages_with_availability(pd):
         home_df['EV'] = None
     
         # Drop the unwanted columns
-        home_df.drop(columns=['Away Team Fair Odds', 'Away Team Star Rating', 'Away Team Thanksgiving Favorite', 'Away Team Christmas Favorite', 'Home Team Expected Availability'], inplace=True)
+        home_df.drop(columns=['Away Team Fair Odds', 'Away Team Star Rating', 'Away Team Thanksgiving Favorite', 'Away Team Christmas Favorite', 'Away Team Expected Availability'], inplace=True)
     
         # Reorder the columns
         column_order = ['EV', 'Win %', 'Pick %', 'Team', 'Opponent', 'Future Value (Stars)', 'Year', 'Date', 'Home/Away', 'Away Team', 'Divisional Matchup?', 'Home Team Thanksgiving Favorite', 'Home Team Christmas Favorite', 'Availability', 'Entry Remaining Percent']

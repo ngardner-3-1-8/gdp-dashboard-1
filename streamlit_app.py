@@ -1332,10 +1332,10 @@ def get_predicted_pick_percentages(pd):
     nfl_schedule_df.loc[nfl_schedule_df['Week'] == 1, 'Total Away Team Pick Availability'] = 1
 
     nfl_schedule_df['Home Expected Survival Rate'] = nfl_schedule_df['Home Team Fair Odds'] * nfl_schedule_df['Home Pick %']
-    nfl_schedule_df['Home Expected Elimination Percent'] = 1 - nfl_schedule_df['Home Expected Survival Rate']
+    nfl_schedule_df['Home Expected Elimination Percent'] = nfl_schedule_df['Home Pick %'] - nfl_schedule_df['Home Expected Survival Rate']
     nfl_schedule_df['Away Expected Survival Rate'] = nfl_schedule_df['Away Team Fair Odds'] * nfl_schedule_df['Away Pick %']
-    nfl_schedule_df['Away Expected Elimination Percent'] = 1 - nfl_schedule_df['Away Expected Survival Rate']
-    nfl_schedule_df['Expected Eliminated Entry Percent From Game'] = nfl_schedule_df['Away Expected Elimination Percent'] + nfl_schedule_df['Home Expected Elimination Percent']
+    nfl_schedule_df['Away Expected Elimination Percent'] = nfl_schedule_df['Away Pick %'] - nfl_schedule_df['Away Expected Survival Rate']
+    nfl_schedule_df['Expected Eliminated Entry Percent From Game'] = nfl_schedule_df['Home Expected Elimination Percent'] + nfl_schedule_df['Away Expected Elimination Percent']
 
 
 

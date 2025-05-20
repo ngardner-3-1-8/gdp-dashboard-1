@@ -1561,7 +1561,7 @@ def get_predicted_pick_percentages_with_availability(pd):
     
         # Read the CSV file into a DataFrame
         
-        new_df = collect_schedule_travel_ranking_data_df
+        new_df = nfl_schedule_pick_percentages_df
     
         # Create a new DataFrame with selected columns
         selected_columns = ['Week', 'Away Team', 'Home Team', 'Away Team Fair Odds',

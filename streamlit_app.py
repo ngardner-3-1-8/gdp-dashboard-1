@@ -1328,8 +1328,6 @@ def get_predicted_pick_percentages(pd):
 
     #Handle Week 1 as before
     nfl_schedule_df.loc[nfl_schedule_df['Week'] == 1, 'Total Remaining Entries at Start of Week'] = circa_total_entries if selected_contest == 'Circa' else dk_total_entries
-    nfl_schedule_df.loc[nfl_schedule_df['Week'] == 1, 'Total Home Team Pick Availability'] = 1
-    nfl_schedule_df.loc[nfl_schedule_df['Week'] == 1, 'Total Away Team Pick Availability'] = 1
 
     nfl_schedule_df['Home Expected Survival Rate'] = nfl_schedule_df['Home Team Fair Odds'] * nfl_schedule_df['Home Pick %']
     nfl_schedule_df['Home Expected Elimination Percent'] = nfl_schedule_df['Home Pick %'] - nfl_schedule_df['Home Expected Survival Rate']
@@ -1341,20 +1339,20 @@ def get_predicted_pick_percentages(pd):
 
     #Iterate through weeks starting from week 2
     for week in range(2, nfl_schedule_df['Week'].max() + 1):
-        previous_week_df = nfl_schedule_df[nfl_schedule_df['Week'] == week - 1]
-        
+        previous_week_df = nfl_schedule_df[nfl_schedule_df['Week'] == week - 1]        
         #Handle potential empty previous week (e.g., if week 1 is missing data for some reason)
         if previous_week_df.empty:
             previous_week_median = nfl_schedule_df['Total Remaining Entries at Start of Week'].median() #Fallback to overall median
         else:    
             previous_week_median = previous_week_df['Total Remaining Entries at Start of Week'].median()
-
         sum_eliminated = previous_week_df['Expected Eliminated Entry Percent From Game'].sum()
-
         #Calculate total remaining entries for current week. Handle potential NaN from previous calculations.
         current_week_total = previous_week_median * sum_eliminated if not np.isnan(previous_week_median * sum_eliminated) else 0 
-
         nfl_schedule_df.loc[nfl_schedule_df['Week'] == week, 'Total Remaining Entries at Start of Week'] = round(previous_week_median - current_week_total)
+    if selected_contest == 'Circa':
+        nfl_schedule_df['Entry Remaining Percent'] = nfl_schedule_df['Total Remaining Entries at Start of Week'] / circa_total_entries
+    else:
+        nfl_schedule_df['Entry Remaining Percent'] = nfl_schedule_df['Total Remaining Entries at Start of Week'] / dk_total_entries
         
     nfl_schedule_df['Expected Eliminated Entries From Game'] = nfl_schedule_df['Total Remaining Entries at Start of Week'] * nfl_schedule_df['Expected Eliminated Entry Percent From Game']
     nfl_schedule_df['Expected Home Team Picks'] = nfl_schedule_df['Home Pick %'] * nfl_schedule_df['Total Remaining Entries at Start of Week']

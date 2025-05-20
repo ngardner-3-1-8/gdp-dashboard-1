@@ -1621,13 +1621,6 @@ def get_predicted_pick_percentages_with_availability(pd):
         column_order = ['EV', 'Win %', 'Pick %', 'Team', 'Opponent', 'Future Value (Stars)', 'Year', 'Date', 'Home/Away', 'Away Team', 'Divisional Matchup?', 'Home Team Thanksgiving Favorite', 'Home Team Christmas Favorite', 'Availability', 'Entry Remaining Percent']
         home_df = home_df[column_order]
     
-        # Now `away_df` contains the desired columns with modified names
-        #print(home_df)
-        home_df['Date'] = home_df['Date'].str.extract(r'(\d+)').astype(int)
-        away_df['Date'] = away_df['Date'].str.extract(r'(\d+)').astype(int)
-    
-        #print(home_df)
-        #print(away_df)
     
         predictions = rf_model.predict(away_df[['Win %', 'Future Value (Stars)', 'Date', 'Away Team', 'Divisional Matchup?', 'Availability', 'Entry Remaining Percent']])
         away_df['Pick %'] = predictions

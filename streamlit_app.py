@@ -1542,7 +1542,7 @@ def get_predicted_pick_percentages_with_availability(pd):
     
         #print(df)
         # Split data into input features (X) and target variable (y)
-        X = df[['Win %', 'Future Value (Stars)', 'Date', 'Away Team', 'Divisional Matchup?','Entry Remaining percent', 'Availability']]
+        X = df[['Win %', 'Future Value (Stars)', 'Date', 'Away Team', 'Divisional Matchup?', 'Availability', 'Entry Remaining Percent']]
         y = df['Pick %']
     
         # Split data into training and testing sets

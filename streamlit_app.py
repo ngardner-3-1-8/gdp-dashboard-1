@@ -1998,14 +1998,6 @@ def get_survivor_picks_based_on_ev():
             picks[i] = solver.IntVar(0, 1, 'pick_%i' % i)
 
         # Add the constraints
-        for week in df['Week_Num'].unique():
-            # One team per week
-            solver.Add(solver.Sum([picks[i] for i in range(len(df)) if df.loc[i, 'Week_Num'] == week]) == 1)
-
-        for team in df['Adjusted Current Winner'].unique():
-            # Can't pick a team more than once
-            solver.Add(solver.Sum([picks[i] for i in range(len(df)) if df.loc[i, 'Adjusted Current Winner'] == team]) <= 1)
-
         for i in range(len(df)):
             # Must pick from 'Adjusted Current Winner'
             #if df.loc[i, 'Adjusted Current Winner'] != df.loc[i, 'Home Team']:
@@ -2097,7 +2089,7 @@ def get_survivor_picks_based_on_ev():
                     solver.Add(picks[i] == 0)
             if df.loc[i, 'Adjusted Current Winner'] == 'Detroit Lions' and df.loc[i, 'Week_Num'] in det_excluded_weeks:
                     solver.Add(picks[i] == 0)
-            if df.loc[i, 'Adjusted Current Winner'] == 'AGreen Bay Packers' and df.loc[i, 'Week_Num'] in gb_excluded_weeks:
+            if df.loc[i, 'Adjusted Current Winner'] == 'Green Bay Packers' and df.loc[i, 'Week_Num'] in gb_excluded_weeks:
                     solver.Add(picks[i] == 0)
             if df.loc[i, 'Adjusted Current Winner'] == 'Houston Texans' and df.loc[i, 'Week_Num'] in hou_excluded_weeks:
                     solver.Add(picks[i] == 0)
@@ -2143,39 +2135,8 @@ def get_survivor_picks_based_on_ev():
 
             if df.loc[i, 'Adjusted Current Winner'] in picked_teams:
                 solver.Add(picks[i] == 0)
-        # Dynamically create the forbidden solution list
-        forbidden_solutions_1 = []
-        if iteration > 0: 
-            for previous_iteration in range(iteration):
-                # Load the picks from the previous iteration
-                if selected_contest == 'Circa':
-                    previous_picks_df = pd.read_csv(f"circa_picks_ev_{previous_iteration + 1}.csv")
-                else:
-                    previous_picks_df = pd.read_csv(f"dk_picks_ev_{previous_iteration + 1}.csv")
 
-                # Extract the forbidden solution for this iteration
-                forbidden_solution_1 = previous_picks_df['Adjusted Current Winner'].tolist()
-                forbidden_solutions_1.append(forbidden_solution_1)
-
-        # Add constraints for all forbidden solutions
-        for forbidden_solution_1 in forbidden_solutions_1:
-            # Get the indices of the forbidden solution in the DataFrame
-            forbidden_indices_1 = []
-            for i in range(len(df)):
-                # Calculate the relative week number within the forbidden solution
-                df_week = df.loc[i, 'Week_Num']
-                relative_week = df_week - starting_week  # Adjust week to be relative to starting week
-
-                #Check if the week is within the range and the solution is forbidden
-                if 0 <= relative_week < len(forbidden_solution_1) and df_week >= starting_week and df_week < ending_week: #Added this to make sure we are only looking at the range
-                    if (df.loc[i, 'Adjusted Current Winner'] == forbidden_solution_1[relative_week]):
-                        forbidden_indices_1.append(i)
-
-            # Add the constraint
-            solver.Add(solver.Sum([1 - picks[i] for i in forbidden_indices_1]) >= 1)
-
-
-        # Add the constraint for San Francisco 49ers in week 11
+# Add the constraint for San Francisco 49ers in week 11
         if sf_req_week > 0:        
             for i in range(len(df)):
                 if (df.loc[i, 'Home Team'] == 'San Francisco 49ers' or df.loc[i, 'Away Team'] == 'San Francisco 49ers') and df.loc[i, 'Week_Num'] == sf_req_week:
@@ -2253,7 +2214,8 @@ def get_survivor_picks_based_on_ev():
                     elif df.loc[i, 'Away Team'] == 'Chicago Bears':
                         df.loc[i, 'Adjusted Current Winner'] = df.loc[i, 'Away Team']
                         solver.Add(picks[i] == 1)
-        if cin_req_week > 0:        
+        if cin_req_week > 0:
+            for i in range(len(df)):
                 if (df.loc[i, 'Home Team'] == 'Cincinnati Bengals' or df.loc[i, 'Away Team'] == 'Cincinnati Bengals') and df.loc[i, 'Week_Num'] == cin_req_week:
                     if df.loc[i, 'Adjusted Current Winner'] == 'Cincinnati Bengals':
                         solver.Add(picks[i] == 1)
@@ -2408,7 +2370,7 @@ def get_survivor_picks_based_on_ev():
                         solver.Add(picks[i] == 1)
         if min_req_week > 0:        
             for i in range(len(df)):
-                if (df.loc[i, 'Home Team'] == 'Minnesota Vikings' or df.loc[i, 'Away Team'] == 'Minnesota Vikings') and df.loc[i, 'Week_Numv'] == min_req_week:
+                if (df.loc[i, 'Home Team'] == 'Minnesota Vikings' or df.loc[i, 'Away Team'] == 'Minnesota Vikings') and df.loc[i, 'Week_Num'] == min_req_week:
                     if df.loc[i, 'Adjusted Current Winner'] == 'Minnesota Vikings':
                         solver.Add(picks[i] == 1)
                     elif df.loc[i, 'Home Team'] == 'Minnesota Vikings':
@@ -2526,6 +2488,50 @@ def get_survivor_picks_based_on_ev():
                     elif df.loc[i, 'Away Team'] == 'Washington Commanders':
                         df.loc[i, 'Adjusted Current Winner'] = df.loc[i, 'Away Team']
                         solver.Add(picks[i] == 1)
+
+	    
+        for week in df['Week_Num'].unique():
+            # One team per week
+            solver.Add(solver.Sum([picks[i] for i in range(len(df)) if df.loc[i, 'Week_Num'] == week]) == 1)
+
+        for team in df['Adjusted Current Winner'].unique():
+            # Can't pick a team more than once
+            solver.Add(solver.Sum([picks[i] for i in range(len(df)) if df.loc[i, 'Adjusted Current Winner'] == team]) <= 1)
+
+
+        # Dynamically create the forbidden solution list
+        forbidden_solutions_1 = []
+        if iteration > 0: 
+            for previous_iteration in range(iteration):
+                # Load the picks from the previous iteration
+                if selected_contest == 'Circa':
+                    previous_picks_df = pd.read_csv(f"circa_picks_ev_{previous_iteration + 1}.csv")
+                else:
+                    previous_picks_df = pd.read_csv(f"dk_picks_ev_{previous_iteration + 1}.csv")
+
+                # Extract the forbidden solution for this iteration
+                forbidden_solution_1 = previous_picks_df['Adjusted Current Winner'].tolist()
+                forbidden_solutions_1.append(forbidden_solution_1)
+
+        # Add constraints for all forbidden solutions
+        for forbidden_solution_1 in forbidden_solutions_1:
+            # Get the indices of the forbidden solution in the DataFrame
+            forbidden_indices_1 = []
+            for i in range(len(df)):
+                # Calculate the relative week number within the forbidden solution
+                df_week = df.loc[i, 'Week_Num']
+                relative_week = df_week - starting_week  # Adjust week to be relative to starting week
+
+                #Check if the week is within the range and the solution is forbidden
+                if 0 <= relative_week < len(forbidden_solution_1) and df_week >= starting_week and df_week < ending_week: #Added this to make sure we are only looking at the range
+                    if (df.loc[i, 'Adjusted Current Winner'] == forbidden_solution_1[relative_week]):
+                        forbidden_indices_1.append(i)
+
+            # Add the constraint
+            solver.Add(solver.Sum([1 - picks[i] for i in forbidden_indices_1]) >= 1)
+
+
+        
 
         # Objective: maximize the sum of Adjusted Current Difference of each game picked
         solver.Maximize(solver.Sum([picks[i] * (df.loc[i, 'Home Team EV'] if df.loc[i, 'Adjusted Current Winner'] == df.loc[i, 'Home Team'] else df.loc[i, 'Away Team EV']) for i in range(len(df))]))
@@ -5609,7 +5615,7 @@ use_live_sportsbook_odds = 1
 if yes_i_have_customized_rankings:
 	st.subheader('Use Saved Expected Value')
 	st.write('Warning, this data may not be nup to date.')
-	st.write('- Checking this box will ensure the process is fast, (Less than 1 minute, compared to 5+ hours) and will prevent the risk of crashing')
+	st.write('- Checking this box will ensure the process is fast, (Less than 1 minute, compared to 5-10 mins) and will prevent the risk of crashing')
 	st.write('- This will not use your customized rankings in the EV calculation process')
 	st.write('- This will NOT have an impact on your customized ranking output, just the EV output')
 	st.write('Last Update: :green[01/01/2025]')

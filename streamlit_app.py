@@ -2707,6 +2707,7 @@ def get_survivor_picks_based_on_ev():
             
             # --- Combine the two dataframes ---
             combined_df = pd.concat([home_ev_df, away_ev_df], ignore_index=True)
+            combined_df = combined_df.sort_values(by='Week_Num', ascending=True)
             
             # Display the results (optional)
             print("Original DataFrame (df):")

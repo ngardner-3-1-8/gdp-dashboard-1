@@ -3152,7 +3152,7 @@ def get_survivor_picks_based_on_ev():
             
             # Append the new forbidden solution to the list
             forbidden_solutions_1.append(picks_df['Hypothetical Current Winner'].tolist())
-            #print(forbidden_solutions)
+            st.write(forbidden_solutions)
 
 def get_survivor_picks_based_on_internal_rankings():
     # Loop through 100 iterations

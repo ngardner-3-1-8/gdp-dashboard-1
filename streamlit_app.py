@@ -5256,9 +5256,15 @@ if yes_i_have_customized_rankings:
 st.write('')
 st.write('')
 st.write('')
+st.subheader('Pick Exclusively Favorites?')
+pick_must_be_favored = st.checkbox('All teams picked must be favored at the time of running this script')
+
+st.write('')
+st.write('')
+st.write('')
 st.subheader('Select Constraints')
 yes_i_have_constraints = st.checkbox('Would you like to add constraints? For example, "Avoid Teams on Short Rest"')
-pick_must_be_favored = st.checkbox('All teams picked must be favored at the time of running this script')
+
 if yes_i_have_constraints:
     st.write('These constraints will not work 100% of the time (For example in week 18, all Games are divisional matchups). However, it will require a team to be so heavily favored that the impact of the constrained factor should be minimal.')
     avoid_away_teams_on_short_rest = 1 if st.checkbox('Avoid Away Teams on Short Rest') else 0
@@ -5283,8 +5289,8 @@ if yes_i_have_constraints:
     #use_same_winners_across_all_4_metrics = 1 if st.selectbox('Bayesian, Rest, and Travel Impact:', options = bayesian_and_travel_options) == "Selected team must have been projected to win based on preseason rankings, current rankings, and with and without travel/rest adjustments" else 0
     #use_same_current_and_adjusted_current_winners = 1 if st.selectbox('Bayesian, Rest, and Travel Impact:', options = bayesian_and_travel_options) == "Selected team must be projected to win with and without travel and rest impact based on current rankings" else 0
     #use_same_adj_preseason_and_adj_current_winner = 1 if st.selectbox('Bayesian, Rest, and Travel Impact:', options = bayesian_and_travel_options) == "Selected team must have been projected to win based on preseason rankings in addition to current rankings" else 0
-    
-    bayesian_rest_travel_constraint = st.selectbox('Bayesian, Rest, and Travel Impact:', options = bayesian_and_travel_options)
+    if pick_must_be_favored:
+    	bayesian_rest_travel_constraint = st.selectbox('Bayesian, Rest, and Travel Impact:', options = bayesian_and_travel_options)
 
 st.write('')
 st.write('')

@@ -3021,10 +3021,6 @@ def get_survivor_picks_based_on_ev():
                         if (df.loc[i, 'Hypothetical Current Winner'] == forbidden_solution_1[relative_week]):
                             forbidden_indices_1.append(i)
     
-                # Add the constraint
-                solver.Add(solver.Sum([1 - picks[i] for i in forbidden_indices_1]) >= 1)
-    
-    
             
     
             # Objective: maximize the sum of Adjusted Current Difference of each game picked
@@ -3152,7 +3148,7 @@ def get_survivor_picks_based_on_ev():
             
             # Append the new forbidden solution to the list
             forbidden_solutions_1.append(picks_df['Hypothetical Current Winner'].tolist())
-            st.write(forbidden_solutions)
+            st.write(forbidden_solutions_1)
 
 def get_survivor_picks_based_on_internal_rankings():
     # Loop through 100 iterations

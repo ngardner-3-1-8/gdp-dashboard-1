@@ -3083,7 +3083,7 @@ def get_survivor_picks_based_on_ev():
                         current_difference = df.loc[i, 'Current Difference']
                         adjusted_current_difference = df.loc[i, 'Adjusted Current Difference']
                         # Calculate EV for this game
-                        ev = (df.loc[i, 'Hypothetical Current Winner EV']
+                        ev = df.loc[i, 'Hypothetical Current Winner EV']
     
     
                         print('Week %i: Pick %s %s %s (%i, %i, %i, %i, %.4f)' % (df.loc[i, 'Week_Num'], df.loc[i, 'Hypothetical Current Winner'], divisional_game, home_team,

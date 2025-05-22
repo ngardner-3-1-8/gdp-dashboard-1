@@ -3028,7 +3028,7 @@ def get_survivor_picks_based_on_ev():
             
     
             # Objective: maximize the sum of Adjusted Current Difference of each game picked
-            solver.Maximize(solver.Sum([picks[i] * (df.loc[i, 'Hypothetical Current Winner EV'] for i in range(len(df))]))
+            solver.Maximize(solver.Sum([picks[i] * (df.loc[i, 'Hypothetical Current Winner EV'] for i in range(len(df)))])
     
             # Solve the problem and print the solution
             status = solver.Solve()

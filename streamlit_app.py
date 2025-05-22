@@ -2992,6 +2992,8 @@ def get_survivor_picks_based_on_ev():
             for team in df['Hypothetical Current Winner'].unique():
                 # Can't pick a team more than once
                 solver.Add(solver.Sum([picks[i] for i in range(len(df)) if df.loc[i, 'Hypothetical Current Winner'] == team]) <= 1)
+
+            
     
     
             # Dynamically create the forbidden solution list
@@ -3021,6 +3023,7 @@ def get_survivor_picks_based_on_ev():
                     if 0 <= relative_week < len(forbidden_solution_1) and df_week >= starting_week and df_week < ending_week: #Added this to make sure we are only looking at the range
                         if (df.loc[i, 'Hypothetical Current Winner'] == forbidden_solution_1[relative_week]):
                             forbidden_indices_1.append(i)
+		solver.Add(solver.Sum([1 - picks[i] for i in forbidden_indices_1]) >= 1)
     
             
     

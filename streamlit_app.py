@@ -2707,7 +2707,7 @@ def get_survivor_picks_based_on_ev():
             
             # --- Combine the two dataframes ---
             combined_df = pd.concat([home_ev_df, away_ev_df], ignore_index=True)
-            combined_df = combined_df.sort_values(by='Week_Num', ascending=True)
+            combined_df = combined_df.sort_values(by='Week_Num')
             
             # Display the results (optional)
             print("Original DataFrame (df):")
@@ -2717,7 +2717,7 @@ def get_survivor_picks_based_on_ev():
             print("\nAway EV DataFrame (away_ev_df):")
             print(away_ev_df)
             print("\nCombined DataFrame (combined_df):")
-            print(combined_df)
+            print(combined_df['Week_Num'])
             df = combined_df
             df = df[~df['Hypothetical Current Winner'].isin(picked_teams)].reset_index(drop=True)
             #print(df)

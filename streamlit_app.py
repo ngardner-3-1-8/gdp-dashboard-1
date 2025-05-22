@@ -3023,7 +3023,7 @@ def get_survivor_picks_based_on_ev():
                     if 0 <= relative_week < len(forbidden_solution_1) and df_week >= starting_week and df_week < ending_week: #Added this to make sure we are only looking at the range
                         if (df.loc[i, 'Hypothetical Current Winner'] == forbidden_solution_1[relative_week]):
                             forbidden_indices_1.append(i)
-		solver.Add(solver.Sum([1 - picks[i] for i in forbidden_indices_1]) >= 1)
+                solver.Add(solver.Sum([1 - picks[i] for i in forbidden_indices_1]) >= 1)
     
             
     

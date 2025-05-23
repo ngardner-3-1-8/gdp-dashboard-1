@@ -5387,13 +5387,14 @@ circa_team_availability = {
     }
 
 circa_remaining_entries = {
-    'Actual Circa Remaining Entries': [14266,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1]
+    'Actual Circa Remaining Entries': [14221,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1]
 }
 dk_remaining_entries = {
     'Actual DK Remaining Entries': [20000,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1]
 }
 
-
+default_current_week_entries_circa = 14221
+default_current_week_entries_dk = 20000
 
 st.title("NFL Survivor Optimization")
 st.subheader("The second best Circa Survivor Contest optimizer")
@@ -5468,6 +5469,57 @@ if yes_i_would_like_to_choose_weeks:
         ending_week_options = range(starting_week, 21)
     ending_week = st.selectbox("Select Ending Week:", options=ending_week_options)
     ending_week = ending_week + 1
+
+    st.write('')
+    st.write('')
+    st.write('')
+    st.subheader('Current Week Entries')
+    st.write('For accurate predictions, you must innput the number of remaining entries in your contest')
+    # Get an integer input with no maximum
+    if selected_contest == "DraftKings":
+        current_week_entries_dk = st.number_input("Number of Remaining Entries:", value=0, max_value=None)
+        st.write(f"You entered: {current_week_entries_dk}")
+    else:
+        current_week_entries_circa = st.number_input("Number of Remaining Entries:", value=0, max_value=None)
+        st.write(f"You entered: {current_week_entries_circa}")
+    st.write('')
+    st.write('')
+    st.write('')
+    st.subheader('Current Week Team Availability')
+    st.write('')
+    az_current_week_availability = st.slider("Arizona Cardinals Current Week Availability:", -1, 100) / 100
+    atl_current_week_availability = st.slider("Atlanta Falcons Current Week Availability:", -1, 100) / 100
+    bal_current_week_availability = st.slider("Baltimore Ravens Current Week Availability:", -1, 100) / 100
+    buf_current_week_availability = st.slider("Buffalo Bills Current Week Availability:", -1, 100) / 100
+    car_current_week_availability = st.slider("Carolina Panthers Current Week Availability:", -1, 100) / 100
+    chi_current_week_availability = st.slider("Chicago Bears Current Week Availability:", -1, 100) / 100
+    cin_current_week_availability = st.slider("Cincinnati Bengals Current Week Availability:", -1, 100) / 100
+    cle_current_week_availability = st.slider("Cleveland Browns Current Week Availability:", -1, 100) / 100
+    dal_current_week_availability = st.slider("Dallas Cowboys Current Week Availability:", -1, 100) / 100
+    den_current_week_availability = st.slider("Denver Broncos Current Week Availability:", -1, 100) / 100
+    det_current_week_availability = st.slider("Detroit Lions Current Week Availability:", -1, 100) / 100
+    gb_current_week_availability = st.slider("Green Bay Packers Current Week Availability:", -1, 100) / 100
+    hou_current_week_availability = st.slider("Houston Texans Current Week Availability:", -1, 100) / 100
+    ind_current_week_availability = st.slider("Indianapoils Colts Current Week Availability:", -1, 100) / 100
+    jax_current_week_availability = st.slider("Jacksonville Jaguars Current Week Availability:", -1, 100) / 100
+    kc_current_week_availability = st.slider("Kansas City Chiefs Current Week Availability:", -1, 100) / 100
+    lv_current_week_availability = st.slider("Las Vegas Raiders Current Week Availability:", -1, 100) / 100
+    lac_current_week_availability = st.slider("Los Angeles Chargers Current Week Availability:", -1, 100) / 100
+    lar_current_week_availability = st.slider("Los Angeles Rams Current Week Availability:", -1, 100) / 100
+    mia_current_week_availability = st.slider("Miami Dolphins Current Week Availability:", -1, 100) / 100
+    min_current_week_availability = st.slider("Minnesota Vikings Current Week Availability:", -1, 100) / 100
+    ne_current_week_availability = st.slider("New England Patriots Current Week Availability:", -1, 100) / 100
+    no_current_week_availability = st.slider("New Orleans Saints Current Week Availability:", -1, 100) / 100
+    nyg_current_week_availability = st.slider("New York Giants Current Week Availability:", -1, 100) / 100
+    nyj_current_week_availability = st.slider("New York Jets Current Week Availability:", -1, 100) / 100
+    phi_current_week_availability = st.slider("Philadelphia Eagles Current Week Availability:", -1, 100) / 100
+    pit_current_week_availability = st.slider("Pittsburgh Steelers Current Week Availability:", -1, 100) / 100
+    sf_current_week_availability = st.slider("San Francisco 49ers Current Week Availability:", -1, 100) / 100
+    sea_current_week_availability = st.slider("Seattle Seahawks Current Week Availability:", -1, 100) / 100
+    tb_current_week_availability = st.slider("Tampa Bay Buccaneers Current Week Availability:", -1, 100) / 100
+    ten_current_week_availability = st.slider("Tennessee Titans Current Week Availability:", -1, 100) / 100
+    was_current_week_availability = st.slider("Washington Commanders Current Week Availability:", -1, 100) / 100
+	
 #return starting_week, ending_week, picked_teams
     #if ending_week:
         #st.write(f"Selected Ending Week: {ending_week}")

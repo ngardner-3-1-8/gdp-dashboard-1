@@ -2564,6 +2564,9 @@ def get_survivor_picks_based_on_ev():
                         week = df.loc[i, 'Week']
                         pick = df.loc[i,'Adjusted Current Winner']
                         opponent = df.loc[i, 'Home Team'] if df.loc[i, 'Adjusted Current Winner'] == df.loc[i, 'Away Team'] else df.loc[i, 'Away Team']
+                        win_odds = df.loc[i, 'Home Team Fair Odds'] if df.loc[i, 'Adjusted Current Winner'] == df.loc[i, 'Home Team'] else df.loc[i, 'Away Team Fair Odds']
+                        pick_% = df.loc[i, 'Home Pick %'] if df.loc[i, 'Adjusted Current Winner'] == df.loc[i, 'Home Team'] else df.loc[i, 'Away Pick %']
+                        expected_availability = df.loc[i, 'Home Team Expected Availability'] if df.loc[i, 'Adjusted Current Winner'] == df.loc[i, 'Home Team'] else df.loc[i, 'Away Team Expected Availability']
                         divisional_game = 'Divisional' if df.loc[i, 'Divisional Matchup Boolean'] else ''
                         home_team = 'Home Team' if df.loc[i, 'Adjusted Current Winner'] == df.loc[i, 'Home Team'] else 'Away Team'
                         weekly_rest = df.loc[i, 'Home Team Weekly Rest'] if df.loc[i, 'Adjusted Current Winner'] == df.loc[i, 'Home Team'] else df.loc[i, 'Away Team Weekly Rest']
@@ -2578,7 +2581,7 @@ def get_survivor_picks_based_on_ev():
                         previous_game_location = df.loc[i, 'Home Team Previous Location'] if df.loc[i, 'Adjusted Current Winner'] == df.loc[i, 'Home Team'] else df.loc[i, 'Away Team Previous Location']
                         next_opponent = df.loc[i, 'Home Team Next Opponent'] if df.loc[i, 'Adjusted Current Winner'] == df.loc[i, 'Home Team'] else df.loc[i, 'Away Team Next Opponent']
                         next_game_location = df.loc[i, 'Home Team Next Location'] if df.loc[i, 'Adjusted Current Winner'] == df.loc[i, 'Home Team'] else df.loc[i, 'Away Team Next Location']
-                        win_odds = df.loc[i, 'Home Team Fair Odds'] if df.loc[i, 'Adjusted Current Winner'] == df.loc[i, 'Home Team'] else df.loc[i, 'Away Team Fair Odds']
+
                         
     
                         # Get differences
@@ -2599,6 +2602,8 @@ def get_survivor_picks_based_on_ev():
                             'Opponent': opponent,
                             'EV': ev,
                             'Win Odds': win_odds,
+                            'Pick %': pick_%,	
+                            'Expected Availability': expected_availability,
                             'Divisional Game': divisional_game,
                             'Home Team Status': home_team,
                             'Weekly Rest': weekly_rest,
@@ -3061,6 +3066,8 @@ def get_survivor_picks_based_on_ev():
                         pick = df.loc[i,'Hypothetical Current Winner']
                         opponent = df.loc[i, 'Hypothetical Current Loser']
                         divisional_game = 'Divisional' if df.loc[i, 'Divisional Matchup Boolean'] else ''
+                        pick_% = df.loc[i, 'Home Pick %'] if df.loc[i, 'Hypothetical Current Winner'] == df.loc[i, 'Home Team 1'] else df.loc[i, 'Away Pick %']
+                        expected_availability = df.loc[i, 'Home Team Expected Availability'] if df.loc[i, 'Hypothetical Current Winner'] == df.loc[i, 'Home Team 1'] else df.loc[i, 'Away Team Expected Availability']
                         home_team = 'Home Team' if df.loc[i, 'Hypothetical Current Winner'] == df.loc[i, 'Home Team 1'] else 'Away Team'
                         weekly_rest = df.loc[i, 'Home Team Weekly Rest'] if df.loc[i, 'Hypothetical Current Winner'] == df.loc[i, 'Home Team 1'] else df.loc[i, 'Away Team Weekly Rest']
                         weekly_rest_advantage = df.loc[i, 'Weekly Home Rest Advantage'] if df.loc[i, 'Hypothetical Current Winner'] == df.loc[i, 'Home Team 1'] else df.loc[i, 'Weekly Away Rest Advantage']
@@ -3095,6 +3102,8 @@ def get_survivor_picks_based_on_ev():
                             'Opponent': opponent,
                             'EV': ev,
                             'Win Odds': win_odds,
+                            'Expected Pick %': pick_%,
+                            'Expected Availability': expected_availability,
                             'Divisional Game': divisional_game,
                             'Home Team Status': home_team,
                             'Weekly Rest': weekly_rest,
@@ -3739,6 +3748,9 @@ def get_survivor_picks_based_on_internal_rankings():
                         week = df.loc[i, 'Week']
                         pick = df.loc[i,'Adjusted Current Winner']
                         opponent = df.loc[i, 'Home Team'] if df.loc[i, 'Adjusted Current Winner'] == df.loc[i, 'Away Team'] else df.loc[i, 'Away Team']
+                        win_odds = df.loc[i, 'Home Team Fair Odds'] if df.loc[i, 'Adjusted Current Winner'] == df.loc[i, 'Home Team'] else df.loc[i, 'Away Team Fair Odds']
+			pick_% = df.loc[i, 'Home Pick %'] if df.loc[i, 'Adjusted Current Winner'] == df.loc[i, 'Home Team'] else df.loc[i, 'Away Pick %']
+                        expected_availability = df.loc[i, 'Home Team Expected Availability'] if df.loc[i, 'Adjusted Current Winner'] == df.loc[i, 'Home Team'] else df.loc[i, 'Away Team Expected Availability']
                         divisional_game = 'Divisional' if df.loc[i, 'Divisional Matchup Boolean'] else ''
                         home_team = 'Home Team' if df.loc[i, 'Adjusted Current Winner'] == df.loc[i, 'Home Team'] else 'Away Team'
                         weekly_rest = df.loc[i, 'Home Team Weekly Rest'] if df.loc[i, 'Adjusted Current Winner'] == df.loc[i, 'Home Team'] else df.loc[i, 'Away Team Weekly Rest']
@@ -3753,7 +3765,7 @@ def get_survivor_picks_based_on_internal_rankings():
                         previous_game_location = df.loc[i, 'Home Team Previous Location'] if df.loc[i, 'Adjusted Current Winner'] == df.loc[i, 'Home Team'] else df.loc[i, 'Away Team Previous Location']
                         next_opponent = df.loc[i, 'Home Team Next Opponent'] if df.loc[i, 'Adjusted Current Winner'] == df.loc[i, 'Home Team'] else df.loc[i, 'Away Team Next Opponent']
                         next_game_location = df.loc[i, 'Home Team Next Location'] if df.loc[i, 'Adjusted Current Winner'] == df.loc[i, 'Home Team'] else df.loc[i, 'Away Team Next Location']
-                        win_odds = df.loc[i, 'Home Team Fair Odds'] if df.loc[i, 'Adjusted Current Winner'] == df.loc[i, 'Home Team'] else df.loc[i, 'Away Team Fair Odds']
+
                         
     
                         # Get differences
@@ -3772,12 +3784,10 @@ def get_survivor_picks_based_on_internal_rankings():
                             'Week': week,
                             'Pick': pick,
                             'Opponent': opponent,
-                            'Preseason Spread': preseason_difference,
-                            'Adjusted Preseason Spread (Homefield, Rest, etc...)': adjusted_preseason_difference,
-                            'Current Spread': current_difference,
-                            'Adjusted Current Spread (Homefield, Rest, etc...)': adjusted_current_difference,
-                            #'EV': ev,
+                            'EV': ev,
                             'Win Odds': win_odds,
+                            'Pick %': pick_%,
+                            'Expected Availability': expected_availability,
                             'Divisional Game': divisional_game,
                             'Home Team Status': home_team,
                             'Weekly Rest': weekly_rest,
@@ -3792,6 +3802,10 @@ def get_survivor_picks_based_on_internal_rankings():
                             'Previous Game Location': previous_game_location,
                             'Next Opponent': next_opponent,
                             'Next Game Location': next_game_location
+                            'Preseason Spread': preseason_difference,
+                            'Adjusted Preseason Spread (Homefield, Rest, etc...)': adjusted_preseason_difference,
+                            'Current Spread': current_difference,
+                            'Adjusted Current Spread (Homefield, Rest, etc...)': adjusted_current_difference,
     
                         }
                         picks_rows_2.append(new_row_2)
@@ -4236,6 +4250,8 @@ def get_survivor_picks_based_on_internal_rankings():
                         week = df.loc[i, 'Week']
                         pick = df.loc[i,'Hypothetical Current Winner']
                         opponent = df.loc[i, 'Hypothetical Current Loser']
+                        pick_% = df.loc[i, 'Home Pick %'] if df.loc[i, 'Hypothetical Current Winner'] == df.loc[i, 'Home Team 1'] else df.loc[i, 'Away Pick %']
+                        expected_availability = df.loc[i, 'Home Team Expected Availability'] if df.loc[i, 'Hypothetical Current Winner'] == df.loc[i, 'Home Team 1'] else df.loc[i, 'Away Team Expected Availability']
                         divisional_game = 'Divisional' if df.loc[i, 'Divisional Matchup Boolean'] else ''
                         home_team = 'Home Team' if df.loc[i, 'Hypothetical Current Winner'] == df.loc[i, 'Home Team 1'] else 'Away Team'
                         weekly_rest = df.loc[i, 'Home Team Weekly Rest'] if df.loc[i, 'Hypothetical Current Winner'] == df.loc[i, 'Home Team 1'] else df.loc[i, 'Away Team Weekly Rest']
@@ -4271,6 +4287,8 @@ def get_survivor_picks_based_on_internal_rankings():
                             'Opponent': opponent,
                             'EV': ev,
                             'Win Odds': win_odds,
+                            'Expected Pick %': pick_%,
+                            'Expected Availability': expected_availability,	
                             'Divisional Game': divisional_game,
                             'Home Team Status': home_team,
                             'Weekly Rest': weekly_rest,

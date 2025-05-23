@@ -1171,6 +1171,11 @@ def get_predicted_pick_percentages(pd):
     selected_columns = ['Week', 'Away Team', 'Home Team', 'Away Team Fair Odds',
                         'Home Team Fair Odds', 'Away Team Star Rating', 'Home Team Star Rating', 'Divisional Matchup Boolean', 'Away Team Thanksgiving Favorite', 'Home Team Thanksgiving Favorite', 'Away Team Christmas Favorite', 'Home Team Christmas Favorite']
     new_df = new_df[selected_columns]
+    new_df['Week_Number'] = new_df['Week'].str.split(' ').str[1].astype(int)
+    # Filter the DataFrame
+    new_df = new_df[new_df['Week_Number'] >= starting_week]
+    # You can drop the auxiliary 'Week_Number' column if you no longer need it
+    new_df = new_df.drop(columns=['Week_Number'])
 
     # Read the original CSV file into a DataFrame
     #csv_path = 'nfl_Schedule_circa.csv'
@@ -1309,6 +1314,12 @@ def get_predicted_pick_percentages(pd):
     #print(away_df)
 
     nfl_schedule_df = collect_schedule_travel_ranking_data_df
+    nfl_schedule_df['Week_Number'] = new_df['Week'].str.split(' ').str[1].astype(int)
+    # Filter the DataFrame
+    nfl_schedule_df = nfl_schedule_df[new_df['Week_Number'] >= starting_week]
+    # You can drop the auxiliary 'Week_Number' column if you no longer need it
+    nfl_schedule_df = nfl_schedule_df.drop(columns=['Week_Number'])
+
     #nfl_schedule_df['Week'] = nfl_schedule_df['Week'].str.extract(r'(\d+)').astype(int)
     # Merge the DataFrames based on matching columns
     nfl_schedule_df = pd.merge(nfl_schedule_df, away_df, 
@@ -1327,7 +1338,7 @@ def get_predicted_pick_percentages(pd):
     nfl_schedule_df['Away Team EV'] = 0.0  # Initialize with 0.0
 
     #Handle Week 1 as before
-    nfl_schedule_df.loc[nfl_schedule_df['Week'] == 1, 'Total Remaining Entries at Start of Week'] = circa_total_entries if selected_contest == 'Circa' else dk_total_entries
+    nfl_schedule_df.loc[nfl_schedule_df['Week'] == starting_week, 'Total Remaining Entries at Start of Week'] = total_remaining_entries_circa if selected_contest == 'Circa' else total_remaining_entries_dk
 
     nfl_schedule_df['Home Expected Survival Rate'] = nfl_schedule_df['Home Team Fair Odds'] * nfl_schedule_df['Home Pick %']
     nfl_schedule_df['Home Expected Elimination Percent'] = nfl_schedule_df['Home Pick %'] - nfl_schedule_df['Home Expected Survival Rate']
@@ -1338,7 +1349,7 @@ def get_predicted_pick_percentages(pd):
 
 
     #Iterate through weeks starting from week 2
-    for week in range(2, nfl_schedule_df['Week'].max() + 1):
+    for week in range(starting_week, nfl_schedule_df['Week'].max() + 1):
         previous_week_df = nfl_schedule_df[nfl_schedule_df['Week'] == week - 1]        
         #Handle potential empty previous week (e.g., if week 1 is missing data for some reason)
         if previous_week_df.empty:
@@ -1562,11 +1573,17 @@ def get_predicted_pick_percentages_with_availability(pd):
         # Read the CSV file into a DataFrame
         
         new_df = nfl_schedule_pick_percentages_df
+
     
         # Create a new DataFrame with selected columns
         selected_columns = ['Week', 'Away Team', 'Home Team', 'Away Team Fair Odds',
                             'Home Team Fair Odds', 'Away Team Star Rating', 'Home Team Star Rating', 'Divisional Matchup Boolean', 'Away Team Thanksgiving Favorite', 'Home Team Thanksgiving Favorite', 'Away Team Christmas Favorite', 'Home Team Christmas Favorite', 'Entry Remaining Percent', 'Home Team Expected Availability', 'Away Team Expected Availability']
         new_df = new_df[selected_columns]
+        new_df['Week_Number'] = new_df['Week'].str.split(' ').str[1].astype(int)
+        # Filter the DataFrame
+        new_df = new_df[new_df['Week_Number'] >= starting_week]
+        # You can drop the auxiliary 'Week_Number' column if you no longer need it
+        new_df = new_df.drop(columns=['Week_Number'])
     
         # Read the original CSV file into a DataFrame
         #csv_path = 'nfl_Schedule_circa.csv'
@@ -1702,6 +1719,13 @@ def get_predicted_pick_percentages_with_availability(pd):
         #print(away_df)
     
         nfl_schedule_df = collect_schedule_travel_ranking_data_df
+        # Assumes format "Week X" - adjust if the format is different
+        nfl_schedule_df_df['Week_Number'] = nfl_schedule_df_df['Week'].str.split(' ').str[1].astype(int)
+        # Filter the DataFrame
+        nfl_schedule_df_df = nfl_schedule_df_df[new_df['Week_Number'] >= starting_week]
+        # You can drop the auxiliary 'Week_Number' column if you no longer need it
+        nfl_schedule_df_df = nfl_schedule_df_df.drop(columns=['Week_Number'])
+
         #nfl_schedule_df['Week'] = nfl_schedule_df['Week'].str.extract(r'(\d+)').astype(int)
         # Merge the DataFrames based on matching columns
         nfl_schedule_df = pd.merge(nfl_schedule_df, away_df, 
@@ -1720,9 +1744,7 @@ def get_predicted_pick_percentages_with_availability(pd):
         nfl_schedule_df['Away Team EV'] = 0.0  # Initialize with 0.0
     
         #Handle Week 1 as before
-        nfl_schedule_df.loc[nfl_schedule_df['Week'] == 1, 'Total Remaining Entries at Start of Week'] = circa_total_entries if selected_contest == 'Circa' else dk_total_entries
-        nfl_schedule_df.loc[nfl_schedule_df['Week'] == 1, 'Total Home Team Pick Availability'] = 1
-        nfl_schedule_df.loc[nfl_schedule_df['Week'] == 1, 'Total Away Team Pick Availability'] = 1
+        nfl_schedule_df.loc[nfl_schedule_df['Week'] == starting_week, 'Total Remaining Entries at Start of Week'] = total_remaining_entries_circa if selected_contest == 'Circa' else total_remaining_entries_dk
     
         nfl_schedule_df['Home Expected Survival Rate'] = nfl_schedule_df['Home Team Fair Odds'] * nfl_schedule_df['Home Pick %']
         nfl_schedule_df['Home Expected Elimination Percent'] = nfl_schedule_df['Home Pick %'] - nfl_schedule_df['Home Expected Survival Rate']
@@ -1733,7 +1755,7 @@ def get_predicted_pick_percentages_with_availability(pd):
     
     
         #Iterate through weeks starting from week 2
-        for week in range(2, nfl_schedule_df['Week'].max() + 1):
+        for week in range(starting_week, nfl_schedule_df['Week'].max() + 1):
             previous_week_df = nfl_schedule_df[nfl_schedule_df['Week'] == week - 1]
             
             #Handle potential empty previous week (e.g., if week 1 is missing data for some reason)

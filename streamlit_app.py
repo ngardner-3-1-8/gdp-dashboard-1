@@ -1338,7 +1338,7 @@ def get_predicted_pick_percentages(pd):
     nfl_schedule_df['Away Team EV'] = 0.0  # Initialize with 0.0
 
     #Handle Week 1 as before
-    nfl_schedule_df.loc[nfl_schedule_df['Week'] == starting_week, 'Total Remaining Entries at Start of Week'] = total_remaining_entries_circa if selected_contest == 'Circa' else total_remaining_entries_dk
+    nfl_schedule_df.loc[nfl_schedule_df['Week'] == starting_week, 'Total Remaining Entries at Start of Week'] = current_week_entries_circa if selected_contest == 'Circa' else current_week_entries_dk
 
     nfl_schedule_df['Home Expected Survival Rate'] = nfl_schedule_df['Home Team Fair Odds'] * nfl_schedule_df['Home Pick %']
     nfl_schedule_df['Home Expected Elimination Percent'] = nfl_schedule_df['Home Pick %'] - nfl_schedule_df['Home Expected Survival Rate']
@@ -1744,7 +1744,7 @@ def get_predicted_pick_percentages_with_availability(pd):
         nfl_schedule_df['Away Team EV'] = 0.0  # Initialize with 0.0
     
         #Handle Week 1 as before
-        nfl_schedule_df.loc[nfl_schedule_df['Week'] == starting_week, 'Total Remaining Entries at Start of Week'] = total_remaining_entries_circa if selected_contest == 'Circa' else total_remaining_entries_dk
+        nfl_schedule_df.loc[nfl_schedule_df['Week'] == starting_week, 'Total Remaining Entries at Start of Week'] = current_week_entries_circa if selected_contest == 'Circa' else current_week_entries_dk
     
         nfl_schedule_df['Home Expected Survival Rate'] = nfl_schedule_df['Home Team Fair Odds'] * nfl_schedule_df['Home Pick %']
         nfl_schedule_df['Home Expected Elimination Percent'] = nfl_schedule_df['Home Pick %'] - nfl_schedule_df['Home Expected Survival Rate']
@@ -5499,7 +5499,7 @@ if yes_i_would_like_to_choose_weeks:
     st.write('For accurate predictions, you must innput the number of remaining entries in your contest')
     # Get an integer input with no maximum
     if selected_contest == "DraftKings":
-         current_week_entries_dk = st.number_input("Number of Remaining Entries:", value=0, max_value=None)
+        current_week_entries_dk = st.number_input("Number of Remaining Entries:", value=0, max_value=None)
         st.write(f"You entered: {current_week_entries_dk}")
     else:
         current_week_entries_circa = st.number_input("Number of Remaining Entries:", value=0, max_value=None)

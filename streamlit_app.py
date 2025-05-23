@@ -3152,689 +3152,1183 @@ def get_survivor_picks_based_on_ev():
             
             # Append the new forbidden solution to the list
             forbidden_solutions_1.append(picks_df['Hypothetical Current Winner'].tolist())
-            st.write(forbidden_solutions_1)
 
 def get_survivor_picks_based_on_internal_rankings():
-    # Loop through 100 iterations
-    for iteration in range(number_solutions):
-        df = nfl_schedule_pick_percentages_df
-
-
-        #Number of weeks that have already been played
-        #weeks_completed = starting_week -1
-
-        # Teams already picked - Team name in quotes and separated by commas
-
-        # Filter out weeks that have already been played and reset index
-
-        df = df[(df['Week_Num'] >= starting_week) & (df['Week_Num'] < ending_week)].reset_index(drop=True)
-        # Filter out already picked teams
-        df = df[~df['Adjusted Current Winner'].isin(picked_teams)].reset_index(drop=True)
-        #print(df)
-        # Create the solver
-        solver = pywraplp.Solver.CreateSolver('SCIP')
-
-        # Create binary variables to represent the picks, and store them in a dictionary for easy lookup
-        picks = {}
-        for i in range(len(df)):
-            picks[i] = solver.IntVar(0, 1, 'pick_%i' % i)
-
-        # Add the constraints
-        for week in df['Week_Num'].unique():
-            # One team per week
-            solver.Add(solver.Sum([picks[i] for i in range(len(df)) if df.loc[i, 'Week_Num'] == week]) == 1)
-
-        for team in df['Adjusted Current Winner'].unique():
-            # Can't pick a team more than once
-            solver.Add(solver.Sum([picks[i] for i in range(len(df)) if df.loc[i, 'Adjusted Current Winner'] == team]) <= 1)
-
-        for i in range(len(df)):
-            # Must pick from 'Adjusted Current Winner'
-            #if df.loc[i, 'Adjusted Current Winner'] != df.loc[i, 'Home Team']:
-                #solver.Add(picks[i] == 0)
-            # Must pick from 'Same Winner?'
-            if bayesian_rest_travel_constraint == "Selected team must have been projected to win based on preseason rankings, current rankings, and with and without travel/rest adjustments":
-                if df.loc[i, 'Same Winner?'] != 'Same':
+    if pick_must_be_favored:
+        for iteration in range(number_solutions):
+            df = nfl_schedule_pick_percentages_df
+    
+    
+            #Number of weeks that have already been played
+            #weeks_completed = starting_week -1
+    
+            # Teams already picked - Team name in quotes and separated by commas
+    
+            # Filter out weeks that have already been played and reset index
+    
+            df = df[(df['Week_Num'] >= starting_week) & (df['Week_Num'] < ending_week)].reset_index(drop=True)
+            # Filter out already picked teams
+            df = df[~df['Adjusted Current Winner'].isin(picked_teams)].reset_index(drop=True)
+            #print(df)
+            # Create the solver
+            solver = pywraplp.Solver.CreateSolver('SCIP')
+    
+            # Create binary variables to represent the picks, and store them in a dictionary for easy lookup
+            picks = {}
+            for i in range(len(df)):
+                picks[i] = solver.IntVar(0, 1, 'pick_%i' % i)
+    
+            # Add the constraints
+            for week in df['Week_Num'].unique():
+                # One team per week
+                solver.Add(solver.Sum([picks[i] for i in range(len(df)) if df.loc[i, 'Week_Num'] == week]) == 1)
+    
+            for team in df['Adjusted Current Winner'].unique():
+                # Can't pick a team more than once
+                solver.Add(solver.Sum([picks[i] for i in range(len(df)) if df.loc[i, 'Adjusted Current Winner'] == team]) <= 1)
+    
+            for i in range(len(df)):
+                # Must pick from 'Adjusted Current Winner'
+                #if df.loc[i, 'Adjusted Current Winner'] != df.loc[i, 'Home Team']:
+                    #solver.Add(picks[i] == 0)
+                # Must pick from 'Same Winner?'
+                if bayesian_rest_travel_constraint == "Selected team must have been projected to win based on preseason rankings, current rankings, and with and without travel/rest adjustments":
+                    if df.loc[i, 'Same Winner?'] != 'Same':
+                        solver.Add(picks[i] == 0)
+                elif  bayesian_rest_travel_constraint == "Selected team must be projected to win with and without travel and rest impact based on current rankings":
+                    if df.loc[i, 'Same Current and Adjusted Current Winner?'] != 'Same':
+                        solver.Add(picks[i] == 0)
+                elif  bayesian_rest_travel_constraint == "Selected team must have been projected to win based on preseason rankings in addition to current rankings":   
+                    if df.loc[i, 'Same Adjusted Preseason Winner?'] != 'Same':
+                        solver.Add(picks[i] == 0)
+                # Can only pick an away team if 'Adjusted Current Difference' > 10
+                if avoid_away_teams_in_close_matchups == 1:
+                    if df.loc[i, 'Away Team'] == df.loc[i, 'Adjusted Current Winner'] and df.loc[i, 'Adjusted Current Difference'] < 10:
+                        solver.Add(picks[i] == 0)
+                #if df.loc[i, 'Away Team'] == df.loc[i, 'Adjusted Current Winner'] and df.loc[i, 'Divisional Matchup?'] == 'Divisional':
+                    #solver.Add(picks[i] == 0)
+                if avoid_back_to_back_away == 1:
+                    if df.loc[i, 'Away Team'] == df.loc[i, 'Adjusted Current Winner'] and df.loc[i, 'Back to Back Away Games'] == 'True':
+                        solver.Add(picks[i] == 0)
+    
+                # If 'Divisional Matchup?' is "Divisional", can only pick if 'Adjusted Current Difference' > 10
+                if avoid_close_divisional_matchups == 1:
+                    if df.loc[i, 'Divisional Matchup?'] == 'Divisional' and df.loc[i, 'Adjusted Current Difference'] < 10:
+                        solver.Add(picks[i] == 0)
+                # Constraints for short rest and 4 games in 17 days (only if team is the Adjusted Current Winner)
+                if avoid_away_teams_on_short_rest == 1:
+                    if df.loc[i, 'Away Team Short Rest'] == 'Yes' and df.loc[i, 'Away Team'] == df.loc[i, 'Adjusted Current Winner']:
+                        solver.Add(picks[i] == 0)
+                if avoid_4_games_in_17_days == 1:
+                    if df.loc[i, 'Home Team 4 games in 17 days'] == 'Yes' and df.loc[i, 'Home Team'] == df.loc[i, 'Adjusted Current Winner'] and df.loc[i, 'Away Team 4 games in 17 days'] == 'No':
+                        solver.Add(picks[i] == 0)
+                    if df.loc[i, 'Away Team 4 games in 17 days'] == 'Yes' and df.loc[i, 'Away Team'] == df.loc[i, 'Adjusted Current Winner'] and df.loc[i, 'Home Team 4 games in 17 days'] == 'No':
+                        solver.Add(picks[i] == 0)
+                if avoid_3_games_in_10_days == 1:
+                    if df.loc[i, 'Home Team 3 games in 10 days'] == 'Yes' and df.loc[i, 'Home Team'] == df.loc[i, 'Adjusted Current Winner'] and df.loc[i, 'Away Team 3 games in 10 days'] == 'No':
+                        solver.Add(picks[i] == 0)
+                    if df.loc[i, 'Away Team 3 games in 10 days'] == 'Yes' and df.loc[i, 'Away Team'] == df.loc[i, 'Adjusted Current Winner'] and df.loc[i, 'Home Team 3 games in 10 days'] == 'No':
+                        solver.Add(picks[i] == 0)
+                if avoid_international_game == 1:    
+                    if df.loc[i, 'City'] == 'London, UK' and df.loc[i, 'Home Team'] == df.loc[i, 'Adjusted Current Winner']:
+                        solver.Add(picks[i] == 0)
+                    if df.loc[i, 'City'] == 'London, UK' and df.loc[i, 'Away Team'] == df.loc[i, 'Adjusted Current Winner']:
+                        solver.Add(picks[i] == 0)
+                if avoid_thursday_night == 1:
+                    if df.loc[i, 'Thursday Night Game'] == 'True':
+                        solver.Add(picks[i] == 0)
+                if avoid_away_thursday_night == 1:
+                    if df.loc[i, 'Thursday Night Game'] == 'True' and df.loc[i, 'Away Team'] == df.loc[i, 'Adjusted Current Winner']:
+                        solver.Add(picks[i] == 0)
+                if avoid_teams_with_weekly_rest_disadvantage == 1:
+                    if df.loc[i, 'Home Team Weekly Rest'] < df.loc [i, 'Away Team Weekly Rest'] and df.loc[i, 'Home Team'] == df.loc[i, 'Adjusted Current Winner']:
+                        solver.Add(picks[i] == 0)
+                    if df.loc[i, 'Away Team Weekly Rest'] < df.loc [i, 'Home Team Weekly Rest'] and df.loc[i, 'Away Team'] == df.loc[i, 'Adjusted Current Winner']:
+                        solver.Add(picks[i] == 0)
+                if avoid_cumulative_rest_disadvantage == 1:
+                    if df.loc[i, 'Away Team Current Week Cumulative Rest Advantage'] < -10 and df.loc[i, 'Away Team'] == df.loc[i, 'Adjusted Current Winner']:
+                        solver.Add(picks[i] == 0)
+                    if df.loc[i, 'Home Team Current Week Cumulative Rest Advantage'] < -5 and df.loc[i, 'Home Team'] == df.loc[i, 'Adjusted Current Winner']:
+                        solver.Add(picks[i] == 0)
+                if avoid_away_teams_with_travel_disadvantage == 1:
+                    if df.loc[i, 'Away Travel Advantage'] < -850 and df.loc[i, 'Away Team'] == df.loc[i, 'Adjusted Current Winner']:
+                        solver.Add(picks[i] == 0)
+    
+    
+                
+                if df.loc[i, 'Adjusted Current Winner'] == 'Arizona Cardinals' and df.loc[i, 'Week_Num'] in az_excluded_weeks:
+                        solver.Add(picks[i] == 0)
+                if df.loc[i, 'Adjusted Current Winner'] == 'Atlanta Falcons' and df.loc[i, 'Week_Num'] in atl_excluded_weeks:
+                        solver.Add(picks[i] == 0)
+                if df.loc[i, 'Adjusted Current Winner'] == 'Baltimore Ravens' and df.loc[i, 'Week_Num'] in bal_excluded_weeks:
+                        solver.Add(picks[i] == 0)
+                if df.loc[i, 'Adjusted Current Winner'] == 'Buffalo Bills' and df.loc[i, 'Week_Num'] in buf_excluded_weeks:
+                        solver.Add(picks[i] == 0)
+                if df.loc[i, 'Adjusted Current Winner'] == 'Carolina Panthers' and df.loc[i, 'Week_Num'] in car_excluded_weeks:
+                        solver.Add(picks[i] == 0)
+                if df.loc[i, 'Adjusted Current Winner'] == 'Chicago Bears' and df.loc[i, 'Week_Num'] in chi_excluded_weeks:
+                        solver.Add(picks[i] == 0)
+                if df.loc[i, 'Adjusted Current Winner'] == 'Cincinnati Bengals' and df.loc[i, 'Week_Num'] in cin_excluded_weeks:
+                        solver.Add(picks[i] == 0)
+                if df.loc[i, 'Adjusted Current Winner'] == 'Cleveland Browns' and df.loc[i, 'Week_Num'] in cle_excluded_weeks:
+                        solver.Add(picks[i] == 0)
+                if df.loc[i, 'Adjusted Current Winner'] == 'Dallas Cowboys' and df.loc[i, 'Week_Num'] in dal_excluded_weeks:
+                        solver.Add(picks[i] == 0)
+                if df.loc[i, 'Adjusted Current Winner'] == 'Denver Broncos' and df.loc[i, 'Week_Num'] in den_excluded_weeks:
+                        solver.Add(picks[i] == 0)
+                if df.loc[i, 'Adjusted Current Winner'] == 'Detroit Lions' and df.loc[i, 'Week_Num'] in det_excluded_weeks:
+                        solver.Add(picks[i] == 0)
+                if df.loc[i, 'Adjusted Current Winner'] == 'AGreen Bay Packers' and df.loc[i, 'Week_Num'] in gb_excluded_weeks:
+                        solver.Add(picks[i] == 0)
+                if df.loc[i, 'Adjusted Current Winner'] == 'Houston Texans' and df.loc[i, 'Week_Num'] in hou_excluded_weeks:
+                        solver.Add(picks[i] == 0)
+                if df.loc[i, 'Adjusted Current Winner'] == 'Indianapolis Colts' and df.loc[i, 'Week_Num'] in ind_excluded_weeks:
+                        solver.Add(picks[i] == 0)
+                if df.loc[i, 'Adjusted Current Winner'] == 'Jacksonville Jaguars' and df.loc[i, 'Week_Num'] in jax_excluded_weeks:
+                        solver.Add(picks[i] == 0)
+                if df.loc[i, 'Adjusted Current Winner'] == 'Kansas City Chiefs' and df.loc[i, 'Week_Num'] in kc_excluded_weeks:
+                        solver.Add(picks[i] == 0)
+                if df.loc[i, 'Adjusted Current Winner'] == 'Las vegas Raiders' and df.loc[i, 'Week_Num'] in lv_excluded_weeks:
+                        solver.Add(picks[i] == 0)
+                if df.loc[i, 'Adjusted Current Winner'] == 'Los Angeles Chargers' and df.loc[i, 'Week_Num'] in lac_excluded_weeks:
+                        solver.Add(picks[i] == 0)
+                if df.loc[i, 'Adjusted Current Winner'] == 'Los Angeles Rams' and df.loc[i, 'Week_Num'] in lar_excluded_weeks:
+                        solver.Add(picks[i] == 0)
+                if df.loc[i, 'Adjusted Current Winner'] == 'Miami Dolphins' and df.loc[i, 'Week_Num'] in mia_excluded_weeks:
+                        solver.Add(picks[i] == 0)
+                if df.loc[i, 'Adjusted Current Winner'] == 'Minnesota Vikings' and df.loc[i, 'Week_Num'] in min_excluded_weeks:
+                        solver.Add(picks[i] == 0)
+                if df.loc[i, 'Adjusted Current Winner'] == 'New England Patriots' and df.loc[i, 'Week_Num'] in ne_excluded_weeks:
+                        solver.Add(picks[i] == 0)
+                if df.loc[i, 'Adjusted Current Winner'] == 'New Orleans Saints' and df.loc[i, 'Week_Num'] in no_excluded_weeks:
+                        solver.Add(picks[i] == 0)
+                if df.loc[i, 'Adjusted Current Winner'] == 'New York Giants' and df.loc[i, 'Week_Num'] in nyg_excluded_weeks:
+                        solver.Add(picks[i] == 0)
+                if df.loc[i, 'Adjusted Current Winner'] == 'New York Jets' and df.loc[i, 'Week_Num'] in nyj_excluded_weeks:
+                        solver.Add(picks[i] == 0)
+                if df.loc[i, 'Adjusted Current Winner'] == 'Philadelphia Eagles' and df.loc[i, 'Week_Num'] in phi_excluded_weeks:
+                        solver.Add(picks[i] == 0)
+                if df.loc[i, 'Adjusted Current Winner'] == 'Pittsburgh Steelers' and df.loc[i, 'Week_Num'] in pit_excluded_weeks:
+                        solver.Add(picks[i] == 0)
+                if df.loc[i, 'Adjusted Current Winner'] == 'Seattle Seahawks' and df.loc[i, 'Week_Num'] in sea_excluded_weeks:
+                        solver.Add(picks[i] == 0)
+                if df.loc[i, 'Adjusted Current Winner'] == 'Tampa Bay Buccaneers' and df.loc[i, 'Week_Num'] in tb_excluded_weeks:
+                        solver.Add(picks[i] == 0)
+                if df.loc[i, 'Adjusted Current Winner'] == 'Tennessee Titans' and df.loc[i, 'Week_Num'] in ten_excluded_weeks:
+                        solver.Add(picks[i] == 0)
+                if df.loc[i, 'Adjusted Current Winner'] == 'Washington Commanders' and df.loc[i, 'Week_Num'] in was_excluded_weeks:
+                        solver.Add(picks[i] == 0)
+                if df.loc[i, 'Adjusted Current Winner'] == 'San Francisco 49ers' and df.loc[i, 'Week_Num'] in sf_excluded_weeks:
+                        solver.Add(picks[i] == 0)
+    
+            # Add the constraint for San Francisco 49ers in week 11
+            if sf_req_week > 0:        
+                for i in range(len(df)):
+                    if (df.loc[i, 'Home Team'] == 'San Francisco 49ers' or df.loc[i, 'Away Team'] == 'San Francisco 49ers') and df.loc[i, 'Week_Num'] == sf_req_week:
+                        if df.loc[i, 'Adjusted Current Winner'] == 'San Francisco 49ers':
+                            solver.Add(picks[i] == 1)
+                        elif df.loc[i, 'Home Team'] == 'San Francisco 49ers':
+                            df.loc[i, 'Adjusted Current Winner'] = df.loc[i, 'Home Team']
+                            solver.Add(picks[i] == 1)
+                        elif df.loc[i, 'Away Team'] == 'San Francisco 49ers':
+                            df.loc[i, 'Adjusted Current Winner'] = df.loc[i, 'Away Team']
+                            solver.Add(picks[i] == 1)
+            if az_req_week > 0:        
+                for i in range(len(df)):
+                    if (df.loc[i, 'Home Team'] == 'Arizona Cardinals' or df.loc[i, 'Away Team'] == 'Arizona Cardinals') and df.loc[i, 'Week_Num'] == az_req_week:
+                        if df.loc[i, 'Adjusted Current Winner'] == 'Arizona Cardinals':
+                            solver.Add(picks[i] == 1)
+                        elif df.loc[i, 'Home Team'] == 'Arizona Cardinals':
+                            df.loc[i, 'Adjusted Current Winner'] = df.loc[i, 'Home Team']
+                            solver.Add(picks[i] == 1)
+                        elif df.loc[i, 'Away Team'] == 'Arizona Cardinals':
+                            df.loc[i, 'Adjusted Current Winner'] = df.loc[i, 'Away Team']
+                            solver.Add(picks[i] == 1)
+            if atl_req_week > 0:        
+                for i in range(len(df)):
+                    if (df.loc[i, 'Home Team'] == 'Atlanta Falcons' or df.loc[i, 'Away Team'] == 'Atlanta Falcons') and df.loc[i, 'Week_Num'] == atl_req_week:
+                        if df.loc[i, 'Adjusted Current Winner'] == 'Atlanta Falcons':
+                            solver.Add(picks[i] == 1)
+                        elif df.loc[i, 'Home Team'] == 'Atlanta Falcons':
+                            df.loc[i, 'Adjusted Current Winner'] = df.loc[i, 'Home Team']
+                            solver.Add(picks[i] == 1)
+                        elif df.loc[i, 'Away Team'] == 'Atlanta Falcons':
+                            df.loc[i, 'Adjusted Current Winner'] = df.loc[i, 'Away Team']
+                            solver.Add(picks[i] == 1)
+            if bal_req_week > 0:        
+                for i in range(len(df)):
+                    if (df.loc[i, 'Home Team'] == 'Baltimore Ravens' or df.loc[i, 'Away Team'] == 'Baltimore Ravens') and df.loc[i, 'Week_Num'] == bal_req_week:
+                        if df.loc[i, 'Adjusted Current Winner'] == 'Baltimore Ravens':
+                            solver.Add(picks[i] == 1)
+                        elif df.loc[i, 'Home Team'] == 'Baltimore Ravens':
+                            df.loc[i, 'Adjusted Current Winner'] = df.loc[i, 'Home Team']
+                            solver.Add(picks[i] == 1)
+                        elif df.loc[i, 'Away Team'] == 'Baltimore Ravens':
+                            df.loc[i, 'Adjusted Current Winner'] = df.loc[i, 'Away Team']
+                            solver.Add(picks[i] == 1)
+            if buf_req_week > 0:        
+                for i in range(len(df)):
+                    if (df.loc[i, 'Home Team'] == 'Buffalo Bills' or df.loc[i, 'Away Team'] == 'Buffalo Bills') and df.loc[i, 'Week_Num'] == buf_req_week:
+                        if df.loc[i, 'Adjusted Current Winner'] == 'Buffalo Bills':
+                            solver.Add(picks[i] == 1)
+                        elif df.loc[i, 'Home Team'] == 'Buffalo Bills':
+                            df.loc[i, 'Adjusted Current Winner'] = df.loc[i, 'Home Team']
+                            solver.Add(picks[i] == 1)
+                        elif df.loc[i, 'Away Team'] == 'Buffalo Bills':
+                            df.loc[i, 'Adjusted Current Winner'] = df.loc[i, 'Away Team']
+                            solver.Add(picks[i] == 1)
+            if car_req_week > 0:        
+                for i in range(len(df)):
+                    if (df.loc[i, 'Home Team'] == 'Carolina Panthers' or df.loc[i, 'Away Team'] == 'Carolina Panthers') and df.loc[i, 'Week_Num'] == car_req_week:
+                        if df.loc[i, 'Adjusted Current Winner'] == 'Carolina Panthers':
+                            solver.Add(picks[i] == 1)
+                        elif df.loc[i, 'Home Team'] == 'Carolina Panthers':
+                            df.loc[i, 'Adjusted Current Winner'] = df.loc[i, 'Home Team']
+                            solver.Add(picks[i] == 1)
+                        elif df.loc[i, 'Away Team'] == 'Carolina Panthers':
+                            df.loc[i, 'Adjusted Current Winner'] = df.loc[i, 'Away Team']
+                            solver.Add(picks[i] == 1)
+            if chi_req_week > 0:        
+                for i in range(len(df)):
+                    if (df.loc[i, 'Home Team'] == 'Chicago Bears' or df.loc[i, 'Away Team'] == 'Chicago Bears') and df.loc[i, 'Week_Num'] == chi_req_week:
+                        if df.loc[i, 'Adjusted Current Winner'] == 'Chicago Bears':
+                            solver.Add(picks[i] == 1)
+                        elif df.loc[i, 'Home Team'] == 'Chicago Bears':
+                            df.loc[i, 'Adjusted Current Winner'] = df.loc[i, 'Home Team']
+                            solver.Add(picks[i] == 1)
+                        elif df.loc[i, 'Away Team'] == 'Chicago Bears':
+                            df.loc[i, 'Adjusted Current Winner'] = df.loc[i, 'Away Team']
+                            solver.Add(picks[i] == 1)
+            if cin_req_week > 0:        
+                    if (df.loc[i, 'Home Team'] == 'Cincinnati Bengals' or df.loc[i, 'Away Team'] == 'Cincinnati Bengals') and df.loc[i, 'Week_Num'] == cin_req_week:
+                        if df.loc[i, 'Adjusted Current Winner'] == 'Cincinnati Bengals':
+                            solver.Add(picks[i] == 1)
+                        elif df.loc[i, 'Home Team'] == 'Cincinnati Bengals':
+                            df.loc[i, 'Adjusted Current Winner'] = df.loc[i, 'Home Team']
+                            solver.Add(picks[i] == 1)
+                        elif df.loc[i, 'Away Team'] == 'Cincinnati Bengals':
+                            df.loc[i, 'Adjusted Current Winner'] = df.loc[i, 'Away Team']
+                            solver.Add(picks[i] == 1)
+            if cle_req_week > 0:        
+                for i in range(len(df)):
+                    if (df.loc[i, 'Home Team'] == 'Cleveland Browns' or df.loc[i, 'Away Team'] == 'Cleveland Browns') and df.loc[i, 'Week_Num'] == cle_req_week:
+                        if df.loc[i, 'Adjusted Current Winner'] == 'Cleveland Browns':
+                            solver.Add(picks[i] == 1)
+                        elif df.loc[i, 'Home Team'] == 'Cleveland Browns':
+                            df.loc[i, 'Adjusted Current Winner'] = df.loc[i, 'Home Team']
+                            solver.Add(picks[i] == 1)
+                        elif df.loc[i, 'Away Team'] == 'Cleveland Browns':
+                            df.loc[i, 'Adjusted Current Winner'] = df.loc[i, 'Away Team']
+                            solver.Add(picks[i] == 1)
+            if dal_req_week > 0:        
+                for i in range(len(df)):
+                    if (df.loc[i, 'Home Team'] == 'Dallas Cowboys' or df.loc[i, 'Away Team'] == 'Dallas Cowboys') and df.loc[i, 'Week_Num'] == dal_req_week:
+                        if df.loc[i, 'Adjusted Current Winner'] == 'Dallas Cowboys':
+                            solver.Add(picks[i] == 1)
+                        elif df.loc[i, 'Home Team'] == 'Dallas Cowboys':
+                            df.loc[i, 'Adjusted Current Winner'] = df.loc[i, 'Home Team']
+                            solver.Add(picks[i] == 1)
+                        elif df.loc[i, 'Away Team'] == 'Dallas Cowboys':
+                            df.loc[i, 'Adjusted Current Winner'] = df.loc[i, 'Away Team']
+                            solver.Add(picks[i] == 1)
+            if den_req_week > 0:        
+                for i in range(len(df)):
+                    if (df.loc[i, 'Home Team'] == 'Denver Broncos' or df.loc[i, 'Away Team'] == 'Denver Broncos') and df.loc[i, 'Week_Num'] == den_req_week:
+                        if df.loc[i, 'Adjusted Current Winner'] == 'Denver Broncos':
+                            solver.Add(picks[i] == 1)
+                        elif df.loc[i, 'Home Team'] == 'Denver Broncos':
+                            df.loc[i, 'Adjusted Current Winner'] = df.loc[i, 'Home Team']
+                            solver.Add(picks[i] == 1)
+                        elif df.loc[i, 'Away Team'] == 'Denver Broncos':
+                            df.loc[i, 'Adjusted Current Winner'] = df.loc[i, 'Away Team']
+                            solver.Add(picks[i] == 1)
+            if det_req_week > 0:        
+                for i in range(len(df)):
+                    if (df.loc[i, 'Home Team'] == 'Detroit Lions' or df.loc[i, 'Away Team'] == 'Detroit Lions') and df.loc[i, 'Week_Num'] == det_req_week:
+                        if df.loc[i, 'Adjusted Current Winner'] == 'Detroit Lions':
+                            solver.Add(picks[i] == 1)
+                        elif df.loc[i, 'Home Team'] == 'Detroit Lions':
+                            df.loc[i, 'Adjusted Current Winner'] = df.loc[i, 'Home Team']
+                            solver.Add(picks[i] == 1)
+                        elif df.loc[i, 'Away Team'] == 'Detroit Lions':
+                            df.loc[i, 'Adjusted Current Winner'] = df.loc[i, 'Away Team']
+                            solver.Add(picks[i] == 1)
+            if gb_req_week > 0:        
+                for i in range(len(df)):
+                    if (df.loc[i, 'Home Team'] == 'Green Bay Packers' or df.loc[i, 'Away Team'] == 'Green Bay Packers') and df.loc[i, 'Week_Num'] == gb_req_week:
+                        if df.loc[i, 'Adjusted Current Winner'] == 'Green Bay Packers':
+                            solver.Add(picks[i] == 1)
+                        elif df.loc[i, 'Home Team'] == 'Green Bay Packers':
+                            df.loc[i, 'Adjusted Current Winner'] = df.loc[i, 'Home Team']
+                            solver.Add(picks[i] == 1)
+                        elif df.loc[i, 'Away Team'] == 'Green Bay Packers':
+                            df.loc[i, 'Adjusted Current Winner'] = df.loc[i, 'Away Team']
+                            solver.Add(picks[i] == 1)
+            if hou_req_week > 0:        
+                for i in range(len(df)):
+                    if (df.loc[i, 'Home Team'] == 'Houston Texans' or df.loc[i, 'Away Team'] == 'Houston Texans') and df.loc[i, 'Week_Num'] == hou_req_week:
+                        if df.loc[i, 'Adjusted Current Winner'] == 'Houston Texans':
+                            solver.Add(picks[i] == 1)
+                        elif df.loc[i, 'Home Team'] == 'Houston Texans':
+                            df.loc[i, 'Adjusted Current Winner'] = df.loc[i, 'Home Team']
+                            solver.Add(picks[i] == 1)
+                        elif df.loc[i, 'Away Team'] == 'Houston Texans':
+                            df.loc[i, 'Adjusted Current Winner'] = df.loc[i, 'Away Team']
+                            solver.Add(picks[i] == 1)
+            if ind_req_week > 0:        
+                for i in range(len(df)):
+                    if (df.loc[i, 'Home Team'] == 'Indianapolis Colts' or df.loc[i, 'Away Team'] == 'Indianapolis Colts') and df.loc[i, 'Week_Num'] == ind_req_week:
+                        if df.loc[i, 'Adjusted Current Winner'] == 'Indianapolis Colts':
+                            solver.Add(picks[i] == 1)
+                        elif df.loc[i, 'Home Team'] == 'Indianapolis Colts':
+                            df.loc[i, 'Adjusted Current Winner'] = df.loc[i, 'Home Team']
+                            solver.Add(picks[i] == 1)
+                        elif df.loc[i, 'Away Team'] == 'Indianapolis Colts':
+                            df.loc[i, 'Adjusted Current Winner'] = df.loc[i, 'Away Team']
+                            solver.Add(picks[i] == 1)
+            if jax_req_week > 0:        
+                for i in range(len(df)):
+                    if (df.loc[i, 'Home Team'] == 'Jacksonville Jaguars' or df.loc[i, 'Away Team'] == 'Jacksonville Jaguars') and df.loc[i, 'Week_Num'] == jax_req_week:
+                        if df.loc[i, 'Adjusted Current Winner'] == 'Jacksonville Jaguars':
+                            solver.Add(picks[i] == 1)
+                        elif df.loc[i, 'Home Team'] == 'Jacksonville Jaguars':
+                            df.loc[i, 'Adjusted Current Winner'] = df.loc[i, 'Home Team']
+                            solver.Add(picks[i] == 1)
+                        elif df.loc[i, 'Away Team'] == 'Jacksonville Jaguars':
+                            df.loc[i, 'Adjusted Current Winner'] = df.loc[i, 'Away Team']
+                            solver.Add(picks[i] == 1)
+            if kc_req_week > 0:        
+                for i in range(len(df)):
+                    if (df.loc[i, 'Home Team'] == 'Kansas City Chiefs' or df.loc[i, 'Away Team'] == 'Kansas City Chiefs') and df.loc[i, 'Week_Num'] == kc_req_week:
+                        if df.loc[i, 'Adjusted Current Winner'] == 'Kansas City Chiefs':
+                            solver.Add(picks[i] == 1)
+                        elif df.loc[i, 'Home Team'] == 'Kansas City Chiefs':
+                            df.loc[i, 'Adjusted Current Winner'] = df.loc[i, 'Home Team']
+                            solver.Add(picks[i] == 1)
+                        elif df.loc[i, 'Away Team'] == 'Kansas City Chiefs':
+                            df.loc[i, 'Adjusted Current Winner'] = df.loc[i, 'Away Team']
+                            solver.Add(picks[i] == 1)
+            if lv_req_week > 0:        
+                for i in range(len(df)):
+                    if (df.loc[i, 'Home Team'] == 'Las Vegas Raiders' or df.loc[i, 'Away Team'] == 'Las Vegas Raiders') and df.loc[i, 'Week_Num'] == lv_req_week:
+                        if df.loc[i, 'Adjusted Current Winner'] == 'Las Vegas Raiders':
+                            solver.Add(picks[i] == 1)
+                        elif df.loc[i, 'Home Team'] == 'Las Vegas Raiders':
+                            df.loc[i, 'Adjusted Current Winner'] = df.loc[i, 'Home Team']
+                            solver.Add(picks[i] == 1)
+                        elif df.loc[i, 'Away Team'] == 'Las Vegas Raiders':
+                            df.loc[i, 'Adjusted Current Winner'] = df.loc[i, 'Away Team']
+                            solver.Add(picks[i] == 1)
+            if lac_req_week > 0:        
+                for i in range(len(df)):
+                    if (df.loc[i, 'Home Team'] == 'Los Angeles Chargers' or df.loc[i, 'Away Team'] == 'Los Angeles Chargers') and df.loc[i, 'Week_Num'] == lac_req_week:
+                        if df.loc[i, 'Adjusted Current Winner'] == 'Los Angeles Chargers':
+                            solver.Add(picks[i] == 1)
+                        elif df.loc[i, 'Home Team'] == 'Los Angeles Chargers':
+                            df.loc[i, 'Adjusted Current Winner'] = df.loc[i, 'Home Team']
+                            solver.Add(picks[i] == 1)
+                        elif df.loc[i, 'Away Team'] == 'Los Angeles Chargers':
+                            df.loc[i, 'Adjusted Current Winner'] = df.loc[i, 'Away Team']
+                            solver.Add(picks[i] == 1)
+            if lar_req_week > 0:        
+                for i in range(len(df)):
+                    if (df.loc[i, 'Home Team'] == 'Los Angeles Rams' or df.loc[i, 'Away Team'] == 'Los Angeles Rams') and df.loc[i, 'Week_Num'] == lar_req_week:
+                        if df.loc[i, 'Adjusted Current Winner'] == 'Los Angeles Rams':
+                            solver.Add(picks[i] == 1)
+                        elif df.loc[i, 'Home Team'] == 'Los Angeles Rams':
+                            df.loc[i, 'Adjusted Current Winner'] = df.loc[i, 'Home Team']
+                            solver.Add(picks[i] == 1)
+                        elif df.loc[i, 'Away Team'] == 'Los Angeles Rams':
+                            df.loc[i, 'Adjusted Current Winner'] = df.loc[i, 'Away Team']
+                            solver.Add(picks[i] == 1)
+            if mia_req_week > 0:        
+                for i in range(len(df)):
+                    if (df.loc[i, 'Home Team'] == 'Miami Dolphins' or df.loc[i, 'Away Team'] == 'Miami Dolphins') and df.loc[i, 'Week_Num'] == mia_req_week:
+                        if df.loc[i, 'Adjusted Current Winner'] == 'Miami Dolphins':
+                            solver.Add(picks[i] == 1)
+                        elif df.loc[i, 'Home Team'] == 'Miami Dolphins':
+                            df.loc[i, 'Adjusted Current Winner'] = df.loc[i, 'Home Team']
+                            solver.Add(picks[i] == 1)
+                        elif df.loc[i, 'Away Team'] == 'Miami Dolphins':
+                            df.loc[i, 'Adjusted Current Winner'] = df.loc[i, 'Away Team']
+                            solver.Add(picks[i] == 1)
+            if min_req_week > 0:        
+                for i in range(len(df)):
+                    if (df.loc[i, 'Home Team'] == 'Minnesota Vikings' or df.loc[i, 'Away Team'] == 'Minnesota Vikings') and df.loc[i, 'Week_Numv'] == min_req_week:
+                        if df.loc[i, 'Adjusted Current Winner'] == 'Minnesota Vikings':
+                            solver.Add(picks[i] == 1)
+                        elif df.loc[i, 'Home Team'] == 'Minnesota Vikings':
+                            df.loc[i, 'Adjusted Current Winner'] = df.loc[i, 'Home Team']
+                            solver.Add(picks[i] == 1)
+                        elif df.loc[i, 'Away Team'] == 'Minnesota Vikings':
+                            df.loc[i, 'Adjusted Current Winner'] = df.loc[i, 'Away Team']
+                            solver.Add(picks[i] == 1)
+            if ne_req_week > 0:        
+                for i in range(len(df)):
+                    if (df.loc[i, 'Home Team'] == 'New England Patriots' or df.loc[i, 'Away Team'] == 'New England Patriots') and df.loc[i, 'Week_Num'] == ne_req_week:
+                        if df.loc[i, 'Adjusted Current Winner'] == 'New England Patriots':
+                            solver.Add(picks[i] == 1)
+                        elif df.loc[i, 'Home Team'] == 'New England Patriots':
+                            df.loc[i, 'Adjusted Current Winner'] = df.loc[i, 'Home Team']
+                            solver.Add(picks[i] == 1)
+                        elif df.loc[i, 'Away Team'] == 'New England Patriots':
+                            df.loc[i, 'Adjusted Current Winner'] = df.loc[i, 'Away Team']
+                            solver.Add(picks[i] == 1)
+            if no_req_week > 0:        
+                for i in range(len(df)):
+                    if (df.loc[i, 'Home Team'] == 'New Orleans Saints' or df.loc[i, 'Away Team'] == 'New Orleans Saints') and df.loc[i, 'Week_Num'] == no_req_week:
+                        if df.loc[i, 'Adjusted Current Winner'] == 'New Orleans Saints':
+                            solver.Add(picks[i] == 1)
+                        elif df.loc[i, 'Home Team'] == 'New Orleans Saints':
+                            df.loc[i, 'Adjusted Current Winner'] = df.loc[i, 'Home Team']
+                            solver.Add(picks[i] == 1)
+                        elif df.loc[i, 'Away Team'] == 'New Orleans Saints':
+                            df.loc[i, 'Adjusted Current Winner'] = df.loc[i, 'Away Team']
+                            solver.Add(picks[i] == 1)
+            if nyg_req_week > 0:        
+                for i in range(len(df)):
+                    if (df.loc[i, 'Home Team'] == 'New York Giants' or df.loc[i, 'Away Team'] == 'New York Giants') and df.loc[i, 'Week_Num'] == nyg_req_week:
+                        if df.loc[i, 'Adjusted Current Winner'] == 'New York Giants':
+                            solver.Add(picks[i] == 1)
+                        elif df.loc[i, 'Home Team'] == 'New York Giants':
+                            df.loc[i, 'Adjusted Current Winner'] = df.loc[i, 'Home Team']
+                            solver.Add(picks[i] == 1)
+                        elif df.loc[i, 'Away Team'] == 'New York Giants':
+                            df.loc[i, 'Adjusted Current Winner'] = df.loc[i, 'Away Team']
+                            solver.Add(picks[i] == 1)
+            if nyj_req_week > 0:        
+                for i in range(len(df)):
+                    if (df.loc[i, 'Home Team'] == 'New York Jets' or df.loc[i, 'Away Team'] == 'New York Jets') and df.loc[i, 'Week_Num'] == nyj_req_week:
+                        if df.loc[i, 'Adjusted Current Winner'] == 'New York Jets':
+                            solver.Add(picks[i] == 1)
+                        elif df.loc[i, 'Home Team'] == 'New York Jets':
+                            df.loc[i, 'Adjusted Current Winner'] = df.loc[i, 'Home Team']
+                            solver.Add(picks[i] == 1)
+                        elif df.loc[i, 'Away Team'] == 'New York Jets':
+                            df.loc[i, 'Adjusted Current Winner'] = df.loc[i, 'Away Team']
+                            solver.Add(picks[i] == 1)
+            if phi_req_week > 0:        
+                for i in range(len(df)):
+                    if (df.loc[i, 'Home Team'] == 'Philadelphia Eagles' or df.loc[i, 'Away Team'] == 'Philadelphia Eagles') and df.loc[i, 'Week_Num'] == phi_req_week:
+                        if df.loc[i, 'Adjusted Current Winner'] == 'Philadelphia Eagles':
+                            solver.Add(picks[i] == 1)
+                        elif df.loc[i, 'Home Team'] == 'Philadelphia Eagles':
+                            df.loc[i, 'Adjusted Current Winner'] = df.loc[i, 'Home Team']
+                            solver.Add(picks[i] == 1)
+                        elif df.loc[i, 'Away Team'] == 'Philadelphia Eagles':
+                            df.loc[i, 'Adjusted Current Winner'] = df.loc[i, 'Away Team']
+                            solver.Add(picks[i] == 1)
+            if pit_req_week > 0:        
+                    if (df.loc[i, 'Home Team'] == 'Pittsburgh Steelers' or df.loc[i, 'Away Team'] == 'Pittsburgh Steelers') and df.loc[i, 'Week_Num'] == pit_req_week:
+                        if df.loc[i, 'Adjusted Current Winner'] == 'Pittsburgh Steelers':
+                            solver.Add(picks[i] == 1)
+                        elif df.loc[i, 'Home Team'] == 'Pittsburgh Steelers':
+                            df.loc[i, 'Adjusted Current Winner'] = df.loc[i, 'Home Team']
+                            solver.Add(picks[i] == 1)
+                        elif df.loc[i, 'Away Team'] == 'Pittsburgh Steelers':
+                            df.loc[i, 'Adjusted Current Winner'] = df.loc[i, 'Away Team']
+                            solver.Add(picks[i] == 1)
+            if sea_req_week > 0:        
+                for i in range(len(df)):
+                    if (df.loc[i, 'Home Team'] == 'Seattle Seahawks' or df.loc[i, 'Away Team'] == 'Seattle Seahawks') and df.loc[i, 'Week_Num'] == sea_req_week:
+                        if df.loc[i, 'Adjusted Current Winner'] == 'Seattle Seahawks':
+                            solver.Add(picks[i] == 1)
+                        elif df.loc[i, 'Home Team'] == 'Seattle Seahawks':
+                            df.loc[i, 'Adjusted Current Winner'] = df.loc[i, 'Home Team']
+                            solver.Add(picks[i] == 1)
+                        elif df.loc[i, 'Away Team'] == 'Seattle Seahawks':
+                            df.loc[i, 'Adjusted Current Winner'] = df.loc[i, 'Away Team']
+                            solver.Add(picks[i] == 1)
+            if tb_req_week > 0:        
+                for i in range(len(df)):
+                    if (df.loc[i, 'Home Team'] == 'Tampa Bay Buccaneers' or df.loc[i, 'Away Team'] == 'Tampa Bay Buccaneers') and df.loc[i, 'Week_Num'] == tb_req_week:
+                        if df.loc[i, 'Adjusted Current Winner'] == 'Tampa Bay Buccaneers':
+                            solver.Add(picks[i] == 1)
+                        elif df.loc[i, 'Home Team'] == 'Tampa Bay Buccaneers':
+                            df.loc[i, 'Adjusted Current Winner'] = df.loc[i, 'Home Team']
+                            solver.Add(picks[i] == 1)
+                        elif df.loc[i, 'Away Team'] == 'Tampa Bay Buccaneers':
+                            df.loc[i, 'Adjusted Current Winner'] = df.loc[i, 'Away Team']
+                            solver.Add(picks[i] == 1)
+            if ten_req_week > 0:        
+                for i in range(len(df)):
+                    if (df.loc[i, 'Home Team'] == 'Tennessee Titans' or df.loc[i, 'Away Team'] == 'Tennessee Titans') and df.loc[i, 'Week_Num'] == ten_req_week:
+                        if df.loc[i, 'Adjusted Current Winner'] == 'Tennessee Titans':
+                            solver.Add(picks[i] == 1)
+                        elif df.loc[i, 'Home Team'] == 'Tennessee Titans':
+                            df.loc[i, 'Adjusted Current Winner'] = df.loc[i, 'Home Team']
+                            solver.Add(picks[i] == 1)
+                        elif df.loc[i, 'Away Team'] == 'Tennessee Titans':
+                            df.loc[i, 'Adjusted Current Winner'] = df.loc[i, 'Away Team']
+                            solver.Add(picks[i] == 1)
+            if was_req_week > 0:        
+                for i in range(len(df)):
+                    if (df.loc[i, 'Home Team'] == 'Washington Commanders' or df.loc[i, 'Away Team'] == 'Washington Commanders') and df.loc[i, 'Week_Num'] == was_req_week:
+                        if df.loc[i, 'Adjusted Current Winner'] == 'Washington Commanders':
+                            solver.Add(picks[i] == 1)
+                        elif df.loc[i, 'Home Team'] == 'Washington Commanders':
+                            df.loc[i, 'Adjusted Current Winner'] = df.loc[i, 'Home Team']
+                            solver.Add(picks[i] == 1)
+                        elif df.loc[i, 'Away Team'] == 'Washington Commanders':
+                            df.loc[i, 'Adjusted Current Winner'] = df.loc[i, 'Away Team']
+                            solver.Add(picks[i] == 1)
+    
+    
+                if df.loc[i, 'Adjusted Current Winner'] in picked_teams:
                     solver.Add(picks[i] == 0)
-            elif  bayesian_rest_travel_constraint == "Selected team must be projected to win with and without travel and rest impact based on current rankings":
-                if df.loc[i, 'Same Current and Adjusted Current Winner?'] != 'Same':
+            # Dynamically create the forbidden solution list
+            forbidden_solutions_1 = []
+            if iteration > 0: 
+                for previous_iteration in range(iteration):
+                    # Load the picks from the previous iteration
+                    if selected_contest == 'Circa':
+                        previous_picks_df = pd.read_csv(f"circa_picks_ir_{previous_iteration + 1}.csv")
+                    else:
+                        previous_picks_df = pd.read_csv(f"dk_picks_ir_{previous_iteration + 1}.csv")
+    
+                    # Extract the forbidden solution for this iteration
+                    forbidden_solution_1 = previous_picks_df['Adjusted Current Winner'].tolist()
+                    forbidden_solutions_1.append(forbidden_solution_1)
+    
+            # Add constraints for all forbidden solutions
+            for forbidden_solution_1 in forbidden_solutions_1:
+                # Get the indices of the forbidden solution in the DataFrame
+                forbidden_indices_1 = []
+                for i in range(len(df)):
+                    # Calculate the relative week number within the forbidden solution
+                    df_week = df.loc[i, 'Week_Num']
+                    relative_week = df_week - starting_week  # Adjust week to be relative to starting week
+    
+                    #Check if the week is within the range and the solution is forbidden
+                    if 0 <= relative_week < len(forbidden_solution_1) and df_week >= starting_week and df_week < ending_week: #Added this to make sure we are only looking at the range
+                        if (df.loc[i, 'Adjusted Current Winner'] == forbidden_solution_1[relative_week]):
+                            forbidden_indices_1.append(i)
+    
+                # Add the constraint
+                solver.Add(solver.Sum([1 - picks[i] for i in forbidden_indices_1]) >= 1)
+     
+    
+            # Objective: maximize the sum of Adjusted Current Difference of each game picked
+            solver.Maximize(solver.Sum([picks[i] * df.loc[i, 'Adjusted Current Difference'] for i in range(len(df))]))
+    
+            # Solve the problem and print the solution
+            status = solver.Solve()
+    
+            if status == pywraplp.Solver.OPTIMAL:
+                st.write('')
+                st.write(f'**Solution Based on Internal Rankings: {iteration + 1}**')
+    
+                st.write('Solution found!')
+                st.write('Objective value =', solver.Objective().Value())
+    
+    
+                # Initialize sums
+                sum_preseason_difference = 0
+                sum_adjusted_preseason_difference = 0
+                sum_current_difference = 0
+                sum_adjusted_current_difference = 0
+                sum_ev = 0
+    
+                # Initialize picks_df
+                picks_df = pd.DataFrame(columns=df.columns)
+                picks_rows_2 = []
+                for i in range(len(df)):
+                    if picks[i].solution_value() > 0:
+                        # Determine if it's a divisional game and if the picked team is the home team
+    
+                        week = df.loc[i, 'Week']
+                        pick = df.loc[i,'Adjusted Current Winner']
+                        opponent = df.loc[i, 'Home Team'] if df.loc[i, 'Adjusted Current Winner'] == df.loc[i, 'Away Team'] else df.loc[i, 'Away Team']
+                        divisional_game = 'Divisional' if df.loc[i, 'Divisional Matchup Boolean'] else ''
+                        home_team = 'Home Team' if df.loc[i, 'Adjusted Current Winner'] == df.loc[i, 'Home Team'] else 'Away Team'
+                        weekly_rest = df.loc[i, 'Home Team Weekly Rest'] if df.loc[i, 'Adjusted Current Winner'] == df.loc[i, 'Home Team'] else df.loc[i, 'Away Team Weekly Rest']
+                        weekly_rest_advantage = df.loc[i, 'Weekly Home Rest Advantage'] if df.loc[i, 'Adjusted Current Winner'] == df.loc[i, 'Home Team'] else df.loc[i, 'Weekly Away Rest Advantage']
+                        cumulative_rest = df.loc[i, 'Home Cumulative Rest Advantage'] if df.loc[i, 'Adjusted Current Winner'] == df.loc[i, 'Home Team'] else df.loc[i, 'Away Cumulative Rest Advantage']
+                        cumulative_rest_advantage = df.loc[i, 'Home Team Current Week Cumulative Rest Advantage'] if df.loc[i, 'Adjusted Current Winner'] == df.loc[i, 'Home Team'] else df.loc[i, 'Away Team Current Week Cumulative Rest Advantage']
+                        travel_advantage = df.loc[i, 'Home Travel Advantage'] if df.loc[i, 'Adjusted Current Winner'] == df.loc[i, 'Home Team'] else df.loc[i, 'Away Travel Advantage']
+                        back_to_back_away_games = 'True' if df.loc[i, 'Adjusted Current Winner'] == df.loc[i, 'Away Team'] and df.loc[i, 'Back to Back Away Games'] == 'True' else 'False'
+                        thursday_night_game = 'Thursday Night Game' if df.loc[i, "Thursday Night Game"] == 'True' else 'Sunday/Monday Game'
+                        international_game = 'International Game' if df.loc[i, 'Actual Stadium'] == 'London, UK' else 'Domestic Game'
+                        previous_opponent = df.loc[i, 'Home Team Previous Opponent'] if df.loc[i, 'Adjusted Current Winner'] == df.loc[i, 'Home Team'] else df.loc[i, 'Away Team Previous Opponent']
+                        previous_game_location = df.loc[i, 'Home Team Previous Location'] if df.loc[i, 'Adjusted Current Winner'] == df.loc[i, 'Home Team'] else df.loc[i, 'Away Team Previous Location']
+                        next_opponent = df.loc[i, 'Home Team Next Opponent'] if df.loc[i, 'Adjusted Current Winner'] == df.loc[i, 'Home Team'] else df.loc[i, 'Away Team Next Opponent']
+                        next_game_location = df.loc[i, 'Home Team Next Location'] if df.loc[i, 'Adjusted Current Winner'] == df.loc[i, 'Home Team'] else df.loc[i, 'Away Team Next Location']
+                        win_odds = df.loc[i, 'Home Team Fair Odds'] if df.loc[i, 'Adjusted Current Winner'] == df.loc[i, 'Home Team'] else df.loc[i, 'Away Team Fair Odds']
+                        
+    
+                        # Get differences
+                        preseason_difference = df.loc[i, 'Preseason Difference']
+                        adjusted_preseason_difference = df.loc[i, 'Adjusted Preseason Difference']
+                        current_difference = df.loc[i, 'Current Difference']
+                        adjusted_current_difference = df.loc[i, 'Adjusted Current Difference']
+                        # Calculate EV for this game
+                        #ev = (df.loc[i, 'Home Team EV'] if df.loc[i, 'Adjusted Current Winner'] == df.loc[i, 'Home Team'] else df.loc[i, 'Away Team EV'])
+    
+    
+                        #print('Week %i: Pick %s %s %s (%i, %i, %i, %i, %.4f)' % (df.loc[i, 'Week_Num'], df.loc[i, 'Adjusted Current Winner'], divisional_game, home_team,
+                        #                                                   preseason_difference, adjusted_preseason_difference,
+                        #                                                   current_difference, adjusted_current_difference, ev))
+                        new_row_2 = {
+                            'Week': week,
+                            'Pick': pick,
+                            'Opponent': opponent,
+                            'Preseason Spread': preseason_difference,
+                            'Adjusted Preseason Spread (Homefield, Rest, etc...)': adjusted_preseason_difference,
+                            'Current Spread': current_difference,
+                            'Adjusted Current Spread (Homefield, Rest, etc...)': adjusted_current_difference,
+                            #'EV': ev,
+                            'Win Odds': win_odds,
+                            'Divisional Game': divisional_game,
+                            'Home Team Status': home_team,
+                            'Weekly Rest': weekly_rest,
+                            'Weekly Rest Advantage': weekly_rest_advantage,
+                            'Cumulative Rest': cumulative_rest,
+                            'Cumulative Rest Advantage': cumulative_rest_advantage,
+                            'Travel Advantage': travel_advantage,
+                            'Back to Back Away Games': back_to_back_away_games,
+                            'Thursday Night Game': thursday_night_game,
+                            'International Game': international_game,
+                            'Previous Opponent': previous_opponent,
+                            'Previous Game Location': previous_game_location,
+                            'Next Opponent': next_opponent,
+                            'Next Game Location': next_game_location
+    
+                        }
+                        picks_rows_2.append(new_row_2)
+    
+    
+                        # Add differences to sums
+                        sum_preseason_difference += preseason_difference
+                        sum_adjusted_preseason_difference += adjusted_preseason_difference
+                        sum_current_difference += current_difference
+                        sum_adjusted_current_difference += adjusted_current_difference
+                        #sum_ev += ev
+                        picks_df = pd.concat([picks_df, df.loc[[i]]], ignore_index=True)
+                        picks_df['Divisional Matchup?'] = divisional_game
+                summarized_picks_df = pd.DataFrame(picks_rows_2)
+    
+                st.write(summarized_picks_df)
+                st.write('')
+                #st.write(f'Total EV: {sum_ev}')
+                st.write('\nPreseason Difference:', sum_preseason_difference)
+                st.write('Adjusted Preseason Difference:', sum_adjusted_preseason_difference)
+                st.write('Current Difference:', sum_current_difference)
+                st.write(f'Adjusted Current Difference: :blue[{sum_adjusted_current_difference}]')
+                
+            else:
+                st.write('No solution found. Consider using fewer constraints. Or you may just be fucked')
+                st.write('No solution found. Consider using fewer constraints. Or you may just be fucked')
+            st.write("---------------------------------------------------------------------------------------------------------------")
+            st.write("")
+            st.write("")  
+            st.write("")
+    
+                # Save the picks to a CSV file for the current iteration
+            if selected_contest == 'Circa':
+                picks_df.to_csv(f'circa_picks_ir_{iteration + 1}.csv', index=False)
+                summarized_picks_df.to_csv(f'circa_picks_ir_subset_{iteration + 1}.csv', index=False)
+            else:
+                picks_df.to_csv(f'dk_picks_ir_{iteration + 1}.csv', index=False)
+                summarized_picks_df.to_csv(f'dk_picks_ir_subset_{iteration + 1}.csv', index=False)
+            
+            # Append the new forbidden solution to the list
+            forbidden_solutions_1.append(picks_df['Adjusted Current Winner'].tolist())
+            #print(forbidden_solutions)
+    else:
+        for iteration in range(number_solutions):
+            df = full_df_with_ev
+    
+            #Number of weeks that have already been played
+            #weeks_completed = starting_week -1
+    
+            # Teams already picked - Team name in quotes and separated by commas
+    
+            # Filter out weeks that have already been played and reset index
+    
+            df = df[(df['Week_Num'] >= starting_week) & (df['Week_Num'] < ending_week)].reset_index(drop=True)
+            # Filter out already picked teams
+            # --- Create home_ev_df ---
+            home_ev_df = df.copy() # Start with a copy to keep all original columns
+            
+            # Rename columns for home_ev_df
+            home_ev_df.rename(columns={
+                "Home Team": "Hypothetical Current Winner",
+                "Away Team": "Hypothetical Current Loser",
+                "Home Team EV": "Hypothetical Current Winner EV",
+                "Away Team EV": "Hypothetical Current Loser EV",
+                "Away Team Adjusted Current Rank": "Hypothetical Current Loser Adjusted Current Rank",
+                "Home Team Adjusted Current Rank": "Hypothetical Current Winner Adjusted Current Rank"
+            }, inplace=True)
+            
+            # Add "Away Team 1" column
+            home_ev_df["Away Team 1"] = home_ev_df["Hypothetical Current Loser"]
+            home_ev_df["Home Team 1"] = home_ev_df["Hypothetical Current Winner"]
+            
+            # --- Create away_ev_df ---
+            away_ev_df = df.copy() # Start with a copy to keep all original columns
+            
+            # Rename columns for away_ev_df
+            away_ev_df.rename(columns={
+                "Home Team": "Hypothetical Current Loser",
+                "Away Team": "Hypothetical Current Winner",
+                "Home Team EV": "Hypothetical Current Loser EV",
+                "Away Team EV": "Hypothetical Current Winner EV",
+                "Away Team Adjusted Current Rank": "Hypothetical Current Winner Adjusted Current Rank",
+                "Home Team Adjusted Current Rank": "Hypothetical Current Loser Adjusted Current Rank"
+            }, inplace=True)
+            
+            # Add "Away Team 1" column
+            away_ev_df["Away Team 1"] = away_ev_df["Hypothetical Current Winner"]
+            away_ev_df["Home Team 1"] = away_ev_df["Hypothetical Current Loser"]
+            
+            # --- Combine the two dataframes ---
+            combined_df = pd.concat([home_ev_df, away_ev_df], ignore_index=True)
+            combined_df = combined_df.sort_values(by='Week_Num')
+            
+            # Display the results (optional)
+            print("Original DataFrame (df):")
+            print(df)
+            print("\nHome EV DataFrame (home_ev_df):")
+            print(home_ev_df)
+            print("\nAway EV DataFrame (away_ev_df):")
+            print(away_ev_df)
+            print("\nCombined DataFrame (combined_df):")
+            print(combined_df['Week_Num'])
+            df = combined_df
+            df = df[~df['Hypothetical Current Winner'].isin(picked_teams)].reset_index(drop=True)
+            #print(df)
+            # Create the solver
+            solver = pywraplp.Solver.CreateSolver('SCIP')
+    
+            # Create binary variables to represent the picks, and store them in a dictionary for easy lookup
+            picks = {}
+            for i in range(len(df)):
+                picks[i] = solver.IntVar(0, 1, 'pick_%i' % i)
+    
+            # Add the constraints
+            for i in range(len(df)):
+                # Can only pick an away team if 'Adjusted Current Difference' > 10
+                if avoid_away_teams_in_close_matchups == 1:
+                    if df.loc[i, 'Away Team 1'] == df.loc[i, 'Hypothetical Current Winner'] and df.loc[i, 'Adjusted Current Difference'] < 10 and df.loc[i, 'Hypothetical Current Winner Adjusted Current Rank'] > df.loc[i, 'Hypothetical Current Loser Adjusted Current Rank']:
+                        solver.Add(picks[i] == 0)
+                #if df.loc[i, 'Away Team'] == df.loc[i, 'Adjusted Current Winner'] and df.loc[i, 'Divisional Matchup?'] == 'Divisional':
+                    #solver.Add(picks[i] == 0)
+                if avoid_back_to_back_away == 1:
+                    if df.loc[i, 'Away Team 1'] == df.loc[i, 'Hypothetical Current Winner'] and df.loc[i, 'Back to Back Away Games'] == 'True':
+                        solver.Add(picks[i] == 0)
+    
+                # If 'Divisional Matchup?' is "Divisional", can only pick if 'Adjusted Current Difference' > 10
+                if avoid_close_divisional_matchups == 1:
+                    if df.loc[i, 'Divisional Matchup?'] == 'Divisional' and df.loc[i, 'Adjusted Current Difference'] < 10 and df.loc[i, 'Hypothetical Current Winner Adjusted Current Rank'] > df.loc[i, 'Hypothetical Current Loser Adjusted Current Rank']:
+                        solver.Add(picks[i] == 0)
+                # Constraints for short rest and 4 games in 17 days (only if team is the Adjusted Current Winner)
+                if avoid_away_teams_on_short_rest == 1:
+                    if df.loc[i, 'Away Team Short Rest'] == 'Yes' and df.loc[i, 'Away Team 1'] == df.loc[i, 'Hypothetical Current Winner']:
+                        solver.Add(picks[i] == 0)
+                if avoid_4_games_in_17_days == 1:
+                    if df.loc[i, 'Home Team 4 games in 17 days'] == 'Yes' and df.loc[i, 'Home Team 1'] == df.loc[i, 'Hypothetical Current Winner'] and df.loc[i, 'Away Team 4 games in 17 days'] == 'No':
+                        solver.Add(picks[i] == 0)
+                    if df.loc[i, 'Away Team 4 games in 17 days'] == 'Yes' and df.loc[i, 'Away Team 1'] == df.loc[i, 'Hypothetical Current Winner'] and df.loc[i, 'Home Team 4 games in 17 days'] == 'No':
+                        solver.Add(picks[i] == 0)
+                if avoid_3_games_in_10_days == 1:
+                    if df.loc[i, 'Home Team 3 games in 10 days'] == 'Yes' and df.loc[i, 'Home Team 1'] == df.loc[i, 'Hypothetical Current Winner'] and df.loc[i, 'Away Team 3 games in 10 days'] == 'No':
+                        solver.Add(picks[i] == 0)
+                    if df.loc[i, 'Away Team 3 games in 10 days'] == 'Yes' and df.loc[i, 'Away Team 1'] == df.loc[i, 'Hypothetical Current Winner'] and df.loc[i, 'Home Team 3 games in 10 days'] == 'No':
+                        solver.Add(picks[i] == 0)
+                if avoid_international_game == 1:    
+                    if df.loc[i, 'City'] == 'London, UK' and df.loc[i, 'Home Team 1'] == df.loc[i, 'Hypothetical Current Winner']:
+                        solver.Add(picks[i] == 0)
+                    if df.loc[i, 'City'] == 'London, UK' and df.loc[i, 'Away Team 1'] == df.loc[i, 'Hypothetical Current Winner']:
+                        solver.Add(picks[i] == 0)
+                if avoid_thursday_night == 1:
+                    if df.loc[i, 'Thursday Night Game'] == 'True':
+                        solver.Add(picks[i] == 0)
+                if avoid_away_thursday_night == 1:
+                    if df.loc[i, 'Thursday Night Game'] == 'True' and df.loc[i, 'Away Team 1'] == df.loc[i, 'Hypothetical Current Winner']:
+                        solver.Add(picks[i] == 0)
+                if avoid_teams_with_weekly_rest_disadvantage == 1:
+                    if df.loc[i, 'Home Team Weekly Rest'] < df.loc [i, 'Away Team Weekly Rest'] and df.loc[i, 'Home Team 1'] == df.loc[i, 'Hypothetical Current Winner']:
+                        solver.Add(picks[i] == 0)
+                    if df.loc[i, 'Away Team Weekly Rest'] < df.loc [i, 'Home Team Weekly Rest'] and df.loc[i, 'Away Team 1'] == df.loc[i, 'Hypothetical Current Winner']:
+                        solver.Add(picks[i] == 0)
+                if avoid_cumulative_rest_disadvantage == 1:
+                    if df.loc[i, 'Away Team Current Week Cumulative Rest Advantage'] < -10 and df.loc[i, 'Away Team 1'] == df.loc[i, 'Hypothetical Current Winner']:
+                        solver.Add(picks[i] == 0)
+                    if df.loc[i, 'Home Team Current Week Cumulative Rest Advantage'] < -5 and df.loc[i, 'Home Team 1'] == df.loc[i, 'Hypothetical Current Winner']:
+                        solver.Add(picks[i] == 0)
+                if avoid_away_teams_with_travel_disadvantage == 1:
+                    if df.loc[i, 'Away Travel Advantage'] < -850 and df.loc[i, 'Away Team 1'] == df.loc[i, 'Hypothetical Current Winner']:
+                        solver.Add(picks[i] == 0)
+    
+    
+                
+                if df.loc[i, 'Hypothetical Current Winner'] == 'Arizona Cardinals' and df.loc[i, 'Week_Num'] in az_excluded_weeks:
+                        solver.Add(picks[i] == 0)
+                if df.loc[i, 'Hypothetical Current Winner'] == 'Atlanta Falcons' and df.loc[i, 'Week_Num'] in atl_excluded_weeks:
+                        solver.Add(picks[i] == 0)
+                if df.loc[i, 'Hypothetical Current Winner'] == 'Baltimore Ravens' and df.loc[i, 'Week_Num'] in bal_excluded_weeks:
+                        solver.Add(picks[i] == 0)
+                if df.loc[i, 'Hypothetical Current Winner'] == 'Buffalo Bills' and df.loc[i, 'Week_Num'] in buf_excluded_weeks:
+                        solver.Add(picks[i] == 0)
+                if df.loc[i, 'Hypothetical Current Winner'] == 'Carolina Panthers' and df.loc[i, 'Week_Num'] in car_excluded_weeks:
+                        solver.Add(picks[i] == 0)
+                if df.loc[i, 'Hypothetical Current Winner'] == 'Chicago Bears' and df.loc[i, 'Week_Num'] in chi_excluded_weeks:
+                        solver.Add(picks[i] == 0)
+                if df.loc[i, 'Hypothetical Current Winner'] == 'Cincinnati Bengals' and df.loc[i, 'Week_Num'] in cin_excluded_weeks:
+                        solver.Add(picks[i] == 0)
+                if df.loc[i, 'Hypothetical Current Winner'] == 'Cleveland Browns' and df.loc[i, 'Week_Num'] in cle_excluded_weeks:
+                        solver.Add(picks[i] == 0)
+                if df.loc[i, 'Hypothetical Current Winner'] == 'Dallas Cowboys' and df.loc[i, 'Week_Num'] in dal_excluded_weeks:
+                        solver.Add(picks[i] == 0)
+                if df.loc[i, 'Hypothetical Current Winner'] == 'Denver Broncos' and df.loc[i, 'Week_Num'] in den_excluded_weeks:
+                        solver.Add(picks[i] == 0)
+                if df.loc[i, 'Hypothetical Current Winner'] == 'Detroit Lions' and df.loc[i, 'Week_Num'] in det_excluded_weeks:
+                        solver.Add(picks[i] == 0)
+                if df.loc[i, 'Hypothetical Current Winner'] == 'Green Bay Packers' and df.loc[i, 'Week_Num'] in gb_excluded_weeks:
+                        solver.Add(picks[i] == 0)
+                if df.loc[i, 'Hypothetical Current Winner'] == 'Houston Texans' and df.loc[i, 'Week_Num'] in hou_excluded_weeks:
+                        solver.Add(picks[i] == 0)
+                if df.loc[i, 'Hypothetical Current Winner'] == 'Indianapolis Colts' and df.loc[i, 'Week_Num'] in ind_excluded_weeks:
+                        solver.Add(picks[i] == 0)
+                if df.loc[i, 'Hypothetical Current Winner'] == 'Jacksonville Jaguars' and df.loc[i, 'Week_Num'] in jax_excluded_weeks:
+                        solver.Add(picks[i] == 0)
+                if df.loc[i, 'Hypothetical Current Winner'] == 'Kansas City Chiefs' and df.loc[i, 'Week_Num'] in kc_excluded_weeks:
+                        solver.Add(picks[i] == 0)
+                if df.loc[i, 'Hypothetical Current Winner'] == 'Las vegas Raiders' and df.loc[i, 'Week_Num'] in lv_excluded_weeks:
+                        solver.Add(picks[i] == 0)
+                if df.loc[i, 'Hypothetical Current Winner'] == 'Los Angeles Chargers' and df.loc[i, 'Week_Num'] in lac_excluded_weeks:
+                        solver.Add(picks[i] == 0)
+                if df.loc[i, 'Hypothetical Current Winner'] == 'Los Angeles Rams' and df.loc[i, 'Week_Num'] in lar_excluded_weeks:
+                        solver.Add(picks[i] == 0)
+                if df.loc[i, 'Hypothetical Current Winner'] == 'Miami Dolphins' and df.loc[i, 'Week_Num'] in mia_excluded_weeks:
+                        solver.Add(picks[i] == 0)
+                if df.loc[i, 'Hypothetical Current Winner'] == 'Minnesota Vikings' and df.loc[i, 'Week_Num'] in min_excluded_weeks:
+                        solver.Add(picks[i] == 0)
+                if df.loc[i, 'Hypothetical Current Winner'] == 'New England Patriots' and df.loc[i, 'Week_Num'] in ne_excluded_weeks:
+                        solver.Add(picks[i] == 0)
+                if df.loc[i, 'Hypothetical Current Winner'] == 'New Orleans Saints' and df.loc[i, 'Week_Num'] in no_excluded_weeks:
+                        solver.Add(picks[i] == 0)
+                if df.loc[i, 'Hypothetical Current Winner'] == 'New York Giants' and df.loc[i, 'Week_Num'] in nyg_excluded_weeks:
+                        solver.Add(picks[i] == 0)
+                if df.loc[i, 'Hypothetical Current Winner'] == 'New York Jets' and df.loc[i, 'Week_Num'] in nyj_excluded_weeks:
+                        solver.Add(picks[i] == 0)
+                if df.loc[i, 'Hypothetical Current Winner'] == 'Philadelphia Eagles' and df.loc[i, 'Week_Num'] in phi_excluded_weeks:
+                        solver.Add(picks[i] == 0)
+                if df.loc[i, 'Hypothetical Current Winner'] == 'Pittsburgh Steelers' and df.loc[i, 'Week_Num'] in pit_excluded_weeks:
+                        solver.Add(picks[i] == 0)
+                if df.loc[i, 'Hypothetical Current Winner'] == 'Seattle Seahawks' and df.loc[i, 'Week_Num'] in sea_excluded_weeks:
+                        solver.Add(picks[i] == 0)
+                if df.loc[i, 'Hypothetical Current Winner'] == 'Tampa Bay Buccaneers' and df.loc[i, 'Week_Num'] in tb_excluded_weeks:
+                        solver.Add(picks[i] == 0)
+                if df.loc[i, 'Hypothetical Current Winner'] == 'Tennessee Titans' and df.loc[i, 'Week_Num'] in ten_excluded_weeks:
+                        solver.Add(picks[i] == 0)
+                if df.loc[i, 'Hypothetical Current Winner'] == 'Washington Commanders' and df.loc[i, 'Week_Num'] in was_excluded_weeks:
+                        solver.Add(picks[i] == 0)
+                if df.loc[i, 'Hypothetical Current Winner'] == 'San Francisco 49ers' and df.loc[i, 'Week_Num'] in sf_excluded_weeks:
+                        solver.Add(picks[i] == 0)
+    
+    
+                if df.loc[i, 'Hypothetical Current Winner'] in picked_teams:
                     solver.Add(picks[i] == 0)
-            elif  bayesian_rest_travel_constraint == "Selected team must have been projected to win based on preseason rankings in addition to current rankings":   
-                if df.loc[i, 'Same Adjusted Preseason Winner?'] != 'Same':
-                    solver.Add(picks[i] == 0)
-            # Can only pick an away team if 'Adjusted Current Difference' > 10
-            if avoid_away_teams_in_close_matchups == 1:
-                if df.loc[i, 'Away Team'] == df.loc[i, 'Adjusted Current Winner'] and df.loc[i, 'Adjusted Current Difference'] < 10:
-                    solver.Add(picks[i] == 0)
-            #if df.loc[i, 'Away Team'] == df.loc[i, 'Adjusted Current Winner'] and df.loc[i, 'Divisional Matchup?'] == 'Divisional':
-                #solver.Add(picks[i] == 0)
-            if avoid_back_to_back_away == 1:
-                if df.loc[i, 'Away Team'] == df.loc[i, 'Adjusted Current Winner'] and df.loc[i, 'Back to Back Away Games'] == 'True':
-                    solver.Add(picks[i] == 0)
-
-            # If 'Divisional Matchup?' is "Divisional", can only pick if 'Adjusted Current Difference' > 10
-            if avoid_close_divisional_matchups == 1:
-                if df.loc[i, 'Divisional Matchup?'] == 'Divisional' and df.loc[i, 'Adjusted Current Difference'] < 10:
-                    solver.Add(picks[i] == 0)
-            # Constraints for short rest and 4 games in 17 days (only if team is the Adjusted Current Winner)
-            if avoid_away_teams_on_short_rest == 1:
-                if df.loc[i, 'Away Team Short Rest'] == 'Yes' and df.loc[i, 'Away Team'] == df.loc[i, 'Adjusted Current Winner']:
-                    solver.Add(picks[i] == 0)
-            if avoid_4_games_in_17_days == 1:
-                if df.loc[i, 'Home Team 4 games in 17 days'] == 'Yes' and df.loc[i, 'Home Team'] == df.loc[i, 'Adjusted Current Winner'] and df.loc[i, 'Away Team 4 games in 17 days'] == 'No':
-                    solver.Add(picks[i] == 0)
-                if df.loc[i, 'Away Team 4 games in 17 days'] == 'Yes' and df.loc[i, 'Away Team'] == df.loc[i, 'Adjusted Current Winner'] and df.loc[i, 'Home Team 4 games in 17 days'] == 'No':
-                    solver.Add(picks[i] == 0)
-            if avoid_3_games_in_10_days == 1:
-                if df.loc[i, 'Home Team 3 games in 10 days'] == 'Yes' and df.loc[i, 'Home Team'] == df.loc[i, 'Adjusted Current Winner'] and df.loc[i, 'Away Team 3 games in 10 days'] == 'No':
-                    solver.Add(picks[i] == 0)
-                if df.loc[i, 'Away Team 3 games in 10 days'] == 'Yes' and df.loc[i, 'Away Team'] == df.loc[i, 'Adjusted Current Winner'] and df.loc[i, 'Home Team 3 games in 10 days'] == 'No':
-                    solver.Add(picks[i] == 0)
-            if avoid_international_game == 1:    
-                if df.loc[i, 'City'] == 'London, UK' and df.loc[i, 'Home Team'] == df.loc[i, 'Adjusted Current Winner']:
-                    solver.Add(picks[i] == 0)
-                if df.loc[i, 'City'] == 'London, UK' and df.loc[i, 'Away Team'] == df.loc[i, 'Adjusted Current Winner']:
-                    solver.Add(picks[i] == 0)
-            if avoid_thursday_night == 1:
-                if df.loc[i, 'Thursday Night Game'] == 'True':
-                    solver.Add(picks[i] == 0)
-            if avoid_away_thursday_night == 1:
-                if df.loc[i, 'Thursday Night Game'] == 'True' and df.loc[i, 'Away Team'] == df.loc[i, 'Adjusted Current Winner']:
-                    solver.Add(picks[i] == 0)
-            if avoid_teams_with_weekly_rest_disadvantage == 1:
-                if df.loc[i, 'Home Team Weekly Rest'] < df.loc [i, 'Away Team Weekly Rest'] and df.loc[i, 'Home Team'] == df.loc[i, 'Adjusted Current Winner']:
-                    solver.Add(picks[i] == 0)
-                if df.loc[i, 'Away Team Weekly Rest'] < df.loc [i, 'Home Team Weekly Rest'] and df.loc[i, 'Away Team'] == df.loc[i, 'Adjusted Current Winner']:
-                    solver.Add(picks[i] == 0)
-            if avoid_cumulative_rest_disadvantage == 1:
-                if df.loc[i, 'Away Team Current Week Cumulative Rest Advantage'] < -10 and df.loc[i, 'Away Team'] == df.loc[i, 'Adjusted Current Winner']:
-                    solver.Add(picks[i] == 0)
-                if df.loc[i, 'Home Team Current Week Cumulative Rest Advantage'] < -5 and df.loc[i, 'Home Team'] == df.loc[i, 'Adjusted Current Winner']:
-                    solver.Add(picks[i] == 0)
-            if avoid_away_teams_with_travel_disadvantage == 1:
-                if df.loc[i, 'Away Travel Advantage'] < -850 and df.loc[i, 'Away Team'] == df.loc[i, 'Adjusted Current Winner']:
-                    solver.Add(picks[i] == 0)
-
+    
+    # Add the constraint for San Francisco 49ers in week 11
+            if sf_req_week > 0:        
+                for i in range(len(df)):
+                    if (df.loc[i, 'Hypothetical Current Winner'] == 'San Francisco 49ers') and df.loc[i, 'Week_Num'] == sf_req_week:
+                        solver.Add(picks[i] == 1)
+            if az_req_week > 0:        
+                for i in range(len(df)):
+                    if (df.loc[i, 'Hypothetical Current Winner'] == 'Arizona Cardinals') and df.loc[i, 'Week_Num'] == az_req_week:
+                        solver.Add(picks[i] == 1)
+            if atl_req_week > 0:        
+                for i in range(len(df)):
+                    if (df.loc[i, 'Hypothetical Current Winner'] == 'Atlanta Falcons') and df.loc[i, 'Week_Num'] == atl_req_week:
+                        solver.Add(picks[i] == 1)
+            if bal_req_week > 0:        
+                for i in range(len(df)):
+                    if (df.loc[i, 'Hypothetical Current Winner'] == 'Baltimore Ravens') and df.loc[i, 'Week_Num'] == bal_req_week:
+                        solver.Add(picks[i] == 1)
+            if buf_req_week > 0:        
+                for i in range(len(df)):
+                    if (df.loc[i, 'Hypothetical Current Winner'] == 'Buffalo Bills') and df.loc[i, 'Week_Num'] == buf_req_week:
+                        solver.Add(picks[i] == 1)
+            if car_req_week > 0:        
+                for i in range(len(df)):
+                    if (df.loc[i, 'Hypothetical Current Winner'] == 'Carolina Panthers') and df.loc[i, 'Week_Num'] == car_req_week:
+                        solver.Add(picks[i] == 1)
+            if chi_req_week > 0:        
+                for i in range(len(df)):
+                    if (df.loc[i, 'Hypothetical Current Winner'] == 'Chicago Bears') and df.loc[i, 'Week_Num'] == chi_req_week:
+                        solver.Add(picks[i] == 1)
+            if cin_req_week > 0:
+                for i in range(len(df)):
+                    if (df.loc[i, 'Hypothetical Current Winner'] == 'Cincinnati Bengals') and df.loc[i, 'Week_Num'] == cin_req_week:
+                        solver.Add(picks[i] == 1)
+            if cle_req_week > 0:        
+                for i in range(len(df)):
+                    if (df.loc[i, 'Hypothetical Current Winner'] == 'Cleveland Browns') and df.loc[i, 'Week_Num'] == cle_req_week:
+                        solver.Add(picks[i] == 1)
+            if dal_req_week > 0:        
+                for i in range(len(df)):
+                    if (df.loc[i, 'Hypothetical Current Winner'] == 'Dallas Cowboys') and df.loc[i, 'Week_Num'] == dal_req_week:
+                        solver.Add(picks[i] == 1)
+            if den_req_week > 0:        
+                for i in range(len(df)):
+                    if (df.loc[i, 'Hypothetical Current Winner'] == 'Denver Broncos') and df.loc[i, 'Week_Num'] == den_req_week:
+                        solver.Add(picks[i] == 1)
+            if det_req_week > 0:        
+                for i in range(len(df)):
+                    if (df.loc[i, 'Hypothetical Current Winner'] == 'Detroit Lions') and df.loc[i, 'Week_Num'] == det_req_week:
+                        solver.Add(picks[i] == 1)
+            if gb_req_week > 0:        
+                for i in range(len(df)):
+                    if (df.loc[i, 'Hypothetical Current Winner'] == 'Green Bay Packers') and df.loc[i, 'Week_Num'] == gb_req_week:
+                        solver.Add(picks[i] == 1)
+            if hou_req_week > 0:        
+                for i in range(len(df)):
+                    if (df.loc[i, 'Hypothetical Current Winner'] == 'Houston Texans') and df.loc[i, 'Week_Num'] == hou_req_week:
+                        solver.Add(picks[i] == 1)
+            if ind_req_week > 0:        
+                for i in range(len(df)):
+                    if (df.loc[i, 'Hypothetical Current Winner'] == 'Indianapolis Colts') and df.loc[i, 'Week_Num'] == ind_req_week:
+                        solver.Add(picks[i] == 1)
+            if jax_req_week > 0:        
+                for i in range(len(df)):
+                    if (df.loc[i, 'Hypothetical Current Winner'] == 'Jacksonville Jaguars') and df.loc[i, 'Week_Num'] == jax_req_week:
+                        solver.Add(picks[i] == 1)
+            if kc_req_week > 0:        
+                for i in range(len(df)):
+                    if (df.loc[i, 'Hypothetical Current Winner'] == 'Kansas City Chiefs') and df.loc[i, 'Week_Num'] == kc_req_week:
+                        solver.Add(picks[i] == 1)
+            if lv_req_week > 0:        
+                for i in range(len(df)):
+                    if (df.loc[i, 'Hypothetical Current Winner'] == 'Las Vegas Raiders') and df.loc[i, 'Week_Num'] == lv_req_week:
+                        solver.Add(picks[i] == 1)
+            if lac_req_week > 0:        
+                for i in range(len(df)):
+                    if (df.loc[i, 'Hypothetical Current Winner'] == 'Los Angeles Chargers') and df.loc[i, 'Week_Num'] == lac_req_week:
+                        solver.Add(picks[i] == 1)
+            if lar_req_week > 0:        
+                for i in range(len(df)):
+                    if (df.loc[i, 'Hypothetical Current Winner'] == 'Los Angeles Rams') and df.loc[i, 'Week_Num'] == lar_req_week:
+                        solver.Add(picks[i] == 1)
+            if mia_req_week > 0:        
+                for i in range(len(df)):
+                    if (df.loc[i, 'Hypothetical Current Winner'] == 'Miami Dolphins') and df.loc[i, 'Week_Num'] == mia_req_week:
+                        solver.Add(picks[i] == 1)
+            if min_req_week > 0:        
+                for i in range(len(df)):
+                    if (df.loc[i, 'Hypothetical Current Winner'] == 'Minnesota Vikings') and df.loc[i, 'Week_Num'] == min_req_week:
+                        solver.Add(picks[i] == 1)
+            if ne_req_week > 0:        
+                for i in range(len(df)):
+                    if (df.loc[i, 'Hypothetical Current Winner'] == 'New England Patriots') and df.loc[i, 'Week_Num'] == ne_req_week:
+                        solver.Add(picks[i] == 1)
+            if no_req_week > 0:        
+                for i in range(len(df)):
+                    if (df.loc[i, 'Hypothetical Current Winner'] == 'New Orleans Saints') and df.loc[i, 'Week_Num'] == no_req_week:
+                        solver.Add(picks[i] == 1)
+            if nyg_req_week > 0:        
+                for i in range(len(df)):
+                    if (df.loc[i, 'Hypothetical Current Winner'] == 'New York Giants') and df.loc[i, 'Week_Num'] == nyg_req_week:
+                        solver.Add(picks[i] == 1)
+            if nyj_req_week > 0:        
+                for i in range(len(df)):
+                    if (df.loc[i, 'Hypothetical Current Winner'] == 'New York Jets') and df.loc[i, 'Week_Num'] == nyj_req_week:
+                        solver.Add(picks[i] == 1)
+            if phi_req_week > 0:        
+                for i in range(len(df)):
+                    if (df.loc[i, 'Hypothetical Current Winner'] == 'Philadelphia Eagles') and df.loc[i, 'Week_Num'] == phi_req_week:
+                        solver.Add(picks[i] == 1)
+            if pit_req_week > 0:        
+                    if (df.loc[i, 'Hypothetical Current Winner'] == 'Pittsburgh Steelers') and df.loc[i, 'Week_Num'] == pit_req_week:
+                        solver.Add(picks[i] == 1)
+            if sea_req_week > 0:        
+                for i in range(len(df)):
+                    if (df.loc[i, 'Hypothetical Current Winner'] == 'Seattle Seahawks') and df.loc[i, 'Week_Num'] == sea_req_week:
+                        solver.Add(picks[i] == 1)
+            if tb_req_week > 0:        
+                for i in range(len(df)):
+                    if (df.loc[i, 'Hypothetical Current Winner'] == 'Tampa Bay Buccaneers') and df.loc[i, 'Week_Num'] == tb_req_week:
+                        solver.Add(picks[i] == 1)
+            if ten_req_week > 0:        
+                for i in range(len(df)):
+                    if (df.loc[i, 'Hypothetical Current Winner'] == 'Tennessee Titans') and df.loc[i, 'Week_Num'] == ten_req_week:
+                        solver.Add(picks[i] == 1)
+            if was_req_week > 0:        
+                for i in range(len(df)):
+                    if (df.loc[i, 'Hypothetical Current Winner'] == 'Washington Commanders') and df.loc[i, 'Week_Num'] == was_req_week:
+                        solver.Add(picks[i] == 1)
+    
+    	    
+            for week in df['Week_Num'].unique():
+                # One team per week
+                solver.Add(solver.Sum([picks[i] for i in range(len(df)) if df.loc[i, 'Week_Num'] == week]) == 1)
+    
+            for team in df['Hypothetical Current Winner'].unique():
+                # Can't pick a team more than once
+                solver.Add(solver.Sum([picks[i] for i in range(len(df)) if df.loc[i, 'Hypothetical Current Winner'] == team]) <= 1)
 
             
-            if df.loc[i, 'Adjusted Current Winner'] == 'Arizona Cardinals' and df.loc[i, 'Week_Num'] in az_excluded_weeks:
-                    solver.Add(picks[i] == 0)
-            if df.loc[i, 'Adjusted Current Winner'] == 'Atlanta Falcons' and df.loc[i, 'Week_Num'] in atl_excluded_weeks:
-                    solver.Add(picks[i] == 0)
-            if df.loc[i, 'Adjusted Current Winner'] == 'Baltimore Ravens' and df.loc[i, 'Week_Num'] in bal_excluded_weeks:
-                    solver.Add(picks[i] == 0)
-            if df.loc[i, 'Adjusted Current Winner'] == 'Buffalo Bills' and df.loc[i, 'Week_Num'] in buf_excluded_weeks:
-                    solver.Add(picks[i] == 0)
-            if df.loc[i, 'Adjusted Current Winner'] == 'Carolina Panthers' and df.loc[i, 'Week_Num'] in car_excluded_weeks:
-                    solver.Add(picks[i] == 0)
-            if df.loc[i, 'Adjusted Current Winner'] == 'Chicago Bears' and df.loc[i, 'Week_Num'] in chi_excluded_weeks:
-                    solver.Add(picks[i] == 0)
-            if df.loc[i, 'Adjusted Current Winner'] == 'Cincinnati Bengals' and df.loc[i, 'Week_Num'] in cin_excluded_weeks:
-                    solver.Add(picks[i] == 0)
-            if df.loc[i, 'Adjusted Current Winner'] == 'Cleveland Browns' and df.loc[i, 'Week_Num'] in cle_excluded_weeks:
-                    solver.Add(picks[i] == 0)
-            if df.loc[i, 'Adjusted Current Winner'] == 'Dallas Cowboys' and df.loc[i, 'Week_Num'] in dal_excluded_weeks:
-                    solver.Add(picks[i] == 0)
-            if df.loc[i, 'Adjusted Current Winner'] == 'Denver Broncos' and df.loc[i, 'Week_Num'] in den_excluded_weeks:
-                    solver.Add(picks[i] == 0)
-            if df.loc[i, 'Adjusted Current Winner'] == 'Detroit Lions' and df.loc[i, 'Week_Num'] in det_excluded_weeks:
-                    solver.Add(picks[i] == 0)
-            if df.loc[i, 'Adjusted Current Winner'] == 'AGreen Bay Packers' and df.loc[i, 'Week_Num'] in gb_excluded_weeks:
-                    solver.Add(picks[i] == 0)
-            if df.loc[i, 'Adjusted Current Winner'] == 'Houston Texans' and df.loc[i, 'Week_Num'] in hou_excluded_weeks:
-                    solver.Add(picks[i] == 0)
-            if df.loc[i, 'Adjusted Current Winner'] == 'Indianapolis Colts' and df.loc[i, 'Week_Num'] in ind_excluded_weeks:
-                    solver.Add(picks[i] == 0)
-            if df.loc[i, 'Adjusted Current Winner'] == 'Jacksonville Jaguars' and df.loc[i, 'Week_Num'] in jax_excluded_weeks:
-                    solver.Add(picks[i] == 0)
-            if df.loc[i, 'Adjusted Current Winner'] == 'Kansas City Chiefs' and df.loc[i, 'Week_Num'] in kc_excluded_weeks:
-                    solver.Add(picks[i] == 0)
-            if df.loc[i, 'Adjusted Current Winner'] == 'Las vegas Raiders' and df.loc[i, 'Week_Num'] in lv_excluded_weeks:
-                    solver.Add(picks[i] == 0)
-            if df.loc[i, 'Adjusted Current Winner'] == 'Los Angeles Chargers' and df.loc[i, 'Week_Num'] in lac_excluded_weeks:
-                    solver.Add(picks[i] == 0)
-            if df.loc[i, 'Adjusted Current Winner'] == 'Los Angeles Rams' and df.loc[i, 'Week_Num'] in lar_excluded_weeks:
-                    solver.Add(picks[i] == 0)
-            if df.loc[i, 'Adjusted Current Winner'] == 'Miami Dolphins' and df.loc[i, 'Week_Num'] in mia_excluded_weeks:
-                    solver.Add(picks[i] == 0)
-            if df.loc[i, 'Adjusted Current Winner'] == 'Minnesota Vikings' and df.loc[i, 'Week_Num'] in min_excluded_weeks:
-                    solver.Add(picks[i] == 0)
-            if df.loc[i, 'Adjusted Current Winner'] == 'New England Patriots' and df.loc[i, 'Week_Num'] in ne_excluded_weeks:
-                    solver.Add(picks[i] == 0)
-            if df.loc[i, 'Adjusted Current Winner'] == 'New Orleans Saints' and df.loc[i, 'Week_Num'] in no_excluded_weeks:
-                    solver.Add(picks[i] == 0)
-            if df.loc[i, 'Adjusted Current Winner'] == 'New York Giants' and df.loc[i, 'Week_Num'] in nyg_excluded_weeks:
-                    solver.Add(picks[i] == 0)
-            if df.loc[i, 'Adjusted Current Winner'] == 'New York Jets' and df.loc[i, 'Week_Num'] in nyj_excluded_weeks:
-                    solver.Add(picks[i] == 0)
-            if df.loc[i, 'Adjusted Current Winner'] == 'Philadelphia Eagles' and df.loc[i, 'Week_Num'] in phi_excluded_weeks:
-                    solver.Add(picks[i] == 0)
-            if df.loc[i, 'Adjusted Current Winner'] == 'Pittsburgh Steelers' and df.loc[i, 'Week_Num'] in pit_excluded_weeks:
-                    solver.Add(picks[i] == 0)
-            if df.loc[i, 'Adjusted Current Winner'] == 'Seattle Seahawks' and df.loc[i, 'Week_Num'] in sea_excluded_weeks:
-                    solver.Add(picks[i] == 0)
-            if df.loc[i, 'Adjusted Current Winner'] == 'Tampa Bay Buccaneers' and df.loc[i, 'Week_Num'] in tb_excluded_weeks:
-                    solver.Add(picks[i] == 0)
-            if df.loc[i, 'Adjusted Current Winner'] == 'Tennessee Titans' and df.loc[i, 'Week_Num'] in ten_excluded_weeks:
-                    solver.Add(picks[i] == 0)
-            if df.loc[i, 'Adjusted Current Winner'] == 'Washington Commanders' and df.loc[i, 'Week_Num'] in was_excluded_weeks:
-                    solver.Add(picks[i] == 0)
-            if df.loc[i, 'Adjusted Current Winner'] == 'San Francisco 49ers' and df.loc[i, 'Week_Num'] in sf_excluded_weeks:
-                    solver.Add(picks[i] == 0)
-
-        # Add the constraint for San Francisco 49ers in week 11
-        if sf_req_week > 0:        
-            for i in range(len(df)):
-                if (df.loc[i, 'Home Team'] == 'San Francisco 49ers' or df.loc[i, 'Away Team'] == 'San Francisco 49ers') and df.loc[i, 'Week_Num'] == sf_req_week:
-                    if df.loc[i, 'Adjusted Current Winner'] == 'San Francisco 49ers':
-                        solver.Add(picks[i] == 1)
-                    elif df.loc[i, 'Home Team'] == 'San Francisco 49ers':
-                        df.loc[i, 'Adjusted Current Winner'] = df.loc[i, 'Home Team']
-                        solver.Add(picks[i] == 1)
-                    elif df.loc[i, 'Away Team'] == 'San Francisco 49ers':
-                        df.loc[i, 'Adjusted Current Winner'] = df.loc[i, 'Away Team']
-                        solver.Add(picks[i] == 1)
-        if az_req_week > 0:        
-            for i in range(len(df)):
-                if (df.loc[i, 'Home Team'] == 'Arizona Cardinals' or df.loc[i, 'Away Team'] == 'Arizona Cardinals') and df.loc[i, 'Week_Num'] == az_req_week:
-                    if df.loc[i, 'Adjusted Current Winner'] == 'Arizona Cardinals':
-                        solver.Add(picks[i] == 1)
-                    elif df.loc[i, 'Home Team'] == 'Arizona Cardinals':
-                        df.loc[i, 'Adjusted Current Winner'] = df.loc[i, 'Home Team']
-                        solver.Add(picks[i] == 1)
-                    elif df.loc[i, 'Away Team'] == 'Arizona Cardinals':
-                        df.loc[i, 'Adjusted Current Winner'] = df.loc[i, 'Away Team']
-                        solver.Add(picks[i] == 1)
-        if atl_req_week > 0:        
-            for i in range(len(df)):
-                if (df.loc[i, 'Home Team'] == 'Atlanta Falcons' or df.loc[i, 'Away Team'] == 'Atlanta Falcons') and df.loc[i, 'Week_Num'] == atl_req_week:
-                    if df.loc[i, 'Adjusted Current Winner'] == 'Atlanta Falcons':
-                        solver.Add(picks[i] == 1)
-                    elif df.loc[i, 'Home Team'] == 'Atlanta Falcons':
-                        df.loc[i, 'Adjusted Current Winner'] = df.loc[i, 'Home Team']
-                        solver.Add(picks[i] == 1)
-                    elif df.loc[i, 'Away Team'] == 'Atlanta Falcons':
-                        df.loc[i, 'Adjusted Current Winner'] = df.loc[i, 'Away Team']
-                        solver.Add(picks[i] == 1)
-        if bal_req_week > 0:        
-            for i in range(len(df)):
-                if (df.loc[i, 'Home Team'] == 'Baltimore Ravens' or df.loc[i, 'Away Team'] == 'Baltimore Ravens') and df.loc[i, 'Week_Num'] == bal_req_week:
-                    if df.loc[i, 'Adjusted Current Winner'] == 'Baltimore Ravens':
-                        solver.Add(picks[i] == 1)
-                    elif df.loc[i, 'Home Team'] == 'Baltimore Ravens':
-                        df.loc[i, 'Adjusted Current Winner'] = df.loc[i, 'Home Team']
-                        solver.Add(picks[i] == 1)
-                    elif df.loc[i, 'Away Team'] == 'Baltimore Ravens':
-                        df.loc[i, 'Adjusted Current Winner'] = df.loc[i, 'Away Team']
-                        solver.Add(picks[i] == 1)
-        if buf_req_week > 0:        
-            for i in range(len(df)):
-                if (df.loc[i, 'Home Team'] == 'Buffalo Bills' or df.loc[i, 'Away Team'] == 'Buffalo Bills') and df.loc[i, 'Week_Num'] == buf_req_week:
-                    if df.loc[i, 'Adjusted Current Winner'] == 'Buffalo Bills':
-                        solver.Add(picks[i] == 1)
-                    elif df.loc[i, 'Home Team'] == 'Buffalo Bills':
-                        df.loc[i, 'Adjusted Current Winner'] = df.loc[i, 'Home Team']
-                        solver.Add(picks[i] == 1)
-                    elif df.loc[i, 'Away Team'] == 'Buffalo Bills':
-                        df.loc[i, 'Adjusted Current Winner'] = df.loc[i, 'Away Team']
-                        solver.Add(picks[i] == 1)
-        if car_req_week > 0:        
-            for i in range(len(df)):
-                if (df.loc[i, 'Home Team'] == 'Carolina Panthers' or df.loc[i, 'Away Team'] == 'Carolina Panthers') and df.loc[i, 'Week_Num'] == car_req_week:
-                    if df.loc[i, 'Adjusted Current Winner'] == 'Carolina Panthers':
-                        solver.Add(picks[i] == 1)
-                    elif df.loc[i, 'Home Team'] == 'Carolina Panthers':
-                        df.loc[i, 'Adjusted Current Winner'] = df.loc[i, 'Home Team']
-                        solver.Add(picks[i] == 1)
-                    elif df.loc[i, 'Away Team'] == 'Carolina Panthers':
-                        df.loc[i, 'Adjusted Current Winner'] = df.loc[i, 'Away Team']
-                        solver.Add(picks[i] == 1)
-        if chi_req_week > 0:        
-            for i in range(len(df)):
-                if (df.loc[i, 'Home Team'] == 'Chicago Bears' or df.loc[i, 'Away Team'] == 'Chicago Bears') and df.loc[i, 'Week_Num'] == chi_req_week:
-                    if df.loc[i, 'Adjusted Current Winner'] == 'Chicago Bears':
-                        solver.Add(picks[i] == 1)
-                    elif df.loc[i, 'Home Team'] == 'Chicago Bears':
-                        df.loc[i, 'Adjusted Current Winner'] = df.loc[i, 'Home Team']
-                        solver.Add(picks[i] == 1)
-                    elif df.loc[i, 'Away Team'] == 'Chicago Bears':
-                        df.loc[i, 'Adjusted Current Winner'] = df.loc[i, 'Away Team']
-                        solver.Add(picks[i] == 1)
-        if cin_req_week > 0:        
-                if (df.loc[i, 'Home Team'] == 'Cincinnati Bengals' or df.loc[i, 'Away Team'] == 'Cincinnati Bengals') and df.loc[i, 'Week_Num'] == cin_req_week:
-                    if df.loc[i, 'Adjusted Current Winner'] == 'Cincinnati Bengals':
-                        solver.Add(picks[i] == 1)
-                    elif df.loc[i, 'Home Team'] == 'Cincinnati Bengals':
-                        df.loc[i, 'Adjusted Current Winner'] = df.loc[i, 'Home Team']
-                        solver.Add(picks[i] == 1)
-                    elif df.loc[i, 'Away Team'] == 'Cincinnati Bengals':
-                        df.loc[i, 'Adjusted Current Winner'] = df.loc[i, 'Away Team']
-                        solver.Add(picks[i] == 1)
-        if cle_req_week > 0:        
-            for i in range(len(df)):
-                if (df.loc[i, 'Home Team'] == 'Cleveland Browns' or df.loc[i, 'Away Team'] == 'Cleveland Browns') and df.loc[i, 'Week_Num'] == cle_req_week:
-                    if df.loc[i, 'Adjusted Current Winner'] == 'Cleveland Browns':
-                        solver.Add(picks[i] == 1)
-                    elif df.loc[i, 'Home Team'] == 'Cleveland Browns':
-                        df.loc[i, 'Adjusted Current Winner'] = df.loc[i, 'Home Team']
-                        solver.Add(picks[i] == 1)
-                    elif df.loc[i, 'Away Team'] == 'Cleveland Browns':
-                        df.loc[i, 'Adjusted Current Winner'] = df.loc[i, 'Away Team']
-                        solver.Add(picks[i] == 1)
-        if dal_req_week > 0:        
-            for i in range(len(df)):
-                if (df.loc[i, 'Home Team'] == 'Dallas Cowboys' or df.loc[i, 'Away Team'] == 'Dallas Cowboys') and df.loc[i, 'Week_Num'] == dal_req_week:
-                    if df.loc[i, 'Adjusted Current Winner'] == 'Dallas Cowboys':
-                        solver.Add(picks[i] == 1)
-                    elif df.loc[i, 'Home Team'] == 'Dallas Cowboys':
-                        df.loc[i, 'Adjusted Current Winner'] = df.loc[i, 'Home Team']
-                        solver.Add(picks[i] == 1)
-                    elif df.loc[i, 'Away Team'] == 'Dallas Cowboys':
-                        df.loc[i, 'Adjusted Current Winner'] = df.loc[i, 'Away Team']
-                        solver.Add(picks[i] == 1)
-        if den_req_week > 0:        
-            for i in range(len(df)):
-                if (df.loc[i, 'Home Team'] == 'Denver Broncos' or df.loc[i, 'Away Team'] == 'Denver Broncos') and df.loc[i, 'Week_Num'] == den_req_week:
-                    if df.loc[i, 'Adjusted Current Winner'] == 'Denver Broncos':
-                        solver.Add(picks[i] == 1)
-                    elif df.loc[i, 'Home Team'] == 'Denver Broncos':
-                        df.loc[i, 'Adjusted Current Winner'] = df.loc[i, 'Home Team']
-                        solver.Add(picks[i] == 1)
-                    elif df.loc[i, 'Away Team'] == 'Denver Broncos':
-                        df.loc[i, 'Adjusted Current Winner'] = df.loc[i, 'Away Team']
-                        solver.Add(picks[i] == 1)
-        if det_req_week > 0:        
-            for i in range(len(df)):
-                if (df.loc[i, 'Home Team'] == 'Detroit Lions' or df.loc[i, 'Away Team'] == 'Detroit Lions') and df.loc[i, 'Week_Num'] == det_req_week:
-                    if df.loc[i, 'Adjusted Current Winner'] == 'Detroit Lions':
-                        solver.Add(picks[i] == 1)
-                    elif df.loc[i, 'Home Team'] == 'Detroit Lions':
-                        df.loc[i, 'Adjusted Current Winner'] = df.loc[i, 'Home Team']
-                        solver.Add(picks[i] == 1)
-                    elif df.loc[i, 'Away Team'] == 'Detroit Lions':
-                        df.loc[i, 'Adjusted Current Winner'] = df.loc[i, 'Away Team']
-                        solver.Add(picks[i] == 1)
-        if gb_req_week > 0:        
-            for i in range(len(df)):
-                if (df.loc[i, 'Home Team'] == 'Green Bay Packers' or df.loc[i, 'Away Team'] == 'Green Bay Packers') and df.loc[i, 'Week_Num'] == gb_req_week:
-                    if df.loc[i, 'Adjusted Current Winner'] == 'Green Bay Packers':
-                        solver.Add(picks[i] == 1)
-                    elif df.loc[i, 'Home Team'] == 'Green Bay Packers':
-                        df.loc[i, 'Adjusted Current Winner'] = df.loc[i, 'Home Team']
-                        solver.Add(picks[i] == 1)
-                    elif df.loc[i, 'Away Team'] == 'Green Bay Packers':
-                        df.loc[i, 'Adjusted Current Winner'] = df.loc[i, 'Away Team']
-                        solver.Add(picks[i] == 1)
-        if hou_req_week > 0:        
-            for i in range(len(df)):
-                if (df.loc[i, 'Home Team'] == 'Houston Texans' or df.loc[i, 'Away Team'] == 'Houston Texans') and df.loc[i, 'Week_Num'] == hou_req_week:
-                    if df.loc[i, 'Adjusted Current Winner'] == 'Houston Texans':
-                        solver.Add(picks[i] == 1)
-                    elif df.loc[i, 'Home Team'] == 'Houston Texans':
-                        df.loc[i, 'Adjusted Current Winner'] = df.loc[i, 'Home Team']
-                        solver.Add(picks[i] == 1)
-                    elif df.loc[i, 'Away Team'] == 'Houston Texans':
-                        df.loc[i, 'Adjusted Current Winner'] = df.loc[i, 'Away Team']
-                        solver.Add(picks[i] == 1)
-        if ind_req_week > 0:        
-            for i in range(len(df)):
-                if (df.loc[i, 'Home Team'] == 'Indianapolis Colts' or df.loc[i, 'Away Team'] == 'Indianapolis Colts') and df.loc[i, 'Week_Num'] == ind_req_week:
-                    if df.loc[i, 'Adjusted Current Winner'] == 'Indianapolis Colts':
-                        solver.Add(picks[i] == 1)
-                    elif df.loc[i, 'Home Team'] == 'Indianapolis Colts':
-                        df.loc[i, 'Adjusted Current Winner'] = df.loc[i, 'Home Team']
-                        solver.Add(picks[i] == 1)
-                    elif df.loc[i, 'Away Team'] == 'Indianapolis Colts':
-                        df.loc[i, 'Adjusted Current Winner'] = df.loc[i, 'Away Team']
-                        solver.Add(picks[i] == 1)
-        if jax_req_week > 0:        
-            for i in range(len(df)):
-                if (df.loc[i, 'Home Team'] == 'Jacksonville Jaguars' or df.loc[i, 'Away Team'] == 'Jacksonville Jaguars') and df.loc[i, 'Week_Num'] == jax_req_week:
-                    if df.loc[i, 'Adjusted Current Winner'] == 'Jacksonville Jaguars':
-                        solver.Add(picks[i] == 1)
-                    elif df.loc[i, 'Home Team'] == 'Jacksonville Jaguars':
-                        df.loc[i, 'Adjusted Current Winner'] = df.loc[i, 'Home Team']
-                        solver.Add(picks[i] == 1)
-                    elif df.loc[i, 'Away Team'] == 'Jacksonville Jaguars':
-                        df.loc[i, 'Adjusted Current Winner'] = df.loc[i, 'Away Team']
-                        solver.Add(picks[i] == 1)
-        if kc_req_week > 0:        
-            for i in range(len(df)):
-                if (df.loc[i, 'Home Team'] == 'Kansas City Chiefs' or df.loc[i, 'Away Team'] == 'Kansas City Chiefs') and df.loc[i, 'Week_Num'] == kc_req_week:
-                    if df.loc[i, 'Adjusted Current Winner'] == 'Kansas City Chiefs':
-                        solver.Add(picks[i] == 1)
-                    elif df.loc[i, 'Home Team'] == 'Kansas City Chiefs':
-                        df.loc[i, 'Adjusted Current Winner'] = df.loc[i, 'Home Team']
-                        solver.Add(picks[i] == 1)
-                    elif df.loc[i, 'Away Team'] == 'Kansas City Chiefs':
-                        df.loc[i, 'Adjusted Current Winner'] = df.loc[i, 'Away Team']
-                        solver.Add(picks[i] == 1)
-        if lv_req_week > 0:        
-            for i in range(len(df)):
-                if (df.loc[i, 'Home Team'] == 'Las Vegas Raiders' or df.loc[i, 'Away Team'] == 'Las Vegas Raiders') and df.loc[i, 'Week_Num'] == lv_req_week:
-                    if df.loc[i, 'Adjusted Current Winner'] == 'Las Vegas Raiders':
-                        solver.Add(picks[i] == 1)
-                    elif df.loc[i, 'Home Team'] == 'Las Vegas Raiders':
-                        df.loc[i, 'Adjusted Current Winner'] = df.loc[i, 'Home Team']
-                        solver.Add(picks[i] == 1)
-                    elif df.loc[i, 'Away Team'] == 'Las Vegas Raiders':
-                        df.loc[i, 'Adjusted Current Winner'] = df.loc[i, 'Away Team']
-                        solver.Add(picks[i] == 1)
-        if lac_req_week > 0:        
-            for i in range(len(df)):
-                if (df.loc[i, 'Home Team'] == 'Los Angeles Chargers' or df.loc[i, 'Away Team'] == 'Los Angeles Chargers') and df.loc[i, 'Week_Num'] == lac_req_week:
-                    if df.loc[i, 'Adjusted Current Winner'] == 'Los Angeles Chargers':
-                        solver.Add(picks[i] == 1)
-                    elif df.loc[i, 'Home Team'] == 'Los Angeles Chargers':
-                        df.loc[i, 'Adjusted Current Winner'] = df.loc[i, 'Home Team']
-                        solver.Add(picks[i] == 1)
-                    elif df.loc[i, 'Away Team'] == 'Los Angeles Chargers':
-                        df.loc[i, 'Adjusted Current Winner'] = df.loc[i, 'Away Team']
-                        solver.Add(picks[i] == 1)
-        if lar_req_week > 0:        
-            for i in range(len(df)):
-                if (df.loc[i, 'Home Team'] == 'Los Angeles Rams' or df.loc[i, 'Away Team'] == 'Los Angeles Rams') and df.loc[i, 'Week_Num'] == lar_req_week:
-                    if df.loc[i, 'Adjusted Current Winner'] == 'Los Angeles Rams':
-                        solver.Add(picks[i] == 1)
-                    elif df.loc[i, 'Home Team'] == 'Los Angeles Rams':
-                        df.loc[i, 'Adjusted Current Winner'] = df.loc[i, 'Home Team']
-                        solver.Add(picks[i] == 1)
-                    elif df.loc[i, 'Away Team'] == 'Los Angeles Rams':
-                        df.loc[i, 'Adjusted Current Winner'] = df.loc[i, 'Away Team']
-                        solver.Add(picks[i] == 1)
-        if mia_req_week > 0:        
-            for i in range(len(df)):
-                if (df.loc[i, 'Home Team'] == 'Miami Dolphins' or df.loc[i, 'Away Team'] == 'Miami Dolphins') and df.loc[i, 'Week_Num'] == mia_req_week:
-                    if df.loc[i, 'Adjusted Current Winner'] == 'Miami Dolphins':
-                        solver.Add(picks[i] == 1)
-                    elif df.loc[i, 'Home Team'] == 'Miami Dolphins':
-                        df.loc[i, 'Adjusted Current Winner'] = df.loc[i, 'Home Team']
-                        solver.Add(picks[i] == 1)
-                    elif df.loc[i, 'Away Team'] == 'Miami Dolphins':
-                        df.loc[i, 'Adjusted Current Winner'] = df.loc[i, 'Away Team']
-                        solver.Add(picks[i] == 1)
-        if min_req_week > 0:        
-            for i in range(len(df)):
-                if (df.loc[i, 'Home Team'] == 'Minnesota Vikings' or df.loc[i, 'Away Team'] == 'Minnesota Vikings') and df.loc[i, 'Week_Numv'] == min_req_week:
-                    if df.loc[i, 'Adjusted Current Winner'] == 'Minnesota Vikings':
-                        solver.Add(picks[i] == 1)
-                    elif df.loc[i, 'Home Team'] == 'Minnesota Vikings':
-                        df.loc[i, 'Adjusted Current Winner'] = df.loc[i, 'Home Team']
-                        solver.Add(picks[i] == 1)
-                    elif df.loc[i, 'Away Team'] == 'Minnesota Vikings':
-                        df.loc[i, 'Adjusted Current Winner'] = df.loc[i, 'Away Team']
-                        solver.Add(picks[i] == 1)
-        if ne_req_week > 0:        
-            for i in range(len(df)):
-                if (df.loc[i, 'Home Team'] == 'New England Patriots' or df.loc[i, 'Away Team'] == 'New England Patriots') and df.loc[i, 'Week_Num'] == ne_req_week:
-                    if df.loc[i, 'Adjusted Current Winner'] == 'New England Patriots':
-                        solver.Add(picks[i] == 1)
-                    elif df.loc[i, 'Home Team'] == 'New England Patriots':
-                        df.loc[i, 'Adjusted Current Winner'] = df.loc[i, 'Home Team']
-                        solver.Add(picks[i] == 1)
-                    elif df.loc[i, 'Away Team'] == 'New England Patriots':
-                        df.loc[i, 'Adjusted Current Winner'] = df.loc[i, 'Away Team']
-                        solver.Add(picks[i] == 1)
-        if no_req_week > 0:        
-            for i in range(len(df)):
-                if (df.loc[i, 'Home Team'] == 'New Orleans Saints' or df.loc[i, 'Away Team'] == 'New Orleans Saints') and df.loc[i, 'Week_Num'] == no_req_week:
-                    if df.loc[i, 'Adjusted Current Winner'] == 'New Orleans Saints':
-                        solver.Add(picks[i] == 1)
-                    elif df.loc[i, 'Home Team'] == 'New Orleans Saints':
-                        df.loc[i, 'Adjusted Current Winner'] = df.loc[i, 'Home Team']
-                        solver.Add(picks[i] == 1)
-                    elif df.loc[i, 'Away Team'] == 'New Orleans Saints':
-                        df.loc[i, 'Adjusted Current Winner'] = df.loc[i, 'Away Team']
-                        solver.Add(picks[i] == 1)
-        if nyg_req_week > 0:        
-            for i in range(len(df)):
-                if (df.loc[i, 'Home Team'] == 'New York Giants' or df.loc[i, 'Away Team'] == 'New York Giants') and df.loc[i, 'Week_Num'] == nyg_req_week:
-                    if df.loc[i, 'Adjusted Current Winner'] == 'New York Giants':
-                        solver.Add(picks[i] == 1)
-                    elif df.loc[i, 'Home Team'] == 'New York Giants':
-                        df.loc[i, 'Adjusted Current Winner'] = df.loc[i, 'Home Team']
-                        solver.Add(picks[i] == 1)
-                    elif df.loc[i, 'Away Team'] == 'New York Giants':
-                        df.loc[i, 'Adjusted Current Winner'] = df.loc[i, 'Away Team']
-                        solver.Add(picks[i] == 1)
-        if nyj_req_week > 0:        
-            for i in range(len(df)):
-                if (df.loc[i, 'Home Team'] == 'New York Jets' or df.loc[i, 'Away Team'] == 'New York Jets') and df.loc[i, 'Week_Num'] == nyj_req_week:
-                    if df.loc[i, 'Adjusted Current Winner'] == 'New York Jets':
-                        solver.Add(picks[i] == 1)
-                    elif df.loc[i, 'Home Team'] == 'New York Jets':
-                        df.loc[i, 'Adjusted Current Winner'] = df.loc[i, 'Home Team']
-                        solver.Add(picks[i] == 1)
-                    elif df.loc[i, 'Away Team'] == 'New York Jets':
-                        df.loc[i, 'Adjusted Current Winner'] = df.loc[i, 'Away Team']
-                        solver.Add(picks[i] == 1)
-        if phi_req_week > 0:        
-            for i in range(len(df)):
-                if (df.loc[i, 'Home Team'] == 'Philadelphia Eagles' or df.loc[i, 'Away Team'] == 'Philadelphia Eagles') and df.loc[i, 'Week_Num'] == phi_req_week:
-                    if df.loc[i, 'Adjusted Current Winner'] == 'Philadelphia Eagles':
-                        solver.Add(picks[i] == 1)
-                    elif df.loc[i, 'Home Team'] == 'Philadelphia Eagles':
-                        df.loc[i, 'Adjusted Current Winner'] = df.loc[i, 'Home Team']
-                        solver.Add(picks[i] == 1)
-                    elif df.loc[i, 'Away Team'] == 'Philadelphia Eagles':
-                        df.loc[i, 'Adjusted Current Winner'] = df.loc[i, 'Away Team']
-                        solver.Add(picks[i] == 1)
-        if pit_req_week > 0:        
-                if (df.loc[i, 'Home Team'] == 'Pittsburgh Steelers' or df.loc[i, 'Away Team'] == 'Pittsburgh Steelers') and df.loc[i, 'Week_Num'] == pit_req_week:
-                    if df.loc[i, 'Adjusted Current Winner'] == 'Pittsburgh Steelers':
-                        solver.Add(picks[i] == 1)
-                    elif df.loc[i, 'Home Team'] == 'Pittsburgh Steelers':
-                        df.loc[i, 'Adjusted Current Winner'] = df.loc[i, 'Home Team']
-                        solver.Add(picks[i] == 1)
-                    elif df.loc[i, 'Away Team'] == 'Pittsburgh Steelers':
-                        df.loc[i, 'Adjusted Current Winner'] = df.loc[i, 'Away Team']
-                        solver.Add(picks[i] == 1)
-        if sea_req_week > 0:        
-            for i in range(len(df)):
-                if (df.loc[i, 'Home Team'] == 'Seattle Seahawks' or df.loc[i, 'Away Team'] == 'Seattle Seahawks') and df.loc[i, 'Week_Num'] == sea_req_week:
-                    if df.loc[i, 'Adjusted Current Winner'] == 'Seattle Seahawks':
-                        solver.Add(picks[i] == 1)
-                    elif df.loc[i, 'Home Team'] == 'Seattle Seahawks':
-                        df.loc[i, 'Adjusted Current Winner'] = df.loc[i, 'Home Team']
-                        solver.Add(picks[i] == 1)
-                    elif df.loc[i, 'Away Team'] == 'Seattle Seahawks':
-                        df.loc[i, 'Adjusted Current Winner'] = df.loc[i, 'Away Team']
-                        solver.Add(picks[i] == 1)
-        if tb_req_week > 0:        
-            for i in range(len(df)):
-                if (df.loc[i, 'Home Team'] == 'Tampa Bay Buccaneers' or df.loc[i, 'Away Team'] == 'Tampa Bay Buccaneers') and df.loc[i, 'Week_Num'] == tb_req_week:
-                    if df.loc[i, 'Adjusted Current Winner'] == 'Tampa Bay Buccaneers':
-                        solver.Add(picks[i] == 1)
-                    elif df.loc[i, 'Home Team'] == 'Tampa Bay Buccaneers':
-                        df.loc[i, 'Adjusted Current Winner'] = df.loc[i, 'Home Team']
-                        solver.Add(picks[i] == 1)
-                    elif df.loc[i, 'Away Team'] == 'Tampa Bay Buccaneers':
-                        df.loc[i, 'Adjusted Current Winner'] = df.loc[i, 'Away Team']
-                        solver.Add(picks[i] == 1)
-        if ten_req_week > 0:        
-            for i in range(len(df)):
-                if (df.loc[i, 'Home Team'] == 'Tennessee Titans' or df.loc[i, 'Away Team'] == 'Tennessee Titans') and df.loc[i, 'Week_Num'] == ten_req_week:
-                    if df.loc[i, 'Adjusted Current Winner'] == 'Tennessee Titans':
-                        solver.Add(picks[i] == 1)
-                    elif df.loc[i, 'Home Team'] == 'Tennessee Titans':
-                        df.loc[i, 'Adjusted Current Winner'] = df.loc[i, 'Home Team']
-                        solver.Add(picks[i] == 1)
-                    elif df.loc[i, 'Away Team'] == 'Tennessee Titans':
-                        df.loc[i, 'Adjusted Current Winner'] = df.loc[i, 'Away Team']
-                        solver.Add(picks[i] == 1)
-        if was_req_week > 0:        
-            for i in range(len(df)):
-                if (df.loc[i, 'Home Team'] == 'Washington Commanders' or df.loc[i, 'Away Team'] == 'Washington Commanders') and df.loc[i, 'Week_Num'] == was_req_week:
-                    if df.loc[i, 'Adjusted Current Winner'] == 'Washington Commanders':
-                        solver.Add(picks[i] == 1)
-                    elif df.loc[i, 'Home Team'] == 'Washington Commanders':
-                        df.loc[i, 'Adjusted Current Winner'] = df.loc[i, 'Home Team']
-                        solver.Add(picks[i] == 1)
-                    elif df.loc[i, 'Away Team'] == 'Washington Commanders':
-                        df.loc[i, 'Adjusted Current Winner'] = df.loc[i, 'Away Team']
-                        solver.Add(picks[i] == 1)
-
-
-            if df.loc[i, 'Adjusted Current Winner'] in picked_teams:
-                solver.Add(picks[i] == 0)
-        # Dynamically create the forbidden solution list
-        forbidden_solutions_1 = []
-        if iteration > 0: 
-            for previous_iteration in range(iteration):
-                # Load the picks from the previous iteration
-                if selected_contest == 'Circa':
-                    previous_picks_df = pd.read_csv(f"circa_picks_ir_{previous_iteration + 1}.csv")
-                else:
-                    previous_picks_df = pd.read_csv(f"dk_picks_ir_{previous_iteration + 1}.csv")
-
-                # Extract the forbidden solution for this iteration
-                forbidden_solution_1 = previous_picks_df['Adjusted Current Winner'].tolist()
-                forbidden_solutions_1.append(forbidden_solution_1)
-
-        # Add constraints for all forbidden solutions
-        for forbidden_solution_1 in forbidden_solutions_1:
-            # Get the indices of the forbidden solution in the DataFrame
-            forbidden_indices_1 = []
-            for i in range(len(df)):
-                # Calculate the relative week number within the forbidden solution
-                df_week = df.loc[i, 'Week_Num']
-                relative_week = df_week - starting_week  # Adjust week to be relative to starting week
-
-                #Check if the week is within the range and the solution is forbidden
-                if 0 <= relative_week < len(forbidden_solution_1) and df_week >= starting_week and df_week < ending_week: #Added this to make sure we are only looking at the range
-                    if (df.loc[i, 'Adjusted Current Winner'] == forbidden_solution_1[relative_week]):
-                        forbidden_indices_1.append(i)
-
-            # Add the constraint
-            solver.Add(solver.Sum([1 - picks[i] for i in forbidden_indices_1]) >= 1)
- 
-
-        # Objective: maximize the sum of Adjusted Current Difference of each game picked
-        solver.Maximize(solver.Sum([picks[i] * df.loc[i, 'Adjusted Current Difference'] for i in range(len(df))]))
-
-        # Solve the problem and print the solution
-        status = solver.Solve()
-
-        if status == pywraplp.Solver.OPTIMAL:
-            st.write('')
-            st.write(f'**Solution Based on Internal Rankings: {iteration + 1}**')
-
-            st.write('Solution found!')
-            st.write('Objective value =', solver.Objective().Value())
-
-
-            # Initialize sums
-            sum_preseason_difference = 0
-            sum_adjusted_preseason_difference = 0
-            sum_current_difference = 0
-            sum_adjusted_current_difference = 0
-            sum_ev = 0
-
-            # Initialize picks_df
-            picks_df = pd.DataFrame(columns=df.columns)
-            picks_rows_2 = []
-            for i in range(len(df)):
-                if picks[i].solution_value() > 0:
-                    # Determine if it's a divisional game and if the picked team is the home team
-
-                    week = df.loc[i, 'Week']
-                    pick = df.loc[i,'Adjusted Current Winner']
-                    opponent = df.loc[i, 'Home Team'] if df.loc[i, 'Adjusted Current Winner'] == df.loc[i, 'Away Team'] else df.loc[i, 'Away Team']
-                    divisional_game = 'Divisional' if df.loc[i, 'Divisional Matchup Boolean'] else ''
-                    home_team = 'Home Team' if df.loc[i, 'Adjusted Current Winner'] == df.loc[i, 'Home Team'] else 'Away Team'
-                    weekly_rest = df.loc[i, 'Home Team Weekly Rest'] if df.loc[i, 'Adjusted Current Winner'] == df.loc[i, 'Home Team'] else df.loc[i, 'Away Team Weekly Rest']
-                    weekly_rest_advantage = df.loc[i, 'Weekly Home Rest Advantage'] if df.loc[i, 'Adjusted Current Winner'] == df.loc[i, 'Home Team'] else df.loc[i, 'Weekly Away Rest Advantage']
-                    cumulative_rest = df.loc[i, 'Home Cumulative Rest Advantage'] if df.loc[i, 'Adjusted Current Winner'] == df.loc[i, 'Home Team'] else df.loc[i, 'Away Cumulative Rest Advantage']
-                    cumulative_rest_advantage = df.loc[i, 'Home Team Current Week Cumulative Rest Advantage'] if df.loc[i, 'Adjusted Current Winner'] == df.loc[i, 'Home Team'] else df.loc[i, 'Away Team Current Week Cumulative Rest Advantage']
-                    travel_advantage = df.loc[i, 'Home Travel Advantage'] if df.loc[i, 'Adjusted Current Winner'] == df.loc[i, 'Home Team'] else df.loc[i, 'Away Travel Advantage']
-                    back_to_back_away_games = 'True' if df.loc[i, 'Adjusted Current Winner'] == df.loc[i, 'Away Team'] and df.loc[i, 'Back to Back Away Games'] == 'True' else 'False'
-                    thursday_night_game = 'Thursday Night Game' if df.loc[i, "Thursday Night Game"] == 'True' else 'Sunday/Monday Game'
-                    international_game = 'International Game' if df.loc[i, 'Actual Stadium'] == 'London, UK' else 'Domestic Game'
-                    previous_opponent = df.loc[i, 'Home Team Previous Opponent'] if df.loc[i, 'Adjusted Current Winner'] == df.loc[i, 'Home Team'] else df.loc[i, 'Away Team Previous Opponent']
-                    previous_game_location = df.loc[i, 'Home Team Previous Location'] if df.loc[i, 'Adjusted Current Winner'] == df.loc[i, 'Home Team'] else df.loc[i, 'Away Team Previous Location']
-                    next_opponent = df.loc[i, 'Home Team Next Opponent'] if df.loc[i, 'Adjusted Current Winner'] == df.loc[i, 'Home Team'] else df.loc[i, 'Away Team Next Opponent']
-                    next_game_location = df.loc[i, 'Home Team Next Location'] if df.loc[i, 'Adjusted Current Winner'] == df.loc[i, 'Home Team'] else df.loc[i, 'Away Team Next Location']
-                    win_odds = df.loc[i, 'Home Team Fair Odds'] if df.loc[i, 'Adjusted Current Winner'] == df.loc[i, 'Home Team'] else df.loc[i, 'Away Team Fair Odds']
-                    
-
-                    # Get differences
-                    preseason_difference = df.loc[i, 'Preseason Difference']
-                    adjusted_preseason_difference = df.loc[i, 'Adjusted Preseason Difference']
-                    current_difference = df.loc[i, 'Current Difference']
-                    adjusted_current_difference = df.loc[i, 'Adjusted Current Difference']
-                    # Calculate EV for this game
-                    #ev = (df.loc[i, 'Home Team EV'] if df.loc[i, 'Adjusted Current Winner'] == df.loc[i, 'Home Team'] else df.loc[i, 'Away Team EV'])
-
-
-                    #print('Week %i: Pick %s %s %s (%i, %i, %i, %i, %.4f)' % (df.loc[i, 'Week_Num'], df.loc[i, 'Adjusted Current Winner'], divisional_game, home_team,
-                    #                                                   preseason_difference, adjusted_preseason_difference,
-                    #                                                   current_difference, adjusted_current_difference, ev))
-                    new_row_2 = {
-                        'Week': week,
-                        'Pick': pick,
-                        'Opponent': opponent,
-                        'Preseason Spread': preseason_difference,
-                        'Adjusted Preseason Spread (Homefield, Rest, etc...)': adjusted_preseason_difference,
-                        'Current Spread': current_difference,
-                        'Adjusted Current Spread (Homefield, Rest, etc...)': adjusted_current_difference,
-                        #'EV': ev,
-                        'Win Odds': win_odds,
-                        'Divisional Game': divisional_game,
-                        'Home Team Status': home_team,
-                        'Weekly Rest': weekly_rest,
-                        'Weekly Rest Advantage': weekly_rest_advantage,
-                        'Cumulative Rest': cumulative_rest,
-                        'Cumulative Rest Advantage': cumulative_rest_advantage,
-                        'Travel Advantage': travel_advantage,
-                        'Back to Back Away Games': back_to_back_away_games,
-                        'Thursday Night Game': thursday_night_game,
-                        'International Game': international_game,
-                        'Previous Opponent': previous_opponent,
-                        'Previous Game Location': previous_game_location,
-                        'Next Opponent': next_opponent,
-                        'Next Game Location': next_game_location
-
-                    }
-                    picks_rows_2.append(new_row_2)
-
-
-                    # Add differences to sums
-                    sum_preseason_difference += preseason_difference
-                    sum_adjusted_preseason_difference += adjusted_preseason_difference
-                    sum_current_difference += current_difference
-                    sum_adjusted_current_difference += adjusted_current_difference
-                    #sum_ev += ev
-                    picks_df = pd.concat([picks_df, df.loc[[i]]], ignore_index=True)
-                    picks_df['Divisional Matchup?'] = divisional_game
-            summarized_picks_df = pd.DataFrame(picks_rows_2)
-
-            st.write(summarized_picks_df)
-            st.write('')
-            #st.write(f'Total EV: {sum_ev}')
-            st.write('\nPreseason Difference:', sum_preseason_difference)
-            st.write('Adjusted Preseason Difference:', sum_adjusted_preseason_difference)
-            st.write('Current Difference:', sum_current_difference)
-            st.write(f'Adjusted Current Difference: :blue[{sum_adjusted_current_difference}]')
+    
+    
+            # Dynamically create the forbidden solution list
+            forbidden_solutions_1 = []
+            if iteration > 0: 
+                for previous_iteration in range(iteration):
+                    # Load the picks from the previous iteration
+                    if selected_contest == 'Circa':
+                        previous_picks_df = pd.read_csv(f"circa_picks_ev_{previous_iteration + 1}.csv")
+                    else:
+                        previous_picks_df = pd.read_csv(f"dk_picks_ev_{previous_iteration + 1}.csv")
+    
+                    # Extract the forbidden solution for this iteration
+                    forbidden_solution_1 = previous_picks_df['Hypothetical Current Winner'].tolist()
+                    forbidden_solutions_1.append(forbidden_solution_1)
+    
+            # Add constraints for all forbidden solutions
+            for forbidden_solution_1 in forbidden_solutions_1:
+                # Get the indices of the forbidden solution in the DataFrame
+                forbidden_indices_1 = []
+                for i in range(len(df)):
+                    # Calculate the relative week number within the forbidden solution
+                    df_week = df.loc[i, 'Week_Num']
+                    relative_week = df_week - starting_week  # Adjust week to be relative to starting week
+    
+                    #Check if the week is within the range and the solution is forbidden
+                    if 0 <= relative_week < len(forbidden_solution_1) and df_week >= starting_week and df_week < ending_week: #Added this to make sure we are only looking at the range
+                        if (df.loc[i, 'Hypothetical Current Winner'] == forbidden_solution_1[relative_week]):
+                            forbidden_indices_1.append(i)
+                solver.Add(solver.Sum([1 - picks[i] for i in forbidden_indices_1]) >= 1)
+    
             
-        else:
-            st.write('No solution found. Consider using fewer constraints. Or you may just be fucked')
-            st.write('No solution found. Consider using fewer constraints. Or you may just be fucked')
-        st.write("---------------------------------------------------------------------------------------------------------------")
-        st.write("")
-        st.write("")  
-        st.write("")
+    
+            # Objective: maximize the sum of Adjusted Current Difference of each game picked
+            solver.Maximize(solver.Sum([picks[i] * df.loc[i, 'Hypothetical Current Winner EV'] for i in range(len(df))]))
 
-            # Save the picks to a CSV file for the current iteration
-        if selected_contest == 'Circa':
-            picks_df.to_csv(f'circa_picks_ir_{iteration + 1}.csv', index=False)
-            summarized_picks_df.to_csv(f'circa_picks_ir_subset_{iteration + 1}.csv', index=False)
-        else:
-            picks_df.to_csv(f'dk_picks_ir_{iteration + 1}.csv', index=False)
-            summarized_picks_df.to_csv(f'dk_picks_ir_subset_{iteration + 1}.csv', index=False)
-        
-        # Append the new forbidden solution to the list
-        forbidden_solutions_1.append(picks_df['Adjusted Current Winner'].tolist())
-        #print(forbidden_solutions)
+
+    
+            # Solve the problem and print the solution
+            status = solver.Solve()
+    
+            if status == pywraplp.Solver.OPTIMAL:
+                st.write('')
+                st.write(f'**Solution Based on EV: {iteration + 1}**')
+    
+                st.write('Solution found!')
+                st.write('Objective value =', solver.Objective().Value())
+    
+    
+                # Initialize sums
+                sum_preseason_difference = 0
+                sum_adjusted_preseason_difference = 0
+                sum_current_difference = 0
+                sum_adjusted_current_difference = 0
+                sum_ev = 0
+    
+                # Initialize picks_df
+                picks_df = pd.DataFrame(columns=df.columns)
+                picks_rows_2 = []
+                for i in range(len(df)):
+                    if picks[i].solution_value() > 0:
+                        # Determine if it's a divisional game and if the picked team is the home team
+    
+                        week = df.loc[i, 'Week']
+                        pick = df.loc[i,'Hypothetical Current Winner']
+                        opponent = df.loc[i, 'Hypothetical Current Loser']
+                        divisional_game = 'Divisional' if df.loc[i, 'Divisional Matchup Boolean'] else ''
+                        home_team = 'Home Team' if df.loc[i, 'Hypothetical Current Winner'] == df.loc[i, 'Home Team 1'] else 'Away Team'
+                        weekly_rest = df.loc[i, 'Home Team Weekly Rest'] if df.loc[i, 'Hypothetical Current Winner'] == df.loc[i, 'Home Team 1'] else df.loc[i, 'Away Team Weekly Rest']
+                        weekly_rest_advantage = df.loc[i, 'Weekly Home Rest Advantage'] if df.loc[i, 'Hypothetical Current Winner'] == df.loc[i, 'Home Team 1'] else df.loc[i, 'Weekly Away Rest Advantage']
+                        cumulative_rest = df.loc[i, 'Home Cumulative Rest Advantage'] if df.loc[i, 'Hypothetical Current Winner'] == df.loc[i, 'Home Team 1'] else df.loc[i, 'Away Cumulative Rest Advantage']
+                        cumulative_rest_advantage = df.loc[i, 'Home Team Current Week Cumulative Rest Advantage'] if df.loc[i, 'Hypothetical Current Winner'] == df.loc[i, 'Home Team 1'] else df.loc[i, 'Away Team Current Week Cumulative Rest Advantage']
+                        travel_advantage = df.loc[i, 'Home Travel Advantage'] if df.loc[i, 'Hypothetical Current Winner'] == df.loc[i, 'Home Team 1'] else df.loc[i, 'Away Travel Advantage']
+                        back_to_back_away_games = 'True' if df.loc[i, 'Hypothetical Current Winner'] == df.loc[i, 'Away Team 1'] and df.loc[i, 'Back to Back Away Games'] == 'True' else 'False'
+                        thursday_night_game = 'Thursday Night Game' if df.loc[i, "Thursday Night Game"] == 'True' else 'Sunday/Monday Game'
+                        international_game = 'International Game' if df.loc[i, 'Actual Stadium'] == 'London, UK' else 'Domestic Game'
+                        previous_opponent = df.loc[i, 'Home Team Previous Opponent'] if df.loc[i, 'Hypothetical Current Winner'] == df.loc[i, 'Home Team 1'] else df.loc[i, 'Away Team Previous Opponent']
+                        previous_game_location = df.loc[i, 'Home Team Previous Location'] if df.loc[i, 'Hypothetical Current Winner'] == df.loc[i, 'Home Team 1'] else df.loc[i, 'Away Team Previous Location']
+                        next_opponent = df.loc[i, 'Home Team Next Opponent'] if df.loc[i, 'Hypothetical Current Winner'] == df.loc[i, 'Home Team 1'] else df.loc[i, 'Away Team Next Opponent']
+                        next_game_location = df.loc[i, 'Home Team Next Location'] if df.loc[i, 'Hypothetical Current Winner'] == df.loc[i, 'Home Team 1'] else df.loc[i, 'Away Team Next Location']
+                        win_odds = df.loc[i, 'Home Team Fair Odds'] if df.loc[i, 'Hypothetical Current Winner'] == df.loc[i, 'Home Team 1'] else df.loc[i, 'Away Team Fair Odds']
+                        
+    
+                        # Get differences
+                        preseason_difference = df.loc[i, 'Preseason Difference']
+                        adjusted_preseason_difference = df.loc[i, 'Adjusted Preseason Difference']
+                        current_difference = df.loc[i, 'Current Difference']
+                        adjusted_current_difference = df.loc[i, 'Adjusted Current Difference']
+                        # Calculate EV for this game
+                        ev = df.loc[i, 'Hypothetical Current Winner EV']
+    
+    
+                        print('Week %i: Pick %s %s %s (%i, %i, %i, %i, %.4f)' % (df.loc[i, 'Week_Num'], df.loc[i, 'Hypothetical Current Winner'], divisional_game, home_team,
+                                                                           preseason_difference, adjusted_preseason_difference,
+                                                                           current_difference, adjusted_current_difference, ev))
+                        new_row_2 = {
+                            'Week': week,
+                            'Pick': pick,
+                            'Opponent': opponent,
+                            'EV': ev,
+                            'Win Odds': win_odds,
+                            'Divisional Game': divisional_game,
+                            'Home Team Status': home_team,
+                            'Weekly Rest': weekly_rest,
+                            'Weekly Rest Advantage': weekly_rest_advantage,
+                            'Cumulative Rest': cumulative_rest,
+                            'Cumulative Rest Advantage': cumulative_rest_advantage,
+                            'Travel Advantage': travel_advantage,
+                            'Back to Back Away Games': back_to_back_away_games,
+                            'Thursday Night Game': thursday_night_game,
+                            'International Game': international_game,
+                            'Previous Opponent': previous_opponent,
+                            'Previous Game Location': previous_game_location,
+                            'Next Opponent': next_opponent,
+                            'Next Game Location': next_game_location,
+                            'Preseason Difference': preseason_difference,
+                            'Adjusted Preseason Difference': adjusted_preseason_difference,
+                            'Current Difference': current_difference,
+                            'Adjusted Current Difference': adjusted_current_difference
+                        }
+                        picks_rows_2.append(new_row_2)
+    
+    
+                        # Add differences to sums
+                        sum_preseason_difference += preseason_difference
+                        sum_adjusted_preseason_difference += adjusted_preseason_difference
+                        sum_current_difference += current_difference
+                        sum_adjusted_current_difference += adjusted_current_difference
+                        picks_df = pd.concat([picks_df, df.loc[[i]]], ignore_index=True)
+                        picks_df['Divisional Matchup?'] = divisional_game
+                summarized_picks_df = pd.DataFrame(picks_rows_2)
+    
+                st.write(summarized_picks_df)
+                st.write('')
+                #st.write(f'Total EV: {sum_ev}')
+                st.write('\nPreseason Difference:', sum_preseason_difference)
+                st.write('Adjusted Preseason Difference:', sum_adjusted_preseason_difference)
+                st.write('Current Difference:', sum_current_difference)
+                st.write(f'Adjusted Current Difference: :blue[{sum_adjusted_current_difference}]')
+                
+            else:
+                st.write('No solution found. Consider using fewer constraints. Or you may just be fucked')
+                st.write('No solution found. Consider using fewer constraints. Or you may just be fucked')
+            st.write("---------------------------------------------------------------------------------------------------------------")
+            st.write("")
+            st.write("")  
+            st.write("")
+    
+                # Save the picks to a CSV file for the current iteration
+            if selected_contest == 'Circa':
+                picks_df.to_csv(f'circa_picks_ir_{iteration + 1}.csv', index=False)
+                summarized_picks_df.to_csv(f'circa_picks_ir_subset_{iteration + 1}.csv', index=False)
+            else:
+                picks_df.to_csv(f'dk_picks_ir_{iteration + 1}.csv', index=False)
+                summarized_picks_df.to_csv(f'dk_picks_ir_subset_{iteration + 1}.csv', index=False)
+            
+            # Append the new forbidden solution to the list
+            forbidden_solutions_1.append(picks_df['Adjusted Current Winner'].tolist())
+            #print(forbidden_solutions)
 
 
 picked_teams = []

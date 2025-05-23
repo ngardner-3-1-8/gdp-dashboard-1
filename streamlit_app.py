@@ -5496,13 +5496,13 @@ if yes_i_would_like_to_choose_weeks:
     st.write('')
     st.write('')
     st.subheader('Current Week Entries')
-    st.write('For accurate predictions, you must innput the number of remaining entries in your contest')
+    st.write('For accurate predictions, you must input the number of remaining entries in your contest')
     # Get an integer input with no maximum
     if selected_contest == "DraftKings":
-        current_week_entries_dk = st.number_input("Number of Remaining Entries:", value=0, max_value=None)
+        current_week_entries_dk = st.number_input("Number of Remaining Entries:", value=-1, max_value=None)
         st.write(f"You entered: {current_week_entries_dk}")
     else:
-        current_week_entries_circa = st.number_input("Number of Remaining Entries:", value=0, max_value=None)
+        current_week_entries_circa = st.number_input("Number of Remaining Entries:", value=-1, max_value=None)
         st.write(f"You entered: {current_week_entries_circa}")
     st.write('')
     st.write('')

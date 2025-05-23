@@ -3802,11 +3802,11 @@ def get_survivor_picks_based_on_internal_rankings():
                             'Previous Opponent': previous_opponent,
                             'Previous Game Location': previous_game_location,
                             'Next Opponent': next_opponent,
-                            'Next Game Location': next_game_location
+                            'Next Game Location': next_game_location,
                             'Preseason Spread': preseason_difference,
                             'Adjusted Preseason Spread (Homefield, Rest, etc...)': adjusted_preseason_difference,
                             'Current Spread': current_difference,
-                            'Adjusted Current Spread (Homefield, Rest, etc...)': adjusted_current_difference,
+                            'Adjusted Current Spread (Homefield, Rest, etc...)': adjusted_current_difference
     
                         }
                         picks_rows_2.append(new_row_2)

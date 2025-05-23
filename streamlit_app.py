@@ -3750,7 +3750,7 @@ def get_survivor_picks_based_on_internal_rankings():
                         pick = df.loc[i,'Adjusted Current Winner']
                         opponent = df.loc[i, 'Home Team'] if df.loc[i, 'Adjusted Current Winner'] == df.loc[i, 'Away Team'] else df.loc[i, 'Away Team']
                         win_odds = df.loc[i, 'Home Team Fair Odds'] if df.loc[i, 'Adjusted Current Winner'] == df.loc[i, 'Home Team'] else df.loc[i, 'Away Team Fair Odds']
-			pick_percent = df.loc[i, 'Home Pick %'] if df.loc[i, 'Adjusted Current Winner'] == df.loc[i, 'Home Team'] else df.loc[i, 'Away Pick %']
+                        pick_percent = df.loc[i, 'Home Pick %'] if df.loc[i, 'Adjusted Current Winner'] == df.loc[i, 'Home Team'] else df.loc[i, 'Away Pick %']
                         expected_availability = df.loc[i, 'Home Team Expected Availability'] if df.loc[i, 'Adjusted Current Winner'] == df.loc[i, 'Home Team'] else df.loc[i, 'Away Team Expected Availability']
                         divisional_game = 'Divisional' if df.loc[i, 'Divisional Matchup Boolean'] else ''
                         home_team = 'Home Team' if df.loc[i, 'Adjusted Current Winner'] == df.loc[i, 'Home Team'] else 'Away Team'

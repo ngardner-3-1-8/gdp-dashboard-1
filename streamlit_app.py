@@ -3150,7 +3150,8 @@ def get_survivor_picks_based_on_ev():
             st.write("")
             st.write("")	    
             st.write("")
-    
+
+		
                 # Save the picks to a CSV file for the current iteration
             if selected_contest == 'Circa':
                 picks_df.to_csv(f'circa_picks_ev_{iteration + 1}.csv', index=False)

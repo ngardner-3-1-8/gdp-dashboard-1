@@ -1314,9 +1314,9 @@ def get_predicted_pick_percentages(pd):
     #print(away_df)
 
     nfl_schedule_df = collect_schedule_travel_ranking_data_df
-    nfl_schedule_df['Week_Number'] = new_df['Week'].str.split(' ').str[1].astype(int)
+    nfl_schedule_df['Week_Number'] = nfl_schedule_df['Week'].str.split(' ').str[1].astype(int)
     # Filter the DataFrame
-    nfl_schedule_df = nfl_schedule_df[new_df['Week_Number'] >= starting_week]
+    nfl_schedule_df = nfl_schedule_df[nfl_schedule_df['Week_Number'] >= starting_week]
     # You can drop the auxiliary 'Week_Number' column if you no longer need it
     nfl_schedule_df = nfl_schedule_df.drop(columns=['Week_Number'])
 

@@ -1742,9 +1742,12 @@ def get_predicted_pick_percentages_with_availability(pd):
     
         nfl_schedule_df = collect_schedule_travel_ranking_data_df
         # Assumes format "Week X" - adjust if the format is different
-        nfl_schedule_df_df['Week_Number'] = nfl_schedule_df_df['Week'].str.split(' ').str[1].astype(int)
+        if nfl_schedule_df['Week'].dtype == 'object':
+            nfl_schedule_df['Week_Number'] = nfl_schedule_df['Week'].str.split(' ').str[1].astype(int)
         # Filter the DataFrame
-        nfl_schedule_df_df = nfl_schedule_df_df[new_df['Week_Number'] >= starting_week]
+	else:
+            nfl_schedule_df['Week_Number'] = nfl_schedule_df['Week']
+        nfl_schedule_df = nfl_schedule_df[new_df['Week_Number'] >= starting_week]
         # You can drop the auxiliary 'Week_Number' column if you no longer need it
         nfl_schedule_df_df = nfl_schedule_df_df.drop(columns=['Week_Number'])
 

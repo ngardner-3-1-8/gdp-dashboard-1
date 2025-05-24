@@ -5338,6 +5338,39 @@ circa_pick_percentages = {
     'Washington Commanders': [was_week_1_pick_percent, was_week_2_pick_percent, was_week_3_pick_percent, was_week_4_pick_percent, was_week_5_pick_percent, was_week_6_pick_percent, was_week_7_pick_percent, was_week_8_pick_percent, was_week_9_pick_percent, was_week_10_pick_percent, was_week_11_pick_percent, was_week_12_pick_percent, was_week_13_pick_percent, was_week_14_pick_percent, was_week_15_pick_percent, was_week_16_pick_percent, was_week_17_pick_percent, was_week_18_pick_percent, was_week_19_pick_percent, was_week_20_pick_percent]
 }
 
+az_current_week_availability = -1
+atl_current_week_availability = -1
+bal_current_week_availability = -1
+buf_current_week_availability = -1
+car_current_week_availability = -1
+chi_current_week_availability = -1
+cin_current_week_availability = -1
+cle_current_week_availability = -1
+dal_current_week_availability = -1
+den_current_week_availability = -1
+det_current_week_availability = -1
+gb_current_week_availability = -1
+hou_current_week_availability = -1
+ind_current_week_availability = -1
+jax_current_week_availability = -1
+kc_current_week_availability = -1
+lv_current_week_availability = -1
+lac_current_week_availability = -1
+lar_current_week_availability = -1
+mia_current_week_availability = -1
+min_current_week_availability = -1
+ne_current_week_availability = -1
+no_current_week_availability = -1
+nyg_current_week_availability = -1
+nyj_current_week_availability = -1
+phi_current_week_availability = -1
+pit_current_week_availability = -1
+sf_current_week_availability = -1
+sea_current_week_availability = -1
+tb_current_week_availability = -1
+ten_current_week_availability = -1
+was_current_week_availability = -1
+
 dk_team_availability = {
     'Arizona Cardinals': [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
     'Atlanta Falcons': [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],

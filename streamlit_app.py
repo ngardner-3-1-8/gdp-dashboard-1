@@ -1385,6 +1385,24 @@ def get_predicted_pick_percentages(pd):
     # Add new columns for availability, initialize
     nfl_schedule_df['Home Team Expected Availability'] = 1.0
     nfl_schedule_df['Away Team Expected Availability'] = 1.0
+
+# Function to get availability
+    def get_expected_availability(team_name, availability_dict):
+        availability = availability_dict.get(team_name, -1) # Get availability, default to -1 if team not in dict
+        if availability != -1:
+            return availability
+        else:
+            return 1.0
+
+# Apply the function to update 'Home Team Expected Availability'
+    nfl_schedule_df['Home Team Expected Availability'] = nfl_schedule_df['Home Team'].apply(
+        lambda team: get_expected_availability(team, team_availability)
+    )
+
+# Apply the function to update 'Away Team Expected Availability'
+    nfl_schedule_df['Away Team Expected Availability'] = nfl_schedule_df['Away Team'].apply(
+        lambda team: get_expected_availability(team, team_availability)
+    )
     
     max_week_num = 0
     if not nfl_schedule_df['Week'].empty:
@@ -1421,20 +1439,21 @@ def get_predicted_pick_percentages(pd):
         for idx, row_data in week_df_rows.iterrows():
             home_team = row_data['Home Team']
             away_team = row_data['Away Team']
+
+            if week_iter_num > starting_week:                
+                home_avail = 1.0
+                away_avail = 1.0
             
-            home_avail = 1.0
-            away_avail = 1.0
+                if S_w > 0:
+                    if pd.notna(home_team):
+                        unavailable_home = U_prev_week.get(home_team, 0.0)
+                        home_avail = (S_w - unavailable_home) / S_w
+                    if pd.notna(away_team):
+                        unavailable_away = U_prev_week.get(away_team, 0.0)
+                        away_avail = (S_w - unavailable_away) / S_w
             
-            if S_w > 0:
-                if pd.notna(home_team):
-                    unavailable_home = U_prev_week.get(home_team, 0.0)
-                    home_avail = (S_w - unavailable_home) / S_w
-                if pd.notna(away_team):
-                    unavailable_away = U_prev_week.get(away_team, 0.0)
-                    away_avail = (S_w - unavailable_away) / S_w
-            
-            nfl_schedule_df.loc[idx, 'Home Team Expected Availability'] = max(0.0, min(1.0, home_avail))
-            nfl_schedule_df.loc[idx, 'Away Team Expected Availability'] = max(0.0, min(1.0, away_avail))
+                nfl_schedule_df.loc[idx, 'Home Team Expected Availability'] = max(0.0, min(1.0, home_avail))
+                nfl_schedule_df.loc[idx, 'Away Team Expected Availability'] = max(0.0, min(1.0, away_avail))
     
         # Prepare U for the next week (U_next_week will become U_prev_week for the next iteration)
         U_next_week = {team: 0.0 for team in all_teams}
@@ -1791,6 +1810,23 @@ def get_predicted_pick_percentages_with_availability(pd):
         # Add new columns for availability, initialize
         nfl_schedule_df['Home Team Expected Availability'] = 1.0
         nfl_schedule_df['Away Team Expected Availability'] = 1.0
+    # Function to get availability
+        def get_expected_availability(team_name, availability_dict):
+            availability = availability_dict.get(team_name, -1) # Get availability, default to -1 if team not in dict
+            if availability != -1:
+                return availability
+            else:
+                return 1.0
+    
+    # Apply the function to update 'Home Team Expected Availability'
+        nfl_schedule_df['Home Team Expected Availability'] = nfl_schedule_df['Home Team'].apply(
+            lambda team: get_expected_availability(team, team_availability)
+        )
+    
+    # Apply the function to update 'Away Team Expected Availability'
+        nfl_schedule_df['Away Team Expected Availability'] = nfl_schedule_df['Away Team'].apply(
+            lambda team: get_expected_availability(team, team_availability)
+        )
         
         max_week_num = 0
         if not nfl_schedule_df['Week'].empty:
@@ -1827,20 +1863,20 @@ def get_predicted_pick_percentages_with_availability(pd):
             for idx, row_data in week_df_rows.iterrows():
                 home_team = row_data['Home Team']
                 away_team = row_data['Away Team']
+                if week_iter_num > starting_week:                
+                    home_avail = 1.0
+                    away_avail = 1.0
                 
-                home_avail = 1.0
-                away_avail = 1.0
+                    if S_w > 0:
+                        if pd.notna(home_team):
+                            unavailable_home = U_prev_week.get(home_team, 0.0)
+                            home_avail = (S_w - unavailable_home) / S_w
+                        if pd.notna(away_team):
+                            unavailable_away = U_prev_week.get(away_team, 0.0)
+                            away_avail = (S_w - unavailable_away) / S_w
                 
-                if S_w > 0:
-                    if pd.notna(home_team):
-                        unavailable_home = U_prev_week.get(home_team, 0.0)
-                        home_avail = (S_w - unavailable_home) / S_w
-                    if pd.notna(away_team):
-                        unavailable_away = U_prev_week.get(away_team, 0.0)
-                        away_avail = (S_w - unavailable_away) / S_w
-                
-                nfl_schedule_df.loc[idx, 'Home Team Expected Availability'] = max(0.0, min(1.0, home_avail))
-                nfl_schedule_df.loc[idx, 'Away Team Expected Availability'] = max(0.0, min(1.0, away_avail))
+                    nfl_schedule_df.loc[idx, 'Home Team Expected Availability'] = max(0.0, min(1.0, home_avail))
+                    nfl_schedule_df.loc[idx, 'Away Team Expected Availability'] = max(0.0, min(1.0, away_avail))
         
             # Prepare U for the next week (U_next_week will become U_prev_week for the next iteration)
             U_next_week = {team: 0.0 for team in all_teams}
@@ -5371,82 +5407,41 @@ tb_current_week_availability = -1
 ten_current_week_availability = -1
 was_current_week_availability = -1
 
-dk_team_availability = {
-    'Arizona Cardinals': [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
-    'Atlanta Falcons': [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
-    'Baltimore Ravens': [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
-    'Buffalo Bills': [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
-    'Carolina Panthers': [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
-    'Chicago Bears': [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
-    'Cincinnati Bengals': [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
-    'Cleveland Browns': [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
-    'Dallas Cowboys': [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
-    'Denver Broncos': [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
-    'Detroit Lions': [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
-    'Green Bay Packers': [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
-    'Houston Texans': [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
-    'Indianapolis Colts': [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
-    'Jacksonville Jaguars': [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
-    'Kansas City Chiefs': [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
-    'Las Vegas Raiders': [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
-    'Los Angeles Chargers': [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
-    'Los Angeles Rams': [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
-    'Miami Dolphins': [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
-    'Minnesota Vikings': [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
-    'New England Patriots': [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
-    'New Orleans Saints': [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
-    'New York Giants': [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
-    'New York Jets': [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
-    'Philadelphia Eagles': [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
-    'Pittsburgh Steelers': [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
-    'San Francisco 49ers': [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
-    'Seattle Seahawks': [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
-    'Tampa Bay Buccaneers': [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
-    'Tennessee Titans': [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
-    'Washington Commanders': [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
+team_availability = {
+    'Arizona Cardinals': az_current_week_availability,
+    'Atlanta Falcons': atl_current_week_availability,
+    'Baltimore Ravens': bal_current_week_availability,
+    'Buffalo Bills': buf_current_week_availability,
+    'Carolina Panthers': car_current_week_availability,
+    'Chicago Bears': chi_current_week_availability,
+    'Cincinnati Bengals': cin_current_week_availability,
+    'Cleveland Browns': cle_current_week_availability,
+    'Dallas Cowboys': dal_current_week_availability,
+    'Denver Broncos': den_current_week_availability,
+    'Detroit Lions': det_current_week_availability,
+    'Green Bay Packers': gb_current_week_availability,
+    'Houston Texans': hou_current_week_availability,
+    'Indianapolis Colts': ind_current_week_availability,
+    'Jacksonville Jaguars': jax_current_week_availability,
+    'Kansas City Chiefs': kc_current_week_availability,
+    'Las Vegas Raiders': lv_current_week_availability,
+    'Los Angeles Chargers': lac_current_week_availability,
+    'Los Angeles Rams': lar_current_week_availability,
+    'Miami Dolphins': mia_current_week_availability,
+    'Minnesota Vikings': min_current_week_availability,
+    'New England Patriots': ne_current_week_availability,
+    'New Orleans Saints': no_current_week_availability,
+    'New York Giants': nyg_current_week_availability,
+    'New York Jets': nyj_current_week_availability,
+    'Philadelphia Eagles': phi_current_week_availability,
+    'Pittsburgh Steelers': pit_current_week_availability,
+    'San Francisco 49ers': sf_current_week_availability,
+    'Seattle Seahawks': sea_current_week_availability,
+    'Tampa Bay Buccaneers': tb_current_week_availability,
+    'Tennessee Titans': ten_current_week_availability,
+    'Washington Commanders': was_current_week_availability
     }
 
-circa_team_availability = {
-    'Arizona Cardinals': [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
-    'Atlanta Falcons': [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
-    'Baltimore Ravens': [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
-    'Buffalo Bills': [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
-    'Carolina Panthers': [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
-    'Chicago Bears': [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
-    'Cincinnati Bengals': [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
-    'Cleveland Browns': [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
-    'Dallas Cowboys': [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
-    'Denver Broncos': [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
-    'Detroit Lions': [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
-    'Green Bay Packers': [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
-    'Houston Texans': [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
-    'Indianapolis Colts': [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
-    'Jacksonville Jaguars': [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
-    'Kansas City Chiefs': [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
-    'Las Vegas Raiders': [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
-    'Los Angeles Chargers': [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
-    'Los Angeles Rams': [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
-    'Miami Dolphins': [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
-    'Minnesota Vikings': [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
-    'New England Patriots': [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
-    'New Orleans Saints': [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
-    'New York Giants': [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
-    'New York Jets': [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
-    'Philadelphia Eagles': [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
-    'Pittsburgh Steelers': [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
-    'San Francisco 49ers': [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
-    'Seattle Seahawks': [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
-    'Tampa Bay Buccaneers': [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
-    'Tennessee Titans': [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
-    'Washington Commanders': [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
-    }
-
-circa_remaining_entries = {
-    'Actual Circa Remaining Entries': [14221,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1]
-}
-dk_remaining_entries = {
-    'Actual DK Remaining Entries': [20000,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1]
-}
 
 default_current_week_entries_circa = 14221
 default_current_week_entries_dk = 20000

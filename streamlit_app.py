@@ -1747,7 +1747,7 @@ def get_predicted_pick_percentages_with_availability(pd):
         # Filter the DataFrame
         else:
             nfl_schedule_df['Week_Number'] = nfl_schedule_df['Week']
-        nfl_schedule_df = nfl_schedule_df[new_df['Week_Number'] >= starting_week]
+        nfl_schedule_df = nfl_schedule_df[nfl_schedule_df['Week_Number'] >= starting_week]
         # You can drop the auxiliary 'Week_Number' column if you no longer need it
         nfl_schedule_df = nfl_schedule_df.drop(columns=['Week_Number'])
 

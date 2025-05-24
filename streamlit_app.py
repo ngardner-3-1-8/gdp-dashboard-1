@@ -1598,10 +1598,10 @@ def get_predicted_pick_percentages_with_availability(pd):
         selected_columns = ['Week', 'Away Team', 'Home Team', 'Away Team Fair Odds',
                             'Home Team Fair Odds', 'Away Team Star Rating', 'Home Team Star Rating', 'Divisional Matchup Boolean', 'Away Team Thanksgiving Favorite', 'Home Team Thanksgiving Favorite', 'Away Team Christmas Favorite', 'Home Team Christmas Favorite', 'Entry Remaining Percent', 'Home Team Expected Availability', 'Away Team Expected Availability']
         new_df = new_df[selected_columns]
-	if new_df['Week'].dtype == 'object':
+        if new_df['Week'].dtype == 'object':
             new_df['Week_Number'] = new_df['Week'].str.split(' ').str[1].astype(int)
         else:
-	    new_df['Week_Number'] = new_df['Week']
+            new_df['Week_Number'] = new_df['Week']
         # Filter the DataFrame
         new_df = new_df[new_df['Week_Number'] >= starting_week]
         # You can drop the auxiliary 'Week_Number' column if you no longer need it

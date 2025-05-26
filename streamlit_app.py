@@ -1406,7 +1406,7 @@ def get_predicted_pick_percentages(pd):
         lambda team: get_expected_availability(team, team_availability)
     )
 
-    st.subtitle("THIS SHOULD BE CORRECT AVAILABILITY")
+    st.subheader("THIS SHOULD BE CORRECT AVAILABILITY")
     st.write(nfl_schedule_df)
     
     max_week_num = 0

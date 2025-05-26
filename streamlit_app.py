@@ -1386,7 +1386,7 @@ def get_predicted_pick_percentages(pd):
     nfl_schedule_df['Home Team Expected Availability'] = 1.0
     nfl_schedule_df['Away Team Expected Availability'] = 1.0
     st.subtitle("THIS SHOULD BE 100% Availability")
-    st.write(nfl_schedule_df)
+     st.write(nfl_schedule_df)
 
 # Function to get availability
     def get_expected_availability(team_name, availability_dict):

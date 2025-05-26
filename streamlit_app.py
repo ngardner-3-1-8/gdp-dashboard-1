@@ -1385,6 +1385,8 @@ def get_predicted_pick_percentages(pd):
     # Add new columns for availability, initialize
     nfl_schedule_df['Home Team Expected Availability'] = 1.0
     nfl_schedule_df['Away Team Expected Availability'] = 1.0
+    st.subtitle("THIS SHOULD BE 100% Availability")
+    st.write(nfl_schedule_df)
 
 # Function to get availability
     def get_expected_availability(team_name, availability_dict):
@@ -1403,6 +1405,9 @@ def get_predicted_pick_percentages(pd):
     nfl_schedule_df['Away Team Expected Availability'] = nfl_schedule_df['Away Team'].apply(
         lambda team: get_expected_availability(team, team_availability)
     )
+
+    st.subtitle("THIS SHOULD BE CORRECT AVAILABILITY")
+    st.write(nfl_schedule_df)
     
     max_week_num = 0
     if not nfl_schedule_df['Week'].empty:

@@ -1385,8 +1385,6 @@ def get_predicted_pick_percentages(pd):
     # Add new columns for availability, initialize
     nfl_schedule_df['Home Team Expected Availability'] = 1.0
     nfl_schedule_df['Away Team Expected Availability'] = 1.0
-    st.subheader("THIS SHOULD BE 100% Availability")
-    st.write(nfl_schedule_df)
 
 # Function to get availability
     def get_expected_availability(team_name, availability_dict):
@@ -1405,9 +1403,6 @@ def get_predicted_pick_percentages(pd):
     nfl_schedule_df['Away Team Expected Availability'] = nfl_schedule_df['Away Team'].apply(
         lambda team: get_expected_availability(team, team_availability)
     )
-
-    st.subheader("THIS SHOULD BE CORRECT AVAILABILITY")
-    st.write(nfl_schedule_df)
     
     max_week_num = 0
     if not nfl_schedule_df['Week'].empty:
@@ -6865,7 +6860,6 @@ if st.button("Get Optimized Survivor Picks"):
         st.write("Step 2/6: Collecting Travel, Ranking, Odds, and Rest Data...")
         collect_schedule_travel_ranking_data_df = collect_schedule_travel_ranking_data(pd)
         st.write("Step 2 Completed: Travel, Ranking, Odds, and Rest Data Retrieved!")
-        st.write(collect_schedule_travel_ranking_data_df)
         st.write("Step 3/6: Predicting Future Pick Percentages of Public...")
     if use_cached_expected_value == 0:
         nfl_schedule_pick_percentages_df = get_predicted_pick_percentages(pd)

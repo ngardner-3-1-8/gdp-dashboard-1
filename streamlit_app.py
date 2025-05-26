@@ -1391,8 +1391,6 @@ def get_predicted_pick_percentages(pd):
 # Function to get availability
     def get_expected_availability(team_name, availability_dict):
         availability = availability_dict.get(team_name) # Get availability, default to -1 if team not in dict
-        st.write(f"Team Name: {team_name}")
-        st.write(f"Availability: {availability}")
         if availability != -1:
             return availability
         else:
@@ -1859,7 +1857,7 @@ def get_predicted_pick_percentages_with_availability(pd):
         nfl_schedule_df['Away Team Expected Availability'] = 1.0
     # Function to get availability
         def get_expected_availability(team_name, availability_dict):
-            availability = availability_dict.get(team_name, -1) # Get availability, default to -1 if team not in dict
+            availability = availability_dict.get(team_name) # Get availability, default to -1 if team not in dict
             if availability != -1:
                 return availability
             else:
@@ -1884,6 +1882,40 @@ def get_predicted_pick_percentages_with_availability(pd):
         # 2. Loop through Weeks
         for week_iter_num in range(1, int(max_week_num) + 1):
             print(f"Calculating availability for Week {week_iter_num}...")
+            # --- START: Recalibrate U_prev_week at starting_week ---
+            if week_iter_num == starting_week:
+                print(f"  Reached starting_week ({starting_week}). Recalibrating U_prev_week based on team_availability.")
+        
+                # Determine S_at_sw (Total Remaining Entries at Start of starting_week)
+                S_at_sw = 0.0
+                starting_week_df_rows = nfl_schedule_df[nfl_schedule_df['Week'] == starting_week]
+                if not starting_week_df_rows.empty:
+                    S_at_sw_series = starting_week_df_rows['Total Remaining Entries at Start of Week']
+                    # Ensure the series is not empty and the first value is not NaN
+                    if not S_at_sw_series.empty and pd.notna(S_at_sw_series.iloc[0]):
+                        S_at_sw = S_at_sw_series.iloc[0]
+                    else:
+                        print(f"  Warning: 'Total Remaining Entries at Start of Week' is missing or NaN for starting_week {starting_week}.")
+                else:
+                    print(f"  Warning: No games found for starting_week {starting_week} to determine S_at_sw.")
+        
+                if S_at_sw > 0:
+                    temp_U_for_starting_week = {}
+                    for team_name_iter in all_teams:
+                        # Get the availability percentage for this team from the initial dictionary
+                        avail_percent = get_expected_availability(team_name_iter, team_availability)
+        
+                        # Implied used count = TotalEntries * (1 - AvailabilityPercent)
+                        implied_used_count = S_at_sw * (1.0 - avail_percent)
+        
+                        # Ensure used count is not negative and not more than total entries
+                        temp_U_for_starting_week[team_name_iter] = max(0.0, min(implied_used_count, S_at_sw))
+        
+                    U_prev_week = temp_U_for_starting_week # U_prev_week is now set for the start of starting_week
+                    print(f"  U_prev_week for Week {starting_week} recalibrated. Example for 'Chicago Bears': {U_prev_week.get('Chicago Bears', 'Not Found')}")
+                else:
+                    print(f"  Warning: S_at_sw for starting_week {starting_week} is {S_at_sw}. Cannot use team_availability to set U_prev_week. U_prev_week will be based on prior week ({week_iter_num-1}) calculations (if any).")
+            # --- END: Recalibrate U_prev_week at starting_week ---
             current_week_mask = nfl_schedule_df['Week'] == week_iter_num
             
             if not current_week_mask.any():

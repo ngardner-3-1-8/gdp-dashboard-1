@@ -1391,7 +1391,7 @@ def get_predicted_pick_percentages(pd):
 # Function to get availability
     def get_expected_availability(team_name, availability_dict):
         availability = availability_dict.get(team_name) # Get availability, default to -1 if team not in dict
-         if availability != -1:
+        if availability != -1:
             return availability
         else:
             return 1.0

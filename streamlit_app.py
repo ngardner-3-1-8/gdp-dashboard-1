@@ -5485,6 +5485,9 @@ was_current_week_availability = -1
 default_current_week_entries_circa = 14221
 default_current_week_entries_dk = 20000
 
+current_week_entries_circa = 14221
+current_week_entries_dk = 20000
+
 st.title("NFL Survivor Optimization")
 st.subheader("The second best Circa Survivor Contest optimizer")
 contest_options = [

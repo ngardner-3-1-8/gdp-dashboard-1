@@ -1397,7 +1397,7 @@ def get_predicted_pick_percentages(pd):
             return 1.0
 
 # Apply the function to update 'Home Team Expected Availability'
-    nfl_schedule_df['Home Team Expected Availability'] = nfl_schedule_df['Home Team'].apply(
+     nfl_schedule_df['Home Team Expected Availability'] = nfl_schedule_df['Home Team'].apply(
         lambda team: get_expected_availability(team, team_availability)
     )
 

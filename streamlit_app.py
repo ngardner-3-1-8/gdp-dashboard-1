@@ -5549,6 +5549,7 @@ if yes_i_would_like_to_choose_weeks:
     st.subheader('Current Week Team Availability')
     st.write('')
     az_current_week_availability = st.slider("Arizona Cardinals Current Week Availability:", -1, 100) / 100
+     st.write(f"Arizona Cardinals Current Week Availability: {az_current_week_availability}")
     atl_current_week_availability = st.slider("Atlanta Falcons Current Week Availability:", -1, 100) / 100
     bal_current_week_availability = st.slider("Baltimore Ravens Current Week Availability:", -1, 100) / 100
     buf_current_week_availability = st.slider("Buffalo Bills Current Week Availability:", -1, 100) / 100

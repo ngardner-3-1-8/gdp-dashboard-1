@@ -5549,7 +5549,7 @@ if yes_i_would_like_to_choose_weeks:
     ten_current_week_availability = st.slider("Tennessee Titans Current Week Availability:", -1, 100) / 100
     was_current_week_availability = st.slider("Washington Commanders Current Week Availability:", -1, 100) / 100
 
-team_availability = {
+ team_availability = {
     'Arizona Cardinals': az_current_week_availability,
     'Atlanta Falcons': atl_current_week_availability,
     'Baltimore Ravens': bal_current_week_availability,

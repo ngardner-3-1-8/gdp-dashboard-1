@@ -1385,7 +1385,7 @@ def get_predicted_pick_percentages(pd):
     # Add new columns for availability, initialize
     nfl_schedule_df['Home Team Expected Availability'] = 1.0
     nfl_schedule_df['Away Team Expected Availability'] = 1.0
-    st.subtitle("THIS SHOULD BE 100% Availability")
+    st.subheader("THIS SHOULD BE 100% Availability")
     st.write(nfl_schedule_df)
 
 # Function to get availability

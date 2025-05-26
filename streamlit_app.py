@@ -6870,8 +6870,6 @@ if st.button("Get Optimized Survivor Picks"):
         #nfl_schedule_circa_df_2 = manually_adjust_pick_predictions()
     if use_cached_expected_value == 0:
         if selected_contest == 'Circa':
-            st.subheader("Pick Percentages Without Availability")
-            st.write(nfl_schedule_pick_percentages_df)
             st.write("Step 3a: Predicting Pick Percentages based on Team Availability...")
             nfl_schedule_pick_percentages_df = get_predicted_pick_percentages_with_availability(pd)
     if use_cached_expected_value == 1:

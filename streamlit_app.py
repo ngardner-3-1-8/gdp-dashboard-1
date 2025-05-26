@@ -5420,41 +5420,6 @@ tb_current_week_availability = -1
 ten_current_week_availability = -1
 was_current_week_availability = -1
 
-team_availability = {
-    'Arizona Cardinals': az_current_week_availability,
-    'Atlanta Falcons': atl_current_week_availability,
-    'Baltimore Ravens': bal_current_week_availability,
-    'Buffalo Bills': buf_current_week_availability,
-    'Carolina Panthers': car_current_week_availability,
-    'Chicago Bears': chi_current_week_availability,
-    'Cincinnati Bengals': cin_current_week_availability,
-    'Cleveland Browns': cle_current_week_availability,
-    'Dallas Cowboys': dal_current_week_availability,
-    'Denver Broncos': den_current_week_availability,
-    'Detroit Lions': det_current_week_availability,
-    'Green Bay Packers': gb_current_week_availability,
-    'Houston Texans': hou_current_week_availability,
-    'Indianapolis Colts': ind_current_week_availability,
-    'Jacksonville Jaguars': jax_current_week_availability,
-    'Kansas City Chiefs': kc_current_week_availability,
-    'Las Vegas Raiders': lv_current_week_availability,
-    'Los Angeles Chargers': lac_current_week_availability,
-    'Los Angeles Rams': lar_current_week_availability,
-    'Miami Dolphins': mia_current_week_availability,
-    'Minnesota Vikings': min_current_week_availability,
-    'New England Patriots': ne_current_week_availability,
-    'New Orleans Saints': no_current_week_availability,
-    'New York Giants': nyg_current_week_availability,
-    'New York Jets': nyj_current_week_availability,
-    'Philadelphia Eagles': phi_current_week_availability,
-    'Pittsburgh Steelers': pit_current_week_availability,
-    'San Francisco 49ers': sf_current_week_availability,
-    'Seattle Seahawks': sea_current_week_availability,
-    'Tampa Bay Buccaneers': tb_current_week_availability,
-    'Tennessee Titans': ten_current_week_availability,
-    'Washington Commanders': was_current_week_availability
-    }
-
 
 default_current_week_entries_circa = 14221
 default_current_week_entries_dk = 20000
@@ -5583,6 +5548,41 @@ if yes_i_would_like_to_choose_weeks:
     tb_current_week_availability = st.slider("Tampa Bay Buccaneers Current Week Availability:", -1, 100) / 100
     ten_current_week_availability = st.slider("Tennessee Titans Current Week Availability:", -1, 100) / 100
     was_current_week_availability = st.slider("Washington Commanders Current Week Availability:", -1, 100) / 100
+
+team_availability = {
+    'Arizona Cardinals': az_current_week_availability,
+    'Atlanta Falcons': atl_current_week_availability,
+    'Baltimore Ravens': bal_current_week_availability,
+    'Buffalo Bills': buf_current_week_availability,
+    'Carolina Panthers': car_current_week_availability,
+    'Chicago Bears': chi_current_week_availability,
+    'Cincinnati Bengals': cin_current_week_availability,
+    'Cleveland Browns': cle_current_week_availability,
+    'Dallas Cowboys': dal_current_week_availability,
+    'Denver Broncos': den_current_week_availability,
+    'Detroit Lions': det_current_week_availability,
+    'Green Bay Packers': gb_current_week_availability,
+    'Houston Texans': hou_current_week_availability,
+    'Indianapolis Colts': ind_current_week_availability,
+    'Jacksonville Jaguars': jax_current_week_availability,
+    'Kansas City Chiefs': kc_current_week_availability,
+    'Las Vegas Raiders': lv_current_week_availability,
+    'Los Angeles Chargers': lac_current_week_availability,
+    'Los Angeles Rams': lar_current_week_availability,
+    'Miami Dolphins': mia_current_week_availability,
+    'Minnesota Vikings': min_current_week_availability,
+    'New England Patriots': ne_current_week_availability,
+    'New Orleans Saints': no_current_week_availability,
+    'New York Giants': nyg_current_week_availability,
+    'New York Jets': nyj_current_week_availability,
+    'Philadelphia Eagles': phi_current_week_availability,
+    'Pittsburgh Steelers': pit_current_week_availability,
+    'San Francisco 49ers': sf_current_week_availability,
+    'Seattle Seahawks': sea_current_week_availability,
+    'Tampa Bay Buccaneers': tb_current_week_availability,
+    'Tennessee Titans': ten_current_week_availability,
+    'Washington Commanders': was_current_week_availability
+    }
 	
 #return starting_week, ending_week, picked_teams
     #if ending_week:

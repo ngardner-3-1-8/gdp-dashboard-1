@@ -4551,7 +4551,7 @@ preseason_ten_rank = -4.5
 preseason_was_rank = 3.5
 
 
- az_home_adv = 1.5/2
+az_home_adv = 1.5/2
 atl_home_adv = 2.3/2
 bal_home_adv = 3.8/2
 buf_home_adv = 3.6/2

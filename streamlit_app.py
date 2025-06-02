@@ -5490,7 +5490,7 @@ current_week_entries_dk = 20000
 
 
 def login_screen():
-    st.title("Welcome to NFL Survivor Optimization")
+   st.title("Welcome to NFL Survivor Optimization")
     st.subheader("Please log in with Google to access the optimizer.")
     st.write("This tool requires authentication to ensure proper usage and to save your progress.")
     st.write("")

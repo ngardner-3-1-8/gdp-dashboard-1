@@ -5488,1437 +5488,1458 @@ default_current_week_entries_dk = 20000
 current_week_entries_circa = 14221
 current_week_entries_dk = 20000
 
-st.title("NFL Survivor Optimization")
-st.subheader("The second best Circa Survivor Contest optimizer")
-contest_options = [
-    "Circa", "DraftKings"
-]
-st.write("Alright, clowns. This site is built to help you optimize your picks for the Circa Survivor contest (Eventually other contests). :red[This tool is just for informational use. It does not take into account injuries, weather, resting players, or certain other factors. Do not use this tool as your only source of information.] Simply input which week you're in, your team rankings, constraints, etc... and the algorithm will do the rest.")
-st.write('Caluclating EV will take the longest in this process. For a full season, this step will take up to 5 hours or more. For that reason, :green[we recommend using the saved Expected Value Calculations.] Good luck!')
-st.write('')
-st.write('')
-st.subheader('Select Contest')
-st.write('Choose the contest you are using this algorithm for: Circa (Advanced) or Draftkings (Traditional and Pathetic)')
-st.write('The biggest differences between the two contests:')
-st.write('- Circa has 20 Weeks (Christmas and Thanksgiving/Black Friday act as their own indivdual weeks)')
-st.write('- Thanksgiving/Black Friday week will be Week 13 on this site (If you select Circa)')
-st.write('- Christmas Week will be week 18 on this site (If you select Circa)')
-st.write('- In Circa, a tie eliminates you, but in Draftkings, you move on with a tie')
-st.write('- Players in Circa tend to be sharper, making it more difficult to play contrarian')
-selected_contest = st.selectbox('Choose Contest:', options = contest_options)
-if selected_contest == "DraftKings":
-	ending_week = 19
-else:
-	ending_week = 21
-st.write('')
-st.write('')
-st.write('')
-st.write('')
-st.subheader('Picked Teams:')
-yes_i_have_picked_teams = st.checkbox('Have you already used any teams in the contest, or want to prevent the algorithm from using any specific teams?')
 
-#def create_nfl_app():
+def login_screen():
+    st.set_page_config(layout="centered") # Optional: Adjust page layout for login
+    st.title("Welcome to NFL Survivor Optimization")
+    st.subheader("Please log in with Google to access the optimizer.")
+    st.write("This tool requires authentication to ensure proper usage and to save your progress.")
+    st.write("")
+    if st.button("Log in with Google", use_container_width=True):
+        st.login() # This triggers the Google OAuth flow
 
-nfl_teams = [
-    "Arizona Cardinals", "Atlanta Falcons", "Baltimore Ravens", "Buffalo Bills",
-    "Carolina Panthers", "Chicago Bears", "Cincinnati Bengals", "Cleveland Browns",
-    "Dallas Cowboys", "Denver Broncos", "Detroit Lions", "Green Bay Packers",
-    "Houston Texans", "Indianapolis Colts", "Jacksonville Jaguars", "Kansas City Chiefs",
-    "Las Vegas Raiders", "Los Angeles Chargers", "Los Angeles Rams", "Miami Dolphins",
-    "Minnesota Vikings", "New England Patriots", "New Orleans Saints", "New York Giants",
-    "New York Jets", "Philadelphia Eagles", "Pittsburgh Steelers", "San Francisco 49ers",
-    "Seattle Seahawks", "Tampa Bay Buccaneers", "Tennessee Titans", "Washington Commanders"
-]
-if yes_i_have_picked_teams:
-    st.write('Select the teams that you have already used in the survivor contest, or teams that you just do not want to pick in the enirety of the contest')
-    selected_teams = st.multiselect("Prohibited Picks:", options=nfl_teams)
-    picked_teams = selected_teams if selected_teams else []
-    if picked_teams:
-        st.write("You selected:")
-        for team in picked_teams:
-            st.write(f"- {team}")
-    else:
-        st.write("No teams selected")
-st.write('')
-st.write('')
-st.write('')
-st.subheader('Remaining Weeks:')
-yes_i_would_like_to_choose_weeks = st.checkbox('Would you like to choose a range of weeks, instead of the entire season?')
-if yes_i_would_like_to_choose_weeks:
-    st.text('Select the upcoming week for the starting week. Select the week you want the algorithm to stop at. If you select one week, Calculating EV can take up to 30-45 minutes (If you do not use the Saved EV calculations). All 20 weeks will take 5-6 hours. Ending Week must be greater than or equal to Starting Week.')
-    if selected_contest == "DraftKings":
-        starting_week = st.selectbox("Select Starting Week:", options=range(1, 19))
-    else:
-        st.write(":red[Week 13 is Thanksgiving/Black Friday Week and Week 18 is Christmas Week]")
-        starting_week = st.selectbox("Select Starting Week:", options=range(1, 21))
-    #if starting_week:
-        #st.write(f"Selected Starting Week: {starting_week}")
-    # Create a dynamic range for ending week based on starting week
-    st.write('')
-    if selected_contest == "DraftKings":
-        ending_week_options = range(starting_week, 19)
-    else:
-        ending_week_options = range(starting_week, 21)
-    ending_week = st.selectbox("Select Ending Week:", options=ending_week_options)
-    ending_week = ending_week + 1
-
-    st.write('')
-    st.write('')
-    st.write('')
-    st.subheader('Current Week Entries')
-    st.write('For accurate predictions, you must input the number of remaining entries in your contest')
-    # Get an integer input with no maximum
-    if selected_contest == "DraftKings":
-        current_week_entries_dk = st.number_input("Number of Remaining Entries:", value=-1, max_value=None)
-        st.write(f"You entered: {current_week_entries_dk}")
-    else:
-        current_week_entries_circa = st.number_input("Number of Remaining Entries:", value=-1, max_value=None)
-        st.write(f"You entered: {current_week_entries_circa}")
-    st.write('')
-    st.write('')
-    st.write('')
-    st.subheader('Current Week Team Availability')
-    st.write('')
-    az_current_week_availability = st.slider("Arizona Cardinals Current Week Availability:", -1, 100) / 100
-    st.write(f"Arizona Cardinals Current Week Availability: {az_current_week_availability}")
-    atl_current_week_availability = st.slider("Atlanta Falcons Current Week Availability:", -1, 100) / 100
-    bal_current_week_availability = st.slider("Baltimore Ravens Current Week Availability:", -1, 100) / 100
-    buf_current_week_availability = st.slider("Buffalo Bills Current Week Availability:", -1, 100) / 100
-    car_current_week_availability = st.slider("Carolina Panthers Current Week Availability:", -1, 100) / 100
-    chi_current_week_availability = st.slider("Chicago Bears Current Week Availability:", -1, 100) / 100
-    cin_current_week_availability = st.slider("Cincinnati Bengals Current Week Availability:", -1, 100) / 100
-    cle_current_week_availability = st.slider("Cleveland Browns Current Week Availability:", -1, 100) / 100
-    dal_current_week_availability = st.slider("Dallas Cowboys Current Week Availability:", -1, 100) / 100
-    den_current_week_availability = st.slider("Denver Broncos Current Week Availability:", -1, 100) / 100
-    det_current_week_availability = st.slider("Detroit Lions Current Week Availability:", -1, 100) / 100
-    gb_current_week_availability = st.slider("Green Bay Packers Current Week Availability:", -1, 100) / 100
-    hou_current_week_availability = st.slider("Houston Texans Current Week Availability:", -1, 100) / 100
-    ind_current_week_availability = st.slider("Indianapoils Colts Current Week Availability:", -1, 100) / 100
-    jax_current_week_availability = st.slider("Jacksonville Jaguars Current Week Availability:", -1, 100) / 100
-    kc_current_week_availability = st.slider("Kansas City Chiefs Current Week Availability:", -1, 100) / 100
-    lv_current_week_availability = st.slider("Las Vegas Raiders Current Week Availability:", -1, 100) / 100
-    lac_current_week_availability = st.slider("Los Angeles Chargers Current Week Availability:", -1, 100) / 100
-    lar_current_week_availability = st.slider("Los Angeles Rams Current Week Availability:", -1, 100) / 100
-    mia_current_week_availability = st.slider("Miami Dolphins Current Week Availability:", -1, 100) / 100
-    min_current_week_availability = st.slider("Minnesota Vikings Current Week Availability:", -1, 100) / 100
-    ne_current_week_availability = st.slider("New England Patriots Current Week Availability:", -1, 100) / 100
-    no_current_week_availability = st.slider("New Orleans Saints Current Week Availability:", -1, 100) / 100
-    nyg_current_week_availability = st.slider("New York Giants Current Week Availability:", -1, 100) / 100
-    nyj_current_week_availability = st.slider("New York Jets Current Week Availability:", -1, 100) / 100
-    phi_current_week_availability = st.slider("Philadelphia Eagles Current Week Availability:", -1, 100) / 100
-    pit_current_week_availability = st.slider("Pittsburgh Steelers Current Week Availability:", -1, 100) / 100
-    sf_current_week_availability = st.slider("San Francisco 49ers Current Week Availability:", -1, 100) / 100
-    sea_current_week_availability = st.slider("Seattle Seahawks Current Week Availability:", -1, 100) / 100
-    tb_current_week_availability = st.slider("Tampa Bay Buccaneers Current Week Availability:", -1, 100) / 100
-    ten_current_week_availability = st.slider("Tennessee Titans Current Week Availability:", -1, 100) / 100
-    was_current_week_availability = st.slider("Washington Commanders Current Week Availability:", -1, 100) / 100
-
-team_availability = {
-    'Arizona Cardinals': az_current_week_availability,
-    'Atlanta Falcons': atl_current_week_availability,
-    'Baltimore Ravens': bal_current_week_availability,
-    'Buffalo Bills': buf_current_week_availability,
-    'Carolina Panthers': car_current_week_availability,
-    'Chicago Bears': chi_current_week_availability,
-    'Cincinnati Bengals': cin_current_week_availability,
-    'Cleveland Browns': cle_current_week_availability,
-    'Dallas Cowboys': dal_current_week_availability,
-    'Denver Broncos': den_current_week_availability,
-    'Detroit Lions': det_current_week_availability,
-    'Green Bay Packers': gb_current_week_availability,
-    'Houston Texans': hou_current_week_availability,
-    'Indianapolis Colts': ind_current_week_availability,
-    'Jacksonville Jaguars': jax_current_week_availability,
-    'Kansas City Chiefs': kc_current_week_availability,
-    'Las Vegas Raiders': lv_current_week_availability,
-    'Los Angeles Chargers': lac_current_week_availability,
-    'Los Angeles Rams': lar_current_week_availability,
-    'Miami Dolphins': mia_current_week_availability,
-    'Minnesota Vikings': min_current_week_availability,
-    'New England Patriots': ne_current_week_availability,
-    'New Orleans Saints': no_current_week_availability,
-    'New York Giants': nyg_current_week_availability,
-    'New York Jets': nyj_current_week_availability,
-    'Philadelphia Eagles': phi_current_week_availability,
-    'Pittsburgh Steelers': pit_current_week_availability,
-    'San Francisco 49ers': sf_current_week_availability,
-    'Seattle Seahawks': sea_current_week_availability,
-    'Tampa Bay Buccaneers': tb_current_week_availability,
-    'Tennessee Titans': ten_current_week_availability,
-    'Washington Commanders': was_current_week_availability
-    }
-	
-#return starting_week, ending_week, picked_teams
-    #if ending_week:
-        #st.write(f"Selected Ending Week: {ending_week}")
-#if __name__ == "__main__":
-#    starting_week, ending_week, picked_teams = create_nfl_app()
-st.write('')
-st.write('')
-st.write('')
-st.subheader('Teams That Have to Be Picked')
-yes_i_have_a_required_team = st.checkbox('Do you have a team that you require to be used in a specific week?')
-required_week_options = [0] + list(range(starting_week, ending_week))
-if yes_i_have_a_required_team:
-    st.write('Select the week in which the algorithm has to pick that team. If you do not want the team to be :red[required] to be used, select 0')
-    
-    az_req_week = st.selectbox("Arizona Cardinals Week Required to Be Picked:", options=required_week_options)
-    atl_req_week = st.selectbox("Atlanta Falcons Week Required to Be Picked:", options=required_week_options)
-    bal_req_week = st.selectbox("Baltimore Ravens Week Required to Be Picked:", options=required_week_options)
-    buf_req_week = st.selectbox("Buffalo Bills Week Required to Be Picked:", options=required_week_options)
-    car_req_week = st.selectbox("Carolina Panthers Week Required to Be Picked:", options=required_week_options)
-    chi_req_week = st.selectbox("Chicago Bears Week Required to Be Picked:", options=required_week_options)
-    cin_req_week = st.selectbox("Cincinnati Bengals Week Required to Be Picked:", options=required_week_options)
-    cle_req_week = st.selectbox("Cleveland Browns Week Required to Be Picked:", options=required_week_options)
-    dal_req_week = st.selectbox("Dallas Cowboys Week Required to Be Picked:", options=required_week_options)
-    den_req_week = st.selectbox("Denver Broncos Week Required to Be Picked:", options=required_week_options)
-    det_req_week = st.selectbox("Detroit Lions Week Required to Be Picked:", options=required_week_options)
-    gb_req_week = st.selectbox("Green Bay Packers Week Required to Be Picked:", options=required_week_options)
-    hou_req_week = st.selectbox("Houston Texans Week Required to Be Picked:", options=required_week_options)
-    ind_req_week = st.selectbox("Indianapoils Colts Week Required to Be Picked:", options=required_week_options)
-    jax_req_week = st.selectbox("Jacksonville Jaguars Week Required to Be Picked:", options=required_week_options)
-    kc_req_week = st.selectbox("Kansas City Chiefs Week Required to Be Picked:", options=required_week_options)
-    lv_req_week = st.selectbox("Las Vegas Raiders Week Required to Be Picked:", options=required_week_options)
-    lac_req_week = st.selectbox("Los Angeles Chargers Week Required to Be Picked:", options=required_week_options)
-    lar_req_week = st.selectbox("Los Angeles Rams Week Required to Be Picked:", options=required_week_options)
-    mia_req_week = st.selectbox("Miami Dolphins Week Required to Be Picked:", options=required_week_options)
-    min_req_week = st.selectbox("Minnesota Vikings Week Required to Be Picked:", options=required_week_options)
-    ne_req_week = st.selectbox("New England Patriots Week Required to Be Picked:", options=required_week_options)
-    no_req_week = st.selectbox("New Orleans Saints Week Required to Be Picked:", options=required_week_options)
-    nyg_req_week = st.selectbox("New York Giants Week Required to Be Picked:", options=required_week_options)
-    nyj_req_week = st.selectbox("New York Jets Week Required to Be Picked:", options=required_week_options)
-    phi_req_week = st.selectbox("Philadelphia Eagles Week Required to Be Picked:", options=required_week_options)
-    pit_req_week = st.selectbox("Pittsburgh Steelers Week Required to Be Picked:", options=required_week_options)
-    sf_req_week = st.selectbox("San Francisco 49ers Week Required to Be Picked:", options=required_week_options)
-    sea_req_week = st.selectbox("Seattle Seahawks Week Required to Be Picked:", options=required_week_options)
-    tb_req_week = st.selectbox("Tampa Bay Buccaneers Week Required to Be Picked:", options=required_week_options)
-    ten_req_week = st.selectbox("Tennessee Titans Week Required to Be Picked:", options=required_week_options)
-    was_req_week = st.selectbox("Washington Commanders Week Required to Be Picked:", options=required_week_options)
-
-st.write('')
-st.write('')
-st.write('')
-st.subheader('Prohibited Teams')
-yes_i_have_prohibited_teams = st.checkbox('Do you have teams that you want to prohibit the alogrithm from choosing in a specifc week?')
-if yes_i_have_prohibited_teams:
-    st.write('Choose which week you do :red[NOT] want a team to be picked. If, for example, you think the 49ers have a bad matchup in Week 15, and you do not want them to be used then, select "15" for the San Francisco 49ers')
-
-    az_prohibited_weeks = st.multiselect("Arizona Cardinals Week to Be Excluded:", options=required_week_options)
-    atl_prohibited_weeks = st.multiselect("Atlanta Falcons Week to Be Excluded:", options=required_week_options)
-    bal_prohibited_weeks = st.multiselect("Baltimore Ravens Week to Be Excluded:", options=required_week_options)
-    buf_prohibited_weeks = st.multiselect("Buffalo Bills Week to Be Excluded:", options=required_week_options)
-    car_prohibited_weeks = st.multiselect("Carolina Panthers Week to Be Excluded:", options=required_week_options)
-    chi_prohibited_weeks = st.multiselect("Chicago Bears Week to Be Excluded:", options=required_week_options)
-    cin_prohibited_weeks = st.multiselect("Cincinnati Bengals Week to Be Excluded:", options=required_week_options)
-    cle_prohibited_weeks = st.multiselect("Cleveland Browns Week to Be Excluded:", options=required_week_options)
-    dal_prohibited_weeks = st.multiselect("Dallas Cowboys Week to Be Excluded:", options=required_week_options)
-    den_prohibited_weeks = st.multiselect("Denver Broncos Week to Be Excluded:", options=required_week_options)
-    det_prohibited_weeks = st.multiselect("Detroit Lions Week to Be Excluded:", options=required_week_options)
-    gb_prohibited_weeks = st.multiselect("Green Bay Packers Week to Be Excluded:", options=required_week_options)
-    hou_prohibited_weeks = st.multiselect("Houston Texans Week to Be Excluded:", options=required_week_options)
-    ind_prohibited_weeks = st.multiselect("Indianapoils Colts Week to Be Excluded:", options=required_week_options)
-    jax_prohibited_weeks = st.multiselect("Jacksonville Jaguars Week to Be Excluded:", options=required_week_options)
-    kc_prohibited_weeks = st.multiselect("Kansas City Chiefs Week to Be Excluded:", options=required_week_options)
-    lv_prohibited_weeks = st.multiselect("Las Vegas Raiders Week to Be Excluded:", options=required_week_options)
-    lac_prohibited_weeks = st.multiselect("Los Angeles Chargers Week to Be Excluded:", options=required_week_options)
-    lar_prohibited_weeks = st.multiselect("Los Angeles Rams Week to Be Excluded:", options=required_week_options)
-    mia_prohibited_weeks = st.multiselect("Miami Dolphins Week to Be Excluded:", options=required_week_options)
-    min_prohibited_weeks = st.multiselect("Minnesota Vikings Week to Be Excluded:", options=required_week_options)
-    ne_prohibited_weeks = st.multiselect("New England Patriots Week to Be Excluded:", options=required_week_options)
-    no_prohibited_weeks = st.multiselect("New Orleans Saints Week to Be Excluded:", options=required_week_options)
-    nyg_prohibited_weeks = st.multiselect("New York Giants Week to Be Excluded:", options=required_week_options)
-    nyj_prohibited_weeks = st.multiselect("New York Jets Week to Be Excluded:", options=required_week_options)
-    phi_prohibited_weeks = st.multiselect("Philadelphia Eagles Week to Be Excluded:", options=required_week_options)
-    pit_prohibited_weeks = st.multiselect("Pittsburgh Steelers Week to Be Excluded:", options=required_week_options)
-    sf_prohibited_weeks = st.multiselect("San Francisco 49ers Week to Be Excluded:", options=required_week_options)
-    sea_prohibited_weeks = st.multiselect("Seattle Seahawks Week to Be Excluded:", options=required_week_options)
-    tb_prohibited_weeks = st.multiselect("Tampa Bay Buccaneers Week to Be Excluded:", options=required_week_options)
-    ten_prohibited_weeks = st.multiselect("Tennessee Titans Week to Be Excluded:", options=required_week_options)
-    was_prohibited_weeks = st.multiselect("Washington Commanders Week to Be Excluded:", options=required_week_options)
-    az_excluded_weeks = az_prohibited_weeks if az_prohibited_weeks else []
-    atl_excluded_weeks = atl_prohibited_weeks if atl_prohibited_weeks else []
-    bal_excluded_weeks = bal_prohibited_weeks if bal_prohibited_weeks else []
-    buf_excluded_weeks = buf_prohibited_weeks if buf_prohibited_weeks else []
-    car_excluded_weeks = car_prohibited_weeks if car_prohibited_weeks else []
-    chi_excluded_weeks = chi_prohibited_weeks if chi_prohibited_weeks else []
-    cin_excluded_weeks = cin_prohibited_week if cin_prohibited_weeks else []
-    cle_excluded_weeks = cle_prohibited_weeks if cle_prohibited_weeks else []
-    dal_excluded_weeks = dal_prohibited_weeks if dal_prohibited_weeks else []
-    den_excluded_weeks = den_prohibited_weeks if den_prohibited_weeks else []
-    det_excluded_weeks = det_prohibited_weeks if det_prohibited_weeks else []
-    gb_excluded_weeks = gb_prohibited_weeks if gb_prohibited_weeks else []
-    hou_excluded_weeks = hou_prohibited_weeks if hou_prohibited_weeks else []
-    ind_excluded_weeks = ind_prohibited_weeks if ind_prohibited_weeks else []
-    jax_excluded_weeks = jax_prohibited_weeks if jax_prohibited_weeks else []
-    kc_excluded_weeks = kc_prohibited_weeks if kc_prohibited_weeks else []
-    lv_excluded_weeks = lv_prohibited_weeks if lv_prohibited_weeks else []
-    lac_excluded_weeks = lac_prohibited_weeks if lac_prohibited_weeks else []
-    lar_excluded_weeks = lar_prohibited_weeks if lar_prohibited_weeks else []
-    mia_excluded_weeks = mia_prohibited_weeks if mia_prohibited_weeks else []
-    min_excluded_weeks = min_prohibited_weeks if min_prohibited_weeks else []
-    ne_excluded_weeks = ne_prohibited_weeks if ne_prohibited_weeks else []
-    no_excluded_weeks = no_prohibited_weeks if no_prohibited_weeks else []
-    nyg_excluded_weeks = nyg_prohibited_weeks if nyg_prohibited_weeks else []
-    nyj_excluded_weeks = nyj_prohibited_weeks if nyj_prohibited_weeks else []
-    phi_excluded_weeks = phi_prohibited_weeks if phi_prohibited_weeks else []
-    pit_excluded_weeks = pit_prohibited_weeks if pit_prohibited_weeks else []
-    sf_excluded_weeks = sf_prohibited_weeks if sf_prohibited_weeks else []
-    sea_excluded_weeks = sea_prohibited_weeks if sea_prohibited_weeks else []
-    tb_excluded_weeks = tb_prohibited_weeks if tb_prohibited_weeks else []
-    ten_excluded_weeks = ten_prohibited_weeks if ten_prohibited_weeks else []
-    was_excluded_weeks = was_prohibited_weeks if was_prohibited_weeks else []
-
-
-st.write('')
-st.write('')
-st.write('')
-
-st.subheader('NFL Team Rankings')
-yes_i_have_customized_rankings = st.checkbox('Would you like to use customized rankings instead of our default rankings?')
-if yes_i_have_customized_rankings:
-    st.write('The Ranking represents :red[how much a team would either win (positive number) or lose (negative number) by to an average NFL team] on a neutral field. 0 means the team is perfectly average. If you leave the "Default" value, the default rankings will be used.')
-    st.write('If you use your own rankings, and do NOT select "Use Cached Expected Value", then we will use your internal rankings in two ways:')
-    st.write('1. We will use them in the calculation based on internal rankings')
-    st.write('2. We will use public Draftkings ML odds to predict pick percentages for the EV calculation, but then use your internal rankinsg to predict win percentage and help you find an EV edge based on your internal rankings')
-    st.write('')
-    
-    
-    team_rankings = [
-        "Default", 0,-15,-14.5,-14,-13.5,-13,-12.5,-12,-11.5,-11,-10.5,-10,-9.5,-9,-8.5,-8,-7.5,
-        -7,-6.5,-6,-5.5,-5,-4.5,-4,-3.5,-3,-2.5,-2,-1.5,-1,-.5,.5,1,1.5,2,2.5,3,3.5,4,
-        4.5,5,5.5,6,6.5,7,7.5,8,8.5,9,9.5,10,10.5,11,11.5,12,12.5,13,13.5,14,14.5,15
+# --- Function to display the main application content ---
+# All your existing Streamlit code will go inside this function
+def main_app():
+    st.title("NFL Survivor Optimization")
+    st.subheader("The second best Circa Survivor Contest optimizer")
+    contest_options = [
+        "Circa", "DraftKings"
     ]
-    az_rank = st.selectbox("Arizona Cardinals Ranking:", options=team_rankings)
-    if az_rank == "Default":
-        az_rank = default_atl_rank
-    st.write(f'Current Arizona Cardinals Ranking: {az_rank}')
-    st.write('')
-    atl_rank = st.selectbox("Atlanta Falcons Ranking:", options=team_rankings)
-    if atl_rank == "Default":
-        atl_rank = default_atl_rank
-    st.write(f'Current Atlanta Falcons Ranking: {atl_rank}')
-    st.write('')
-    bal_rank = st.selectbox("Baltimore Ravens Ranking:", options=team_rankings)
-    if bal_rank == "Default":
-        bal_rank = default_bal_rank
-    st.write(f'Current Baltimore Ravens Ranking: {bal_rank}')
-    st.write('')
-    buf_rank = st.selectbox("Buffalo Bills Ranking:", options=team_rankings)
-    if buf_rank == "Default":
-        buf_rank = default_buf_rank
-    st.write(f'Current Buffalo Bills Ranking: {buf_rank}')
-    st.write('')
-    car_rank = st.selectbox("Carolina Panthers Ranking:", options=team_rankings)
-    if car_rank == "Default":
-        car_rank = default_car_rank
-    st.write(f'Current Carolina Panthers Ranking: {car_rank}')
-    st.write('')
-    chi_rank = st.selectbox("Chicago Bears Ranking:", options=team_rankings)
-    if chi_rank == "Default":
-        chi_rank = default_chi_rank
-    st.write(f'Current Chicago Bears Ranking: {chi_rank}')
-    st.write('')
-    cin_rank = st.selectbox("Cincinnati Bengals Ranking:", options=team_rankings)
-    if cin_rank == "Default":
-        cin_rank = default_cin_rank
-    st.write(f'Current Cincinnati Bengals Ranking: {cin_rank}')
-    st.write('')
-    cle_rank = st.selectbox("Cleveland Browns Ranking:", options=team_rankings)
-    if cle_rank == "Default":
-        cle_rank = default_cle_rank
-    st.write(f'Current Cleveland Browns Ranking: {cle_rank}')
-    st.write('')
-    dal_rank = st.selectbox("Dallas Cowboys Ranking:", options=team_rankings)
-    if dal_rank == "Default":
-        dal_rank = default_dal_rank
-    st.write(f'Current Dallas Cowboys Ranking: {dal_rank}')
-    st.write('')
-    den_rank = st.selectbox("Denver Broncos Ranking:", options=team_rankings)
-    if den_rank == "Default":
-        den_rank = default_den_rank
-    st.write(f'Current Denver Broncos Ranking: {den_rank}')
-    st.write('')
-    det_rank = st.selectbox("Detroit Lions Ranking:", options=team_rankings)
-    if det_rank == "Default":
-        det_rank = default_det_rank
-    st.write(f'Current Detroit Lions Ranking: {det_rank}')
-    st.write('')
-    gb_rank = st.selectbox("Green Bay Packers Ranking:", options=team_rankings)
-    if gb_rank == "Default":
-        gb_rank = default_gb_rank
-    st.write(f'Current Green Bay Packers Ranking: {gb_rank}')
-    st.write('')
-    hou_rank = st.selectbox("Houston Texans Ranking:", options=team_rankings)
-    if hou_rank == "Default":
-        hou_rank = default_hou_rank
-    st.write(f'Current Houston Texans Ranking: {hou_rank}')
-    st.write('')
-    ind_rank = st.selectbox("Indianapoils Colts Ranking:", options=team_rankings)
-    if ind_rank == "Default":
-        ind_rank = default_ind_rank
-    st.write(f'Current Indianapoils Colts Ranking: {ind_rank}')
-    st.write('')
-    jax_rank = st.selectbox("Jacksonville Jaguars Ranking:", options=team_rankings)
-    if jax_rank == "Default":
-        jax_rank = default_jax_rank
-    st.write(f'Current Jacksonville Jaguars Ranking: {jax_rank}')
-    st.write('')
-    kc_rank = st.selectbox("Kansas City Chiefs Ranking:", options=team_rankings)
-    if kc_rank == "Default":
-        kc_rank = default_kc_rank
-    st.write(f'Current Kansas City Chiefs Ranking: {kc_rank}')
-    st.write('')
-    lv_rank = st.selectbox("Las Vegas Raiders Ranking:", options=team_rankings)
-    if lv_rank == "Default":
-        lv_rank = default_lv_rank
-    st.write(f'Current Las Vegas Raiders Ranking: {lv_rank}')
-    st.write('')
-    lac_rank = st.selectbox("Los Angeles Chargers Ranking:", options=team_rankings)
-    if lac_rank == "Default":
-        lac_rank = default_lac_rank
-    st.write(f'Current Los Angeles Chargers Ranking: {lac_rank}')
-    st.write('')
-    lar_rank = st.selectbox("Los Angeles Rams Ranking:", options=team_rankings)
-    if lar_rank == "Default":
-        lar_rank = default_lar_rank
-    st.write(f'Current Los Angeles Rams Ranking: {lar_rank}')
-    st.write('')
-    mia_rank = st.selectbox("Miami Dolphins Ranking:", options=team_rankings)
-    if mia_rank == "Default":
-        mia_rank = default_mia_rank
-    st.write(f'Current Miami Dolphins Ranking: {mia_rank}')
-    st.write('')
-    min_rank = st.selectbox("Minnesota Vikings Ranking:", options=team_rankings)
-    if min_rank == "Default":
-        min_rank = default_min_rank
-    st.write(f'Current Minnesota Vikings Ranking: {min_rank}')
-    st.write('')
-    ne_rank = st.selectbox("New England Patriots Ranking:", options=team_rankings)
-    if ne_rank == "Default":
-        ne_rank = default_ne_rank
-    st.write(f'Current New England Patriots Ranking: {ne_rank}')
-    st.write('')
-    no_rank = st.selectbox("New Orleans Saints Ranking:", options=team_rankings)
-    if no_rank == "Default":
-        no_rank = default_no_rank
-    st.write(f'Current New Orleans Saints Ranking: {no_rank}')
-    st.write('')
-    nyg_rank = st.selectbox("New York Giants Ranking:", options=team_rankings)
-    if nyg_rank == "Default":
-        nyg_rank = default_nyg_rank
-    st.write(f'Current New York Giants Ranking: {nyg_rank}')
-    st.write('')
-    nyj_rank = st.selectbox("New York Jets Ranking:", options=team_rankings)
-    if nyj_rank == "Default":
-        nyj_rank = default_nyj_rank
-    st.write(f'Current New York Jets Ranking: {nyj_rank}')
-    st.write('')
-    phi_rank = st.selectbox("Philadelphia Eagles Ranking:", options=team_rankings)
-    if phi_rank == "Default":
-        phi_rank = default_phi_rank
-    st.write(f'Current Philadelphia Eagles Ranking: {phi_rank}')
-    st.write('')
-    pit_rank = st.selectbox("Pittsburgh Steelers Ranking:", options=team_rankings)
-    if pit_rank == "Default":
-        pit_rank = default_pit_rank
-    st.write(f'Current Pittsburgh Steelers Ranking: {pit_rank}')
-    st.write('')
-    sf_rank = st.selectbox("San Francisco 49ers Ranking:", options=team_rankings)
-    if sf_rank == "Default":
-        sf_rank = default_sf_rank
-    st.write(f'Current San Francisco 49ers Ranking: {sf_rank}')
-    st.write('')
-    sea_rank = st.selectbox("Seattle Seahawks Ranking:", options=team_rankings)
-    if sea_rank == "Default":
-        sea_rank = default_sea_rank
-    st.write(f'Current Seattle Seahawks Ranking: {sea_rank}')
-    st.write('')
-    tb_rank = st.selectbox("Tampa Bay Buccaneers Ranking:", options=team_rankings)
-    if tb_rank == "Default":
-        tb_rank = default_tb_rank
-    st.write(f'Current Tampa Bay Buccaneers Ranking: {tb_rank}')
-    st.write('')
-    ten_rank = st.selectbox("Tennessee Titans Ranking:", options=team_rankings)
-    if ten_rank == "Default":
-        ten_rank = default_ten_rank
-    st.write(f'Current Tennessee Titans Ranking: {ten_rank}')
-    st.write('')
-    was_rank = st.selectbox("Washington Commanders Ranking:", options=team_rankings)
-    if was_rank == "Default":
-        was_rank = default_was_rank
-    st.write(f'Current Washington Commanders Ranking: {was_rank}')
-
-st.write('')
-st.write('')
-st.write('')
-st.subheader('Pick Exclusively Favorites?')
-pick_must_be_favored = st.checkbox('All teams picked must be favored at the time of running this script')
-
-st.write('')
-st.write('')
-st.write('')
-st.subheader('Select Constraints')
-yes_i_have_constraints = st.checkbox('Would you like to add constraints? For example, "Avoid Teams on Short Rest"')
-
-if yes_i_have_constraints:
-    st.write('These constraints will not work 100% of the time (For example in week 18, all Games are divisional matchups). However, it will require a team to be so heavily favored that the impact of the constrained factor should be minimal.')
-    avoid_away_teams_on_short_rest = 1 if st.checkbox('Avoid Away Teams on Short Rest') else 0
-    avoid_close_divisional_matchups = 1 if st.checkbox('Avoid Close Divisional Matchups') else 0
-    avoid_3_games_in_10_days = 1 if st.checkbox('Avoid 3 games in 10 days') else 0
-    avoid_4_games_in_17_days = 1 if st.checkbox('Avoid 4 games in 17 days') else 0
-    avoid_away_teams_in_close_matchups = 1 if st.checkbox('Avoid Away Teams in Close Games') else 0
-    avoid_cumulative_rest_disadvantage = 1 if st.checkbox('Avoid Cumulative Rest Disadvantage') else 0
-    avoid_thursday_night = 1 if st.checkbox('Avoid :red[ALL TEAMS] in Thursday Night Games') else 0
-    avoid_away_thursday_night = 1 if st.checkbox('Avoid :red[ONLY AWAY TEAMS] in Thursday Night Games') else 0
-    avoid_back_to_back_away = 1 if st.checkbox('Avoid Teams on Back to Back Away Games') else 0
-    avoid_international_game = 1 if st.checkbox('Avoid International Games') else 0
-    avoid_teams_with_weekly_rest_disadvantage = 1 if st.checkbox('Avoid Teams with Rest Disadvantage') else 0
-    avoid_away_teams_with_travel_disadvantage = 1 if st.checkbox('Avoid Teams with Travel Disadvatage') else 0
-    bayesian_and_travel_options = [
-        "No Rest, Bayesian, and Travel Constraints",
-        "Selected team must have been projected to win based on preseason rankings, current rankings, and with and without travel/rest adjustments",
-        "Selected team must be projected to win with and without travel and rest impact based on current rankings",
-        "Selected team must have been projected to win based on preseason rankings in addition to current rankings",
-    ]
-        
-    #use_same_winners_across_all_4_metrics = 1 if st.selectbox('Bayesian, Rest, and Travel Impact:', options = bayesian_and_travel_options) == "Selected team must have been projected to win based on preseason rankings, current rankings, and with and without travel/rest adjustments" else 0
-    #use_same_current_and_adjusted_current_winners = 1 if st.selectbox('Bayesian, Rest, and Travel Impact:', options = bayesian_and_travel_options) == "Selected team must be projected to win with and without travel and rest impact based on current rankings" else 0
-    #use_same_adj_preseason_and_adj_current_winner = 1 if st.selectbox('Bayesian, Rest, and Travel Impact:', options = bayesian_and_travel_options) == "Selected team must have been projected to win based on preseason rankings in addition to current rankings" else 0
-    if pick_must_be_favored:
-    	bayesian_rest_travel_constraint = st.selectbox('Bayesian, Rest, and Travel Impact:', options = bayesian_and_travel_options)
-
-st.write('')
-st.write('')
-st.write('')
-
-st.subheader('Estimate Pick Percentages')
-yes_i_have_pick_percents = st.checkbox('Would you like to add your own estimated pick percentages, instead of using our estimated picks?')
-if yes_i_have_pick_percents:
-    st.write('Select your own estimated pick percentages for each team. If you do not change the default value of -1, then it will automatically select our own estimated picks. This tool will be especially useful later in the season')
+    st.write("Alright, clowns. This site is built to help you optimize your picks for the Circa Survivor contest (Eventually other contests). :red[This tool is just for informational use. It does not take into account injuries, weather, resting players, or certain other factors. Do not use this tool as your only source of information.] Simply input which week you're in, your team rankings, constraints, etc... and the algorithm will do the rest.")
+    st.write('Caluclating EV will take the longest in this process. For a full season, this step will take up to 5 hours or more. For that reason, :green[we recommend using the saved Expected Value Calculations.] Good luck!')
     st.write('')
     st.write('')
-    if starting_week <= 1 and ending_week > 1:
-        week_1_pick_percents = st.checkbox('Add Week 1 Pick Percentages?')
-        if week_1_pick_percents:
-            st.write('')
-            st.subheader('Week 1 Estimated Pick Percentages')
-            st.write('')
-            az_week_1_pick_percent = st.slider("Arizona Cardinals Estimated Week 1 Pick %:", -1, 100) / 100
-            atl_week_1_pick_percent = st.slider("Atlanta Falcons Estimated Week 1 Pick %:", -1, 100) / 100
-            bal_week_1_pick_percent = st.slider("Baltimore Ravens Estimated Week 1 Pick %:", -1, 100) / 100
-            buf_week_1_pick_percent = st.slider("Buffalo Bills Estimated Week 1 Pick %:", -1, 100) / 100
-            car_week_1_pick_percent = st.slider("Carolina Panthers Estimated Week 1 Pick %:", -1, 100) / 100
-            chi_week_1_pick_percent = st.slider("Chicago Bears Estimated Week 1 Pick %:", -1, 100) / 100
-            cin_week_1_pick_percent = st.slider("Cincinnati Bengals Estimated Week 1 Pick %:", -1, 100) / 100
-            cle_week_1_pick_percent = st.slider("Cleveland Browns Estimated Week 1 Pick %:", -1, 100) / 100
-            dal_week_1_pick_percent = st.slider("Dallas Cowboys Estimated Week 1 Pick %:", -1, 100) / 100
-            den_week_1_pick_percent = st.slider("Denver Broncos Estimated Week 1 Pick %:", -1, 100) / 100
-            det_week_1_pick_percent = st.slider("Detroit Lions Estimated Week 1 Pick %:", -1, 100) / 100
-            gb_week_1_pick_percent = st.slider("Green Bay Packers Estimated Week 1 Pick %:", -1, 100) / 100
-            hou_week_1_pick_percent = st.slider("Houston Texans Estimated Week 1 Pick %:", -1, 100) / 100
-            ind_week_1_pick_percent = st.slider("Indianapoils Colts Estimated Week 1 Pick %:", -1, 100) / 100
-            jax_week_1_pick_percent = st.slider("Jacksonville Jaguars Estimated Week 1 Pick %:", -1, 100) / 100
-            kc_week_1_pick_percent = st.slider("Kansas City Chiefs Estimated Week 1 Pick %:", -1, 100) / 100
-            lv_week_1_pick_percent = st.slider("Las Vegas Raiders Estimated Week 1 Pick %:", -1, 100) / 100
-            lac_week_1_pick_percent = st.slider("Los Angeles Chargers Estimated Week 1 Pick %:", -1, 100) / 100
-            lar_week_1_pick_percent = st.slider("Los Angeles Rams Estimated Week 1 Pick %:", -1, 100) / 100
-            mia_week_1_pick_percent = st.slider("Miami Dolphins Estimated Week 1 Pick %:", -1, 100) / 100
-            min_week_1_pick_percent = st.slider("Minnesota Vikings Estimated Week 1 Pick %:", -1, 100) / 100
-            ne_week_1_pick_percent = st.slider("New England Patriots Estimated Week 1 Pick %:", -1, 100) / 100
-            no_week_1_pick_percent = st.slider("New Orleans Saints Estimated Week 1 Pick %:", -1, 100) / 100
-            nyg_week_1_pick_percent = st.slider("New York Giants Estimated Week 1 Pick %:", -1, 100) / 100
-            nyj_week_1_pick_percent = st.slider("New York Jets Estimated Week 1 Pick %:", -1, 100) / 100
-            phi_week_1_pick_percent = st.slider("Philadelphia Eagles Estimated Week 1 Pick %:", -1, 100) / 100
-            pit_week_1_pick_percent = st.slider("Pittsburgh Steelers Estimated Week 1 Pick %:", -1, 100) / 100
-            sf_week_1_pick_percent = st.slider("San Francisco 49ers Estimated Week 1 Pick %:", -1, 100) / 100
-            sea_week_1_pick_percent = st.slider("Seattle Seahawks Estimated Week 1 Pick %:", -1, 100) / 100
-            tb_week_1_pick_percent = st.slider("Tampa Bay Buccaneers Estimated Week 1 Pick %:", -1, 100) / 100
-            ten_week_1_pick_percent = st.slider("Tennessee Titans Estimated Week 1 Pick %:", -1, 100) / 100
-            was_week_1_pick_percent = st.slider("Washington Commanders Estimated Week 1 Pick %:", -1, 100) / 100
-        st.write('')
-        st.write('')
-    if starting_week <= 2 and ending_week > 2:
-        week_2_pick_percents = st.checkbox('Add Week 2 Pick Percentages?')
-        if week_2_pick_percents:
-            st.write('')
-            st.subheader('Week 2 Estimated Pick Percentages')
-            st.write('')
-            az_week_2_pick_percent = st.slider("Arizona Cardinals Estimated Week 2 Pick %:", -1, 100) / 100
-            atl_week_2_pick_percent = st.slider("Atlanta Falcons Estimated Week 2 Pick %:", -1, 100) / 100
-            bal_week_2_pick_percent = st.slider("Baltimore Ravens Estimated Week 2 Pick %:", -1, 100) / 100
-            buf_week_2_pick_percent = st.slider("Buffalo Bills Estimated Week 2 Pick %:", -1, 100) / 100
-            car_week_2_pick_percent = st.slider("Carolina Panthers Estimated Week 2 Pick %:", -1, 100) / 100
-            chi_week_2_pick_percent = st.slider("Chicago Bears Estimated Week 2 Pick %:", -1, 100) / 100
-            cin_week_2_pick_percent = st.slider("Cincinnati Bengals Estimated Week 2 Pick %:", -1, 100) / 100
-            cle_week_2_pick_percent = st.slider("Cleveland Browns Estimated Week 2 Pick %:", -1, 100) / 100
-            dal_week_2_pick_percent = st.slider("Dallas Cowboys Estimated Week 2 Pick %:", -1, 100) / 100
-            den_week_2_pick_percent = st.slider("Denver Broncos Estimated Week 2 Pick %:", -1, 100) / 100
-            det_week_2_pick_percent = st.slider("Detroit Lions Estimated Week 2 Pick %:", -1, 100) / 100
-            gb_week_2_pick_percent = st.slider("Green Bay Packers Estimated Week 2 Pick %:", -1, 100) / 100
-            hou_week_2_pick_percent = st.slider("Houston Texans Estimated Week 2 Pick %:", -1, 100) / 100
-            ind_week_2_pick_percent = st.slider("Indianapoils Colts Estimated Week 2 Pick %:", -1, 100) / 100
-            jax_week_2_pick_percent = st.slider("Jacksonville Jaguars Estimated Week 2 Pick %:", -1, 100) / 100
-            kc_week_2_pick_percent = st.slider("Kansas City Chiefs Estimated Week 2 Pick %:", -1, 100) / 100
-            lv_week_2_pick_percent = st.slider("Las Vegas Raiders Estimated Week 2 Pick %:", -1, 100) / 100
-            lac_week_2_pick_percent = st.slider("Los Angeles Chargers Estimated Week 2 Pick %:", -1, 100) / 100
-            lar_week_2_pick_percent = st.slider("Los Angeles Rams Estimated Week 2 Pick %:", -1, 100) / 100
-            mia_week_2_pick_percent = st.slider("Miami Dolphins Estimated Week 2 Pick %:", -1, 100) / 100
-            min_week_2_pick_percent = st.slider("Minnesota Vikings Estimated Week 2 Pick %:", -1, 100) / 100
-            ne_week_2_pick_percent = st.slider("New England Patriots Estimated Week 2 Pick %:", -1, 100) / 100
-            no_week_2_pick_percent = st.slider("New Orleans Saints Estimated Week 2 Pick %:", -1, 100) / 100
-            nyg_week_2_pick_percent = st.slider("New York Giants Estimated Week 2 Pick %:", -1, 100) / 100
-            nyj_week_2_pick_percent = st.slider("New York Jets Estimated Week 2 Pick %:", -1, 100) / 100
-            phi_week_2_pick_percent = st.slider("Philadelphia Eagles Estimated Week 2 Pick %:", -1, 100) / 100
-            pit_week_2_pick_percent = st.slider("Pittsburgh Steelers Estimated Week 2 Pick %:", -1, 100) / 100
-            sf_week_2_pick_percent = st.slider("San Francisco 49ers Estimated Week 2 Pick %:", -1, 100) / 100
-            sea_week_2_pick_percent = st.slider("Seattle Seahawks Estimated Week 2 Pick %:", -1, 100) / 100
-            tb_week_2_pick_percent = st.slider("Tampa Bay Buccaneers Estimated Week 2 Pick %:", -1, 100) / 100
-            ten_week_2_pick_percent = st.slider("Tennessee Titans Estimated Week 2 Pick %:", -1, 100) / 100
-            was_week_2_pick_percent = st.slider("Washington Commanders Estimated Week 2 Pick %:", -1, 100) / 100
-        st.write('')
-        st.write('')
-    if starting_week <= 3 and ending_week > 3:
-        week_3_pick_percents = st.checkbox('Add Week 3 Pick Percentages?')
-        if week_3_pick_percents:
-            st.write('')
-            st.subheader('Week 3 Estimated Pick Percentages')
-            st.write('')
-            az_week_3_pick_percent = st.slider("Arizona Cardinals Estimated Week 3 Pick %:", -1, 100) / 100
-            atl_week_3_pick_percent = st.slider("Atlanta Falcons Estimated Week 3 Pick %:", -1, 100) / 100
-            bal_week_3_pick_percent = st.slider("Baltimore Ravens Estimated Week 3 Pick %:", -1, 100) / 100
-            buf_week_3_pick_percent = st.slider("Buffalo Bills Estimated Week 3 Pick %:", -1, 100) / 100
-            car_week_3_pick_percent = st.slider("Carolina Panthers Estimated Week 3 Pick %:", -1, 100) / 100
-            chi_week_3_pick_percent = st.slider("Chicago Bears Estimated Week 3 Pick %:", -1, 100) / 100
-            cin_week_3_pick_percent = st.slider("Cincinnati Bengals Estimated Week 3 Pick %:", -1, 100) / 100
-            cle_week_3_pick_percent = st.slider("Cleveland Browns Estimated Week 3 Pick %:", -1, 100) / 100
-            dal_week_3_pick_percent = st.slider("Dallas Cowboys Estimated Week 3 Pick %:", -1, 100) / 100
-            den_week_3_pick_percent = st.slider("Denver Broncos Estimated Week 3 Pick %:", -1, 100) / 100
-            det_week_3_pick_percent = st.slider("Detroit Lions Estimated Week 3 Pick %:", -1, 100) / 100
-            gb_week_3_pick_percent = st.slider("Green Bay Packers Estimated Week 3 Pick %:", -1, 100) / 100
-            hou_week_3_pick_percent = st.slider("Houston Texans Estimated Week 3 Pick %:", -1, 100) / 100
-            ind_week_3_pick_percent = st.slider("Indianapoils Colts Estimated Week 3 Pick %:", -1, 100) / 100
-            jax_week_3_pick_percent = st.slider("Jacksonville Jaguars Estimated Week 3 Pick %:", -1, 100) / 100
-            kc_week_3_pick_percent = st.slider("Kansas City Chiefs Estimated Week 3 Pick %:", -1, 100) / 100
-            lv_week_3_pick_percent = st.slider("Las Vegas Raiders Estimated Week 3 Pick %:", -1, 100) / 100
-            lac_week_3_pick_percent = st.slider("Los Angeles Chargers Estimated Week 3 Pick %:", -1, 100) / 100
-            lar_week_3_pick_percent = st.slider("Los Angeles Rams Estimated Week 3 Pick %:", -1, 100) / 100
-            mia_week_3_pick_percent = st.slider("Miami Dolphins Estimated Week 3 Pick %:", -1, 100) / 100
-            min_week_3_pick_percent = st.slider("Minnesota Vikings Estimated Week 3 Pick %:", -1, 100) / 100
-            ne_week_3_pick_percent = st.slider("New England Patriots Estimated Week 3 Pick %:", -1, 100) / 100
-            no_week_3_pick_percent = st.slider("New Orleans Saints Estimated Week 3 Pick %:", -1, 100) / 100
-            nyg_week_3_pick_percent = st.slider("New York Giants Estimated Week 3 Pick %:", -1, 100) / 100
-            nyj_week_3_pick_percent = st.slider("New York Jets Estimated Week 3 Pick %:", -1, 100) / 100
-            phi_week_3_pick_percent = st.slider("Philadelphia Eagles Estimated Week 3 Pick %:", -1, 100) / 100
-            pit_week_3_pick_percent = st.slider("Pittsburgh Steelers Estimated Week 3 Pick %:", -1, 100) / 100
-            sf_week_3_pick_percent = st.slider("San Francisco 49ers Estimated Week 3 Pick %:", -1, 100) / 100
-            sea_week_3_pick_percent = st.slider("Seattle Seahawks Estimated Week 3 Pick %:", -1, 100) / 100
-            tb_week_3_pick_percent = st.slider("Tampa Bay Buccaneers Estimated Week 3 Pick %:", -1, 100) / 100
-            ten_week_3_pick_percent = st.slider("Tennessee Titans Estimated Week 3 Pick %:", -1, 100) / 100
-            was_week_3_pick_percent = st.slider("Washington Commanders Estimated Week 3 Pick %:", -1, 100) / 100
-        st.write('')
-        st.write('')
-    if starting_week <= 4 and ending_week > 4:
-        week_4_pick_percents = st.checkbox('Add Week 4 Pick Percentages?')
-        if week_4_pick_percents:
-            st.write('')
-            st.subheader('Week 4 Estimated Pick Percentages')
-            st.write('')
-            az_week_4_pick_percent = st.slider("Arizona Cardinals Estimated Week 4 Pick %:", -1, 100) / 100
-            atl_week_4_pick_percent = st.slider("Atlanta Falcons Estimated Week 4 Pick %:", -1, 100) / 100
-            bal_week_4_pick_percent = st.slider("Baltimore Ravens Estimated Week 4 Pick %:", -1, 100) / 100
-            buf_week_4_pick_percent = st.slider("Buffalo Bills Estimated Week 4 Pick %:", -1, 100) / 100
-            car_week_4_pick_percent = st.slider("Carolina Panthers Estimated Week 4 Pick %:", -1, 100) / 100
-            chi_week_4_pick_percent = st.slider("Chicago Bears Estimated Week 4 Pick %:", -1, 100) / 100
-            cin_week_4_pick_percent = st.slider("Cincinnati Bengals Estimated Week 4 Pick %:", -1, 100) / 100
-            cle_week_4_pick_percent = st.slider("Cleveland Browns Estimated Week 4 Pick %:", -1, 100) / 100
-            dal_week_4_pick_percent = st.slider("Dallas Cowboys Estimated Week 4 Pick %:", -1, 100) / 100
-            den_week_4_pick_percent = st.slider("Denver Broncos Estimated Week 4 Pick %:", -1, 100) / 100
-            det_week_4_pick_percent = st.slider("Detroit Lions Estimated Week 4 Pick %:", -1, 100) / 100
-            gb_week_4_pick_percent = st.slider("Green Bay Packers Estimated Week 4 Pick %:", -1, 100) / 100
-            hou_week_4_pick_percent = st.slider("Houston Texans Estimated Week 4 Pick %:", -1, 100) / 100
-            ind_week_4_pick_percent = st.slider("Indianapoils Colts Estimated Week 4 Pick %:", -1, 100) / 100
-            jax_week_4_pick_percent = st.slider("Jacksonville Jaguars Estimated Week 4 Pick %:", -1, 100) / 100
-            kc_week_4_pick_percent = st.slider("Kansas City Chiefs Estimated Week 4 Pick %:", -1, 100) / 100
-            lv_week_4_pick_percent = st.slider("Las Vegas Raiders Estimated Week 4 Pick %:", -1, 100) / 100
-            lac_week_4_pick_percent = st.slider("Los Angeles Chargers Estimated Week 4 Pick %:", -1, 100) / 100
-            lar_week_4_pick_percent = st.slider("Los Angeles Rams Estimated Week 4 Pick %:", -1, 100) / 100
-            mia_week_4_pick_percent = st.slider("Miami Dolphins Estimated Week 4 Pick %:", -1, 100) / 100
-            min_week_4_pick_percent = st.slider("Minnesota Vikings Estimated Week 4 Pick %:", -1, 100) / 100
-            ne_week_4_pick_percent = st.slider("New England Patriots Estimated Week 4 Pick %:", -1, 100) / 100
-            no_week_4_pick_percent = st.slider("New Orleans Saints Estimated Week 4 Pick %:", -1, 100) / 100
-            nyg_week_4_pick_percent = st.slider("New York Giants Estimated Week 4 Pick %:", -1, 100) / 100
-            nyj_week_4_pick_percent = st.slider("New York Jets Estimated Week 4 Pick %:", -1, 100) / 100
-            phi_week_4_pick_percent = st.slider("Philadelphia Eagles Estimated Week 4 Pick %:", -1, 100) / 100
-            pit_week_4_pick_percent = st.slider("Pittsburgh Steelers Estimated Week 4 Pick %:", -1, 100) / 100
-            sf_week_4_pick_percent = st.slider("San Francisco 49ers Estimated Week 4 Pick %:", -1, 100) / 100
-            sea_week_4_pick_percent = st.slider("Seattle Seahawks Estimated Week 4 Pick %:", -1, 100) / 100
-            tb_week_4_pick_percent = st.slider("Tampa Bay Buccaneers Estimated Week 4 Pick %:", -1, 100) / 100
-            ten_week_4_pick_percent = st.slider("Tennessee Titans Estimated Week 4 Pick %:", -1, 100) / 100
-            was_week_4_pick_percent = st.slider("Washington Commanders Estimated Week 4 Pick %:", -1, 100) / 100
-        st.write('')
-        st.write('')
-    if starting_week <= 5 and ending_week > 5:
-        week_5_pick_percents = st.checkbox('Add Week 5 Pick Percentages?')
-        if week_5_pick_percents:
-            st.write('')
-            st.subheader('Week 5 Estimated Pick Percentages')
-            st.write('')
-            az_week_5_pick_percent = st.slider("Arizona Cardinals Estimated Week 5 Pick %:", -1, 100) / 100
-            atl_week_5_pick_percent = st.slider("Atlanta Falcons Estimated Week 5 Pick %:", -1, 100) / 100
-            bal_week_5_pick_percent = st.slider("Baltimore Ravens Estimated Week 5 Pick %:", -1, 100) / 100
-            buf_week_5_pick_percent = st.slider("Buffalo Bills Estimated Week 5 Pick %:", -1, 100) / 100
-            car_week_5_pick_percent = st.slider("Carolina Panthers Estimated Week 5 Pick %:", -1, 100) / 100
-            chi_week_5_pick_percent = st.slider("Chicago Bears Estimated Week 5 Pick %:", -1, 100) / 100
-            cin_week_5_pick_percent = st.slider("Cincinnati Bengals Estimated Week 5 Pick %:", -1, 100) / 100
-            cle_week_5_pick_percent = st.slider("Cleveland Browns Estimated Week 5 Pick %:", -1, 100) / 100
-            dal_week_5_pick_percent = st.slider("Dallas Cowboys Estimated Week 5 Pick %:", -1, 100) / 100
-            den_week_5_pick_percent = st.slider("Denver Broncos Estimated Week 5 Pick %:", -1, 100) / 100
-            det_week_5_pick_percent = st.slider("Detroit Lions Estimated Week 5 Pick %:", -1, 100) / 100
-            gb_week_5_pick_percent = st.slider("Green Bay Packers Estimated Week 5 Pick %:", -1, 100) / 100
-            hou_week_5_pick_percent = st.slider("Houston Texans Estimated Week 5 Pick %:", -1, 100) / 100
-            ind_week_5_pick_percent = st.slider("Indianapoils Colts Estimated Week 5 Pick %:", -1, 100) / 100
-            jax_week_5_pick_percent = st.slider("Jacksonville Jaguars Estimated Week 5 Pick %:", -1, 100) / 100
-            kc_week_5_pick_percent = st.slider("Kansas City Chiefs Estimated Week 5 Pick %:", -1, 100) / 100
-            lv_week_5_pick_percent = st.slider("Las Vegas Raiders Estimated Week 5 Pick %:", -1, 100) / 100
-            lac_week_5_pick_percent = st.slider("Los Angeles Chargers Estimated Week 5 Pick %:", -1, 100) / 100
-            lar_week_5_pick_percent = st.slider("Los Angeles Rams Estimated Week 5 Pick %:", -1, 100) / 100
-            mia_week_5_pick_percent = st.slider("Miami Dolphins Estimated Week 5 Pick %:", -1, 100) / 100
-            min_week_5_pick_percent = st.slider("Minnesota Vikings Estimated Week 5 Pick %:", -1, 100) / 100
-            ne_week_5_pick_percent = st.slider("New England Patriots Estimated Week 5 Pick %:", -1, 100) / 100
-            no_week_5_pick_percent = st.slider("New Orleans Saints Estimated Week 5 Pick %:", -1, 100) / 100
-            nyg_week_5_pick_percent = st.slider("New York Giants Estimated Week 5 Pick %:", -1, 100) / 100
-            nyj_week_5_pick_percent = st.slider("New York Jets Estimated Week 5 Pick %:", -1, 100) / 100
-            phi_week_5_pick_percent = st.slider("Philadelphia Eagles Estimated Week 5 Pick %:", -1, 100) / 100
-            pit_week_5_pick_percent = st.slider("Pittsburgh Steelers Estimated Week 5 Pick %:", -1, 100) / 100
-            sf_week_5_pick_percent = st.slider("San Francisco 59ers Estimated Week 5 Pick %:", -1, 100) / 100
-            sea_week_5_pick_percent = st.slider("Seattle Seahawks Estimated Week 5 Pick %:", -1, 100) / 100
-            tb_week_5_pick_percent = st.slider("Tampa Bay Buccaneers Estimated Week 5 Pick %:", -1, 100) / 100
-            ten_week_5_pick_percent = st.slider("Tennessee Titans Estimated Week 5 Pick %:", -1, 100) / 100
-            was_week_5_pick_percent = st.slider("Washington Commanders Estimated Week 5 Pick %:", -1, 100) / 100
-        st.write('')
-        st.write('')
-    if starting_week <= 6 and ending_week > 6:
-        week_6_pick_percents = st.checkbox('Add Week 6 Pick Percentages?')
-        if week_6_pick_percents:
-            st.write('')
-            st.subheader('Week 6 Estimated Pick Percentages')
-            st.write('')
-            az_week_6_pick_percent = st.slider("Arizona Cardinals Estimated Week 6 Pick %:", -1, 100) / 100
-            atl_week_6_pick_percent = st.slider("Atlanta Falcons Estimated Week 6 Pick %:", -1, 100) / 100
-            bal_week_6_pick_percent = st.slider("Baltimore Ravens Estimated Week 6 Pick %:", -1, 100) / 100
-            buf_week_6_pick_percent = st.slider("Buffalo Bills Estimated Week 6 Pick %:", -1, 100) / 100
-            car_week_6_pick_percent = st.slider("Carolina Panthers Estimated Week 6 Pick %:", -1, 100) / 100
-            chi_week_6_pick_percent = st.slider("Chicago Bears Estimated Week 6 Pick %:", -1, 100) / 100
-            cin_week_6_pick_percent = st.slider("Cincinnati Bengals Estimated Week 6 Pick %:", -1, 100) / 100
-            cle_week_6_pick_percent = st.slider("Cleveland Browns Estimated Week 6 Pick %:", -1, 100) / 100
-            dal_week_6_pick_percent = st.slider("Dallas Cowboys Estimated Week 6 Pick %:", -1, 100) / 100
-            den_week_6_pick_percent = st.slider("Denver Broncos Estimated Week 6 Pick %:", -1, 100) / 100
-            det_week_6_pick_percent = st.slider("Detroit Lions Estimated Week 6 Pick %:", -1, 100) / 100
-            gb_week_6_pick_percent = st.slider("Green Bay Packers Estimated Week 6 Pick %:", -1, 100) / 100
-            hou_week_6_pick_percent = st.slider("Houston Texans Estimated Week 6 Pick %:", -1, 100) / 100
-            ind_week_6_pick_percent = st.slider("Indianapoils Colts Estimated Week 6 Pick %:", -1, 100) / 100
-            jax_week_6_pick_percent = st.slider("Jacksonville Jaguars Estimated Week 6 Pick %:", -1, 100) / 100
-            kc_week_6_pick_percent = st.slider("Kansas City Chiefs Estimated Week 6 Pick %:", -1, 100) / 100
-            lv_week_6_pick_percent = st.slider("Las Vegas Raiders Estimated Week 6 Pick %:", -1, 100) / 100
-            lac_week_6_pick_percent = st.slider("Los Angeles Chargers Estimated Week 6 Pick %:", -1, 100) / 100
-            lar_week_6_pick_percent = st.slider("Los Angeles Rams Estimated Week 6 Pick %:", -1, 100) / 100
-            mia_week_6_pick_percent = st.slider("Miami Dolphins Estimated Week 6 Pick %:", -1, 100) / 100
-            min_week_6_pick_percent = st.slider("Minnesota Vikings Estimated Week 6 Pick %:", -1, 100) / 100
-            ne_week_6_pick_percent = st.slider("New England Patriots Estimated Week 6 Pick %:", -1, 100) / 100
-            no_week_6_pick_percent = st.slider("New Orleans Saints Estimated Week 6 Pick %:", -1, 100) / 100
-            nyg_week_6_pick_percent = st.slider("New York Giants Estimated Week 6 Pick %:", -1, 100) / 100
-            nyj_week_6_pick_percent = st.slider("New York Jets Estimated Week 6 Pick %:", -1, 100) / 100
-            phi_week_6_pick_percent = st.slider("Philadelphia Eagles Estimated Week 6 Pick %:", -1, 100) / 100
-            pit_week_6_pick_percent = st.slider("Pittsburgh Steelers Estimated Week 6 Pick %:", -1, 100) / 100
-            sf_week_6_pick_percent = st.slider("San Francisco 69ers Estimated Week 6 Pick %:", -1, 100) / 100
-            sea_week_6_pick_percent = st.slider("Seattle Seahawks Estimated Week 6 Pick %:", -1, 100) / 100
-            tb_week_6_pick_percent = st.slider("Tampa Bay Buccaneers Estimated Week 6 Pick %:", -1, 100) / 100
-            ten_week_6_pick_percent = st.slider("Tennessee Titans Estimated Week 6 Pick %:", -1, 100) / 100
-            was_week_6_pick_percent = st.slider("Washington Commanders Estimated Week 6 Pick %:", -1, 100) / 100
-        st.write('')
-        st.write('')
-    if starting_week <= 7 and ending_week > 7:
-        week_7_pick_percents = st.checkbox('Add Week 7 Pick Percentages?')
-        if week_7_pick_percents:
-            st.write('')
-            st.subheader('Week 7 Estimated Pick Percentages')
-            st.write('')
-            az_week_7_pick_percent = st.slider("Arizona Cardinals Estimated Week 7 Pick %:", -1, 100) / 100
-            atl_week_7_pick_percent = st.slider("Atlanta Falcons Estimated Week 7 Pick %:", -1, 100) / 100
-            bal_week_7_pick_percent = st.slider("Baltimore Ravens Estimated Week 7 Pick %:", -1, 100) / 100
-            buf_week_7_pick_percent = st.slider("Buffalo Bills Estimated Week 7 Pick %:", -1, 100) / 100
-            car_week_7_pick_percent = st.slider("Carolina Panthers Estimated Week 7 Pick %:", -1, 100) / 100
-            chi_week_7_pick_percent = st.slider("Chicago Bears Estimated Week 7 Pick %:", -1, 100) / 100
-            cin_week_7_pick_percent = st.slider("Cincinnati Bengals Estimated Week 7 Pick %:", -1, 100) / 100
-            cle_week_7_pick_percent = st.slider("Cleveland Browns Estimated Week 7 Pick %:", -1, 100) / 100
-            dal_week_7_pick_percent = st.slider("Dallas Cowboys Estimated Week 7 Pick %:", -1, 100) / 100
-            den_week_7_pick_percent = st.slider("Denver Broncos Estimated Week 7 Pick %:", -1, 100) / 100
-            det_week_7_pick_percent = st.slider("Detroit Lions Estimated Week 7 Pick %:", -1, 100) / 100
-            gb_week_7_pick_percent = st.slider("Green Bay Packers Estimated Week 7 Pick %:", -1, 100) / 100
-            hou_week_7_pick_percent = st.slider("Houston Texans Estimated Week 7 Pick %:", -1, 100) / 100
-            ind_week_7_pick_percent = st.slider("Indianapoils Colts Estimated Week 7 Pick %:", -1, 100) / 100
-            jax_week_7_pick_percent = st.slider("Jacksonville Jaguars Estimated Week 7 Pick %:", -1, 100) / 100
-            kc_week_7_pick_percent = st.slider("Kansas City Chiefs Estimated Week 7 Pick %:", -1, 100) / 100
-            lv_week_7_pick_percent = st.slider("Las Vegas Raiders Estimated Week 7 Pick %:", -1, 100) / 100
-            lac_week_7_pick_percent = st.slider("Los Angeles Chargers Estimated Week 7 Pick %:", -1, 100) / 100
-            lar_week_7_pick_percent = st.slider("Los Angeles Rams Estimated Week 7 Pick %:", -1, 100) / 100
-            mia_week_7_pick_percent = st.slider("Miami Dolphins Estimated Week 7 Pick %:", -1, 100) / 100
-            min_week_7_pick_percent = st.slider("Minnesota Vikings Estimated Week 7 Pick %:", -1, 100) / 100
-            ne_week_7_pick_percent = st.slider("New England Patriots Estimated Week 7 Pick %:", -1, 100) / 100
-            no_week_7_pick_percent = st.slider("New Orleans Saints Estimated Week 7 Pick %:", -1, 100) / 100
-            nyg_week_7_pick_percent = st.slider("New York Giants Estimated Week 7 Pick %:", -1, 100) / 100
-            nyj_week_7_pick_percent = st.slider("New York Jets Estimated Week 7 Pick %:", -1, 100) / 100
-            phi_week_7_pick_percent = st.slider("Philadelphia Eagles Estimated Week 7 Pick %:", -1, 100) / 100
-            pit_week_7_pick_percent = st.slider("Pittsburgh Steelers Estimated Week 7 Pick %:", -1, 100) / 100
-            sf_week_7_pick_percent = st.slider("San Francisco 79ers Estimated Week 7 Pick %:", -1, 100) / 100
-            sea_week_7_pick_percent = st.slider("Seattle Seahawks Estimated Week 7 Pick %:", -1, 100) / 100
-            tb_week_7_pick_percent = st.slider("Tampa Bay Buccaneers Estimated Week 7 Pick %:", -1, 100) / 100
-            ten_week_7_pick_percent = st.slider("Tennessee Titans Estimated Week 7 Pick %:", -1, 100) / 100
-            was_week_7_pick_percent = st.slider("Washington Commanders Estimated Week 7 Pick %:", -1, 100) / 100
-        st.write('')
-        st.write('')
-    if starting_week <= 8 and ending_week > 8:
-        week_8_pick_percents = st.checkbox('Add Week 8 Pick Percentages?')
-        if week_8_pick_percents:
-            st.write('')
-            st.subheader('Week 8 Estimated Pick Percentages')
-            st.write('')
-            az_week_8_pick_percent = st.slider("Arizona Cardinals Estimated Week 8 Pick %:", -1, 100) / 100
-            atl_week_8_pick_percent = st.slider("Atlanta Falcons Estimated Week 8 Pick %:", -1, 100) / 100
-            bal_week_8_pick_percent = st.slider("Baltimore Ravens Estimated Week 8 Pick %:", -1, 100) / 100
-            buf_week_8_pick_percent = st.slider("Buffalo Bills Estimated Week 8 Pick %:", -1, 100) / 100
-            car_week_8_pick_percent = st.slider("Carolina Panthers Estimated Week 8 Pick %:", -1, 100) / 100
-            chi_week_8_pick_percent = st.slider("Chicago Bears Estimated Week 8 Pick %:", -1, 100) / 100
-            cin_week_8_pick_percent = st.slider("Cincinnati Bengals Estimated Week 8 Pick %:", -1, 100) / 100
-            cle_week_8_pick_percent = st.slider("Cleveland Browns Estimated Week 8 Pick %:", -1, 100) / 100
-            dal_week_8_pick_percent = st.slider("Dallas Cowboys Estimated Week 8 Pick %:", -1, 100) / 100
-            den_week_8_pick_percent = st.slider("Denver Broncos Estimated Week 8 Pick %:", -1, 100) / 100
-            det_week_8_pick_percent = st.slider("Detroit Lions Estimated Week 8 Pick %:", -1, 100) / 100
-            gb_week_8_pick_percent = st.slider("Green Bay Packers Estimated Week 8 Pick %:", -1, 100) / 100
-            hou_week_8_pick_percent = st.slider("Houston Texans Estimated Week 8 Pick %:", -1, 100) / 100
-            ind_week_8_pick_percent = st.slider("Indianapoils Colts Estimated Week 8 Pick %:", -1, 100) / 100
-            jax_week_8_pick_percent = st.slider("Jacksonville Jaguars Estimated Week 8 Pick %:", -1, 100) / 100
-            kc_week_8_pick_percent = st.slider("Kansas City Chiefs Estimated Week 8 Pick %:", -1, 100) / 100
-            lv_week_8_pick_percent = st.slider("Las Vegas Raiders Estimated Week 8 Pick %:", -1, 100) / 100
-            lac_week_8_pick_percent = st.slider("Los Angeles Chargers Estimated Week 8 Pick %:", -1, 100) / 100
-            lar_week_8_pick_percent = st.slider("Los Angeles Rams Estimated Week 8 Pick %:", -1, 100) / 100
-            mia_week_8_pick_percent = st.slider("Miami Dolphins Estimated Week 8 Pick %:", -1, 100) / 100
-            min_week_8_pick_percent = st.slider("Minnesota Vikings Estimated Week 8 Pick %:", -1, 100) / 100
-            ne_week_8_pick_percent = st.slider("New England Patriots Estimated Week 8 Pick %:", -1, 100) / 100
-            no_week_8_pick_percent = st.slider("New Orleans Saints Estimated Week 8 Pick %:", -1, 100) / 100
-            nyg_week_8_pick_percent = st.slider("New York Giants Estimated Week 8 Pick %:", -1, 100) / 100
-            nyj_week_8_pick_percent = st.slider("New York Jets Estimated Week 8 Pick %:", -1, 100) / 100
-            phi_week_8_pick_percent = st.slider("Philadelphia Eagles Estimated Week 8 Pick %:", -1, 100) / 100
-            pit_week_8_pick_percent = st.slider("Pittsburgh Steelers Estimated Week 8 Pick %:", -1, 100) / 100
-            sf_week_8_pick_percent = st.slider("San Francisco 89ers Estimated Week 8 Pick %:", -1, 100) / 100
-            sea_week_8_pick_percent = st.slider("Seattle Seahawks Estimated Week 8 Pick %:", -1, 100) / 100
-            tb_week_8_pick_percent = st.slider("Tampa Bay Buccaneers Estimated Week 8 Pick %:", -1, 100) / 100
-            ten_week_8_pick_percent = st.slider("Tennessee Titans Estimated Week 8 Pick %:", -1, 100) / 100
-            was_week_8_pick_percent = st.slider("Washington Commanders Estimated Week 8 Pick %:", -1, 100) / 100
-        st.write('')
-        st.write('')
-    if starting_week <= 9 and ending_week > 9:
-        week_9_pick_percents = st.checkbox('Add Week 9 Pick Percentages?')
-        if week_9_pick_percents:
-            st.write('')
-            st.subheader('Week 9 Estimated Pick Percentages')
-            st.write('')
-            az_week_9_pick_percent = st.slider("Arizona Cardinals Estimated Week 9 Pick %:", -1, 100) / 100
-            atl_week_9_pick_percent = st.slider("Atlanta Falcons Estimated Week 9 Pick %:", -1, 100) / 100
-            bal_week_9_pick_percent = st.slider("Baltimore Ravens Estimated Week 9 Pick %:", -1, 100) / 100
-            buf_week_9_pick_percent = st.slider("Buffalo Bills Estimated Week 9 Pick %:", -1, 100) / 100
-            car_week_9_pick_percent = st.slider("Carolina Panthers Estimated Week 9 Pick %:", -1, 100) / 100
-            chi_week_9_pick_percent = st.slider("Chicago Bears Estimated Week 9 Pick %:", -1, 100) / 100
-            cin_week_9_pick_percent = st.slider("Cincinnati Bengals Estimated Week 9 Pick %:", -1, 100) / 100
-            cle_week_9_pick_percent = st.slider("Cleveland Browns Estimated Week 9 Pick %:", -1, 100) / 100
-            dal_week_9_pick_percent = st.slider("Dallas Cowboys Estimated Week 9 Pick %:", -1, 100) / 100
-            den_week_9_pick_percent = st.slider("Denver Broncos Estimated Week 9 Pick %:", -1, 100) / 100
-            det_week_9_pick_percent = st.slider("Detroit Lions Estimated Week 9 Pick %:", -1, 100) / 100
-            gb_week_9_pick_percent = st.slider("Green Bay Packers Estimated Week 9 Pick %:", -1, 100) / 100
-            hou_week_9_pick_percent = st.slider("Houston Texans Estimated Week 9 Pick %:", -1, 100) / 100
-            ind_week_9_pick_percent = st.slider("Indianapoils Colts Estimated Week 9 Pick %:", -1, 100) / 100
-            jax_week_9_pick_percent = st.slider("Jacksonville Jaguars Estimated Week 9 Pick %:", -1, 100) / 100
-            kc_week_9_pick_percent = st.slider("Kansas City Chiefs Estimated Week 9 Pick %:", -1, 100) / 100
-            lv_week_9_pick_percent = st.slider("Las Vegas Raiders Estimated Week 9 Pick %:", -1, 100) / 100
-            lac_week_9_pick_percent = st.slider("Los Angeles Chargers Estimated Week 9 Pick %:", -1, 100) / 100
-            lar_week_9_pick_percent = st.slider("Los Angeles Rams Estimated Week 9 Pick %:", -1, 100) / 100
-            mia_week_9_pick_percent = st.slider("Miami Dolphins Estimated Week 9 Pick %:", -1, 100) / 100
-            min_week_9_pick_percent = st.slider("Minnesota Vikings Estimated Week 9 Pick %:", -1, 100) / 100
-            ne_week_9_pick_percent = st.slider("New England Patriots Estimated Week 9 Pick %:", -1, 100) / 100
-            no_week_9_pick_percent = st.slider("New Orleans Saints Estimated Week 9 Pick %:", -1, 100) / 100
-            nyg_week_9_pick_percent = st.slider("New York Giants Estimated Week 9 Pick %:", -1, 100) / 100
-            nyj_week_9_pick_percent = st.slider("New York Jets Estimated Week 9 Pick %:", -1, 100) / 100
-            phi_week_9_pick_percent = st.slider("Philadelphia Eagles Estimated Week 9 Pick %:", -1, 100) / 100
-            pit_week_9_pick_percent = st.slider("Pittsburgh Steelers Estimated Week 9 Pick %:", -1, 100) / 100
-            sf_week_9_pick_percent = st.slider("San Francisco 99ers Estimated Week 9 Pick %:", -1, 100) / 100
-            sea_week_9_pick_percent = st.slider("Seattle Seahawks Estimated Week 9 Pick %:", -1, 100) / 100
-            tb_week_9_pick_percent = st.slider("Tampa Bay Buccaneers Estimated Week 9 Pick %:", -1, 100) / 100
-            ten_week_9_pick_percent = st.slider("Tennessee Titans Estimated Week 9 Pick %:", -1, 100) / 100
-            was_week_9_pick_percent = st.slider("Washington Commanders Estimated Week 9 Pick %:", -1, 100) / 100
-        st.write('')
-        st.write('')
-    if starting_week <= 10 and ending_week > 10:
-        week_10_pick_percents = st.checkbox('Add Week 10 Pick Percentages?')
-        if week_10_pick_percents:
-            st.write('')
-            st.subheader('Week 10 Estimated Pick Percentages')
-            st.write('')
-            az_week_10_pick_percent = st.slider("Arizona Cardinals Estimated Week 10 Pick %:", -1, 100) / 100
-            atl_week_10_pick_percent = st.slider("Atlanta Falcons Estimated Week 10 Pick %:", -1, 100) / 100
-            bal_week_10_pick_percent = st.slider("Baltimore Ravens Estimated Week 10 Pick %:", -1, 100) / 100
-            buf_week_10_pick_percent = st.slider("Buffalo Bills Estimated Week 10 Pick %:", -1, 100) / 100
-            car_week_10_pick_percent = st.slider("Carolina Panthers Estimated Week 10 Pick %:", -1, 100) / 100
-            chi_week_10_pick_percent = st.slider("Chicago Bears Estimated Week 10 Pick %:", -1, 100) / 100
-            cin_week_10_pick_percent = st.slider("Cincinnati Bengals Estimated Week 10 Pick %:", -1, 100) / 100
-            cle_week_10_pick_percent = st.slider("Cleveland Browns Estimated Week 10 Pick %:", -1, 100) / 100
-            dal_week_10_pick_percent = st.slider("Dallas Cowboys Estimated Week 10 Pick %:", -1, 100) / 100
-            den_week_10_pick_percent = st.slider("Denver Broncos Estimated Week 10 Pick %:", -1, 100) / 100
-            det_week_10_pick_percent = st.slider("Detroit Lions Estimated Week 10 Pick %:", -1, 100) / 100
-            gb_week_10_pick_percent = st.slider("Green Bay Packers Estimated Week 10 Pick %:", -1, 100) / 100
-            hou_week_10_pick_percent = st.slider("Houston Texans Estimated Week 10 Pick %:", -1, 100) / 100
-            ind_week_10_pick_percent = st.slider("Indianapoils Colts Estimated Week 10 Pick %:", -1, 100) / 100
-            jax_week_10_pick_percent = st.slider("Jacksonville Jaguars Estimated Week 10 Pick %:", -1, 100) / 100
-            kc_week_10_pick_percent = st.slider("Kansas City Chiefs Estimated Week 10 Pick %:", -1, 100) / 100
-            lv_week_10_pick_percent = st.slider("Las Vegas Raiders Estimated Week 10 Pick %:", -1, 100) / 100
-            lac_week_10_pick_percent = st.slider("Los Angeles Chargers Estimated Week 10 Pick %:", -1, 100) / 100
-            lar_week_10_pick_percent = st.slider("Los Angeles Rams Estimated Week 10 Pick %:", -1, 100) / 100
-            mia_week_10_pick_percent = st.slider("Miami Dolphins Estimated Week 10 Pick %:", -1, 100) / 100
-            min_week_10_pick_percent = st.slider("Minnesota Vikings Estimated Week 10 Pick %:", -1, 100) / 100
-            ne_week_10_pick_percent = st.slider("New England Patriots Estimated Week 10 Pick %:", -1, 100) / 100
-            no_week_10_pick_percent = st.slider("New Orleans Saints Estimated Week 10 Pick %:", -1, 100) / 100
-            nyg_week_10_pick_percent = st.slider("New York Giants Estimated Week 10 Pick %:", -1, 100) / 100
-            nyj_week_10_pick_percent = st.slider("New York Jets Estimated Week 10 Pick %:", -1, 100) / 100
-            phi_week_10_pick_percent = st.slider("Philadelphia Eagles Estimated Week 10 Pick %:", -1, 100) / 100
-            pit_week_10_pick_percent = st.slider("Pittsburgh Steelers Estimated Week 10 Pick %:", -1, 100) / 100
-            sf_week_10_pick_percent = st.slider("San Francisco 1010ers Estimated Week 10 Pick %:", -1, 100) / 100
-            sea_week_10_pick_percent = st.slider("Seattle Seahawks Estimated Week 10 Pick %:", -1, 100) / 100
-            tb_week_10_pick_percent = st.slider("Tampa Bay Buccaneers Estimated Week 10 Pick %:", -1, 100) / 100
-            ten_week_10_pick_percent = st.slider("Tennessee Titans Estimated Week 10 Pick %:", -1, 100) / 100
-            was_week_10_pick_percent = st.slider("Washington Commanders Estimated Week 10 Pick %:", -1, 100) / 100
-        st.write('')
-        st.write('')
-    if starting_week <= 11 and ending_week > 11:
-        week_11_pick_percents = st.checkbox('Add Week 11 Pick Percentages?')
-        if week_11_pick_percents:
-            st.write('')
-            st.subheader('Week 11 Estimated Pick Percentages')
-            st.write('')
-            az_week_11_pick_percent = st.slider("Arizona Cardinals Estimated Week 11 Pick %:", -1, 100) / 100
-            atl_week_11_pick_percent = st.slider("Atlanta Falcons Estimated Week 11 Pick %:", -1, 100) / 100
-            bal_week_11_pick_percent = st.slider("Baltimore Ravens Estimated Week 11 Pick %:", -1, 100) / 100
-            buf_week_11_pick_percent = st.slider("Buffalo Bills Estimated Week 11 Pick %:", -1, 100) / 100
-            car_week_11_pick_percent = st.slider("Carolina Panthers Estimated Week 11 Pick %:", -1, 100) / 100
-            chi_week_11_pick_percent = st.slider("Chicago Bears Estimated Week 11 Pick %:", -1, 100) / 100
-            cin_week_11_pick_percent = st.slider("Cincinnati Bengals Estimated Week 11 Pick %:", -1, 100) / 100
-            cle_week_11_pick_percent = st.slider("Cleveland Browns Estimated Week 11 Pick %:", -1, 100) / 100
-            dal_week_11_pick_percent = st.slider("Dallas Cowboys Estimated Week 11 Pick %:", -1, 100) / 100
-            den_week_11_pick_percent = st.slider("Denver Broncos Estimated Week 11 Pick %:", -1, 100) / 100
-            det_week_11_pick_percent = st.slider("Detroit Lions Estimated Week 11 Pick %:", -1, 100) / 100
-            gb_week_11_pick_percent = st.slider("Green Bay Packers Estimated Week 11 Pick %:", -1, 100) / 100
-            hou_week_11_pick_percent = st.slider("Houston Texans Estimated Week 11 Pick %:", -1, 100) / 100
-            ind_week_11_pick_percent = st.slider("Indianapoils Colts Estimated Week 11 Pick %:", -1, 100) / 100
-            jax_week_11_pick_percent = st.slider("Jacksonville Jaguars Estimated Week 11 Pick %:", -1, 100) / 100
-            kc_week_11_pick_percent = st.slider("Kansas City Chiefs Estimated Week 11 Pick %:", -1, 100) / 100
-            lv_week_11_pick_percent = st.slider("Las Vegas Raiders Estimated Week 11 Pick %:", -1, 100) / 100
-            lac_week_11_pick_percent = st.slider("Los Angeles Chargers Estimated Week 11 Pick %:", -1, 100) / 100
-            lar_week_11_pick_percent = st.slider("Los Angeles Rams Estimated Week 11 Pick %:", -1, 100) / 100
-            mia_week_11_pick_percent = st.slider("Miami Dolphins Estimated Week 11 Pick %:", -1, 100) / 100
-            min_week_11_pick_percent = st.slider("Minnesota Vikings Estimated Week 11 Pick %:", -1, 100) / 100
-            ne_week_11_pick_percent = st.slider("New England Patriots Estimated Week 11 Pick %:", -1, 100) / 100
-            no_week_11_pick_percent = st.slider("New Orleans Saints Estimated Week 11 Pick %:", -1, 100) / 100
-            nyg_week_11_pick_percent = st.slider("New York Giants Estimated Week 11 Pick %:", -1, 100) / 100
-            nyj_week_11_pick_percent = st.slider("New York Jets Estimated Week 11 Pick %:", -1, 100) / 100
-            phi_week_11_pick_percent = st.slider("Philadelphia Eagles Estimated Week 11 Pick %:", -1, 100) / 100
-            pit_week_11_pick_percent = st.slider("Pittsburgh Steelers Estimated Week 11 Pick %:", -1, 100) / 100
-            sf_week_11_pick_percent = st.slider("San Francisco 1111ers Estimated Week 11 Pick %:", -1, 100) / 100
-            sea_week_11_pick_percent = st.slider("Seattle Seahawks Estimated Week 11 Pick %:", -1, 100) / 100
-            tb_week_11_pick_percent = st.slider("Tampa Bay Buccaneers Estimated Week 11 Pick %:", -1, 100) / 100
-            ten_week_11_pick_percent = st.slider("Tennessee Titans Estimated Week 11 Pick %:", -1, 100) / 100
-            was_week_11_pick_percent = st.slider("Washington Commanders Estimated Week 11 Pick %:", -1, 100) / 100
-        st.write('')
-        st.write('')
-    if starting_week <= 12 and ending_week > 12:
-        week_12_pick_percents = st.checkbox('Add Week 12 Pick Percentages?')
-        if week_12_pick_percents:
-            st.write('')
-            st.subheader('Week 12 Estimated Pick Percentages')
-            st.write('')
-            az_week_12_pick_percent = st.slider("Arizona Cardinals Estimated Week 12 Pick %:", -1, 100) / 100
-            atl_week_12_pick_percent = st.slider("Atlanta Falcons Estimated Week 12 Pick %:", -1, 100) / 100
-            bal_week_12_pick_percent = st.slider("Baltimore Ravens Estimated Week 12 Pick %:", -1, 100) / 100
-            buf_week_12_pick_percent = st.slider("Buffalo Bills Estimated Week 12 Pick %:", -1, 100) / 100
-            car_week_12_pick_percent = st.slider("Carolina Panthers Estimated Week 12 Pick %:", -1, 100) / 100
-            chi_week_12_pick_percent = st.slider("Chicago Bears Estimated Week 12 Pick %:", -1, 100) / 100
-            cin_week_12_pick_percent = st.slider("Cincinnati Bengals Estimated Week 12 Pick %:", -1, 100) / 100
-            cle_week_12_pick_percent = st.slider("Cleveland Browns Estimated Week 12 Pick %:", -1, 100) / 100
-            dal_week_12_pick_percent = st.slider("Dallas Cowboys Estimated Week 12 Pick %:", -1, 100) / 100
-            den_week_12_pick_percent = st.slider("Denver Broncos Estimated Week 12 Pick %:", -1, 100) / 100
-            det_week_12_pick_percent = st.slider("Detroit Lions Estimated Week 12 Pick %:", -1, 100) / 100
-            gb_week_12_pick_percent = st.slider("Green Bay Packers Estimated Week 12 Pick %:", -1, 100) / 100
-            hou_week_12_pick_percent = st.slider("Houston Texans Estimated Week 12 Pick %:", -1, 100) / 100
-            ind_week_12_pick_percent = st.slider("Indianapoils Colts Estimated Week 12 Pick %:", -1, 100) / 100
-            jax_week_12_pick_percent = st.slider("Jacksonville Jaguars Estimated Week 12 Pick %:", -1, 100) / 100
-            kc_week_12_pick_percent = st.slider("Kansas City Chiefs Estimated Week 12 Pick %:", -1, 100) / 100
-            lv_week_12_pick_percent = st.slider("Las Vegas Raiders Estimated Week 12 Pick %:", -1, 100) / 100
-            lac_week_12_pick_percent = st.slider("Los Angeles Chargers Estimated Week 12 Pick %:", -1, 100) / 100
-            lar_week_12_pick_percent = st.slider("Los Angeles Rams Estimated Week 12 Pick %:", -1, 100) / 100
-            mia_week_12_pick_percent = st.slider("Miami Dolphins Estimated Week 12 Pick %:", -1, 100) / 100
-            min_week_12_pick_percent = st.slider("Minnesota Vikings Estimated Week 12 Pick %:", -1, 100) / 100
-            ne_week_12_pick_percent = st.slider("New England Patriots Estimated Week 12 Pick %:", -1, 100) / 100
-            no_week_12_pick_percent = st.slider("New Orleans Saints Estimated Week 12 Pick %:", -1, 100) / 100
-            nyg_week_12_pick_percent = st.slider("New York Giants Estimated Week 12 Pick %:", -1, 100) / 100
-            nyj_week_12_pick_percent = st.slider("New York Jets Estimated Week 12 Pick %:", -1, 100) / 100
-            phi_week_12_pick_percent = st.slider("Philadelphia Eagles Estimated Week 12 Pick %:", -1, 100) / 100
-            pit_week_12_pick_percent = st.slider("Pittsburgh Steelers Estimated Week 12 Pick %:", -1, 100) / 100
-            sf_week_12_pick_percent = st.slider("San Francisco 1212ers Estimated Week 12 Pick %:", -1, 100) / 100
-            sea_week_12_pick_percent = st.slider("Seattle Seahawks Estimated Week 12 Pick %:", -1, 100) / 100
-            tb_week_12_pick_percent = st.slider("Tampa Bay Buccaneers Estimated Week 12 Pick %:", -1, 100) / 100
-            ten_week_12_pick_percent = st.slider("Tennessee Titans Estimated Week 12 Pick %:", -1, 100) / 100
-            was_week_12_pick_percent = st.slider("Washington Commanders Estimated Week 12 Pick %:", -1, 100) / 100
-        st.write('')
-        st.write('')
-    if starting_week <= 13 and ending_week > 13:
-        week_13_pick_percents = st.checkbox('Add Week 13 Pick Percentages?')
-        if week_13_pick_percents:
-            st.write('')
-            st.subheader('Week 13 Estimated Pick Percentages')
-            st.write('')
-            az_week_13_pick_percent = st.slider("Arizona Cardinals Estimated Week 13 Pick %:", -1, 100) / 100
-            atl_week_13_pick_percent = st.slider("Atlanta Falcons Estimated Week 13 Pick %:", -1, 100) / 100
-            bal_week_13_pick_percent = st.slider("Baltimore Ravens Estimated Week 13 Pick %:", -1, 100) / 100
-            buf_week_13_pick_percent = st.slider("Buffalo Bills Estimated Week 13 Pick %:", -1, 100) / 100
-            car_week_13_pick_percent = st.slider("Carolina Panthers Estimated Week 13 Pick %:", -1, 100) / 100
-            chi_week_13_pick_percent = st.slider("Chicago Bears Estimated Week 13 Pick %:", -1, 100) / 100
-            cin_week_13_pick_percent = st.slider("Cincinnati Bengals Estimated Week 13 Pick %:", -1, 100) / 100
-            cle_week_13_pick_percent = st.slider("Cleveland Browns Estimated Week 13 Pick %:", -1, 100) / 100
-            dal_week_13_pick_percent = st.slider("Dallas Cowboys Estimated Week 13 Pick %:", -1, 100) / 100
-            den_week_13_pick_percent = st.slider("Denver Broncos Estimated Week 13 Pick %:", -1, 100) / 100
-            det_week_13_pick_percent = st.slider("Detroit Lions Estimated Week 13 Pick %:", -1, 100) / 100
-            gb_week_13_pick_percent = st.slider("Green Bay Packers Estimated Week 13 Pick %:", -1, 100) / 100
-            hou_week_13_pick_percent = st.slider("Houston Texans Estimated Week 13 Pick %:", -1, 100) / 100
-            ind_week_13_pick_percent = st.slider("Indianapoils Colts Estimated Week 13 Pick %:", -1, 100) / 100
-            jax_week_13_pick_percent = st.slider("Jacksonville Jaguars Estimated Week 13 Pick %:", -1, 100) / 100
-            kc_week_13_pick_percent = st.slider("Kansas City Chiefs Estimated Week 13 Pick %:", -1, 100) / 100
-            lv_week_13_pick_percent = st.slider("Las Vegas Raiders Estimated Week 13 Pick %:", -1, 100) / 100
-            lac_week_13_pick_percent = st.slider("Los Angeles Chargers Estimated Week 13 Pick %:", -1, 100) / 100
-            lar_week_13_pick_percent = st.slider("Los Angeles Rams Estimated Week 13 Pick %:", -1, 100) / 100
-            mia_week_13_pick_percent = st.slider("Miami Dolphins Estimated Week 13 Pick %:", -1, 100) / 100
-            min_week_13_pick_percent = st.slider("Minnesota Vikings Estimated Week 13 Pick %:", -1, 100) / 100
-            ne_week_13_pick_percent = st.slider("New England Patriots Estimated Week 13 Pick %:", -1, 100) / 100
-            no_week_13_pick_percent = st.slider("New Orleans Saints Estimated Week 13 Pick %:", -1, 100) / 100
-            nyg_week_13_pick_percent = st.slider("New York Giants Estimated Week 13 Pick %:", -1, 100) / 100
-            nyj_week_13_pick_percent = st.slider("New York Jets Estimated Week 13 Pick %:", -1, 100) / 100
-            phi_week_13_pick_percent = st.slider("Philadelphia Eagles Estimated Week 13 Pick %:", -1, 100) / 100
-            pit_week_13_pick_percent = st.slider("Pittsburgh Steelers Estimated Week 13 Pick %:", -1, 100) / 100
-            sf_week_13_pick_percent = st.slider("San Francisco 1313ers Estimated Week 13 Pick %:", -1, 100) / 100
-            sea_week_13_pick_percent = st.slider("Seattle Seahawks Estimated Week 13 Pick %:", -1, 100) / 100
-            tb_week_13_pick_percent = st.slider("Tampa Bay Buccaneers Estimated Week 13 Pick %:", -1, 100) / 100
-            ten_week_13_pick_percent = st.slider("Tennessee Titans Estimated Week 13 Pick %:", -1, 100) / 100
-            was_week_13_pick_percent = st.slider("Washington Commanders Estimated Week 13 Pick %:", -1, 100) / 100
-        st.write('')
-        st.write('')
-    if starting_week <= 14 and ending_week > 14:
-        week_14_pick_percents = st.checkbox('Add Week 14 Pick Percentages?')
-        if week_14_pick_percents:
-            st.write('')
-            st.subheader('Week 14 Estimated Pick Percentages')
-            st.write('')
-            az_week_14_pick_percent = st.slider("Arizona Cardinals Estimated Week 14 Pick %:", -1, 100) / 100
-            atl_week_14_pick_percent = st.slider("Atlanta Falcons Estimated Week 14 Pick %:", -1, 100) / 100
-            bal_week_14_pick_percent = st.slider("Baltimore Ravens Estimated Week 14 Pick %:", -1, 100) / 100
-            buf_week_14_pick_percent = st.slider("Buffalo Bills Estimated Week 14 Pick %:", -1, 100) / 100
-            car_week_14_pick_percent = st.slider("Carolina Panthers Estimated Week 14 Pick %:", -1, 100) / 100
-            chi_week_14_pick_percent = st.slider("Chicago Bears Estimated Week 14 Pick %:", -1, 100) / 100
-            cin_week_14_pick_percent = st.slider("Cincinnati Bengals Estimated Week 14 Pick %:", -1, 100) / 100
-            cle_week_14_pick_percent = st.slider("Cleveland Browns Estimated Week 14 Pick %:", -1, 100) / 100
-            dal_week_14_pick_percent = st.slider("Dallas Cowboys Estimated Week 14 Pick %:", -1, 100) / 100
-            den_week_14_pick_percent = st.slider("Denver Broncos Estimated Week 14 Pick %:", -1, 100) / 100
-            det_week_14_pick_percent = st.slider("Detroit Lions Estimated Week 14 Pick %:", -1, 100) / 100
-            gb_week_14_pick_percent = st.slider("Green Bay Packers Estimated Week 14 Pick %:", -1, 100) / 100
-            hou_week_14_pick_percent = st.slider("Houston Texans Estimated Week 14 Pick %:", -1, 100) / 100
-            ind_week_14_pick_percent = st.slider("Indianapoils Colts Estimated Week 14 Pick %:", -1, 100) / 100
-            jax_week_14_pick_percent = st.slider("Jacksonville Jaguars Estimated Week 14 Pick %:", -1, 100) / 100
-            kc_week_14_pick_percent = st.slider("Kansas City Chiefs Estimated Week 14 Pick %:", -1, 100) / 100
-            lv_week_14_pick_percent = st.slider("Las Vegas Raiders Estimated Week 14 Pick %:", -1, 100) / 100
-            lac_week_14_pick_percent = st.slider("Los Angeles Chargers Estimated Week 14 Pick %:", -1, 100) / 100
-            lar_week_14_pick_percent = st.slider("Los Angeles Rams Estimated Week 14 Pick %:", -1, 100) / 100
-            mia_week_14_pick_percent = st.slider("Miami Dolphins Estimated Week 14 Pick %:", -1, 100) / 100
-            min_week_14_pick_percent = st.slider("Minnesota Vikings Estimated Week 14 Pick %:", -1, 100) / 100
-            ne_week_14_pick_percent = st.slider("New England Patriots Estimated Week 14 Pick %:", -1, 100) / 100
-            no_week_14_pick_percent = st.slider("New Orleans Saints Estimated Week 14 Pick %:", -1, 100) / 100
-            nyg_week_14_pick_percent = st.slider("New York Giants Estimated Week 14 Pick %:", -1, 100) / 100
-            nyj_week_14_pick_percent = st.slider("New York Jets Estimated Week 14 Pick %:", -1, 100) / 100
-            phi_week_14_pick_percent = st.slider("Philadelphia Eagles Estimated Week 14 Pick %:", -1, 100) / 100
-            pit_week_14_pick_percent = st.slider("Pittsburgh Steelers Estimated Week 14 Pick %:", -1, 100) / 100
-            sf_week_14_pick_percent = st.slider("San Francisco 1414ers Estimated Week 14 Pick %:", -1, 100) / 100
-            sea_week_14_pick_percent = st.slider("Seattle Seahawks Estimated Week 14 Pick %:", -1, 100) / 100
-            tb_week_14_pick_percent = st.slider("Tampa Bay Buccaneers Estimated Week 14 Pick %:", -1, 100) / 100
-            ten_week_14_pick_percent = st.slider("Tennessee Titans Estimated Week 14 Pick %:", -1, 100) / 100
-            was_week_14_pick_percent = st.slider("Washington Commanders Estimated Week 14 Pick %:", -1, 100) / 100
-        st.write('')
-        st.write('')
-    if starting_week <= 15 and ending_week > 15:
-        week_15_pick_percents = st.checkbox('Add Week 15 Pick Percentages?')
-        if week_15_pick_percents:
-            st.write('')
-            st.subheader('Week 15 Estimated Pick Percentages')
-            st.write('')
-            az_week_15_pick_percent = st.slider("Arizona Cardinals Estimated Week 15 Pick %:", -1, 100) / 100
-            atl_week_15_pick_percent = st.slider("Atlanta Falcons Estimated Week 15 Pick %:", -1, 100) / 100
-            bal_week_15_pick_percent = st.slider("Baltimore Ravens Estimated Week 15 Pick %:", -1, 100) / 100
-            buf_week_15_pick_percent = st.slider("Buffalo Bills Estimated Week 15 Pick %:", -1, 100) / 100
-            car_week_15_pick_percent = st.slider("Carolina Panthers Estimated Week 15 Pick %:", -1, 100) / 100
-            chi_week_15_pick_percent = st.slider("Chicago Bears Estimated Week 15 Pick %:", -1, 100) / 100
-            cin_week_15_pick_percent = st.slider("Cincinnati Bengals Estimated Week 15 Pick %:", -1, 100) / 100
-            cle_week_15_pick_percent = st.slider("Cleveland Browns Estimated Week 15 Pick %:", -1, 100) / 100
-            dal_week_15_pick_percent = st.slider("Dallas Cowboys Estimated Week 15 Pick %:", -1, 100) / 100
-            den_week_15_pick_percent = st.slider("Denver Broncos Estimated Week 15 Pick %:", -1, 100) / 100
-            det_week_15_pick_percent = st.slider("Detroit Lions Estimated Week 15 Pick %:", -1, 100) / 100
-            gb_week_15_pick_percent = st.slider("Green Bay Packers Estimated Week 15 Pick %:", -1, 100) / 100
-            hou_week_15_pick_percent = st.slider("Houston Texans Estimated Week 15 Pick %:", -1, 100) / 100
-            ind_week_15_pick_percent = st.slider("Indianapoils Colts Estimated Week 15 Pick %:", -1, 100) / 100
-            jax_week_15_pick_percent = st.slider("Jacksonville Jaguars Estimated Week 15 Pick %:", -1, 100) / 100
-            kc_week_15_pick_percent = st.slider("Kansas City Chiefs Estimated Week 15 Pick %:", -1, 100) / 100
-            lv_week_15_pick_percent = st.slider("Las Vegas Raiders Estimated Week 15 Pick %:", -1, 100) / 100
-            lac_week_15_pick_percent = st.slider("Los Angeles Chargers Estimated Week 15 Pick %:", -1, 100) / 100
-            lar_week_15_pick_percent = st.slider("Los Angeles Rams Estimated Week 15 Pick %:", -1, 100) / 100
-            mia_week_15_pick_percent = st.slider("Miami Dolphins Estimated Week 15 Pick %:", -1, 100) / 100
-            min_week_15_pick_percent = st.slider("Minnesota Vikings Estimated Week 15 Pick %:", -1, 100) / 100
-            ne_week_15_pick_percent = st.slider("New England Patriots Estimated Week 15 Pick %:", -1, 100) / 100
-            no_week_15_pick_percent = st.slider("New Orleans Saints Estimated Week 15 Pick %:", -1, 100) / 100
-            nyg_week_15_pick_percent = st.slider("New York Giants Estimated Week 15 Pick %:", -1, 100) / 100
-            nyj_week_15_pick_percent = st.slider("New York Jets Estimated Week 15 Pick %:", -1, 100) / 100
-            phi_week_15_pick_percent = st.slider("Philadelphia Eagles Estimated Week 15 Pick %:", -1, 100) / 100
-            pit_week_15_pick_percent = st.slider("Pittsburgh Steelers Estimated Week 15 Pick %:", -1, 100) / 100
-            sf_week_15_pick_percent = st.slider("San Francisco 1515ers Estimated Week 15 Pick %:", -1, 100) / 100
-            sea_week_15_pick_percent = st.slider("Seattle Seahawks Estimated Week 15 Pick %:", -1, 100) / 100
-            tb_week_15_pick_percent = st.slider("Tampa Bay Buccaneers Estimated Week 15 Pick %:", -1, 100) / 100
-            ten_week_15_pick_percent = st.slider("Tennessee Titans Estimated Week 15 Pick %:", -1, 100) / 100
-            was_week_15_pick_percent = st.slider("Washington Commanders Estimated Week 15 Pick %:", -1, 100) / 100
-        st.write('')
-        st.write('')
-    if starting_week <= 16 and ending_week > 16:
-        week_16_pick_percents = st.checkbox('Add Week 16 Pick Percentages?')
-        if week_16_pick_percents:
-            st.write('')
-            st.subheader('Week 16 Estimated Pick Percentages')
-            st.write('')
-            az_week_16_pick_percent = st.slider("Arizona Cardinals Estimated Week 16 Pick %:", -1, 100) / 100
-            atl_week_16_pick_percent = st.slider("Atlanta Falcons Estimated Week 16 Pick %:", -1, 100) / 100
-            bal_week_16_pick_percent = st.slider("Baltimore Ravens Estimated Week 16 Pick %:", -1, 100) / 100
-            buf_week_16_pick_percent = st.slider("Buffalo Bills Estimated Week 16 Pick %:", -1, 100) / 100
-            car_week_16_pick_percent = st.slider("Carolina Panthers Estimated Week 16 Pick %:", -1, 100) / 100
-            chi_week_16_pick_percent = st.slider("Chicago Bears Estimated Week 16 Pick %:", -1, 100) / 100
-            cin_week_16_pick_percent = st.slider("Cincinnati Bengals Estimated Week 16 Pick %:", -1, 100) / 100
-            cle_week_16_pick_percent = st.slider("Cleveland Browns Estimated Week 16 Pick %:", -1, 100) / 100
-            dal_week_16_pick_percent = st.slider("Dallas Cowboys Estimated Week 16 Pick %:", -1, 100) / 100
-            den_week_16_pick_percent = st.slider("Denver Broncos Estimated Week 16 Pick %:", -1, 100) / 100
-            det_week_16_pick_percent = st.slider("Detroit Lions Estimated Week 16 Pick %:", -1, 100) / 100
-            gb_week_16_pick_percent = st.slider("Green Bay Packers Estimated Week 16 Pick %:", -1, 100) / 100
-            hou_week_16_pick_percent = st.slider("Houston Texans Estimated Week 16 Pick %:", -1, 100) / 100
-            ind_week_16_pick_percent = st.slider("Indianapoils Colts Estimated Week 16 Pick %:", -1, 100) / 100
-            jax_week_16_pick_percent = st.slider("Jacksonville Jaguars Estimated Week 16 Pick %:", -1, 100) / 100
-            kc_week_16_pick_percent = st.slider("Kansas City Chiefs Estimated Week 16 Pick %:", -1, 100) / 100
-            lv_week_16_pick_percent = st.slider("Las Vegas Raiders Estimated Week 16 Pick %:", -1, 100) / 100
-            lac_week_16_pick_percent = st.slider("Los Angeles Chargers Estimated Week 16 Pick %:", -1, 100) / 100
-            lar_week_16_pick_percent = st.slider("Los Angeles Rams Estimated Week 16 Pick %:", -1, 100) / 100
-            mia_week_16_pick_percent = st.slider("Miami Dolphins Estimated Week 16 Pick %:", -1, 100) / 100
-            min_week_16_pick_percent = st.slider("Minnesota Vikings Estimated Week 16 Pick %:", -1, 100) / 100
-            ne_week_16_pick_percent = st.slider("New England Patriots Estimated Week 16 Pick %:", -1, 100) / 100
-            no_week_16_pick_percent = st.slider("New Orleans Saints Estimated Week 16 Pick %:", -1, 100) / 100
-            nyg_week_16_pick_percent = st.slider("New York Giants Estimated Week 16 Pick %:", -1, 100) / 100
-            nyj_week_16_pick_percent = st.slider("New York Jets Estimated Week 16 Pick %:", -1, 100) / 100
-            phi_week_16_pick_percent = st.slider("Philadelphia Eagles Estimated Week 16 Pick %:", -1, 100) / 100
-            pit_week_16_pick_percent = st.slider("Pittsburgh Steelers Estimated Week 16 Pick %:", -1, 100) / 100
-            sf_week_16_pick_percent = st.slider("San Francisco 1616ers Estimated Week 16 Pick %:", -1, 100) / 100
-            sea_week_16_pick_percent = st.slider("Seattle Seahawks Estimated Week 16 Pick %:", -1, 100) / 100
-            tb_week_16_pick_percent = st.slider("Tampa Bay Buccaneers Estimated Week 16 Pick %:", -1, 100) / 100
-            ten_week_16_pick_percent = st.slider("Tennessee Titans Estimated Week 16 Pick %:", -1, 100) / 100
-            was_week_16_pick_percent = st.slider("Washington Commanders Estimated Week 16 Pick %:", -1, 100) / 100
-        st.write('')
-        st.write('')
-    if starting_week <= 17 and ending_week > 17:
-        week_17_pick_percents = st.checkbox('Add Week 17 Pick Percentages?')
-        if week_17_pick_percents:
-            st.write('')
-            st.subheader('Week 17 Estimated Pick Percentages')
-            st.write('')
-            az_week_17_pick_percent = st.slider("Arizona Cardinals Estimated Week 17 Pick %:", -1, 100) / 100
-            atl_week_17_pick_percent = st.slider("Atlanta Falcons Estimated Week 17 Pick %:", -1, 100) / 100
-            bal_week_17_pick_percent = st.slider("Baltimore Ravens Estimated Week 17 Pick %:", -1, 100) / 100
-            buf_week_17_pick_percent = st.slider("Buffalo Bills Estimated Week 17 Pick %:", -1, 100) / 100
-            car_week_17_pick_percent = st.slider("Carolina Panthers Estimated Week 17 Pick %:", -1, 100) / 100
-            chi_week_17_pick_percent = st.slider("Chicago Bears Estimated Week 17 Pick %:", -1, 100) / 100
-            cin_week_17_pick_percent = st.slider("Cincinnati Bengals Estimated Week 17 Pick %:", -1, 100) / 100
-            cle_week_17_pick_percent = st.slider("Cleveland Browns Estimated Week 17 Pick %:", -1, 100) / 100
-            dal_week_17_pick_percent = st.slider("Dallas Cowboys Estimated Week 17 Pick %:", -1, 100) / 100
-            den_week_17_pick_percent = st.slider("Denver Broncos Estimated Week 17 Pick %:", -1, 100) / 100
-            det_week_17_pick_percent = st.slider("Detroit Lions Estimated Week 17 Pick %:", -1, 100) / 100
-            gb_week_17_pick_percent = st.slider("Green Bay Packers Estimated Week 17 Pick %:", -1, 100) / 100
-            hou_week_17_pick_percent = st.slider("Houston Texans Estimated Week 17 Pick %:", -1, 100) / 100
-            ind_week_17_pick_percent = st.slider("Indianapoils Colts Estimated Week 17 Pick %:", -1, 100) / 100
-            jax_week_17_pick_percent = st.slider("Jacksonville Jaguars Estimated Week 17 Pick %:", -1, 100) / 100
-            kc_week_17_pick_percent = st.slider("Kansas City Chiefs Estimated Week 17 Pick %:", -1, 100) / 100
-            lv_week_17_pick_percent = st.slider("Las Vegas Raiders Estimated Week 17 Pick %:", -1, 100) / 100
-            lac_week_17_pick_percent = st.slider("Los Angeles Chargers Estimated Week 17 Pick %:", -1, 100) / 100
-            lar_week_17_pick_percent = st.slider("Los Angeles Rams Estimated Week 17 Pick %:", -1, 100) / 100
-            mia_week_17_pick_percent = st.slider("Miami Dolphins Estimated Week 17 Pick %:", -1, 100) / 100
-            min_week_17_pick_percent = st.slider("Minnesota Vikings Estimated Week 17 Pick %:", -1, 100) / 100
-            ne_week_17_pick_percent = st.slider("New England Patriots Estimated Week 17 Pick %:", -1, 100) / 100
-            no_week_17_pick_percent = st.slider("New Orleans Saints Estimated Week 17 Pick %:", -1, 100) / 100
-            nyg_week_17_pick_percent = st.slider("New York Giants Estimated Week 17 Pick %:", -1, 100) / 100
-            nyj_week_17_pick_percent = st.slider("New York Jets Estimated Week 17 Pick %:", -1, 100) / 100
-            phi_week_17_pick_percent = st.slider("Philadelphia Eagles Estimated Week 17 Pick %:", -1, 100) / 100
-            pit_week_17_pick_percent = st.slider("Pittsburgh Steelers Estimated Week 17 Pick %:", -1, 100) / 100
-            sf_week_17_pick_percent = st.slider("San Francisco 1717ers Estimated Week 17 Pick %:", -1, 100) / 100
-            sea_week_17_pick_percent = st.slider("Seattle Seahawks Estimated Week 17 Pick %:", -1, 100) / 100
-            tb_week_17_pick_percent = st.slider("Tampa Bay Buccaneers Estimated Week 17 Pick %:", -1, 100) / 100
-            ten_week_17_pick_percent = st.slider("Tennessee Titans Estimated Week 17 Pick %:", -1, 100) / 100
-            was_week_17_pick_percent = st.slider("Washington Commanders Estimated Week 17 Pick %:", -1, 100) / 100
-        st.write('')
-        st.write('')
-    if starting_week <= 18 and ending_week > 18:
-        week_18_pick_percents = st.checkbox('Add Week 18 Pick Percentages?')
-        if week_18_pick_percents:
-            st.write('')
-            st.subheader('Week 18 Estimated Pick Percentages')
-            st.write('')
-            az_week_18_pick_percent = st.slider("Arizona Cardinals Estimated Week 18 Pick %:", -1, 100) / 100
-            atl_week_18_pick_percent = st.slider("Atlanta Falcons Estimated Week 18 Pick %:", -1, 100) / 100
-            bal_week_18_pick_percent = st.slider("Baltimore Ravens Estimated Week 18 Pick %:", -1, 100) / 100
-            buf_week_18_pick_percent = st.slider("Buffalo Bills Estimated Week 18 Pick %:", -1, 100) / 100
-            car_week_18_pick_percent = st.slider("Carolina Panthers Estimated Week 18 Pick %:", -1, 100) / 100
-            chi_week_18_pick_percent = st.slider("Chicago Bears Estimated Week 18 Pick %:", -1, 100) / 100
-            cin_week_18_pick_percent = st.slider("Cincinnati Bengals Estimated Week 18 Pick %:", -1, 100) / 100
-            cle_week_18_pick_percent = st.slider("Cleveland Browns Estimated Week 18 Pick %:", -1, 100) / 100
-            dal_week_18_pick_percent = st.slider("Dallas Cowboys Estimated Week 18 Pick %:", -1, 100) / 100
-            den_week_18_pick_percent = st.slider("Denver Broncos Estimated Week 18 Pick %:", -1, 100) / 100
-            det_week_18_pick_percent = st.slider("Detroit Lions Estimated Week 18 Pick %:", -1, 100) / 100
-            gb_week_18_pick_percent = st.slider("Green Bay Packers Estimated Week 18 Pick %:", -1, 100) / 100
-            hou_week_18_pick_percent = st.slider("Houston Texans Estimated Week 18 Pick %:", -1, 100) / 100
-            ind_week_18_pick_percent = st.slider("Indianapoils Colts Estimated Week 18 Pick %:", -1, 100) / 100
-            jax_week_18_pick_percent = st.slider("Jacksonville Jaguars Estimated Week 18 Pick %:", -1, 100) / 100
-            kc_week_18_pick_percent = st.slider("Kansas City Chiefs Estimated Week 18 Pick %:", -1, 100) / 100
-            lv_week_18_pick_percent = st.slider("Las Vegas Raiders Estimated Week 18 Pick %:", -1, 100) / 100
-            lac_week_18_pick_percent = st.slider("Los Angeles Chargers Estimated Week 18 Pick %:", -1, 100) / 100
-            lar_week_18_pick_percent = st.slider("Los Angeles Rams Estimated Week 18 Pick %:", -1, 100) / 100
-            mia_week_18_pick_percent = st.slider("Miami Dolphins Estimated Week 18 Pick %:", -1, 100) / 100
-            min_week_18_pick_percent = st.slider("Minnesota Vikings Estimated Week 18 Pick %:", -1, 100) / 100
-            ne_week_18_pick_percent = st.slider("New England Patriots Estimated Week 18 Pick %:", -1, 100) / 100
-            no_week_18_pick_percent = st.slider("New Orleans Saints Estimated Week 18 Pick %:", -1, 100) / 100
-            nyg_week_18_pick_percent = st.slider("New York Giants Estimated Week 18 Pick %:", -1, 100) / 100
-            nyj_week_18_pick_percent = st.slider("New York Jets Estimated Week 18 Pick %:", -1, 100) / 100
-            phi_week_18_pick_percent = st.slider("Philadelphia Eagles Estimated Week 18 Pick %:", -1, 100) / 100
-            pit_week_18_pick_percent = st.slider("Pittsburgh Steelers Estimated Week 18 Pick %:", -1, 100) / 100
-            sf_week_18_pick_percent = st.slider("San Francisco 1818ers Estimated Week 18 Pick %:", -1, 100) / 100
-            sea_week_18_pick_percent = st.slider("Seattle Seahawks Estimated Week 18 Pick %:", -1, 100) / 100
-            tb_week_18_pick_percent = st.slider("Tampa Bay Buccaneers Estimated Week 18 Pick %:", -1, 100) / 100
-            ten_week_18_pick_percent = st.slider("Tennessee Titans Estimated Week 18 Pick %:", -1, 100) / 100
-            was_week_18_pick_percent = st.slider("Washington Commanders Estimated Week 18 Pick %:", -1, 100) / 100
-        st.write('')
-        st.write('')
-    if selected_contest == 'Circa':
-        if starting_week <= 19 and ending_week > 19:
-            week_19_pick_percents = st.checkbox('Add Week 19 Pick Percentages?')
-            if week_19_pick_percents:
-                st.write('')
-                st.subheader('Week 19 Estimated Pick Percentages')
-                st.write('')
-                az_week_19_pick_percent = st.slider("Arizona Cardinals Estimated Week 19 Pick %:", -1, 100) / 100
-                atl_week_19_pick_percent = st.slider("Atlanta Falcons Estimated Week 19 Pick %:", -1, 100) / 100
-                bal_week_19_pick_percent = st.slider("Baltimore Ravens Estimated Week 19 Pick %:", -1, 100) / 100
-                buf_week_19_pick_percent = st.slider("Buffalo Bills Estimated Week 19 Pick %:", -1, 100) / 100
-                car_week_19_pick_percent = st.slider("Carolina Panthers Estimated Week 19 Pick %:", -1, 100) / 100
-                chi_week_19_pick_percent = st.slider("Chicago Bears Estimated Week 19 Pick %:", -1, 100) / 100
-                cin_week_19_pick_percent = st.slider("Cincinnati Bengals Estimated Week 19 Pick %:", -1, 100) / 100
-                cle_week_19_pick_percent = st.slider("Cleveland Browns Estimated Week 19 Pick %:", -1, 100) / 100
-                dal_week_19_pick_percent = st.slider("Dallas Cowboys Estimated Week 19 Pick %:", -1, 100) / 100
-                den_week_19_pick_percent = st.slider("Denver Broncos Estimated Week 19 Pick %:", -1, 100) / 100
-                det_week_19_pick_percent = st.slider("Detroit Lions Estimated Week 19 Pick %:", -1, 100) / 100
-                gb_week_19_pick_percent = st.slider("Green Bay Packers Estimated Week 19 Pick %:", -1, 100) / 100
-                hou_week_19_pick_percent = st.slider("Houston Texans Estimated Week 19 Pick %:", -1, 100) / 100
-                ind_week_19_pick_percent = st.slider("Indianapoils Colts Estimated Week 19 Pick %:", -1, 100) / 100
-                jax_week_19_pick_percent = st.slider("Jacksonville Jaguars Estimated Week 19 Pick %:", -1, 100) / 100
-                kc_week_19_pick_percent = st.slider("Kansas City Chiefs Estimated Week 19 Pick %:", -1, 100) / 100
-                lv_week_19_pick_percent = st.slider("Las Vegas Raiders Estimated Week 19 Pick %:", -1, 100) / 100
-                lac_week_19_pick_percent = st.slider("Los Angeles Chargers Estimated Week 19 Pick %:", -1, 100) / 100
-                lar_week_19_pick_percent = st.slider("Los Angeles Rams Estimated Week 19 Pick %:", -1, 100) / 100
-                mia_week_19_pick_percent = st.slider("Miami Dolphins Estimated Week 19 Pick %:", -1, 100) / 100
-                min_week_19_pick_percent = st.slider("Minnesota Vikings Estimated Week 19 Pick %:", -1, 100) / 100
-                ne_week_19_pick_percent = st.slider("New England Patriots Estimated Week 19 Pick %:", -1, 100) / 100
-                no_week_19_pick_percent = st.slider("New Orleans Saints Estimated Week 19 Pick %:", -1, 100) / 100
-                nyg_week_19_pick_percent = st.slider("New York Giants Estimated Week 19 Pick %:", -1, 100) / 100
-                nyj_week_19_pick_percent = st.slider("New York Jets Estimated Week 19 Pick %:", -1, 100) / 100
-                phi_week_19_pick_percent = st.slider("Philadelphia Eagles Estimated Week 19 Pick %:", -1, 100) / 100
-                pit_week_19_pick_percent = st.slider("Pittsburgh Steelers Estimated Week 19 Pick %:", -1, 100) / 100
-                sf_week_19_pick_percent = st.slider("San Francisco 1919ers Estimated Week 19 Pick %:", -1, 100) / 100
-                sea_week_19_pick_percent = st.slider("Seattle Seahawks Estimated Week 19 Pick %:", -1, 100) / 100
-                tb_week_19_pick_percent = st.slider("Tampa Bay Buccaneers Estimated Week 19 Pick %:", -1, 100) / 100
-                ten_week_19_pick_percent = st.slider("Tennessee Titans Estimated Week 19 Pick %:", -1, 100) / 100
-                was_week_19_pick_percent = st.slider("Washington Commanders Estimated Week 19 Pick %:", -1, 100) / 100
-            st.write('')
-            st.write('')
-    if selected_contest == 'Circa':
-        if starting_week <= 20 and ending_week > 20:
-            week_20_pick_percents = st.checkbox('Add Week 20 Pick Percentages?')
-            if week_20_pick_percents:
-                st.write('')
-                st.subheader('Week 20 Estimated Pick Percentages')
-                st.write('')
-                az_week_20_pick_percent = st.slider("Arizona Cardinals Estimated Week 20 Pick %:", -1, 100) / 100
-                atl_week_20_pick_percent = st.slider("Atlanta Falcons Estimated Week 20 Pick %:", -1, 100) / 100
-                bal_week_20_pick_percent = st.slider("Baltimore Ravens Estimated Week 20 Pick %:", -1, 100) / 100
-                buf_week_20_pick_percent = st.slider("Buffalo Bills Estimated Week 20 Pick %:", -1, 100) / 100
-                car_week_20_pick_percent = st.slider("Carolina Panthers Estimated Week 20 Pick %:", -1, 100) / 100
-                chi_week_20_pick_percent = st.slider("Chicago Bears Estimated Week 20 Pick %:", -1, 100) / 100
-                cin_week_20_pick_percent = st.slider("Cincinnati Bengals Estimated Week 20 Pick %:", -1, 100) / 100
-                cle_week_20_pick_percent = st.slider("Cleveland Browns Estimated Week 20 Pick %:", -1, 100) / 100
-                dal_week_20_pick_percent = st.slider("Dallas Cowboys Estimated Week 20 Pick %:", -1, 100) / 100
-                den_week_20_pick_percent = st.slider("Denver Broncos Estimated Week 20 Pick %:", -1, 100) / 100
-                det_week_20_pick_percent = st.slider("Detroit Lions Estimated Week 20 Pick %:", -1, 100) / 100
-                gb_week_20_pick_percent = st.slider("Green Bay Packers Estimated Week 20 Pick %:", -1, 100) / 100
-                hou_week_20_pick_percent = st.slider("Houston Texans Estimated Week 20 Pick %:", -1, 100) / 100
-                ind_week_20_pick_percent = st.slider("Indianapoils Colts Estimated Week 20 Pick %:", -1, 100) / 100
-                jax_week_20_pick_percent = st.slider("Jacksonville Jaguars Estimated Week 20 Pick %:", -1, 100) / 100
-                kc_week_20_pick_percent = st.slider("Kansas City Chiefs Estimated Week 20 Pick %:", -1, 100) / 100
-                lv_week_20_pick_percent = st.slider("Las Vegas Raiders Estimated Week 20 Pick %:", -1, 100) / 100
-                lac_week_20_pick_percent = st.slider("Los Angeles Chargers Estimated Week 20 Pick %:", -1, 100) / 100
-                lar_week_20_pick_percent = st.slider("Los Angeles Rams Estimated Week 20 Pick %:", -1, 100) / 100
-                mia_week_20_pick_percent = st.slider("Miami Dolphins Estimated Week 20 Pick %:", -1, 100) / 100
-                min_week_20_pick_percent = st.slider("Minnesota Vikings Estimated Week 20 Pick %:", -1, 100) / 100
-                ne_week_20_pick_percent = st.slider("New England Patriots Estimated Week 20 Pick %:", -1, 100) / 100
-                no_week_20_pick_percent = st.slider("New Orleans Saints Estimated Week 20 Pick %:", -1, 100) / 100
-                nyg_week_20_pick_percent = st.slider("New York Giants Estimated Week 20 Pick %:", -1, 100) / 100
-                nyj_week_20_pick_percent = st.slider("New York Jets Estimated Week 20 Pick %:", -1, 100) / 100
-                phi_week_20_pick_percent = st.slider("Philadelphia Eagles Estimated Week 20 Pick %:", -1, 100) / 100
-                pit_week_20_pick_percent = st.slider("Pittsburgh Steelers Estimated Week 20 Pick %:", -1, 100) / 100
-                sf_week_20_pick_percent = st.slider("San Francisco 2020ers Estimated Week 20 Pick %:", -1, 100) / 100
-                sea_week_20_pick_percent = st.slider("Seattle Seahawks Estimated Week 20 Pick %:", -1, 100) / 100
-                tb_week_20_pick_percent = st.slider("Tampa Bay Buccaneers Estimated Week 20 Pick %:", -1, 100) / 100
-                ten_week_20_pick_percent = st.slider("Tennessee Titans Estimated Week 20 Pick %:", -1, 100) / 100
-                was_week_20_pick_percent = st.slider("Washington Commanders Estimated Week 20 Pick %:", -1, 100) / 100
-	
-
-
-
-st.write('')
-st.write('')
-st.write('')
-
-use_cached_expected_value = 0
-use_live_sportsbook_odds = 1
-
-if yes_i_have_customized_rankings:
-	st.subheader('Use Saved Expected Value')
-	st.write('Warning, this data may not be nup to date.')
-	st.write('- Checking this box will ensure the process is fast, (Less than 1 minute, compared to 5-10 mins) and will prevent the risk of crashing')
-	st.write('- This will not use your customized rankings in the EV calculation process')
-	st.write('- This will NOT have an impact on your customized ranking output, just the EV output')
-	st.write('Last Update: :green[01/01/2025]')
-	use_cached_expected_value = 1 if st.checkbox('Use Cached Expected Value') else 0
-	st.write('')
-	st.write('')
-	st.write('')
-	if use_cached_expected_value == 1:
-            use_live_sportsbook_odds = 1 if st.checkbox('Use Live Sportsbook Odds to calculate win probability (If Available?') else 0
-            st.write('')
-            st.write("If this is checked, we will use odds from DraftKings to determine a team's win probability. For games where live odds from DraftKings are unavailable, we will use your own internal rankings to determine the predicted spread and win probability.")	
-            st.write('If this is left unchecked, we will use your own internal rankings to determine the predicted spread and win probability for all games.')	
-	st.write('')
-	st.write('')
-	st.write('')
-st.subheader('Get Optimized Survivor Picks')
-number_of_solutions_options = [
-    1,5,10,25,50,100
-]
-st.write('How many solutions would you like from each solver?')
-number_solutions = st.selectbox('Number of Solutions', options = number_of_solutions_options)
-double_number_solutions = number_solutions * 2
-st.text(f'This button will find the best picks for each week. It will pump out {double_number_solutions} solutions.')
-st.write(f'- The first {number_solutions} will be :red[based purely on EV] that is a complicated formula based on predicted pick percentage of each team in each week, and their chances of winning that week.')
-st.write('- This will use the rankings defined above to determine win probability and thus pick percentage for each team. If you provide your own rankings, :red[you CANNOT use the cached version of EV]. If you use the default rankings, the cached version will be fine') 
-st.write(f'- The second {number_solutions} solutions will be based on the :red[rankings and constraints you provided]')
-st.write('- This will use the rankings defined above to determine win probability for each team. Because this :red[does not use predicted pick percentage nor EV], you can use the cached version of EV to speed things up.') 
-st.write('- All solutions will abide by the prohibited teams and the weeks you selected')
-st.write('- If you have too many constraints, or the solution is impossible, you will see an error')
-st.write("- :green[Mathematically, EV is most likely to win, however, using your own rankings has advantages as well, which is why we provide both solutions (Sometimes it's just preposterous to Pick the Jets)]")
-
-
-st.write('')
-st.write('')
-schedule_data_retrieved = False #Initialize on first run
-
-if st.button("Get Optimized Survivor Picks"):
-    st.write("Step 1/6: Fetching Schedule Data...")
-    schedule_table, schedule_rows = get_schedule() # Call the function   
-    if schedule_table:
-        st.write("Step 1 Completed: Schedule Data Retrieved!")
-        schedule_data_retrieved = True #Set Flag to True after retrieval
+    st.subheader('Select Contest')
+    st.write('Choose the contest you are using this algorithm for: Circa (Advanced) or Draftkings (Traditional and Pathetic)')
+    st.write('The biggest differences between the two contests:')
+    st.write('- Circa has 20 Weeks (Christmas and Thanksgiving/Black Friday act as their own indivdual weeks)')
+    st.write('- Thanksgiving/Black Friday week will be Week 13 on this site (If you select Circa)')
+    st.write('- Christmas Week will be week 18 on this site (If you select Circa)')
+    st.write('- In Circa, a tie eliminates you, but in Draftkings, you move on with a tie')
+    st.write('- Players in Circa tend to be sharper, making it more difficult to play contrarian')
+    selected_contest = st.selectbox('Choose Contest:', options = contest_options)
+    if selected_contest == "DraftKings":
+    	ending_week = 19
     else:
-        st.write("Error. Could not find the table.")
-        schedule_data_retrieved = False #Set flag to False on error
-         
-    if schedule_rows:
-        st.write(f"Number of Schedule Rows: {len(schedule_rows)}") #Display row length
-        st.write("Step 2/6: Collecting Travel, Ranking, Odds, and Rest Data...")
-        collect_schedule_travel_ranking_data_df = collect_schedule_travel_ranking_data(pd)
-        st.write("Step 2 Completed: Travel, Ranking, Odds, and Rest Data Retrieved!")
-        st.write("Step 3/6: Predicting Future Pick Percentages of Public...")
-    if use_cached_expected_value == 0:
-        nfl_schedule_pick_percentages_df = get_predicted_pick_percentages(pd)
-        st.write("Step 3 Completed: Public Pick Percentages Predicted")
-        #nfl_schedule_circa_df_2 = manually_adjust_pick_predictions()
-    if use_cached_expected_value == 0:
-        if selected_contest == 'Circa':
-            st.write("Step 3a: Predicting Pick Percentages based on Team Availability...")
-            nfl_schedule_pick_percentages_df = get_predicted_pick_percentages_with_availability(pd)
-    if use_cached_expected_value == 1:
-        nfl_schedule_pick_percentages_df = get_predicted_pick_percentages(pd)
-        if selected_contest == 'Circa':
-            full_df_with_ev = nfl_schedule_pick_percentages_df_circa #pd.read_csv('NFL Schedule with full ev_circa.csv')
+    	ending_week = 21
+    st.write('')
+    st.write('')
+    st.write('')
+    st.write('')
+    st.subheader('Picked Teams:')
+    yes_i_have_picked_teams = st.checkbox('Have you already used any teams in the contest, or want to prevent the algorithm from using any specific teams?')
+    
+    #def create_nfl_app():
+    
+    nfl_teams = [
+        "Arizona Cardinals", "Atlanta Falcons", "Baltimore Ravens", "Buffalo Bills",
+        "Carolina Panthers", "Chicago Bears", "Cincinnati Bengals", "Cleveland Browns",
+        "Dallas Cowboys", "Denver Broncos", "Detroit Lions", "Green Bay Packers",
+        "Houston Texans", "Indianapolis Colts", "Jacksonville Jaguars", "Kansas City Chiefs",
+        "Las Vegas Raiders", "Los Angeles Chargers", "Los Angeles Rams", "Miami Dolphins",
+        "Minnesota Vikings", "New England Patriots", "New Orleans Saints", "New York Giants",
+        "New York Jets", "Philadelphia Eagles", "Pittsburgh Steelers", "San Francisco 49ers",
+        "Seattle Seahawks", "Tampa Bay Buccaneers", "Tennessee Titans", "Washington Commanders"
+    ]
+    if yes_i_have_picked_teams:
+        st.write('Select the teams that you have already used in the survivor contest, or teams that you just do not want to pick in the enirety of the contest')
+        selected_teams = st.multiselect("Prohibited Picks:", options=nfl_teams)
+        picked_teams = selected_teams if selected_teams else []
+        if picked_teams:
+            st.write("You selected:")
+            for team in picked_teams:
+                st.write(f"- {team}")
         else:
-            full_df_with_ev = nfl_schedule_pick_percentages_df_dk #pd.read_csv('NFL Schedule with full ev_dk.csv')
-        st.write("Step 3 Completed: Public Pick Percentages Predicted")
-        st.write('- Using Cached Expected Values...')
-    else:
-        st.write("Step 4/6: Calculating Live Expected Value (Will take 5-10 mins)...")
-        with st.spinner('Processing...'):
-            full_df_with_ev = calculate_ev(nfl_schedule_pick_percentages_df, starting_week, ending_week, selected_contest, use_cached_expected_value)
-            st.write("Processing Complete!")
-            #st.dataframe(full_df_with_ev)
-    st.write("Step 4 Completed: Expected Value Calculated")
-    st.subheader('Full Dataset')
-    st.write(full_df_with_ev)
-    st.write('Step 5/6: Calculating Best Combination of Picks Based on EV...')
+            st.write("No teams selected")
     st.write('')
-
-
-    ending_week_2 = ending_week - 1	
-    if selected_contest == 'Circa':
-        st.subheader(f':blue[Optimal Picks for Circa: Weeks {starting_week} through {ending_week_2}]')
+    st.write('')
+    st.write('')
+    st.subheader('Remaining Weeks:')
+    yes_i_would_like_to_choose_weeks = st.checkbox('Would you like to choose a range of weeks, instead of the entire season?')
+    if yes_i_would_like_to_choose_weeks:
+        st.text('Select the upcoming week for the starting week. Select the week you want the algorithm to stop at. If you select one week, Calculating EV can take up to 30-45 minutes (If you do not use the Saved EV calculations). All 20 weeks will take 5-6 hours. Ending Week must be greater than or equal to Starting Week.')
+        if selected_contest == "DraftKings":
+            starting_week = st.selectbox("Select Starting Week:", options=range(1, 19))
+        else:
+            st.write(":red[Week 13 is Thanksgiving/Black Friday Week and Week 18 is Christmas Week]")
+            starting_week = st.selectbox("Select Starting Week:", options=range(1, 21))
+        #if starting_week:
+            #st.write(f"Selected Starting Week: {starting_week}")
+        # Create a dynamic range for ending week based on starting week
         st.write('')
-    else:
-        st.subheader(f':green[Optimal Picks for Draftkings: Weeks {starting_week} through {ending_week_2}]')
+        if selected_contest == "DraftKings":
+            ending_week_options = range(starting_week, 19)
+        else:
+            ending_week_options = range(starting_week, 21)
+        ending_week = st.selectbox("Select Ending Week:", options=ending_week_options)
+        ending_week = ending_week + 1
+    
         st.write('')
-        st.subheader('Expected Value Optimized Picks')
-
-    get_survivor_picks_based_on_ev()
-    st.write('Step 5 Completed: Top Picks Determined Based on EV')
+        st.write('')
+        st.write('')
+        st.subheader('Current Week Entries')
+        st.write('For accurate predictions, you must input the number of remaining entries in your contest')
+        # Get an integer input with no maximum
+        if selected_contest == "DraftKings":
+            current_week_entries_dk = st.number_input("Number of Remaining Entries:", value=-1, max_value=None)
+            st.write(f"You entered: {current_week_entries_dk}")
+        else:
+            current_week_entries_circa = st.number_input("Number of Remaining Entries:", value=-1, max_value=None)
+            st.write(f"You entered: {current_week_entries_circa}")
+        st.write('')
+        st.write('')
+        st.write('')
+        st.subheader('Current Week Team Availability')
+        st.write('')
+        az_current_week_availability = st.slider("Arizona Cardinals Current Week Availability:", -1, 100) / 100
+        st.write(f"Arizona Cardinals Current Week Availability: {az_current_week_availability}")
+        atl_current_week_availability = st.slider("Atlanta Falcons Current Week Availability:", -1, 100) / 100
+        bal_current_week_availability = st.slider("Baltimore Ravens Current Week Availability:", -1, 100) / 100
+        buf_current_week_availability = st.slider("Buffalo Bills Current Week Availability:", -1, 100) / 100
+        car_current_week_availability = st.slider("Carolina Panthers Current Week Availability:", -1, 100) / 100
+        chi_current_week_availability = st.slider("Chicago Bears Current Week Availability:", -1, 100) / 100
+        cin_current_week_availability = st.slider("Cincinnati Bengals Current Week Availability:", -1, 100) / 100
+        cle_current_week_availability = st.slider("Cleveland Browns Current Week Availability:", -1, 100) / 100
+        dal_current_week_availability = st.slider("Dallas Cowboys Current Week Availability:", -1, 100) / 100
+        den_current_week_availability = st.slider("Denver Broncos Current Week Availability:", -1, 100) / 100
+        det_current_week_availability = st.slider("Detroit Lions Current Week Availability:", -1, 100) / 100
+        gb_current_week_availability = st.slider("Green Bay Packers Current Week Availability:", -1, 100) / 100
+        hou_current_week_availability = st.slider("Houston Texans Current Week Availability:", -1, 100) / 100
+        ind_current_week_availability = st.slider("Indianapoils Colts Current Week Availability:", -1, 100) / 100
+        jax_current_week_availability = st.slider("Jacksonville Jaguars Current Week Availability:", -1, 100) / 100
+        kc_current_week_availability = st.slider("Kansas City Chiefs Current Week Availability:", -1, 100) / 100
+        lv_current_week_availability = st.slider("Las Vegas Raiders Current Week Availability:", -1, 100) / 100
+        lac_current_week_availability = st.slider("Los Angeles Chargers Current Week Availability:", -1, 100) / 100
+        lar_current_week_availability = st.slider("Los Angeles Rams Current Week Availability:", -1, 100) / 100
+        mia_current_week_availability = st.slider("Miami Dolphins Current Week Availability:", -1, 100) / 100
+        min_current_week_availability = st.slider("Minnesota Vikings Current Week Availability:", -1, 100) / 100
+        ne_current_week_availability = st.slider("New England Patriots Current Week Availability:", -1, 100) / 100
+        no_current_week_availability = st.slider("New Orleans Saints Current Week Availability:", -1, 100) / 100
+        nyg_current_week_availability = st.slider("New York Giants Current Week Availability:", -1, 100) / 100
+        nyj_current_week_availability = st.slider("New York Jets Current Week Availability:", -1, 100) / 100
+        phi_current_week_availability = st.slider("Philadelphia Eagles Current Week Availability:", -1, 100) / 100
+        pit_current_week_availability = st.slider("Pittsburgh Steelers Current Week Availability:", -1, 100) / 100
+        sf_current_week_availability = st.slider("San Francisco 49ers Current Week Availability:", -1, 100) / 100
+        sea_current_week_availability = st.slider("Seattle Seahawks Current Week Availability:", -1, 100) / 100
+        tb_current_week_availability = st.slider("Tampa Bay Buccaneers Current Week Availability:", -1, 100) / 100
+        ten_current_week_availability = st.slider("Tennessee Titans Current Week Availability:", -1, 100) / 100
+        was_current_week_availability = st.slider("Washington Commanders Current Week Availability:", -1, 100) / 100
+    
+    team_availability = {
+        'Arizona Cardinals': az_current_week_availability,
+        'Atlanta Falcons': atl_current_week_availability,
+        'Baltimore Ravens': bal_current_week_availability,
+        'Buffalo Bills': buf_current_week_availability,
+        'Carolina Panthers': car_current_week_availability,
+        'Chicago Bears': chi_current_week_availability,
+        'Cincinnati Bengals': cin_current_week_availability,
+        'Cleveland Browns': cle_current_week_availability,
+        'Dallas Cowboys': dal_current_week_availability,
+        'Denver Broncos': den_current_week_availability,
+        'Detroit Lions': det_current_week_availability,
+        'Green Bay Packers': gb_current_week_availability,
+        'Houston Texans': hou_current_week_availability,
+        'Indianapolis Colts': ind_current_week_availability,
+        'Jacksonville Jaguars': jax_current_week_availability,
+        'Kansas City Chiefs': kc_current_week_availability,
+        'Las Vegas Raiders': lv_current_week_availability,
+        'Los Angeles Chargers': lac_current_week_availability,
+        'Los Angeles Rams': lar_current_week_availability,
+        'Miami Dolphins': mia_current_week_availability,
+        'Minnesota Vikings': min_current_week_availability,
+        'New England Patriots': ne_current_week_availability,
+        'New Orleans Saints': no_current_week_availability,
+        'New York Giants': nyg_current_week_availability,
+        'New York Jets': nyj_current_week_availability,
+        'Philadelphia Eagles': phi_current_week_availability,
+        'Pittsburgh Steelers': pit_current_week_availability,
+        'San Francisco 49ers': sf_current_week_availability,
+        'Seattle Seahawks': sea_current_week_availability,
+        'Tampa Bay Buccaneers': tb_current_week_availability,
+        'Tennessee Titans': ten_current_week_availability,
+        'Washington Commanders': was_current_week_availability
+        }
+    	
+    #return starting_week, ending_week, picked_teams
+        #if ending_week:
+            #st.write(f"Selected Ending Week: {ending_week}")
+    #if __name__ == "__main__":
+    #    starting_week, ending_week, picked_teams = create_nfl_app()
+    st.write('')
+    st.write('')
+    st.write('')
+    st.subheader('Teams That Have to Be Picked')
+    yes_i_have_a_required_team = st.checkbox('Do you have a team that you require to be used in a specific week?')
+    required_week_options = [0] + list(range(starting_week, ending_week))
+    if yes_i_have_a_required_team:
+        st.write('Select the week in which the algorithm has to pick that team. If you do not want the team to be :red[required] to be used, select 0')
+        
+        az_req_week = st.selectbox("Arizona Cardinals Week Required to Be Picked:", options=required_week_options)
+        atl_req_week = st.selectbox("Atlanta Falcons Week Required to Be Picked:", options=required_week_options)
+        bal_req_week = st.selectbox("Baltimore Ravens Week Required to Be Picked:", options=required_week_options)
+        buf_req_week = st.selectbox("Buffalo Bills Week Required to Be Picked:", options=required_week_options)
+        car_req_week = st.selectbox("Carolina Panthers Week Required to Be Picked:", options=required_week_options)
+        chi_req_week = st.selectbox("Chicago Bears Week Required to Be Picked:", options=required_week_options)
+        cin_req_week = st.selectbox("Cincinnati Bengals Week Required to Be Picked:", options=required_week_options)
+        cle_req_week = st.selectbox("Cleveland Browns Week Required to Be Picked:", options=required_week_options)
+        dal_req_week = st.selectbox("Dallas Cowboys Week Required to Be Picked:", options=required_week_options)
+        den_req_week = st.selectbox("Denver Broncos Week Required to Be Picked:", options=required_week_options)
+        det_req_week = st.selectbox("Detroit Lions Week Required to Be Picked:", options=required_week_options)
+        gb_req_week = st.selectbox("Green Bay Packers Week Required to Be Picked:", options=required_week_options)
+        hou_req_week = st.selectbox("Houston Texans Week Required to Be Picked:", options=required_week_options)
+        ind_req_week = st.selectbox("Indianapoils Colts Week Required to Be Picked:", options=required_week_options)
+        jax_req_week = st.selectbox("Jacksonville Jaguars Week Required to Be Picked:", options=required_week_options)
+        kc_req_week = st.selectbox("Kansas City Chiefs Week Required to Be Picked:", options=required_week_options)
+        lv_req_week = st.selectbox("Las Vegas Raiders Week Required to Be Picked:", options=required_week_options)
+        lac_req_week = st.selectbox("Los Angeles Chargers Week Required to Be Picked:", options=required_week_options)
+        lar_req_week = st.selectbox("Los Angeles Rams Week Required to Be Picked:", options=required_week_options)
+        mia_req_week = st.selectbox("Miami Dolphins Week Required to Be Picked:", options=required_week_options)
+        min_req_week = st.selectbox("Minnesota Vikings Week Required to Be Picked:", options=required_week_options)
+        ne_req_week = st.selectbox("New England Patriots Week Required to Be Picked:", options=required_week_options)
+        no_req_week = st.selectbox("New Orleans Saints Week Required to Be Picked:", options=required_week_options)
+        nyg_req_week = st.selectbox("New York Giants Week Required to Be Picked:", options=required_week_options)
+        nyj_req_week = st.selectbox("New York Jets Week Required to Be Picked:", options=required_week_options)
+        phi_req_week = st.selectbox("Philadelphia Eagles Week Required to Be Picked:", options=required_week_options)
+        pit_req_week = st.selectbox("Pittsburgh Steelers Week Required to Be Picked:", options=required_week_options)
+        sf_req_week = st.selectbox("San Francisco 49ers Week Required to Be Picked:", options=required_week_options)
+        sea_req_week = st.selectbox("Seattle Seahawks Week Required to Be Picked:", options=required_week_options)
+        tb_req_week = st.selectbox("Tampa Bay Buccaneers Week Required to Be Picked:", options=required_week_options)
+        ten_req_week = st.selectbox("Tennessee Titans Week Required to Be Picked:", options=required_week_options)
+        was_req_week = st.selectbox("Washington Commanders Week Required to Be Picked:", options=required_week_options)
+    
+    st.write('')
+    st.write('')
+    st.write('')
+    st.subheader('Prohibited Teams')
+    yes_i_have_prohibited_teams = st.checkbox('Do you have teams that you want to prohibit the alogrithm from choosing in a specifc week?')
+    if yes_i_have_prohibited_teams:
+        st.write('Choose which week you do :red[NOT] want a team to be picked. If, for example, you think the 49ers have a bad matchup in Week 15, and you do not want them to be used then, select "15" for the San Francisco 49ers')
+    
+        az_prohibited_weeks = st.multiselect("Arizona Cardinals Week to Be Excluded:", options=required_week_options)
+        atl_prohibited_weeks = st.multiselect("Atlanta Falcons Week to Be Excluded:", options=required_week_options)
+        bal_prohibited_weeks = st.multiselect("Baltimore Ravens Week to Be Excluded:", options=required_week_options)
+        buf_prohibited_weeks = st.multiselect("Buffalo Bills Week to Be Excluded:", options=required_week_options)
+        car_prohibited_weeks = st.multiselect("Carolina Panthers Week to Be Excluded:", options=required_week_options)
+        chi_prohibited_weeks = st.multiselect("Chicago Bears Week to Be Excluded:", options=required_week_options)
+        cin_prohibited_weeks = st.multiselect("Cincinnati Bengals Week to Be Excluded:", options=required_week_options)
+        cle_prohibited_weeks = st.multiselect("Cleveland Browns Week to Be Excluded:", options=required_week_options)
+        dal_prohibited_weeks = st.multiselect("Dallas Cowboys Week to Be Excluded:", options=required_week_options)
+        den_prohibited_weeks = st.multiselect("Denver Broncos Week to Be Excluded:", options=required_week_options)
+        det_prohibited_weeks = st.multiselect("Detroit Lions Week to Be Excluded:", options=required_week_options)
+        gb_prohibited_weeks = st.multiselect("Green Bay Packers Week to Be Excluded:", options=required_week_options)
+        hou_prohibited_weeks = st.multiselect("Houston Texans Week to Be Excluded:", options=required_week_options)
+        ind_prohibited_weeks = st.multiselect("Indianapoils Colts Week to Be Excluded:", options=required_week_options)
+        jax_prohibited_weeks = st.multiselect("Jacksonville Jaguars Week to Be Excluded:", options=required_week_options)
+        kc_prohibited_weeks = st.multiselect("Kansas City Chiefs Week to Be Excluded:", options=required_week_options)
+        lv_prohibited_weeks = st.multiselect("Las Vegas Raiders Week to Be Excluded:", options=required_week_options)
+        lac_prohibited_weeks = st.multiselect("Los Angeles Chargers Week to Be Excluded:", options=required_week_options)
+        lar_prohibited_weeks = st.multiselect("Los Angeles Rams Week to Be Excluded:", options=required_week_options)
+        mia_prohibited_weeks = st.multiselect("Miami Dolphins Week to Be Excluded:", options=required_week_options)
+        min_prohibited_weeks = st.multiselect("Minnesota Vikings Week to Be Excluded:", options=required_week_options)
+        ne_prohibited_weeks = st.multiselect("New England Patriots Week to Be Excluded:", options=required_week_options)
+        no_prohibited_weeks = st.multiselect("New Orleans Saints Week to Be Excluded:", options=required_week_options)
+        nyg_prohibited_weeks = st.multiselect("New York Giants Week to Be Excluded:", options=required_week_options)
+        nyj_prohibited_weeks = st.multiselect("New York Jets Week to Be Excluded:", options=required_week_options)
+        phi_prohibited_weeks = st.multiselect("Philadelphia Eagles Week to Be Excluded:", options=required_week_options)
+        pit_prohibited_weeks = st.multiselect("Pittsburgh Steelers Week to Be Excluded:", options=required_week_options)
+        sf_prohibited_weeks = st.multiselect("San Francisco 49ers Week to Be Excluded:", options=required_week_options)
+        sea_prohibited_weeks = st.multiselect("Seattle Seahawks Week to Be Excluded:", options=required_week_options)
+        tb_prohibited_weeks = st.multiselect("Tampa Bay Buccaneers Week to Be Excluded:", options=required_week_options)
+        ten_prohibited_weeks = st.multiselect("Tennessee Titans Week to Be Excluded:", options=required_week_options)
+        was_prohibited_weeks = st.multiselect("Washington Commanders Week to Be Excluded:", options=required_week_options)
+        az_excluded_weeks = az_prohibited_weeks if az_prohibited_weeks else []
+        atl_excluded_weeks = atl_prohibited_weeks if atl_prohibited_weeks else []
+        bal_excluded_weeks = bal_prohibited_weeks if bal_prohibited_weeks else []
+        buf_excluded_weeks = buf_prohibited_weeks if buf_prohibited_weeks else []
+        car_excluded_weeks = car_prohibited_weeks if car_prohibited_weeks else []
+        chi_excluded_weeks = chi_prohibited_weeks if chi_prohibited_weeks else []
+        cin_excluded_weeks = cin_prohibited_weeks if cin_prohibited_weeks else []
+        cle_excluded_weeks = cle_prohibited_weeks if cle_prohibited_weeks else []
+        dal_excluded_weeks = dal_prohibited_weeks if dal_prohibited_weeks else []
+        den_excluded_weeks = den_prohibited_weeks if den_prohibited_weeks else []
+        det_excluded_weeks = det_prohibited_weeks if det_prohibited_weeks else []
+        gb_excluded_weeks = gb_prohibited_weeks if gb_prohibited_weeks else []
+        hou_excluded_weeks = hou_prohibited_weeks if hou_prohibited_weeks else []
+        ind_excluded_weeks = ind_prohibited_weeks if ind_prohibited_weeks else []
+        jax_excluded_weeks = jax_prohibited_weeks if jax_prohibited_weeks else []
+        kc_excluded_weeks = kc_prohibited_weeks if kc_prohibited_weeks else []
+        lv_excluded_weeks = lv_prohibited_weeks if lv_prohibited_weeks else []
+        lac_excluded_weeks = lac_prohibited_weeks if lac_prohibited_weeks else []
+        lar_excluded_weeks = lar_prohibited_weeks if lar_prohibited_weeks else []
+        mia_excluded_weeks = mia_prohibited_weeks if mia_prohibited_weeks else []
+        min_excluded_weeks = min_prohibited_weeks if min_prohibited_weeks else []
+        ne_excluded_weeks = ne_prohibited_weeks if ne_prohibited_weeks else []
+        no_excluded_weeks = no_prohibited_weeks if no_prohibited_weeks else []
+        nyg_excluded_weeks = nyg_prohibited_weeks if nyg_prohibited_weeks else []
+        nyj_excluded_weeks = nyj_prohibited_weeks if nyj_prohibited_weeks else []
+        phi_excluded_weeks = phi_prohibited_weeks if phi_prohibited_weeks else []
+        pit_excluded_weeks = pit_prohibited_weeks if pit_prohibited_weeks else []
+        sf_excluded_weeks = sf_prohibited_weeks if sf_prohibited_weeks else []
+        sea_excluded_weeks = sea_prohibited_weeks if sea_prohibited_weeks else []
+        tb_excluded_weeks = tb_prohibited_weeks if tb_prohibited_weeks else []
+        ten_excluded_weeks = ten_prohibited_weeks if ten_prohibited_weeks else []
+        was_excluded_weeks = was_prohibited_weeks if was_prohibited_weeks else []
+    
+    
+    st.write('')
+    st.write('')
+    st.write('')
+    
+    st.subheader('NFL Team Rankings')
+    yes_i_have_customized_rankings = st.checkbox('Would you like to use customized rankings instead of our default rankings?')
     if yes_i_have_customized_rankings:
-        st.write('Step 6/6: Calculating Best Combination of Picks Based on Customized Rankings...')
-        st.write("---------------------------------------------------------------------------------------------------------------")
-        st.write("---------------------------------------------------------------------------------------------------------------")
-        st.write("---------------------------------------------------------------------------------------------------------------")
-        st.subheader('Customized Ranking Optimized Picks')
-        get_survivor_picks_based_on_internal_rankings()
-        st.write('Step 6 Completed: Top Picks Determined Based on Customized Rankings')
+        st.write('The Ranking represents :red[how much a team would either win (positive number) or lose (negative number) by to an average NFL team] on a neutral field. 0 means the team is perfectly average. If you leave the "Default" value, the default rankings will be used.')
+        st.write('If you use your own rankings, and do NOT select "Use Cached Expected Value", then we will use your internal rankings in two ways:')
+        st.write('1. We will use them in the calculation based on internal rankings')
+        st.write('2. We will use public Draftkings ML odds to predict pick percentages for the EV calculation, but then use your internal rankinsg to predict win percentage and help you find an EV edge based on your internal rankings')
+        st.write('')
+        
+        
+        team_rankings = [
+            "Default", 0,-15,-14.5,-14,-13.5,-13,-12.5,-12,-11.5,-11,-10.5,-10,-9.5,-9,-8.5,-8,-7.5,
+            -7,-6.5,-6,-5.5,-5,-4.5,-4,-3.5,-3,-2.5,-2,-1.5,-1,-.5,.5,1,1.5,2,2.5,3,3.5,4,
+            4.5,5,5.5,6,6.5,7,7.5,8,8.5,9,9.5,10,10.5,11,11.5,12,12.5,13,13.5,14,14.5,15
+        ]
+        az_rank = st.selectbox("Arizona Cardinals Ranking:", options=team_rankings)
+        if az_rank == "Default":
+            az_rank = default_atl_rank
+        st.write(f'Current Arizona Cardinals Ranking: {az_rank}')
+        st.write('')
+        atl_rank = st.selectbox("Atlanta Falcons Ranking:", options=team_rankings)
+        if atl_rank == "Default":
+            atl_rank = default_atl_rank
+        st.write(f'Current Atlanta Falcons Ranking: {atl_rank}')
+        st.write('')
+        bal_rank = st.selectbox("Baltimore Ravens Ranking:", options=team_rankings)
+        if bal_rank == "Default":
+            bal_rank = default_bal_rank
+        st.write(f'Current Baltimore Ravens Ranking: {bal_rank}')
+        st.write('')
+        buf_rank = st.selectbox("Buffalo Bills Ranking:", options=team_rankings)
+        if buf_rank == "Default":
+            buf_rank = default_buf_rank
+        st.write(f'Current Buffalo Bills Ranking: {buf_rank}')
+        st.write('')
+        car_rank = st.selectbox("Carolina Panthers Ranking:", options=team_rankings)
+        if car_rank == "Default":
+            car_rank = default_car_rank
+        st.write(f'Current Carolina Panthers Ranking: {car_rank}')
+        st.write('')
+        chi_rank = st.selectbox("Chicago Bears Ranking:", options=team_rankings)
+        if chi_rank == "Default":
+            chi_rank = default_chi_rank
+        st.write(f'Current Chicago Bears Ranking: {chi_rank}')
+        st.write('')
+        cin_rank = st.selectbox("Cincinnati Bengals Ranking:", options=team_rankings)
+        if cin_rank == "Default":
+            cin_rank = default_cin_rank
+        st.write(f'Current Cincinnati Bengals Ranking: {cin_rank}')
+        st.write('')
+        cle_rank = st.selectbox("Cleveland Browns Ranking:", options=team_rankings)
+        if cle_rank == "Default":
+            cle_rank = default_cle_rank
+        st.write(f'Current Cleveland Browns Ranking: {cle_rank}')
+        st.write('')
+        dal_rank = st.selectbox("Dallas Cowboys Ranking:", options=team_rankings)
+        if dal_rank == "Default":
+            dal_rank = default_dal_rank
+        st.write(f'Current Dallas Cowboys Ranking: {dal_rank}')
+        st.write('')
+        den_rank = st.selectbox("Denver Broncos Ranking:", options=team_rankings)
+        if den_rank == "Default":
+            den_rank = default_den_rank
+        st.write(f'Current Denver Broncos Ranking: {den_rank}')
+        st.write('')
+        det_rank = st.selectbox("Detroit Lions Ranking:", options=team_rankings)
+        if det_rank == "Default":
+            det_rank = default_det_rank
+        st.write(f'Current Detroit Lions Ranking: {det_rank}')
+        st.write('')
+        gb_rank = st.selectbox("Green Bay Packers Ranking:", options=team_rankings)
+        if gb_rank == "Default":
+            gb_rank = default_gb_rank
+        st.write(f'Current Green Bay Packers Ranking: {gb_rank}')
+        st.write('')
+        hou_rank = st.selectbox("Houston Texans Ranking:", options=team_rankings)
+        if hou_rank == "Default":
+            hou_rank = default_hou_rank
+        st.write(f'Current Houston Texans Ranking: {hou_rank}')
+        st.write('')
+        ind_rank = st.selectbox("Indianapoils Colts Ranking:", options=team_rankings)
+        if ind_rank == "Default":
+            ind_rank = default_ind_rank
+        st.write(f'Current Indianapoils Colts Ranking: {ind_rank}')
+        st.write('')
+        jax_rank = st.selectbox("Jacksonville Jaguars Ranking:", options=team_rankings)
+        if jax_rank == "Default":
+            jax_rank = default_jax_rank
+        st.write(f'Current Jacksonville Jaguars Ranking: {jax_rank}')
+        st.write('')
+        kc_rank = st.selectbox("Kansas City Chiefs Ranking:", options=team_rankings)
+        if kc_rank == "Default":
+            kc_rank = default_kc_rank
+        st.write(f'Current Kansas City Chiefs Ranking: {kc_rank}')
+        st.write('')
+        lv_rank = st.selectbox("Las Vegas Raiders Ranking:", options=team_rankings)
+        if lv_rank == "Default":
+            lv_rank = default_lv_rank
+        st.write(f'Current Las Vegas Raiders Ranking: {lv_rank}')
+        st.write('')
+        lac_rank = st.selectbox("Los Angeles Chargers Ranking:", options=team_rankings)
+        if lac_rank == "Default":
+            lac_rank = default_lac_rank
+        st.write(f'Current Los Angeles Chargers Ranking: {lac_rank}')
+        st.write('')
+        lar_rank = st.selectbox("Los Angeles Rams Ranking:", options=team_rankings)
+        if lar_rank == "Default":
+            lar_rank = default_lar_rank
+        st.write(f'Current Los Angeles Rams Ranking: {lar_rank}')
+        st.write('')
+        mia_rank = st.selectbox("Miami Dolphins Ranking:", options=team_rankings)
+        if mia_rank == "Default":
+            mia_rank = default_mia_rank
+        st.write(f'Current Miami Dolphins Ranking: {mia_rank}')
+        st.write('')
+        min_rank = st.selectbox("Minnesota Vikings Ranking:", options=team_rankings)
+        if min_rank == "Default":
+            min_rank = default_min_rank
+        st.write(f'Current Minnesota Vikings Ranking: {min_rank}')
+        st.write('')
+        ne_rank = st.selectbox("New England Patriots Ranking:", options=team_rankings)
+        if ne_rank == "Default":
+            ne_rank = default_ne_rank
+        st.write(f'Current New England Patriots Ranking: {ne_rank}')
+        st.write('')
+        no_rank = st.selectbox("New Orleans Saints Ranking:", options=team_rankings)
+        if no_rank == "Default":
+            no_rank = default_no_rank
+        st.write(f'Current New Orleans Saints Ranking: {no_rank}')
+        st.write('')
+        nyg_rank = st.selectbox("New York Giants Ranking:", options=team_rankings)
+        if nyg_rank == "Default":
+            nyg_rank = default_nyg_rank
+        st.write(f'Current New York Giants Ranking: {nyg_rank}')
+        st.write('')
+        nyj_rank = st.selectbox("New York Jets Ranking:", options=team_rankings)
+        if nyj_rank == "Default":
+            nyj_rank = default_nyj_rank
+        st.write(f'Current New York Jets Ranking: {nyj_rank}')
+        st.write('')
+        phi_rank = st.selectbox("Philadelphia Eagles Ranking:", options=team_rankings)
+        if phi_rank == "Default":
+            phi_rank = default_phi_rank
+        st.write(f'Current Philadelphia Eagles Ranking: {phi_rank}')
+        st.write('')
+        pit_rank = st.selectbox("Pittsburgh Steelers Ranking:", options=team_rankings)
+        if pit_rank == "Default":
+            pit_rank = default_pit_rank
+        st.write(f'Current Pittsburgh Steelers Ranking: {pit_rank}')
+        st.write('')
+        sf_rank = st.selectbox("San Francisco 49ers Ranking:", options=team_rankings)
+        if sf_rank == "Default":
+            sf_rank = default_sf_rank
+        st.write(f'Current San Francisco 49ers Ranking: {sf_rank}')
+        st.write('')
+        sea_rank = st.selectbox("Seattle Seahawks Ranking:", options=team_rankings)
+        if sea_rank == "Default":
+            sea_rank = default_sea_rank
+        st.write(f'Current Seattle Seahawks Ranking: {sea_rank}')
+        st.write('')
+        tb_rank = st.selectbox("Tampa Bay Buccaneers Ranking:", options=team_rankings)
+        if tb_rank == "Default":
+            tb_rank = default_tb_rank
+        st.write(f'Current Tampa Bay Buccaneers Ranking: {tb_rank}')
+        st.write('')
+        ten_rank = st.selectbox("Tennessee Titans Ranking:", options=team_rankings)
+        if ten_rank == "Default":
+            ten_rank = default_ten_rank
+        st.write(f'Current Tennessee Titans Ranking: {ten_rank}')
+        st.write('')
+        was_rank = st.selectbox("Washington Commanders Ranking:", options=team_rankings)
+        if was_rank == "Default":
+            was_rank = default_was_rank
+        st.write(f'Current Washington Commanders Ranking: {was_rank}')
+    
+    st.write('')
+    st.write('')
+    st.write('')
+    st.subheader('Pick Exclusively Favorites?')
+    pick_must_be_favored = st.checkbox('All teams picked must be favored at the time of running this script')
+    
+    st.write('')
+    st.write('')
+    st.write('')
+    st.subheader('Select Constraints')
+    yes_i_have_constraints = st.checkbox('Would you like to add constraints? For example, "Avoid Teams on Short Rest"')
+    
+    if yes_i_have_constraints:
+        st.write('These constraints will not work 100% of the time (For example in week 18, all Games are divisional matchups). However, it will require a team to be so heavily favored that the impact of the constrained factor should be minimal.')
+        avoid_away_teams_on_short_rest = 1 if st.checkbox('Avoid Away Teams on Short Rest') else 0
+        avoid_close_divisional_matchups = 1 if st.checkbox('Avoid Close Divisional Matchups') else 0
+        avoid_3_games_in_10_days = 1 if st.checkbox('Avoid 3 games in 10 days') else 0
+        avoid_4_games_in_17_days = 1 if st.checkbox('Avoid 4 games in 17 days') else 0
+        avoid_away_teams_in_close_matchups = 1 if st.checkbox('Avoid Away Teams in Close Games') else 0
+        avoid_cumulative_rest_disadvantage = 1 if st.checkbox('Avoid Cumulative Rest Disadvantage') else 0
+        avoid_thursday_night = 1 if st.checkbox('Avoid :red[ALL TEAMS] in Thursday Night Games') else 0
+        avoid_away_thursday_night = 1 if st.checkbox('Avoid :red[ONLY AWAY TEAMS] in Thursday Night Games') else 0
+        avoid_back_to_back_away = 1 if st.checkbox('Avoid Teams on Back to Back Away Games') else 0
+        avoid_international_game = 1 if st.checkbox('Avoid International Games') else 0
+        avoid_teams_with_weekly_rest_disadvantage = 1 if st.checkbox('Avoid Teams with Rest Disadvantage') else 0
+        avoid_away_teams_with_travel_disadvantage = 1 if st.checkbox('Avoid Teams with Travel Disadvatage') else 0
+        bayesian_and_travel_options = [
+            "No Rest, Bayesian, and Travel Constraints",
+            "Selected team must have been projected to win based on preseason rankings, current rankings, and with and without travel/rest adjustments",
+            "Selected team must be projected to win with and without travel and rest impact based on current rankings",
+            "Selected team must have been projected to win based on preseason rankings in addition to current rankings",
+        ]
+            
+        #use_same_winners_across_all_4_metrics = 1 if st.selectbox('Bayesian, Rest, and Travel Impact:', options = bayesian_and_travel_options) == "Selected team must have been projected to win based on preseason rankings, current rankings, and with and without travel/rest adjustments" else 0
+        #use_same_current_and_adjusted_current_winners = 1 if st.selectbox('Bayesian, Rest, and Travel Impact:', options = bayesian_and_travel_options) == "Selected team must be projected to win with and without travel and rest impact based on current rankings" else 0
+        #use_same_adj_preseason_and_adj_current_winner = 1 if st.selectbox('Bayesian, Rest, and Travel Impact:', options = bayesian_and_travel_options) == "Selected team must have been projected to win based on preseason rankings in addition to current rankings" else 0
+        if pick_must_be_favored:
+        	bayesian_rest_travel_constraint = st.selectbox('Bayesian, Rest, and Travel Impact:', options = bayesian_and_travel_options)
+    
+    st.write('')
+    st.write('')
+    st.write('')
+    
+    st.subheader('Estimate Pick Percentages')
+    yes_i_have_pick_percents = st.checkbox('Would you like to add your own estimated pick percentages, instead of using our estimated picks?')
+    if yes_i_have_pick_percents:
+        st.write('Select your own estimated pick percentages for each team. If you do not change the default value of -1, then it will automatically select our own estimated picks. This tool will be especially useful later in the season')
+        st.write('')
+        st.write('')
+        if starting_week <= 1 and ending_week > 1:
+            week_1_pick_percents = st.checkbox('Add Week 1 Pick Percentages?')
+            if week_1_pick_percents:
+                st.write('')
+                st.subheader('Week 1 Estimated Pick Percentages')
+                st.write('')
+                az_week_1_pick_percent = st.slider("Arizona Cardinals Estimated Week 1 Pick %:", -1, 100) / 100
+                atl_week_1_pick_percent = st.slider("Atlanta Falcons Estimated Week 1 Pick %:", -1, 100) / 100
+                bal_week_1_pick_percent = st.slider("Baltimore Ravens Estimated Week 1 Pick %:", -1, 100) / 100
+                buf_week_1_pick_percent = st.slider("Buffalo Bills Estimated Week 1 Pick %:", -1, 100) / 100
+                car_week_1_pick_percent = st.slider("Carolina Panthers Estimated Week 1 Pick %:", -1, 100) / 100
+                chi_week_1_pick_percent = st.slider("Chicago Bears Estimated Week 1 Pick %:", -1, 100) / 100
+                cin_week_1_pick_percent = st.slider("Cincinnati Bengals Estimated Week 1 Pick %:", -1, 100) / 100
+                cle_week_1_pick_percent = st.slider("Cleveland Browns Estimated Week 1 Pick %:", -1, 100) / 100
+                dal_week_1_pick_percent = st.slider("Dallas Cowboys Estimated Week 1 Pick %:", -1, 100) / 100
+                den_week_1_pick_percent = st.slider("Denver Broncos Estimated Week 1 Pick %:", -1, 100) / 100
+                det_week_1_pick_percent = st.slider("Detroit Lions Estimated Week 1 Pick %:", -1, 100) / 100
+                gb_week_1_pick_percent = st.slider("Green Bay Packers Estimated Week 1 Pick %:", -1, 100) / 100
+                hou_week_1_pick_percent = st.slider("Houston Texans Estimated Week 1 Pick %:", -1, 100) / 100
+                ind_week_1_pick_percent = st.slider("Indianapoils Colts Estimated Week 1 Pick %:", -1, 100) / 100
+                jax_week_1_pick_percent = st.slider("Jacksonville Jaguars Estimated Week 1 Pick %:", -1, 100) / 100
+                kc_week_1_pick_percent = st.slider("Kansas City Chiefs Estimated Week 1 Pick %:", -1, 100) / 100
+                lv_week_1_pick_percent = st.slider("Las Vegas Raiders Estimated Week 1 Pick %:", -1, 100) / 100
+                lac_week_1_pick_percent = st.slider("Los Angeles Chargers Estimated Week 1 Pick %:", -1, 100) / 100
+                lar_week_1_pick_percent = st.slider("Los Angeles Rams Estimated Week 1 Pick %:", -1, 100) / 100
+                mia_week_1_pick_percent = st.slider("Miami Dolphins Estimated Week 1 Pick %:", -1, 100) / 100
+                min_week_1_pick_percent = st.slider("Minnesota Vikings Estimated Week 1 Pick %:", -1, 100) / 100
+                ne_week_1_pick_percent = st.slider("New England Patriots Estimated Week 1 Pick %:", -1, 100) / 100
+                no_week_1_pick_percent = st.slider("New Orleans Saints Estimated Week 1 Pick %:", -1, 100) / 100
+                nyg_week_1_pick_percent = st.slider("New York Giants Estimated Week 1 Pick %:", -1, 100) / 100
+                nyj_week_1_pick_percent = st.slider("New York Jets Estimated Week 1 Pick %:", -1, 100) / 100
+                phi_week_1_pick_percent = st.slider("Philadelphia Eagles Estimated Week 1 Pick %:", -1, 100) / 100
+                pit_week_1_pick_percent = st.slider("Pittsburgh Steelers Estimated Week 1 Pick %:", -1, 100) / 100
+                sf_week_1_pick_percent = st.slider("San Francisco 49ers Estimated Week 1 Pick %:", -1, 100) / 100
+                sea_week_1_pick_percent = st.slider("Seattle Seahawks Estimated Week 1 Pick %:", -1, 100) / 100
+                tb_week_1_pick_percent = st.slider("Tampa Bay Buccaneers Estimated Week 1 Pick %:", -1, 100) / 100
+                ten_week_1_pick_percent = st.slider("Tennessee Titans Estimated Week 1 Pick %:", -1, 100) / 100
+                was_week_1_pick_percent = st.slider("Washington Commanders Estimated Week 1 Pick %:", -1, 100) / 100
+            st.write('')
+            st.write('')
+        if starting_week <= 2 and ending_week > 2:
+            week_2_pick_percents = st.checkbox('Add Week 2 Pick Percentages?')
+            if week_2_pick_percents:
+                st.write('')
+                st.subheader('Week 2 Estimated Pick Percentages')
+                st.write('')
+                az_week_2_pick_percent = st.slider("Arizona Cardinals Estimated Week 2 Pick %:", -1, 100) / 100
+                atl_week_2_pick_percent = st.slider("Atlanta Falcons Estimated Week 2 Pick %:", -1, 100) / 100
+                bal_week_2_pick_percent = st.slider("Baltimore Ravens Estimated Week 2 Pick %:", -1, 100) / 100
+                buf_week_2_pick_percent = st.slider("Buffalo Bills Estimated Week 2 Pick %:", -1, 100) / 100
+                car_week_2_pick_percent = st.slider("Carolina Panthers Estimated Week 2 Pick %:", -1, 100) / 100
+                chi_week_2_pick_percent = st.slider("Chicago Bears Estimated Week 2 Pick %:", -1, 100) / 100
+                cin_week_2_pick_percent = st.slider("Cincinnati Bengals Estimated Week 2 Pick %:", -1, 100) / 100
+                cle_week_2_pick_percent = st.slider("Cleveland Browns Estimated Week 2 Pick %:", -1, 100) / 100
+                dal_week_2_pick_percent = st.slider("Dallas Cowboys Estimated Week 2 Pick %:", -1, 100) / 100
+                den_week_2_pick_percent = st.slider("Denver Broncos Estimated Week 2 Pick %:", -1, 100) / 100
+                det_week_2_pick_percent = st.slider("Detroit Lions Estimated Week 2 Pick %:", -1, 100) / 100
+                gb_week_2_pick_percent = st.slider("Green Bay Packers Estimated Week 2 Pick %:", -1, 100) / 100
+                hou_week_2_pick_percent = st.slider("Houston Texans Estimated Week 2 Pick %:", -1, 100) / 100
+                ind_week_2_pick_percent = st.slider("Indianapoils Colts Estimated Week 2 Pick %:", -1, 100) / 100
+                jax_week_2_pick_percent = st.slider("Jacksonville Jaguars Estimated Week 2 Pick %:", -1, 100) / 100
+                kc_week_2_pick_percent = st.slider("Kansas City Chiefs Estimated Week 2 Pick %:", -1, 100) / 100
+                lv_week_2_pick_percent = st.slider("Las Vegas Raiders Estimated Week 2 Pick %:", -1, 100) / 100
+                lac_week_2_pick_percent = st.slider("Los Angeles Chargers Estimated Week 2 Pick %:", -1, 100) / 100
+                lar_week_2_pick_percent = st.slider("Los Angeles Rams Estimated Week 2 Pick %:", -1, 100) / 100
+                mia_week_2_pick_percent = st.slider("Miami Dolphins Estimated Week 2 Pick %:", -1, 100) / 100
+                min_week_2_pick_percent = st.slider("Minnesota Vikings Estimated Week 2 Pick %:", -1, 100) / 100
+                ne_week_2_pick_percent = st.slider("New England Patriots Estimated Week 2 Pick %:", -1, 100) / 100
+                no_week_2_pick_percent = st.slider("New Orleans Saints Estimated Week 2 Pick %:", -1, 100) / 100
+                nyg_week_2_pick_percent = st.slider("New York Giants Estimated Week 2 Pick %:", -1, 100) / 100
+                nyj_week_2_pick_percent = st.slider("New York Jets Estimated Week 2 Pick %:", -1, 100) / 100
+                phi_week_2_pick_percent = st.slider("Philadelphia Eagles Estimated Week 2 Pick %:", -1, 100) / 100
+                pit_week_2_pick_percent = st.slider("Pittsburgh Steelers Estimated Week 2 Pick %:", -1, 100) / 100
+                sf_week_2_pick_percent = st.slider("San Francisco 49ers Estimated Week 2 Pick %:", -1, 100) / 100
+                sea_week_2_pick_percent = st.slider("Seattle Seahawks Estimated Week 2 Pick %:", -1, 100) / 100
+                tb_week_2_pick_percent = st.slider("Tampa Bay Buccaneers Estimated Week 2 Pick %:", -1, 100) / 100
+                ten_week_2_pick_percent = st.slider("Tennessee Titans Estimated Week 2 Pick %:", -1, 100) / 100
+                was_week_2_pick_percent = st.slider("Washington Commanders Estimated Week 2 Pick %:", -1, 100) / 100
+            st.write('')
+            st.write('')
+        if starting_week <= 3 and ending_week > 3:
+            week_3_pick_percents = st.checkbox('Add Week 3 Pick Percentages?')
+            if week_3_pick_percents:
+                st.write('')
+                st.subheader('Week 3 Estimated Pick Percentages')
+                st.write('')
+                az_week_3_pick_percent = st.slider("Arizona Cardinals Estimated Week 3 Pick %:", -1, 100) / 100
+                atl_week_3_pick_percent = st.slider("Atlanta Falcons Estimated Week 3 Pick %:", -1, 100) / 100
+                bal_week_3_pick_percent = st.slider("Baltimore Ravens Estimated Week 3 Pick %:", -1, 100) / 100
+                buf_week_3_pick_percent = st.slider("Buffalo Bills Estimated Week 3 Pick %:", -1, 100) / 100
+                car_week_3_pick_percent = st.slider("Carolina Panthers Estimated Week 3 Pick %:", -1, 100) / 100
+                chi_week_3_pick_percent = st.slider("Chicago Bears Estimated Week 3 Pick %:", -1, 100) / 100
+                cin_week_3_pick_percent = st.slider("Cincinnati Bengals Estimated Week 3 Pick %:", -1, 100) / 100
+                cle_week_3_pick_percent = st.slider("Cleveland Browns Estimated Week 3 Pick %:", -1, 100) / 100
+                dal_week_3_pick_percent = st.slider("Dallas Cowboys Estimated Week 3 Pick %:", -1, 100) / 100
+                den_week_3_pick_percent = st.slider("Denver Broncos Estimated Week 3 Pick %:", -1, 100) / 100
+                det_week_3_pick_percent = st.slider("Detroit Lions Estimated Week 3 Pick %:", -1, 100) / 100
+                gb_week_3_pick_percent = st.slider("Green Bay Packers Estimated Week 3 Pick %:", -1, 100) / 100
+                hou_week_3_pick_percent = st.slider("Houston Texans Estimated Week 3 Pick %:", -1, 100) / 100
+                ind_week_3_pick_percent = st.slider("Indianapoils Colts Estimated Week 3 Pick %:", -1, 100) / 100
+                jax_week_3_pick_percent = st.slider("Jacksonville Jaguars Estimated Week 3 Pick %:", -1, 100) / 100
+                kc_week_3_pick_percent = st.slider("Kansas City Chiefs Estimated Week 3 Pick %:", -1, 100) / 100
+                lv_week_3_pick_percent = st.slider("Las Vegas Raiders Estimated Week 3 Pick %:", -1, 100) / 100
+                lac_week_3_pick_percent = st.slider("Los Angeles Chargers Estimated Week 3 Pick %:", -1, 100) / 100
+                lar_week_3_pick_percent = st.slider("Los Angeles Rams Estimated Week 3 Pick %:", -1, 100) / 100
+                mia_week_3_pick_percent = st.slider("Miami Dolphins Estimated Week 3 Pick %:", -1, 100) / 100
+                min_week_3_pick_percent = st.slider("Minnesota Vikings Estimated Week 3 Pick %:", -1, 100) / 100
+                ne_week_3_pick_percent = st.slider("New England Patriots Estimated Week 3 Pick %:", -1, 100) / 100
+                no_week_3_pick_percent = st.slider("New Orleans Saints Estimated Week 3 Pick %:", -1, 100) / 100
+                nyg_week_3_pick_percent = st.slider("New York Giants Estimated Week 3 Pick %:", -1, 100) / 100
+                nyj_week_3_pick_percent = st.slider("New York Jets Estimated Week 3 Pick %:", -1, 100) / 100
+                phi_week_3_pick_percent = st.slider("Philadelphia Eagles Estimated Week 3 Pick %:", -1, 100) / 100
+                pit_week_3_pick_percent = st.slider("Pittsburgh Steelers Estimated Week 3 Pick %:", -1, 100) / 100
+                sf_week_3_pick_percent = st.slider("San Francisco 49ers Estimated Week 3 Pick %:", -1, 100) / 100
+                sea_week_3_pick_percent = st.slider("Seattle Seahawks Estimated Week 3 Pick %:", -1, 100) / 100
+                tb_week_3_pick_percent = st.slider("Tampa Bay Buccaneers Estimated Week 3 Pick %:", -1, 100) / 100
+                ten_week_3_pick_percent = st.slider("Tennessee Titans Estimated Week 3 Pick %:", -1, 100) / 100
+                was_week_3_pick_percent = st.slider("Washington Commanders Estimated Week 3 Pick %:", -1, 100) / 100
+            st.write('')
+            st.write('')
+        if starting_week <= 4 and ending_week > 4:
+            week_4_pick_percents = st.checkbox('Add Week 4 Pick Percentages?')
+            if week_4_pick_percents:
+                st.write('')
+                st.subheader('Week 4 Estimated Pick Percentages')
+                st.write('')
+                az_week_4_pick_percent = st.slider("Arizona Cardinals Estimated Week 4 Pick %:", -1, 100) / 100
+                atl_week_4_pick_percent = st.slider("Atlanta Falcons Estimated Week 4 Pick %:", -1, 100) / 100
+                bal_week_4_pick_percent = st.slider("Baltimore Ravens Estimated Week 4 Pick %:", -1, 100) / 100
+                buf_week_4_pick_percent = st.slider("Buffalo Bills Estimated Week 4 Pick %:", -1, 100) / 100
+                car_week_4_pick_percent = st.slider("Carolina Panthers Estimated Week 4 Pick %:", -1, 100) / 100
+                chi_week_4_pick_percent = st.slider("Chicago Bears Estimated Week 4 Pick %:", -1, 100) / 100
+                cin_week_4_pick_percent = st.slider("Cincinnati Bengals Estimated Week 4 Pick %:", -1, 100) / 100
+                cle_week_4_pick_percent = st.slider("Cleveland Browns Estimated Week 4 Pick %:", -1, 100) / 100
+                dal_week_4_pick_percent = st.slider("Dallas Cowboys Estimated Week 4 Pick %:", -1, 100) / 100
+                den_week_4_pick_percent = st.slider("Denver Broncos Estimated Week 4 Pick %:", -1, 100) / 100
+                det_week_4_pick_percent = st.slider("Detroit Lions Estimated Week 4 Pick %:", -1, 100) / 100
+                gb_week_4_pick_percent = st.slider("Green Bay Packers Estimated Week 4 Pick %:", -1, 100) / 100
+                hou_week_4_pick_percent = st.slider("Houston Texans Estimated Week 4 Pick %:", -1, 100) / 100
+                ind_week_4_pick_percent = st.slider("Indianapoils Colts Estimated Week 4 Pick %:", -1, 100) / 100
+                jax_week_4_pick_percent = st.slider("Jacksonville Jaguars Estimated Week 4 Pick %:", -1, 100) / 100
+                kc_week_4_pick_percent = st.slider("Kansas City Chiefs Estimated Week 4 Pick %:", -1, 100) / 100
+                lv_week_4_pick_percent = st.slider("Las Vegas Raiders Estimated Week 4 Pick %:", -1, 100) / 100
+                lac_week_4_pick_percent = st.slider("Los Angeles Chargers Estimated Week 4 Pick %:", -1, 100) / 100
+                lar_week_4_pick_percent = st.slider("Los Angeles Rams Estimated Week 4 Pick %:", -1, 100) / 100
+                mia_week_4_pick_percent = st.slider("Miami Dolphins Estimated Week 4 Pick %:", -1, 100) / 100
+                min_week_4_pick_percent = st.slider("Minnesota Vikings Estimated Week 4 Pick %:", -1, 100) / 100
+                ne_week_4_pick_percent = st.slider("New England Patriots Estimated Week 4 Pick %:", -1, 100) / 100
+                no_week_4_pick_percent = st.slider("New Orleans Saints Estimated Week 4 Pick %:", -1, 100) / 100
+                nyg_week_4_pick_percent = st.slider("New York Giants Estimated Week 4 Pick %:", -1, 100) / 100
+                nyj_week_4_pick_percent = st.slider("New York Jets Estimated Week 4 Pick %:", -1, 100) / 100
+                phi_week_4_pick_percent = st.slider("Philadelphia Eagles Estimated Week 4 Pick %:", -1, 100) / 100
+                pit_week_4_pick_percent = st.slider("Pittsburgh Steelers Estimated Week 4 Pick %:", -1, 100) / 100
+                sf_week_4_pick_percent = st.slider("San Francisco 49ers Estimated Week 4 Pick %:", -1, 100) / 100
+                sea_week_4_pick_percent = st.slider("Seattle Seahawks Estimated Week 4 Pick %:", -1, 100) / 100
+                tb_week_4_pick_percent = st.slider("Tampa Bay Buccaneers Estimated Week 4 Pick %:", -1, 100) / 100
+                ten_week_4_pick_percent = st.slider("Tennessee Titans Estimated Week 4 Pick %:", -1, 100) / 100
+                was_week_4_pick_percent = st.slider("Washington Commanders Estimated Week 4 Pick %:", -1, 100) / 100
+            st.write('')
+            st.write('')
+        if starting_week <= 5 and ending_week > 5:
+            week_5_pick_percents = st.checkbox('Add Week 5 Pick Percentages?')
+            if week_5_pick_percents:
+                st.write('')
+                st.subheader('Week 5 Estimated Pick Percentages')
+                st.write('')
+                az_week_5_pick_percent = st.slider("Arizona Cardinals Estimated Week 5 Pick %:", -1, 100) / 100
+                atl_week_5_pick_percent = st.slider("Atlanta Falcons Estimated Week 5 Pick %:", -1, 100) / 100
+                bal_week_5_pick_percent = st.slider("Baltimore Ravens Estimated Week 5 Pick %:", -1, 100) / 100
+                buf_week_5_pick_percent = st.slider("Buffalo Bills Estimated Week 5 Pick %:", -1, 100) / 100
+                car_week_5_pick_percent = st.slider("Carolina Panthers Estimated Week 5 Pick %:", -1, 100) / 100
+                chi_week_5_pick_percent = st.slider("Chicago Bears Estimated Week 5 Pick %:", -1, 100) / 100
+                cin_week_5_pick_percent = st.slider("Cincinnati Bengals Estimated Week 5 Pick %:", -1, 100) / 100
+                cle_week_5_pick_percent = st.slider("Cleveland Browns Estimated Week 5 Pick %:", -1, 100) / 100
+                dal_week_5_pick_percent = st.slider("Dallas Cowboys Estimated Week 5 Pick %:", -1, 100) / 100
+                den_week_5_pick_percent = st.slider("Denver Broncos Estimated Week 5 Pick %:", -1, 100) / 100
+                det_week_5_pick_percent = st.slider("Detroit Lions Estimated Week 5 Pick %:", -1, 100) / 100
+                gb_week_5_pick_percent = st.slider("Green Bay Packers Estimated Week 5 Pick %:", -1, 100) / 100
+                hou_week_5_pick_percent = st.slider("Houston Texans Estimated Week 5 Pick %:", -1, 100) / 100
+                ind_week_5_pick_percent = st.slider("Indianapoils Colts Estimated Week 5 Pick %:", -1, 100) / 100
+                jax_week_5_pick_percent = st.slider("Jacksonville Jaguars Estimated Week 5 Pick %:", -1, 100) / 100
+                kc_week_5_pick_percent = st.slider("Kansas City Chiefs Estimated Week 5 Pick %:", -1, 100) / 100
+                lv_week_5_pick_percent = st.slider("Las Vegas Raiders Estimated Week 5 Pick %:", -1, 100) / 100
+                lac_week_5_pick_percent = st.slider("Los Angeles Chargers Estimated Week 5 Pick %:", -1, 100) / 100
+                lar_week_5_pick_percent = st.slider("Los Angeles Rams Estimated Week 5 Pick %:", -1, 100) / 100
+                mia_week_5_pick_percent = st.slider("Miami Dolphins Estimated Week 5 Pick %:", -1, 100) / 100
+                min_week_5_pick_percent = st.slider("Minnesota Vikings Estimated Week 5 Pick %:", -1, 100) / 100
+                ne_week_5_pick_percent = st.slider("New England Patriots Estimated Week 5 Pick %:", -1, 100) / 100
+                no_week_5_pick_percent = st.slider("New Orleans Saints Estimated Week 5 Pick %:", -1, 100) / 100
+                nyg_week_5_pick_percent = st.slider("New York Giants Estimated Week 5 Pick %:", -1, 100) / 100
+                nyj_week_5_pick_percent = st.slider("New York Jets Estimated Week 5 Pick %:", -1, 100) / 100
+                phi_week_5_pick_percent = st.slider("Philadelphia Eagles Estimated Week 5 Pick %:", -1, 100) / 100
+                pit_week_5_pick_percent = st.slider("Pittsburgh Steelers Estimated Week 5 Pick %:", -1, 100) / 100
+                sf_week_5_pick_percent = st.slider("San Francisco 59ers Estimated Week 5 Pick %:", -1, 100) / 100
+                sea_week_5_pick_percent = st.slider("Seattle Seahawks Estimated Week 5 Pick %:", -1, 100) / 100
+                tb_week_5_pick_percent = st.slider("Tampa Bay Buccaneers Estimated Week 5 Pick %:", -1, 100) / 100
+                ten_week_5_pick_percent = st.slider("Tennessee Titans Estimated Week 5 Pick %:", -1, 100) / 100
+                was_week_5_pick_percent = st.slider("Washington Commanders Estimated Week 5 Pick %:", -1, 100) / 100
+            st.write('')
+            st.write('')
+        if starting_week <= 6 and ending_week > 6:
+            week_6_pick_percents = st.checkbox('Add Week 6 Pick Percentages?')
+            if week_6_pick_percents:
+                st.write('')
+                st.subheader('Week 6 Estimated Pick Percentages')
+                st.write('')
+                az_week_6_pick_percent = st.slider("Arizona Cardinals Estimated Week 6 Pick %:", -1, 100) / 100
+                atl_week_6_pick_percent = st.slider("Atlanta Falcons Estimated Week 6 Pick %:", -1, 100) / 100
+                bal_week_6_pick_percent = st.slider("Baltimore Ravens Estimated Week 6 Pick %:", -1, 100) / 100
+                buf_week_6_pick_percent = st.slider("Buffalo Bills Estimated Week 6 Pick %:", -1, 100) / 100
+                car_week_6_pick_percent = st.slider("Carolina Panthers Estimated Week 6 Pick %:", -1, 100) / 100
+                chi_week_6_pick_percent = st.slider("Chicago Bears Estimated Week 6 Pick %:", -1, 100) / 100
+                cin_week_6_pick_percent = st.slider("Cincinnati Bengals Estimated Week 6 Pick %:", -1, 100) / 100
+                cle_week_6_pick_percent = st.slider("Cleveland Browns Estimated Week 6 Pick %:", -1, 100) / 100
+                dal_week_6_pick_percent = st.slider("Dallas Cowboys Estimated Week 6 Pick %:", -1, 100) / 100
+                den_week_6_pick_percent = st.slider("Denver Broncos Estimated Week 6 Pick %:", -1, 100) / 100
+                det_week_6_pick_percent = st.slider("Detroit Lions Estimated Week 6 Pick %:", -1, 100) / 100
+                gb_week_6_pick_percent = st.slider("Green Bay Packers Estimated Week 6 Pick %:", -1, 100) / 100
+                hou_week_6_pick_percent = st.slider("Houston Texans Estimated Week 6 Pick %:", -1, 100) / 100
+                ind_week_6_pick_percent = st.slider("Indianapoils Colts Estimated Week 6 Pick %:", -1, 100) / 100
+                jax_week_6_pick_percent = st.slider("Jacksonville Jaguars Estimated Week 6 Pick %:", -1, 100) / 100
+                kc_week_6_pick_percent = st.slider("Kansas City Chiefs Estimated Week 6 Pick %:", -1, 100) / 100
+                lv_week_6_pick_percent = st.slider("Las Vegas Raiders Estimated Week 6 Pick %:", -1, 100) / 100
+                lac_week_6_pick_percent = st.slider("Los Angeles Chargers Estimated Week 6 Pick %:", -1, 100) / 100
+                lar_week_6_pick_percent = st.slider("Los Angeles Rams Estimated Week 6 Pick %:", -1, 100) / 100
+                mia_week_6_pick_percent = st.slider("Miami Dolphins Estimated Week 6 Pick %:", -1, 100) / 100
+                min_week_6_pick_percent = st.slider("Minnesota Vikings Estimated Week 6 Pick %:", -1, 100) / 100
+                ne_week_6_pick_percent = st.slider("New England Patriots Estimated Week 6 Pick %:", -1, 100) / 100
+                no_week_6_pick_percent = st.slider("New Orleans Saints Estimated Week 6 Pick %:", -1, 100) / 100
+                nyg_week_6_pick_percent = st.slider("New York Giants Estimated Week 6 Pick %:", -1, 100) / 100
+                nyj_week_6_pick_percent = st.slider("New York Jets Estimated Week 6 Pick %:", -1, 100) / 100
+                phi_week_6_pick_percent = st.slider("Philadelphia Eagles Estimated Week 6 Pick %:", -1, 100) / 100
+                pit_week_6_pick_percent = st.slider("Pittsburgh Steelers Estimated Week 6 Pick %:", -1, 100) / 100
+                sf_week_6_pick_percent = st.slider("San Francisco 69ers Estimated Week 6 Pick %:", -1, 100) / 100
+                sea_week_6_pick_percent = st.slider("Seattle Seahawks Estimated Week 6 Pick %:", -1, 100) / 100
+                tb_week_6_pick_percent = st.slider("Tampa Bay Buccaneers Estimated Week 6 Pick %:", -1, 100) / 100
+                ten_week_6_pick_percent = st.slider("Tennessee Titans Estimated Week 6 Pick %:", -1, 100) / 100
+                was_week_6_pick_percent = st.slider("Washington Commanders Estimated Week 6 Pick %:", -1, 100) / 100
+            st.write('')
+            st.write('')
+        if starting_week <= 7 and ending_week > 7:
+            week_7_pick_percents = st.checkbox('Add Week 7 Pick Percentages?')
+            if week_7_pick_percents:
+                st.write('')
+                st.subheader('Week 7 Estimated Pick Percentages')
+                st.write('')
+                az_week_7_pick_percent = st.slider("Arizona Cardinals Estimated Week 7 Pick %:", -1, 100) / 100
+                atl_week_7_pick_percent = st.slider("Atlanta Falcons Estimated Week 7 Pick %:", -1, 100) / 100
+                bal_week_7_pick_percent = st.slider("Baltimore Ravens Estimated Week 7 Pick %:", -1, 100) / 100
+                buf_week_7_pick_percent = st.slider("Buffalo Bills Estimated Week 7 Pick %:", -1, 100) / 100
+                car_week_7_pick_percent = st.slider("Carolina Panthers Estimated Week 7 Pick %:", -1, 100) / 100
+                chi_week_7_pick_percent = st.slider("Chicago Bears Estimated Week 7 Pick %:", -1, 100) / 100
+                cin_week_7_pick_percent = st.slider("Cincinnati Bengals Estimated Week 7 Pick %:", -1, 100) / 100
+                cle_week_7_pick_percent = st.slider("Cleveland Browns Estimated Week 7 Pick %:", -1, 100) / 100
+                dal_week_7_pick_percent = st.slider("Dallas Cowboys Estimated Week 7 Pick %:", -1, 100) / 100
+                den_week_7_pick_percent = st.slider("Denver Broncos Estimated Week 7 Pick %:", -1, 100) / 100
+                det_week_7_pick_percent = st.slider("Detroit Lions Estimated Week 7 Pick %:", -1, 100) / 100
+                gb_week_7_pick_percent = st.slider("Green Bay Packers Estimated Week 7 Pick %:", -1, 100) / 100
+                hou_week_7_pick_percent = st.slider("Houston Texans Estimated Week 7 Pick %:", -1, 100) / 100
+                ind_week_7_pick_percent = st.slider("Indianapoils Colts Estimated Week 7 Pick %:", -1, 100) / 100
+                jax_week_7_pick_percent = st.slider("Jacksonville Jaguars Estimated Week 7 Pick %:", -1, 100) / 100
+                kc_week_7_pick_percent = st.slider("Kansas City Chiefs Estimated Week 7 Pick %:", -1, 100) / 100
+                lv_week_7_pick_percent = st.slider("Las Vegas Raiders Estimated Week 7 Pick %:", -1, 100) / 100
+                lac_week_7_pick_percent = st.slider("Los Angeles Chargers Estimated Week 7 Pick %:", -1, 100) / 100
+                lar_week_7_pick_percent = st.slider("Los Angeles Rams Estimated Week 7 Pick %:", -1, 100) / 100
+                mia_week_7_pick_percent = st.slider("Miami Dolphins Estimated Week 7 Pick %:", -1, 100) / 100
+                min_week_7_pick_percent = st.slider("Minnesota Vikings Estimated Week 7 Pick %:", -1, 100) / 100
+                ne_week_7_pick_percent = st.slider("New England Patriots Estimated Week 7 Pick %:", -1, 100) / 100
+                no_week_7_pick_percent = st.slider("New Orleans Saints Estimated Week 7 Pick %:", -1, 100) / 100
+                nyg_week_7_pick_percent = st.slider("New York Giants Estimated Week 7 Pick %:", -1, 100) / 100
+                nyj_week_7_pick_percent = st.slider("New York Jets Estimated Week 7 Pick %:", -1, 100) / 100
+                phi_week_7_pick_percent = st.slider("Philadelphia Eagles Estimated Week 7 Pick %:", -1, 100) / 100
+                pit_week_7_pick_percent = st.slider("Pittsburgh Steelers Estimated Week 7 Pick %:", -1, 100) / 100
+                sf_week_7_pick_percent = st.slider("San Francisco 79ers Estimated Week 7 Pick %:", -1, 100) / 100
+                sea_week_7_pick_percent = st.slider("Seattle Seahawks Estimated Week 7 Pick %:", -1, 100) / 100
+                tb_week_7_pick_percent = st.slider("Tampa Bay Buccaneers Estimated Week 7 Pick %:", -1, 100) / 100
+                ten_week_7_pick_percent = st.slider("Tennessee Titans Estimated Week 7 Pick %:", -1, 100) / 100
+                was_week_7_pick_percent = st.slider("Washington Commanders Estimated Week 7 Pick %:", -1, 100) / 100
+            st.write('')
+            st.write('')
+        if starting_week <= 8 and ending_week > 8:
+            week_8_pick_percents = st.checkbox('Add Week 8 Pick Percentages?')
+            if week_8_pick_percents:
+                st.write('')
+                st.subheader('Week 8 Estimated Pick Percentages')
+                st.write('')
+                az_week_8_pick_percent = st.slider("Arizona Cardinals Estimated Week 8 Pick %:", -1, 100) / 100
+                atl_week_8_pick_percent = st.slider("Atlanta Falcons Estimated Week 8 Pick %:", -1, 100) / 100
+                bal_week_8_pick_percent = st.slider("Baltimore Ravens Estimated Week 8 Pick %:", -1, 100) / 100
+                buf_week_8_pick_percent = st.slider("Buffalo Bills Estimated Week 8 Pick %:", -1, 100) / 100
+                car_week_8_pick_percent = st.slider("Carolina Panthers Estimated Week 8 Pick %:", -1, 100) / 100
+                chi_week_8_pick_percent = st.slider("Chicago Bears Estimated Week 8 Pick %:", -1, 100) / 100
+                cin_week_8_pick_percent = st.slider("Cincinnati Bengals Estimated Week 8 Pick %:", -1, 100) / 100
+                cle_week_8_pick_percent = st.slider("Cleveland Browns Estimated Week 8 Pick %:", -1, 100) / 100
+                dal_week_8_pick_percent = st.slider("Dallas Cowboys Estimated Week 8 Pick %:", -1, 100) / 100
+                den_week_8_pick_percent = st.slider("Denver Broncos Estimated Week 8 Pick %:", -1, 100) / 100
+                det_week_8_pick_percent = st.slider("Detroit Lions Estimated Week 8 Pick %:", -1, 100) / 100
+                gb_week_8_pick_percent = st.slider("Green Bay Packers Estimated Week 8 Pick %:", -1, 100) / 100
+                hou_week_8_pick_percent = st.slider("Houston Texans Estimated Week 8 Pick %:", -1, 100) / 100
+                ind_week_8_pick_percent = st.slider("Indianapoils Colts Estimated Week 8 Pick %:", -1, 100) / 100
+                jax_week_8_pick_percent = st.slider("Jacksonville Jaguars Estimated Week 8 Pick %:", -1, 100) / 100
+                kc_week_8_pick_percent = st.slider("Kansas City Chiefs Estimated Week 8 Pick %:", -1, 100) / 100
+                lv_week_8_pick_percent = st.slider("Las Vegas Raiders Estimated Week 8 Pick %:", -1, 100) / 100
+                lac_week_8_pick_percent = st.slider("Los Angeles Chargers Estimated Week 8 Pick %:", -1, 100) / 100
+                lar_week_8_pick_percent = st.slider("Los Angeles Rams Estimated Week 8 Pick %:", -1, 100) / 100
+                mia_week_8_pick_percent = st.slider("Miami Dolphins Estimated Week 8 Pick %:", -1, 100) / 100
+                min_week_8_pick_percent = st.slider("Minnesota Vikings Estimated Week 8 Pick %:", -1, 100) / 100
+                ne_week_8_pick_percent = st.slider("New England Patriots Estimated Week 8 Pick %:", -1, 100) / 100
+                no_week_8_pick_percent = st.slider("New Orleans Saints Estimated Week 8 Pick %:", -1, 100) / 100
+                nyg_week_8_pick_percent = st.slider("New York Giants Estimated Week 8 Pick %:", -1, 100) / 100
+                nyj_week_8_pick_percent = st.slider("New York Jets Estimated Week 8 Pick %:", -1, 100) / 100
+                phi_week_8_pick_percent = st.slider("Philadelphia Eagles Estimated Week 8 Pick %:", -1, 100) / 100
+                pit_week_8_pick_percent = st.slider("Pittsburgh Steelers Estimated Week 8 Pick %:", -1, 100) / 100
+                sf_week_8_pick_percent = st.slider("San Francisco 89ers Estimated Week 8 Pick %:", -1, 100) / 100
+                sea_week_8_pick_percent = st.slider("Seattle Seahawks Estimated Week 8 Pick %:", -1, 100) / 100
+                tb_week_8_pick_percent = st.slider("Tampa Bay Buccaneers Estimated Week 8 Pick %:", -1, 100) / 100
+                ten_week_8_pick_percent = st.slider("Tennessee Titans Estimated Week 8 Pick %:", -1, 100) / 100
+                was_week_8_pick_percent = st.slider("Washington Commanders Estimated Week 8 Pick %:", -1, 100) / 100
+            st.write('')
+            st.write('')
+        if starting_week <= 9 and ending_week > 9:
+            week_9_pick_percents = st.checkbox('Add Week 9 Pick Percentages?')
+            if week_9_pick_percents:
+                st.write('')
+                st.subheader('Week 9 Estimated Pick Percentages')
+                st.write('')
+                az_week_9_pick_percent = st.slider("Arizona Cardinals Estimated Week 9 Pick %:", -1, 100) / 100
+                atl_week_9_pick_percent = st.slider("Atlanta Falcons Estimated Week 9 Pick %:", -1, 100) / 100
+                bal_week_9_pick_percent = st.slider("Baltimore Ravens Estimated Week 9 Pick %:", -1, 100) / 100
+                buf_week_9_pick_percent = st.slider("Buffalo Bills Estimated Week 9 Pick %:", -1, 100) / 100
+                car_week_9_pick_percent = st.slider("Carolina Panthers Estimated Week 9 Pick %:", -1, 100) / 100
+                chi_week_9_pick_percent = st.slider("Chicago Bears Estimated Week 9 Pick %:", -1, 100) / 100
+                cin_week_9_pick_percent = st.slider("Cincinnati Bengals Estimated Week 9 Pick %:", -1, 100) / 100
+                cle_week_9_pick_percent = st.slider("Cleveland Browns Estimated Week 9 Pick %:", -1, 100) / 100
+                dal_week_9_pick_percent = st.slider("Dallas Cowboys Estimated Week 9 Pick %:", -1, 100) / 100
+                den_week_9_pick_percent = st.slider("Denver Broncos Estimated Week 9 Pick %:", -1, 100) / 100
+                det_week_9_pick_percent = st.slider("Detroit Lions Estimated Week 9 Pick %:", -1, 100) / 100
+                gb_week_9_pick_percent = st.slider("Green Bay Packers Estimated Week 9 Pick %:", -1, 100) / 100
+                hou_week_9_pick_percent = st.slider("Houston Texans Estimated Week 9 Pick %:", -1, 100) / 100
+                ind_week_9_pick_percent = st.slider("Indianapoils Colts Estimated Week 9 Pick %:", -1, 100) / 100
+                jax_week_9_pick_percent = st.slider("Jacksonville Jaguars Estimated Week 9 Pick %:", -1, 100) / 100
+                kc_week_9_pick_percent = st.slider("Kansas City Chiefs Estimated Week 9 Pick %:", -1, 100) / 100
+                lv_week_9_pick_percent = st.slider("Las Vegas Raiders Estimated Week 9 Pick %:", -1, 100) / 100
+                lac_week_9_pick_percent = st.slider("Los Angeles Chargers Estimated Week 9 Pick %:", -1, 100) / 100
+                lar_week_9_pick_percent = st.slider("Los Angeles Rams Estimated Week 9 Pick %:", -1, 100) / 100
+                mia_week_9_pick_percent = st.slider("Miami Dolphins Estimated Week 9 Pick %:", -1, 100) / 100
+                min_week_9_pick_percent = st.slider("Minnesota Vikings Estimated Week 9 Pick %:", -1, 100) / 100
+                ne_week_9_pick_percent = st.slider("New England Patriots Estimated Week 9 Pick %:", -1, 100) / 100
+                no_week_9_pick_percent = st.slider("New Orleans Saints Estimated Week 9 Pick %:", -1, 100) / 100
+                nyg_week_9_pick_percent = st.slider("New York Giants Estimated Week 9 Pick %:", -1, 100) / 100
+                nyj_week_9_pick_percent = st.slider("New York Jets Estimated Week 9 Pick %:", -1, 100) / 100
+                phi_week_9_pick_percent = st.slider("Philadelphia Eagles Estimated Week 9 Pick %:", -1, 100) / 100
+                pit_week_9_pick_percent = st.slider("Pittsburgh Steelers Estimated Week 9 Pick %:", -1, 100) / 100
+                sf_week_9_pick_percent = st.slider("San Francisco 99ers Estimated Week 9 Pick %:", -1, 100) / 100
+                sea_week_9_pick_percent = st.slider("Seattle Seahawks Estimated Week 9 Pick %:", -1, 100) / 100
+                tb_week_9_pick_percent = st.slider("Tampa Bay Buccaneers Estimated Week 9 Pick %:", -1, 100) / 100
+                ten_week_9_pick_percent = st.slider("Tennessee Titans Estimated Week 9 Pick %:", -1, 100) / 100
+                was_week_9_pick_percent = st.slider("Washington Commanders Estimated Week 9 Pick %:", -1, 100) / 100
+            st.write('')
+            st.write('')
+        if starting_week <= 10 and ending_week > 10:
+            week_10_pick_percents = st.checkbox('Add Week 10 Pick Percentages?')
+            if week_10_pick_percents:
+                st.write('')
+                st.subheader('Week 10 Estimated Pick Percentages')
+                st.write('')
+                az_week_10_pick_percent = st.slider("Arizona Cardinals Estimated Week 10 Pick %:", -1, 100) / 100
+                atl_week_10_pick_percent = st.slider("Atlanta Falcons Estimated Week 10 Pick %:", -1, 100) / 100
+                bal_week_10_pick_percent = st.slider("Baltimore Ravens Estimated Week 10 Pick %:", -1, 100) / 100
+                buf_week_10_pick_percent = st.slider("Buffalo Bills Estimated Week 10 Pick %:", -1, 100) / 100
+                car_week_10_pick_percent = st.slider("Carolina Panthers Estimated Week 10 Pick %:", -1, 100) / 100
+                chi_week_10_pick_percent = st.slider("Chicago Bears Estimated Week 10 Pick %:", -1, 100) / 100
+                cin_week_10_pick_percent = st.slider("Cincinnati Bengals Estimated Week 10 Pick %:", -1, 100) / 100
+                cle_week_10_pick_percent = st.slider("Cleveland Browns Estimated Week 10 Pick %:", -1, 100) / 100
+                dal_week_10_pick_percent = st.slider("Dallas Cowboys Estimated Week 10 Pick %:", -1, 100) / 100
+                den_week_10_pick_percent = st.slider("Denver Broncos Estimated Week 10 Pick %:", -1, 100) / 100
+                det_week_10_pick_percent = st.slider("Detroit Lions Estimated Week 10 Pick %:", -1, 100) / 100
+                gb_week_10_pick_percent = st.slider("Green Bay Packers Estimated Week 10 Pick %:", -1, 100) / 100
+                hou_week_10_pick_percent = st.slider("Houston Texans Estimated Week 10 Pick %:", -1, 100) / 100
+                ind_week_10_pick_percent = st.slider("Indianapoils Colts Estimated Week 10 Pick %:", -1, 100) / 100
+                jax_week_10_pick_percent = st.slider("Jacksonville Jaguars Estimated Week 10 Pick %:", -1, 100) / 100
+                kc_week_10_pick_percent = st.slider("Kansas City Chiefs Estimated Week 10 Pick %:", -1, 100) / 100
+                lv_week_10_pick_percent = st.slider("Las Vegas Raiders Estimated Week 10 Pick %:", -1, 100) / 100
+                lac_week_10_pick_percent = st.slider("Los Angeles Chargers Estimated Week 10 Pick %:", -1, 100) / 100
+                lar_week_10_pick_percent = st.slider("Los Angeles Rams Estimated Week 10 Pick %:", -1, 100) / 100
+                mia_week_10_pick_percent = st.slider("Miami Dolphins Estimated Week 10 Pick %:", -1, 100) / 100
+                min_week_10_pick_percent = st.slider("Minnesota Vikings Estimated Week 10 Pick %:", -1, 100) / 100
+                ne_week_10_pick_percent = st.slider("New England Patriots Estimated Week 10 Pick %:", -1, 100) / 100
+                no_week_10_pick_percent = st.slider("New Orleans Saints Estimated Week 10 Pick %:", -1, 100) / 100
+                nyg_week_10_pick_percent = st.slider("New York Giants Estimated Week 10 Pick %:", -1, 100) / 100
+                nyj_week_10_pick_percent = st.slider("New York Jets Estimated Week 10 Pick %:", -1, 100) / 100
+                phi_week_10_pick_percent = st.slider("Philadelphia Eagles Estimated Week 10 Pick %:", -1, 100) / 100
+                pit_week_10_pick_percent = st.slider("Pittsburgh Steelers Estimated Week 10 Pick %:", -1, 100) / 100
+                sf_week_10_pick_percent = st.slider("San Francisco 1010ers Estimated Week 10 Pick %:", -1, 100) / 100
+                sea_week_10_pick_percent = st.slider("Seattle Seahawks Estimated Week 10 Pick %:", -1, 100) / 100
+                tb_week_10_pick_percent = st.slider("Tampa Bay Buccaneers Estimated Week 10 Pick %:", -1, 100) / 100
+                ten_week_10_pick_percent = st.slider("Tennessee Titans Estimated Week 10 Pick %:", -1, 100) / 100
+                was_week_10_pick_percent = st.slider("Washington Commanders Estimated Week 10 Pick %:", -1, 100) / 100
+            st.write('')
+            st.write('')
+        if starting_week <= 11 and ending_week > 11:
+            week_11_pick_percents = st.checkbox('Add Week 11 Pick Percentages?')
+            if week_11_pick_percents:
+                st.write('')
+                st.subheader('Week 11 Estimated Pick Percentages')
+                st.write('')
+                az_week_11_pick_percent = st.slider("Arizona Cardinals Estimated Week 11 Pick %:", -1, 100) / 100
+                atl_week_11_pick_percent = st.slider("Atlanta Falcons Estimated Week 11 Pick %:", -1, 100) / 100
+                bal_week_11_pick_percent = st.slider("Baltimore Ravens Estimated Week 11 Pick %:", -1, 100) / 100
+                buf_week_11_pick_percent = st.slider("Buffalo Bills Estimated Week 11 Pick %:", -1, 100) / 100
+                car_week_11_pick_percent = st.slider("Carolina Panthers Estimated Week 11 Pick %:", -1, 100) / 100
+                chi_week_11_pick_percent = st.slider("Chicago Bears Estimated Week 11 Pick %:", -1, 100) / 100
+                cin_week_11_pick_percent = st.slider("Cincinnati Bengals Estimated Week 11 Pick %:", -1, 100) / 100
+                cle_week_11_pick_percent = st.slider("Cleveland Browns Estimated Week 11 Pick %:", -1, 100) / 100
+                dal_week_11_pick_percent = st.slider("Dallas Cowboys Estimated Week 11 Pick %:", -1, 100) / 100
+                den_week_11_pick_percent = st.slider("Denver Broncos Estimated Week 11 Pick %:", -1, 100) / 100
+                det_week_11_pick_percent = st.slider("Detroit Lions Estimated Week 11 Pick %:", -1, 100) / 100
+                gb_week_11_pick_percent = st.slider("Green Bay Packers Estimated Week 11 Pick %:", -1, 100) / 100
+                hou_week_11_pick_percent = st.slider("Houston Texans Estimated Week 11 Pick %:", -1, 100) / 100
+                ind_week_11_pick_percent = st.slider("Indianapoils Colts Estimated Week 11 Pick %:", -1, 100) / 100
+                jax_week_11_pick_percent = st.slider("Jacksonville Jaguars Estimated Week 11 Pick %:", -1, 100) / 100
+                kc_week_11_pick_percent = st.slider("Kansas City Chiefs Estimated Week 11 Pick %:", -1, 100) / 100
+                lv_week_11_pick_percent = st.slider("Las Vegas Raiders Estimated Week 11 Pick %:", -1, 100) / 100
+                lac_week_11_pick_percent = st.slider("Los Angeles Chargers Estimated Week 11 Pick %:", -1, 100) / 100
+                lar_week_11_pick_percent = st.slider("Los Angeles Rams Estimated Week 11 Pick %:", -1, 100) / 100
+                mia_week_11_pick_percent = st.slider("Miami Dolphins Estimated Week 11 Pick %:", -1, 100) / 100
+                min_week_11_pick_percent = st.slider("Minnesota Vikings Estimated Week 11 Pick %:", -1, 100) / 100
+                ne_week_11_pick_percent = st.slider("New England Patriots Estimated Week 11 Pick %:", -1, 100) / 100
+                no_week_11_pick_percent = st.slider("New Orleans Saints Estimated Week 11 Pick %:", -1, 100) / 100
+                nyg_week_11_pick_percent = st.slider("New York Giants Estimated Week 11 Pick %:", -1, 100) / 100
+                nyj_week_11_pick_percent = st.slider("New York Jets Estimated Week 11 Pick %:", -1, 100) / 100
+                phi_week_11_pick_percent = st.slider("Philadelphia Eagles Estimated Week 11 Pick %:", -1, 100) / 100
+                pit_week_11_pick_percent = st.slider("Pittsburgh Steelers Estimated Week 11 Pick %:", -1, 100) / 100
+                sf_week_11_pick_percent = st.slider("San Francisco 1111ers Estimated Week 11 Pick %:", -1, 100) / 100
+                sea_week_11_pick_percent = st.slider("Seattle Seahawks Estimated Week 11 Pick %:", -1, 100) / 100
+                tb_week_11_pick_percent = st.slider("Tampa Bay Buccaneers Estimated Week 11 Pick %:", -1, 100) / 100
+                ten_week_11_pick_percent = st.slider("Tennessee Titans Estimated Week 11 Pick %:", -1, 100) / 100
+                was_week_11_pick_percent = st.slider("Washington Commanders Estimated Week 11 Pick %:", -1, 100) / 100
+            st.write('')
+            st.write('')
+        if starting_week <= 12 and ending_week > 12:
+            week_12_pick_percents = st.checkbox('Add Week 12 Pick Percentages?')
+            if week_12_pick_percents:
+                st.write('')
+                st.subheader('Week 12 Estimated Pick Percentages')
+                st.write('')
+                az_week_12_pick_percent = st.slider("Arizona Cardinals Estimated Week 12 Pick %:", -1, 100) / 100
+                atl_week_12_pick_percent = st.slider("Atlanta Falcons Estimated Week 12 Pick %:", -1, 100) / 100
+                bal_week_12_pick_percent = st.slider("Baltimore Ravens Estimated Week 12 Pick %:", -1, 100) / 100
+                buf_week_12_pick_percent = st.slider("Buffalo Bills Estimated Week 12 Pick %:", -1, 100) / 100
+                car_week_12_pick_percent = st.slider("Carolina Panthers Estimated Week 12 Pick %:", -1, 100) / 100
+                chi_week_12_pick_percent = st.slider("Chicago Bears Estimated Week 12 Pick %:", -1, 100) / 100
+                cin_week_12_pick_percent = st.slider("Cincinnati Bengals Estimated Week 12 Pick %:", -1, 100) / 100
+                cle_week_12_pick_percent = st.slider("Cleveland Browns Estimated Week 12 Pick %:", -1, 100) / 100
+                dal_week_12_pick_percent = st.slider("Dallas Cowboys Estimated Week 12 Pick %:", -1, 100) / 100
+                den_week_12_pick_percent = st.slider("Denver Broncos Estimated Week 12 Pick %:", -1, 100) / 100
+                det_week_12_pick_percent = st.slider("Detroit Lions Estimated Week 12 Pick %:", -1, 100) / 100
+                gb_week_12_pick_percent = st.slider("Green Bay Packers Estimated Week 12 Pick %:", -1, 100) / 100
+                hou_week_12_pick_percent = st.slider("Houston Texans Estimated Week 12 Pick %:", -1, 100) / 100
+                ind_week_12_pick_percent = st.slider("Indianapoils Colts Estimated Week 12 Pick %:", -1, 100) / 100
+                jax_week_12_pick_percent = st.slider("Jacksonville Jaguars Estimated Week 12 Pick %:", -1, 100) / 100
+                kc_week_12_pick_percent = st.slider("Kansas City Chiefs Estimated Week 12 Pick %:", -1, 100) / 100
+                lv_week_12_pick_percent = st.slider("Las Vegas Raiders Estimated Week 12 Pick %:", -1, 100) / 100
+                lac_week_12_pick_percent = st.slider("Los Angeles Chargers Estimated Week 12 Pick %:", -1, 100) / 100
+                lar_week_12_pick_percent = st.slider("Los Angeles Rams Estimated Week 12 Pick %:", -1, 100) / 100
+                mia_week_12_pick_percent = st.slider("Miami Dolphins Estimated Week 12 Pick %:", -1, 100) / 100
+                min_week_12_pick_percent = st.slider("Minnesota Vikings Estimated Week 12 Pick %:", -1, 100) / 100
+                ne_week_12_pick_percent = st.slider("New England Patriots Estimated Week 12 Pick %:", -1, 100) / 100
+                no_week_12_pick_percent = st.slider("New Orleans Saints Estimated Week 12 Pick %:", -1, 100) / 100
+                nyg_week_12_pick_percent = st.slider("New York Giants Estimated Week 12 Pick %:", -1, 100) / 100
+                nyj_week_12_pick_percent = st.slider("New York Jets Estimated Week 12 Pick %:", -1, 100) / 100
+                phi_week_12_pick_percent = st.slider("Philadelphia Eagles Estimated Week 12 Pick %:", -1, 100) / 100
+                pit_week_12_pick_percent = st.slider("Pittsburgh Steelers Estimated Week 12 Pick %:", -1, 100) / 100
+                sf_week_12_pick_percent = st.slider("San Francisco 1212ers Estimated Week 12 Pick %:", -1, 100) / 100
+                sea_week_12_pick_percent = st.slider("Seattle Seahawks Estimated Week 12 Pick %:", -1, 100) / 100
+                tb_week_12_pick_percent = st.slider("Tampa Bay Buccaneers Estimated Week 12 Pick %:", -1, 100) / 100
+                ten_week_12_pick_percent = st.slider("Tennessee Titans Estimated Week 12 Pick %:", -1, 100) / 100
+                was_week_12_pick_percent = st.slider("Washington Commanders Estimated Week 12 Pick %:", -1, 100) / 100
+            st.write('')
+            st.write('')
+        if starting_week <= 13 and ending_week > 13:
+            week_13_pick_percents = st.checkbox('Add Week 13 Pick Percentages?')
+            if week_13_pick_percents:
+                st.write('')
+                st.subheader('Week 13 Estimated Pick Percentages')
+                st.write('')
+                az_week_13_pick_percent = st.slider("Arizona Cardinals Estimated Week 13 Pick %:", -1, 100) / 100
+                atl_week_13_pick_percent = st.slider("Atlanta Falcons Estimated Week 13 Pick %:", -1, 100) / 100
+                bal_week_13_pick_percent = st.slider("Baltimore Ravens Estimated Week 13 Pick %:", -1, 100) / 100
+                buf_week_13_pick_percent = st.slider("Buffalo Bills Estimated Week 13 Pick %:", -1, 100) / 100
+                car_week_13_pick_percent = st.slider("Carolina Panthers Estimated Week 13 Pick %:", -1, 100) / 100
+                chi_week_13_pick_percent = st.slider("Chicago Bears Estimated Week 13 Pick %:", -1, 100) / 100
+                cin_week_13_pick_percent = st.slider("Cincinnati Bengals Estimated Week 13 Pick %:", -1, 100) / 100
+                cle_week_13_pick_percent = st.slider("Cleveland Browns Estimated Week 13 Pick %:", -1, 100) / 100
+                dal_week_13_pick_percent = st.slider("Dallas Cowboys Estimated Week 13 Pick %:", -1, 100) / 100
+                den_week_13_pick_percent = st.slider("Denver Broncos Estimated Week 13 Pick %:", -1, 100) / 100
+                det_week_13_pick_percent = st.slider("Detroit Lions Estimated Week 13 Pick %:", -1, 100) / 100
+                gb_week_13_pick_percent = st.slider("Green Bay Packers Estimated Week 13 Pick %:", -1, 100) / 100
+                hou_week_13_pick_percent = st.slider("Houston Texans Estimated Week 13 Pick %:", -1, 100) / 100
+                ind_week_13_pick_percent = st.slider("Indianapoils Colts Estimated Week 13 Pick %:", -1, 100) / 100
+                jax_week_13_pick_percent = st.slider("Jacksonville Jaguars Estimated Week 13 Pick %:", -1, 100) / 100
+                kc_week_13_pick_percent = st.slider("Kansas City Chiefs Estimated Week 13 Pick %:", -1, 100) / 100
+                lv_week_13_pick_percent = st.slider("Las Vegas Raiders Estimated Week 13 Pick %:", -1, 100) / 100
+                lac_week_13_pick_percent = st.slider("Los Angeles Chargers Estimated Week 13 Pick %:", -1, 100) / 100
+                lar_week_13_pick_percent = st.slider("Los Angeles Rams Estimated Week 13 Pick %:", -1, 100) / 100
+                mia_week_13_pick_percent = st.slider("Miami Dolphins Estimated Week 13 Pick %:", -1, 100) / 100
+                min_week_13_pick_percent = st.slider("Minnesota Vikings Estimated Week 13 Pick %:", -1, 100) / 100
+                ne_week_13_pick_percent = st.slider("New England Patriots Estimated Week 13 Pick %:", -1, 100) / 100
+                no_week_13_pick_percent = st.slider("New Orleans Saints Estimated Week 13 Pick %:", -1, 100) / 100
+                nyg_week_13_pick_percent = st.slider("New York Giants Estimated Week 13 Pick %:", -1, 100) / 100
+                nyj_week_13_pick_percent = st.slider("New York Jets Estimated Week 13 Pick %:", -1, 100) / 100
+                phi_week_13_pick_percent = st.slider("Philadelphia Eagles Estimated Week 13 Pick %:", -1, 100) / 100
+                pit_week_13_pick_percent = st.slider("Pittsburgh Steelers Estimated Week 13 Pick %:", -1, 100) / 100
+                sf_week_13_pick_percent = st.slider("San Francisco 1313ers Estimated Week 13 Pick %:", -1, 100) / 100
+                sea_week_13_pick_percent = st.slider("Seattle Seahawks Estimated Week 13 Pick %:", -1, 100) / 100
+                tb_week_13_pick_percent = st.slider("Tampa Bay Buccaneers Estimated Week 13 Pick %:", -1, 100) / 100
+                ten_week_13_pick_percent = st.slider("Tennessee Titans Estimated Week 13 Pick %:", -1, 100) / 100
+                was_week_13_pick_percent = st.slider("Washington Commanders Estimated Week 13 Pick %:", -1, 100) / 100
+            st.write('')
+            st.write('')
+        if starting_week <= 14 and ending_week > 14:
+            week_14_pick_percents = st.checkbox('Add Week 14 Pick Percentages?')
+            if week_14_pick_percents:
+                st.write('')
+                st.subheader('Week 14 Estimated Pick Percentages')
+                st.write('')
+                az_week_14_pick_percent = st.slider("Arizona Cardinals Estimated Week 14 Pick %:", -1, 100) / 100
+                atl_week_14_pick_percent = st.slider("Atlanta Falcons Estimated Week 14 Pick %:", -1, 100) / 100
+                bal_week_14_pick_percent = st.slider("Baltimore Ravens Estimated Week 14 Pick %:", -1, 100) / 100
+                buf_week_14_pick_percent = st.slider("Buffalo Bills Estimated Week 14 Pick %:", -1, 100) / 100
+                car_week_14_pick_percent = st.slider("Carolina Panthers Estimated Week 14 Pick %:", -1, 100) / 100
+                chi_week_14_pick_percent = st.slider("Chicago Bears Estimated Week 14 Pick %:", -1, 100) / 100
+                cin_week_14_pick_percent = st.slider("Cincinnati Bengals Estimated Week 14 Pick %:", -1, 100) / 100
+                cle_week_14_pick_percent = st.slider("Cleveland Browns Estimated Week 14 Pick %:", -1, 100) / 100
+                dal_week_14_pick_percent = st.slider("Dallas Cowboys Estimated Week 14 Pick %:", -1, 100) / 100
+                den_week_14_pick_percent = st.slider("Denver Broncos Estimated Week 14 Pick %:", -1, 100) / 100
+                det_week_14_pick_percent = st.slider("Detroit Lions Estimated Week 14 Pick %:", -1, 100) / 100
+                gb_week_14_pick_percent = st.slider("Green Bay Packers Estimated Week 14 Pick %:", -1, 100) / 100
+                hou_week_14_pick_percent = st.slider("Houston Texans Estimated Week 14 Pick %:", -1, 100) / 100
+                ind_week_14_pick_percent = st.slider("Indianapoils Colts Estimated Week 14 Pick %:", -1, 100) / 100
+                jax_week_14_pick_percent = st.slider("Jacksonville Jaguars Estimated Week 14 Pick %:", -1, 100) / 100
+                kc_week_14_pick_percent = st.slider("Kansas City Chiefs Estimated Week 14 Pick %:", -1, 100) / 100
+                lv_week_14_pick_percent = st.slider("Las Vegas Raiders Estimated Week 14 Pick %:", -1, 100) / 100
+                lac_week_14_pick_percent = st.slider("Los Angeles Chargers Estimated Week 14 Pick %:", -1, 100) / 100
+                lar_week_14_pick_percent = st.slider("Los Angeles Rams Estimated Week 14 Pick %:", -1, 100) / 100
+                mia_week_14_pick_percent = st.slider("Miami Dolphins Estimated Week 14 Pick %:", -1, 100) / 100
+                min_week_14_pick_percent = st.slider("Minnesota Vikings Estimated Week 14 Pick %:", -1, 100) / 100
+                ne_week_14_pick_percent = st.slider("New England Patriots Estimated Week 14 Pick %:", -1, 100) / 100
+                no_week_14_pick_percent = st.slider("New Orleans Saints Estimated Week 14 Pick %:", -1, 100) / 100
+                nyg_week_14_pick_percent = st.slider("New York Giants Estimated Week 14 Pick %:", -1, 100) / 100
+                nyj_week_14_pick_percent = st.slider("New York Jets Estimated Week 14 Pick %:", -1, 100) / 100
+                phi_week_14_pick_percent = st.slider("Philadelphia Eagles Estimated Week 14 Pick %:", -1, 100) / 100
+                pit_week_14_pick_percent = st.slider("Pittsburgh Steelers Estimated Week 14 Pick %:", -1, 100) / 100
+                sf_week_14_pick_percent = st.slider("San Francisco 1414ers Estimated Week 14 Pick %:", -1, 100) / 100
+                sea_week_14_pick_percent = st.slider("Seattle Seahawks Estimated Week 14 Pick %:", -1, 100) / 100
+                tb_week_14_pick_percent = st.slider("Tampa Bay Buccaneers Estimated Week 14 Pick %:", -1, 100) / 100
+                ten_week_14_pick_percent = st.slider("Tennessee Titans Estimated Week 14 Pick %:", -1, 100) / 100
+                was_week_14_pick_percent = st.slider("Washington Commanders Estimated Week 14 Pick %:", -1, 100) / 100
+            st.write('')
+            st.write('')
+        if starting_week <= 15 and ending_week > 15:
+            week_15_pick_percents = st.checkbox('Add Week 15 Pick Percentages?')
+            if week_15_pick_percents:
+                st.write('')
+                st.subheader('Week 15 Estimated Pick Percentages')
+                st.write('')
+                az_week_15_pick_percent = st.slider("Arizona Cardinals Estimated Week 15 Pick %:", -1, 100) / 100
+                atl_week_15_pick_percent = st.slider("Atlanta Falcons Estimated Week 15 Pick %:", -1, 100) / 100
+                bal_week_15_pick_percent = st.slider("Baltimore Ravens Estimated Week 15 Pick %:", -1, 100) / 100
+                buf_week_15_pick_percent = st.slider("Buffalo Bills Estimated Week 15 Pick %:", -1, 100) / 100
+                car_week_15_pick_percent = st.slider("Carolina Panthers Estimated Week 15 Pick %:", -1, 100) / 100
+                chi_week_15_pick_percent = st.slider("Chicago Bears Estimated Week 15 Pick %:", -1, 100) / 100
+                cin_week_15_pick_percent = st.slider("Cincinnati Bengals Estimated Week 15 Pick %:", -1, 100) / 100
+                cle_week_15_pick_percent = st.slider("Cleveland Browns Estimated Week 15 Pick %:", -1, 100) / 100
+                dal_week_15_pick_percent = st.slider("Dallas Cowboys Estimated Week 15 Pick %:", -1, 100) / 100
+                den_week_15_pick_percent = st.slider("Denver Broncos Estimated Week 15 Pick %:", -1, 100) / 100
+                det_week_15_pick_percent = st.slider("Detroit Lions Estimated Week 15 Pick %:", -1, 100) / 100
+                gb_week_15_pick_percent = st.slider("Green Bay Packers Estimated Week 15 Pick %:", -1, 100) / 100
+                hou_week_15_pick_percent = st.slider("Houston Texans Estimated Week 15 Pick %:", -1, 100) / 100
+                ind_week_15_pick_percent = st.slider("Indianapoils Colts Estimated Week 15 Pick %:", -1, 100) / 100
+                jax_week_15_pick_percent = st.slider("Jacksonville Jaguars Estimated Week 15 Pick %:", -1, 100) / 100
+                kc_week_15_pick_percent = st.slider("Kansas City Chiefs Estimated Week 15 Pick %:", -1, 100) / 100
+                lv_week_15_pick_percent = st.slider("Las Vegas Raiders Estimated Week 15 Pick %:", -1, 100) / 100
+                lac_week_15_pick_percent = st.slider("Los Angeles Chargers Estimated Week 15 Pick %:", -1, 100) / 100
+                lar_week_15_pick_percent = st.slider("Los Angeles Rams Estimated Week 15 Pick %:", -1, 100) / 100
+                mia_week_15_pick_percent = st.slider("Miami Dolphins Estimated Week 15 Pick %:", -1, 100) / 100
+                min_week_15_pick_percent = st.slider("Minnesota Vikings Estimated Week 15 Pick %:", -1, 100) / 100
+                ne_week_15_pick_percent = st.slider("New England Patriots Estimated Week 15 Pick %:", -1, 100) / 100
+                no_week_15_pick_percent = st.slider("New Orleans Saints Estimated Week 15 Pick %:", -1, 100) / 100
+                nyg_week_15_pick_percent = st.slider("New York Giants Estimated Week 15 Pick %:", -1, 100) / 100
+                nyj_week_15_pick_percent = st.slider("New York Jets Estimated Week 15 Pick %:", -1, 100) / 100
+                phi_week_15_pick_percent = st.slider("Philadelphia Eagles Estimated Week 15 Pick %:", -1, 100) / 100
+                pit_week_15_pick_percent = st.slider("Pittsburgh Steelers Estimated Week 15 Pick %:", -1, 100) / 100
+                sf_week_15_pick_percent = st.slider("San Francisco 1515ers Estimated Week 15 Pick %:", -1, 100) / 100
+                sea_week_15_pick_percent = st.slider("Seattle Seahawks Estimated Week 15 Pick %:", -1, 100) / 100
+                tb_week_15_pick_percent = st.slider("Tampa Bay Buccaneers Estimated Week 15 Pick %:", -1, 100) / 100
+                ten_week_15_pick_percent = st.slider("Tennessee Titans Estimated Week 15 Pick %:", -1, 100) / 100
+                was_week_15_pick_percent = st.slider("Washington Commanders Estimated Week 15 Pick %:", -1, 100) / 100
+            st.write('')
+            st.write('')
+        if starting_week <= 16 and ending_week > 16:
+            week_16_pick_percents = st.checkbox('Add Week 16 Pick Percentages?')
+            if week_16_pick_percents:
+                st.write('')
+                st.subheader('Week 16 Estimated Pick Percentages')
+                st.write('')
+                az_week_16_pick_percent = st.slider("Arizona Cardinals Estimated Week 16 Pick %:", -1, 100) / 100
+                atl_week_16_pick_percent = st.slider("Atlanta Falcons Estimated Week 16 Pick %:", -1, 100) / 100
+                bal_week_16_pick_percent = st.slider("Baltimore Ravens Estimated Week 16 Pick %:", -1, 100) / 100
+                buf_week_16_pick_percent = st.slider("Buffalo Bills Estimated Week 16 Pick %:", -1, 100) / 100
+                car_week_16_pick_percent = st.slider("Carolina Panthers Estimated Week 16 Pick %:", -1, 100) / 100
+                chi_week_16_pick_percent = st.slider("Chicago Bears Estimated Week 16 Pick %:", -1, 100) / 100
+                cin_week_16_pick_percent = st.slider("Cincinnati Bengals Estimated Week 16 Pick %:", -1, 100) / 100
+                cle_week_16_pick_percent = st.slider("Cleveland Browns Estimated Week 16 Pick %:", -1, 100) / 100
+                dal_week_16_pick_percent = st.slider("Dallas Cowboys Estimated Week 16 Pick %:", -1, 100) / 100
+                den_week_16_pick_percent = st.slider("Denver Broncos Estimated Week 16 Pick %:", -1, 100) / 100
+                det_week_16_pick_percent = st.slider("Detroit Lions Estimated Week 16 Pick %:", -1, 100) / 100
+                gb_week_16_pick_percent = st.slider("Green Bay Packers Estimated Week 16 Pick %:", -1, 100) / 100
+                hou_week_16_pick_percent = st.slider("Houston Texans Estimated Week 16 Pick %:", -1, 100) / 100
+                ind_week_16_pick_percent = st.slider("Indianapoils Colts Estimated Week 16 Pick %:", -1, 100) / 100
+                jax_week_16_pick_percent = st.slider("Jacksonville Jaguars Estimated Week 16 Pick %:", -1, 100) / 100
+                kc_week_16_pick_percent = st.slider("Kansas City Chiefs Estimated Week 16 Pick %:", -1, 100) / 100
+                lv_week_16_pick_percent = st.slider("Las Vegas Raiders Estimated Week 16 Pick %:", -1, 100) / 100
+                lac_week_16_pick_percent = st.slider("Los Angeles Chargers Estimated Week 16 Pick %:", -1, 100) / 100
+                lar_week_16_pick_percent = st.slider("Los Angeles Rams Estimated Week 16 Pick %:", -1, 100) / 100
+                mia_week_16_pick_percent = st.slider("Miami Dolphins Estimated Week 16 Pick %:", -1, 100) / 100
+                min_week_16_pick_percent = st.slider("Minnesota Vikings Estimated Week 16 Pick %:", -1, 100) / 100
+                ne_week_16_pick_percent = st.slider("New England Patriots Estimated Week 16 Pick %:", -1, 100) / 100
+                no_week_16_pick_percent = st.slider("New Orleans Saints Estimated Week 16 Pick %:", -1, 100) / 100
+                nyg_week_16_pick_percent = st.slider("New York Giants Estimated Week 16 Pick %:", -1, 100) / 100
+                nyj_week_16_pick_percent = st.slider("New York Jets Estimated Week 16 Pick %:", -1, 100) / 100
+                phi_week_16_pick_percent = st.slider("Philadelphia Eagles Estimated Week 16 Pick %:", -1, 100) / 100
+                pit_week_16_pick_percent = st.slider("Pittsburgh Steelers Estimated Week 16 Pick %:", -1, 100) / 100
+                sf_week_16_pick_percent = st.slider("San Francisco 1616ers Estimated Week 16 Pick %:", -1, 100) / 100
+                sea_week_16_pick_percent = st.slider("Seattle Seahawks Estimated Week 16 Pick %:", -1, 100) / 100
+                tb_week_16_pick_percent = st.slider("Tampa Bay Buccaneers Estimated Week 16 Pick %:", -1, 100) / 100
+                ten_week_16_pick_percent = st.slider("Tennessee Titans Estimated Week 16 Pick %:", -1, 100) / 100
+                was_week_16_pick_percent = st.slider("Washington Commanders Estimated Week 16 Pick %:", -1, 100) / 100
+            st.write('')
+            st.write('')
+        if starting_week <= 17 and ending_week > 17:
+            week_17_pick_percents = st.checkbox('Add Week 17 Pick Percentages?')
+            if week_17_pick_percents:
+                st.write('')
+                st.subheader('Week 17 Estimated Pick Percentages')
+                st.write('')
+                az_week_17_pick_percent = st.slider("Arizona Cardinals Estimated Week 17 Pick %:", -1, 100) / 100
+                atl_week_17_pick_percent = st.slider("Atlanta Falcons Estimated Week 17 Pick %:", -1, 100) / 100
+                bal_week_17_pick_percent = st.slider("Baltimore Ravens Estimated Week 17 Pick %:", -1, 100) / 100
+                buf_week_17_pick_percent = st.slider("Buffalo Bills Estimated Week 17 Pick %:", -1, 100) / 100
+                car_week_17_pick_percent = st.slider("Carolina Panthers Estimated Week 17 Pick %:", -1, 100) / 100
+                chi_week_17_pick_percent = st.slider("Chicago Bears Estimated Week 17 Pick %:", -1, 100) / 100
+                cin_week_17_pick_percent = st.slider("Cincinnati Bengals Estimated Week 17 Pick %:", -1, 100) / 100
+                cle_week_17_pick_percent = st.slider("Cleveland Browns Estimated Week 17 Pick %:", -1, 100) / 100
+                dal_week_17_pick_percent = st.slider("Dallas Cowboys Estimated Week 17 Pick %:", -1, 100) / 100
+                den_week_17_pick_percent = st.slider("Denver Broncos Estimated Week 17 Pick %:", -1, 100) / 100
+                det_week_17_pick_percent = st.slider("Detroit Lions Estimated Week 17 Pick %:", -1, 100) / 100
+                gb_week_17_pick_percent = st.slider("Green Bay Packers Estimated Week 17 Pick %:", -1, 100) / 100
+                hou_week_17_pick_percent = st.slider("Houston Texans Estimated Week 17 Pick %:", -1, 100) / 100
+                ind_week_17_pick_percent = st.slider("Indianapoils Colts Estimated Week 17 Pick %:", -1, 100) / 100
+                jax_week_17_pick_percent = st.slider("Jacksonville Jaguars Estimated Week 17 Pick %:", -1, 100) / 100
+                kc_week_17_pick_percent = st.slider("Kansas City Chiefs Estimated Week 17 Pick %:", -1, 100) / 100
+                lv_week_17_pick_percent = st.slider("Las Vegas Raiders Estimated Week 17 Pick %:", -1, 100) / 100
+                lac_week_17_pick_percent = st.slider("Los Angeles Chargers Estimated Week 17 Pick %:", -1, 100) / 100
+                lar_week_17_pick_percent = st.slider("Los Angeles Rams Estimated Week 17 Pick %:", -1, 100) / 100
+                mia_week_17_pick_percent = st.slider("Miami Dolphins Estimated Week 17 Pick %:", -1, 100) / 100
+                min_week_17_pick_percent = st.slider("Minnesota Vikings Estimated Week 17 Pick %:", -1, 100) / 100
+                ne_week_17_pick_percent = st.slider("New England Patriots Estimated Week 17 Pick %:", -1, 100) / 100
+                no_week_17_pick_percent = st.slider("New Orleans Saints Estimated Week 17 Pick %:", -1, 100) / 100
+                nyg_week_17_pick_percent = st.slider("New York Giants Estimated Week 17 Pick %:", -1, 100) / 100
+                nyj_week_17_pick_percent = st.slider("New York Jets Estimated Week 17 Pick %:", -1, 100) / 100
+                phi_week_17_pick_percent = st.slider("Philadelphia Eagles Estimated Week 17 Pick %:", -1, 100) / 100
+                pit_week_17_pick_percent = st.slider("Pittsburgh Steelers Estimated Week 17 Pick %:", -1, 100) / 100
+                sf_week_17_pick_percent = st.slider("San Francisco 1717ers Estimated Week 17 Pick %:", -1, 100) / 100
+                sea_week_17_pick_percent = st.slider("Seattle Seahawks Estimated Week 17 Pick %:", -1, 100) / 100
+                tb_week_17_pick_percent = st.slider("Tampa Bay Buccaneers Estimated Week 17 Pick %:", -1, 100) / 100
+                ten_week_17_pick_percent = st.slider("Tennessee Titans Estimated Week 17 Pick %:", -1, 100) / 100
+                was_week_17_pick_percent = st.slider("Washington Commanders Estimated Week 17 Pick %:", -1, 100) / 100
+            st.write('')
+            st.write('')
+        if starting_week <= 18 and ending_week > 18:
+            week_18_pick_percents = st.checkbox('Add Week 18 Pick Percentages?')
+            if week_18_pick_percents:
+                st.write('')
+                st.subheader('Week 18 Estimated Pick Percentages')
+                st.write('')
+                az_week_18_pick_percent = st.slider("Arizona Cardinals Estimated Week 18 Pick %:", -1, 100) / 100
+                atl_week_18_pick_percent = st.slider("Atlanta Falcons Estimated Week 18 Pick %:", -1, 100) / 100
+                bal_week_18_pick_percent = st.slider("Baltimore Ravens Estimated Week 18 Pick %:", -1, 100) / 100
+                buf_week_18_pick_percent = st.slider("Buffalo Bills Estimated Week 18 Pick %:", -1, 100) / 100
+                car_week_18_pick_percent = st.slider("Carolina Panthers Estimated Week 18 Pick %:", -1, 100) / 100
+                chi_week_18_pick_percent = st.slider("Chicago Bears Estimated Week 18 Pick %:", -1, 100) / 100
+                cin_week_18_pick_percent = st.slider("Cincinnati Bengals Estimated Week 18 Pick %:", -1, 100) / 100
+                cle_week_18_pick_percent = st.slider("Cleveland Browns Estimated Week 18 Pick %:", -1, 100) / 100
+                dal_week_18_pick_percent = st.slider("Dallas Cowboys Estimated Week 18 Pick %:", -1, 100) / 100
+                den_week_18_pick_percent = st.slider("Denver Broncos Estimated Week 18 Pick %:", -1, 100) / 100
+                det_week_18_pick_percent = st.slider("Detroit Lions Estimated Week 18 Pick %:", -1, 100) / 100
+                gb_week_18_pick_percent = st.slider("Green Bay Packers Estimated Week 18 Pick %:", -1, 100) / 100
+                hou_week_18_pick_percent = st.slider("Houston Texans Estimated Week 18 Pick %:", -1, 100) / 100
+                ind_week_18_pick_percent = st.slider("Indianapoils Colts Estimated Week 18 Pick %:", -1, 100) / 100
+                jax_week_18_pick_percent = st.slider("Jacksonville Jaguars Estimated Week 18 Pick %:", -1, 100) / 100
+                kc_week_18_pick_percent = st.slider("Kansas City Chiefs Estimated Week 18 Pick %:", -1, 100) / 100
+                lv_week_18_pick_percent = st.slider("Las Vegas Raiders Estimated Week 18 Pick %:", -1, 100) / 100
+                lac_week_18_pick_percent = st.slider("Los Angeles Chargers Estimated Week 18 Pick %:", -1, 100) / 100
+                lar_week_18_pick_percent = st.slider("Los Angeles Rams Estimated Week 18 Pick %:", -1, 100) / 100
+                mia_week_18_pick_percent = st.slider("Miami Dolphins Estimated Week 18 Pick %:", -1, 100) / 100
+                min_week_18_pick_percent = st.slider("Minnesota Vikings Estimated Week 18 Pick %:", -1, 100) / 100
+                ne_week_18_pick_percent = st.slider("New England Patriots Estimated Week 18 Pick %:", -1, 100) / 100
+                no_week_18_pick_percent = st.slider("New Orleans Saints Estimated Week 18 Pick %:", -1, 100) / 100
+                nyg_week_18_pick_percent = st.slider("New York Giants Estimated Week 18 Pick %:", -1, 100) / 100
+                nyj_week_18_pick_percent = st.slider("New York Jets Estimated Week 18 Pick %:", -1, 100) / 100
+                phi_week_18_pick_percent = st.slider("Philadelphia Eagles Estimated Week 18 Pick %:", -1, 100) / 100
+                pit_week_18_pick_percent = st.slider("Pittsburgh Steelers Estimated Week 18 Pick %:", -1, 100) / 100
+                sf_week_18_pick_percent = st.slider("San Francisco 1818ers Estimated Week 18 Pick %:", -1, 100) / 100
+                sea_week_18_pick_percent = st.slider("Seattle Seahawks Estimated Week 18 Pick %:", -1, 100) / 100
+                tb_week_18_pick_percent = st.slider("Tampa Bay Buccaneers Estimated Week 18 Pick %:", -1, 100) / 100
+                ten_week_18_pick_percent = st.slider("Tennessee Titans Estimated Week 18 Pick %:", -1, 100) / 100
+                was_week_18_pick_percent = st.slider("Washington Commanders Estimated Week 18 Pick %:", -1, 100) / 100
+            st.write('')
+            st.write('')
+        if selected_contest == 'Circa':
+            if starting_week <= 19 and ending_week > 19:
+                week_19_pick_percents = st.checkbox('Add Week 19 Pick Percentages?')
+                if week_19_pick_percents:
+                    st.write('')
+                    st.subheader('Week 19 Estimated Pick Percentages')
+                    st.write('')
+                    az_week_19_pick_percent = st.slider("Arizona Cardinals Estimated Week 19 Pick %:", -1, 100) / 100
+                    atl_week_19_pick_percent = st.slider("Atlanta Falcons Estimated Week 19 Pick %:", -1, 100) / 100
+                    bal_week_19_pick_percent = st.slider("Baltimore Ravens Estimated Week 19 Pick %:", -1, 100) / 100
+                    buf_week_19_pick_percent = st.slider("Buffalo Bills Estimated Week 19 Pick %:", -1, 100) / 100
+                    car_week_19_pick_percent = st.slider("Carolina Panthers Estimated Week 19 Pick %:", -1, 100) / 100
+                    chi_week_19_pick_percent = st.slider("Chicago Bears Estimated Week 19 Pick %:", -1, 100) / 100
+                    cin_week_19_pick_percent = st.slider("Cincinnati Bengals Estimated Week 19 Pick %:", -1, 100) / 100
+                    cle_week_19_pick_percent = st.slider("Cleveland Browns Estimated Week 19 Pick %:", -1, 100) / 100
+                    dal_week_19_pick_percent = st.slider("Dallas Cowboys Estimated Week 19 Pick %:", -1, 100) / 100
+                    den_week_19_pick_percent = st.slider("Denver Broncos Estimated Week 19 Pick %:", -1, 100) / 100
+                    det_week_19_pick_percent = st.slider("Detroit Lions Estimated Week 19 Pick %:", -1, 100) / 100
+                    gb_week_19_pick_percent = st.slider("Green Bay Packers Estimated Week 19 Pick %:", -1, 100) / 100
+                    hou_week_19_pick_percent = st.slider("Houston Texans Estimated Week 19 Pick %:", -1, 100) / 100
+                    ind_week_19_pick_percent = st.slider("Indianapoils Colts Estimated Week 19 Pick %:", -1, 100) / 100
+                    jax_week_19_pick_percent = st.slider("Jacksonville Jaguars Estimated Week 19 Pick %:", -1, 100) / 100
+                    kc_week_19_pick_percent = st.slider("Kansas City Chiefs Estimated Week 19 Pick %:", -1, 100) / 100
+                    lv_week_19_pick_percent = st.slider("Las Vegas Raiders Estimated Week 19 Pick %:", -1, 100) / 100
+                    lac_week_19_pick_percent = st.slider("Los Angeles Chargers Estimated Week 19 Pick %:", -1, 100) / 100
+                    lar_week_19_pick_percent = st.slider("Los Angeles Rams Estimated Week 19 Pick %:", -1, 100) / 100
+                    mia_week_19_pick_percent = st.slider("Miami Dolphins Estimated Week 19 Pick %:", -1, 100) / 100
+                    min_week_19_pick_percent = st.slider("Minnesota Vikings Estimated Week 19 Pick %:", -1, 100) / 100
+                    ne_week_19_pick_percent = st.slider("New England Patriots Estimated Week 19 Pick %:", -1, 100) / 100
+                    no_week_19_pick_percent = st.slider("New Orleans Saints Estimated Week 19 Pick %:", -1, 100) / 100
+                    nyg_week_19_pick_percent = st.slider("New York Giants Estimated Week 19 Pick %:", -1, 100) / 100
+                    nyj_week_19_pick_percent = st.slider("New York Jets Estimated Week 19 Pick %:", -1, 100) / 100
+                    phi_week_19_pick_percent = st.slider("Philadelphia Eagles Estimated Week 19 Pick %:", -1, 100) / 100
+                    pit_week_19_pick_percent = st.slider("Pittsburgh Steelers Estimated Week 19 Pick %:", -1, 100) / 100
+                    sf_week_19_pick_percent = st.slider("San Francisco 1919ers Estimated Week 19 Pick %:", -1, 100) / 100
+                    sea_week_19_pick_percent = st.slider("Seattle Seahawks Estimated Week 19 Pick %:", -1, 100) / 100
+                    tb_week_19_pick_percent = st.slider("Tampa Bay Buccaneers Estimated Week 19 Pick %:", -1, 100) / 100
+                    ten_week_19_pick_percent = st.slider("Tennessee Titans Estimated Week 19 Pick %:", -1, 100) / 100
+                    was_week_19_pick_percent = st.slider("Washington Commanders Estimated Week 19 Pick %:", -1, 100) / 100
+                st.write('')
+                st.write('')
+        if selected_contest == 'Circa':
+            if starting_week <= 20 and ending_week > 20:
+                week_20_pick_percents = st.checkbox('Add Week 20 Pick Percentages?')
+                if week_20_pick_percents:
+                    st.write('')
+                    st.subheader('Week 20 Estimated Pick Percentages')
+                    st.write('')
+                    az_week_20_pick_percent = st.slider("Arizona Cardinals Estimated Week 20 Pick %:", -1, 100) / 100
+                    atl_week_20_pick_percent = st.slider("Atlanta Falcons Estimated Week 20 Pick %:", -1, 100) / 100
+                    bal_week_20_pick_percent = st.slider("Baltimore Ravens Estimated Week 20 Pick %:", -1, 100) / 100
+                    buf_week_20_pick_percent = st.slider("Buffalo Bills Estimated Week 20 Pick %:", -1, 100) / 100
+                    car_week_20_pick_percent = st.slider("Carolina Panthers Estimated Week 20 Pick %:", -1, 100) / 100
+                    chi_week_20_pick_percent = st.slider("Chicago Bears Estimated Week 20 Pick %:", -1, 100) / 100
+                    cin_week_20_pick_percent = st.slider("Cincinnati Bengals Estimated Week 20 Pick %:", -1, 100) / 100
+                    cle_week_20_pick_percent = st.slider("Cleveland Browns Estimated Week 20 Pick %:", -1, 100) / 100
+                    dal_week_20_pick_percent = st.slider("Dallas Cowboys Estimated Week 20 Pick %:", -1, 100) / 100
+                    den_week_20_pick_percent = st.slider("Denver Broncos Estimated Week 20 Pick %:", -1, 100) / 100
+                    det_week_20_pick_percent = st.slider("Detroit Lions Estimated Week 20 Pick %:", -1, 100) / 100
+                    gb_week_20_pick_percent = st.slider("Green Bay Packers Estimated Week 20 Pick %:", -1, 100) / 100
+                    hou_week_20_pick_percent = st.slider("Houston Texans Estimated Week 20 Pick %:", -1, 100) / 100
+                    ind_week_20_pick_percent = st.slider("Indianapoils Colts Estimated Week 20 Pick %:", -1, 100) / 100
+                    jax_week_20_pick_percent = st.slider("Jacksonville Jaguars Estimated Week 20 Pick %:", -1, 100) / 100
+                    kc_week_20_pick_percent = st.slider("Kansas City Chiefs Estimated Week 20 Pick %:", -1, 100) / 100
+                    lv_week_20_pick_percent = st.slider("Las Vegas Raiders Estimated Week 20 Pick %:", -1, 100) / 100
+                    lac_week_20_pick_percent = st.slider("Los Angeles Chargers Estimated Week 20 Pick %:", -1, 100) / 100
+                    lar_week_20_pick_percent = st.slider("Los Angeles Rams Estimated Week 20 Pick %:", -1, 100) / 100
+                    mia_week_20_pick_percent = st.slider("Miami Dolphins Estimated Week 20 Pick %:", -1, 100) / 100
+                    min_week_20_pick_percent = st.slider("Minnesota Vikings Estimated Week 20 Pick %:", -1, 100) / 100
+                    ne_week_20_pick_percent = st.slider("New England Patriots Estimated Week 20 Pick %:", -1, 100) / 100
+                    no_week_20_pick_percent = st.slider("New Orleans Saints Estimated Week 20 Pick %:", -1, 100) / 100
+                    nyg_week_20_pick_percent = st.slider("New York Giants Estimated Week 20 Pick %:", -1, 100) / 100
+                    nyj_week_20_pick_percent = st.slider("New York Jets Estimated Week 20 Pick %:", -1, 100) / 100
+                    phi_week_20_pick_percent = st.slider("Philadelphia Eagles Estimated Week 20 Pick %:", -1, 100) / 100
+                    pit_week_20_pick_percent = st.slider("Pittsburgh Steelers Estimated Week 20 Pick %:", -1, 100) / 100
+                    sf_week_20_pick_percent = st.slider("San Francisco 2020ers Estimated Week 20 Pick %:", -1, 100) / 100
+                    sea_week_20_pick_percent = st.slider("Seattle Seahawks Estimated Week 20 Pick %:", -1, 100) / 100
+                    tb_week_20_pick_percent = st.slider("Tampa Bay Buccaneers Estimated Week 20 Pick %:", -1, 100) / 100
+                    ten_week_20_pick_percent = st.slider("Tennessee Titans Estimated Week 20 Pick %:", -1, 100) / 100
+                    was_week_20_pick_percent = st.slider("Washington Commanders Estimated Week 20 Pick %:", -1, 100) / 100
+    	
+    
+    
+    
+    st.write('')
+    st.write('')
+    st.write('')
+    
+    use_cached_expected_value = 0
+    use_live_sportsbook_odds = 1
+    
+    if yes_i_have_customized_rankings:
+    	st.subheader('Use Saved Expected Value')
+    	st.write('Warning, this data may not be nup to date.')
+    	st.write('- Checking this box will ensure the process is fast, (Less than 1 minute, compared to 5-10 mins) and will prevent the risk of crashing')
+    	st.write('- This will not use your customized rankings in the EV calculation process')
+    	st.write('- This will NOT have an impact on your customized ranking output, just the EV output')
+    	st.write('Last Update: :green[01/01/2025]')
+    	use_cached_expected_value = 1 if st.checkbox('Use Cached Expected Value') else 0
+    	st.write('')
+    	st.write('')
+    	st.write('')
+    	if use_cached_expected_value == 1:
+                use_live_sportsbook_odds = 1 if st.checkbox('Use Live Sportsbook Odds to calculate win probability (If Available?') else 0
+                st.write('')
+                st.write("If this is checked, we will use odds from DraftKings to determine a team's win probability. For games where live odds from DraftKings are unavailable, we will use your own internal rankings to determine the predicted spread and win probability.")	
+                st.write('If this is left unchecked, we will use your own internal rankings to determine the predicted spread and win probability for all games.')	
+    	st.write('')
+    	st.write('')
+    	st.write('')
+    st.subheader('Get Optimized Survivor Picks')
+    number_of_solutions_options = [
+        1,5,10,25,50,100
+    ]
+    st.write('How many solutions would you like from each solver?')
+    number_solutions = st.selectbox('Number of Solutions', options = number_of_solutions_options)
+    double_number_solutions = number_solutions * 2
+    st.text(f'This button will find the best picks for each week. It will pump out {double_number_solutions} solutions.')
+    st.write(f'- The first {number_solutions} will be :red[based purely on EV] that is a complicated formula based on predicted pick percentage of each team in each week, and their chances of winning that week.')
+    st.write('- This will use the rankings defined above to determine win probability and thus pick percentage for each team. If you provide your own rankings, :red[you CANNOT use the cached version of EV]. If you use the default rankings, the cached version will be fine') 
+    st.write(f'- The second {number_solutions} solutions will be based on the :red[rankings and constraints you provided]')
+    st.write('- This will use the rankings defined above to determine win probability for each team. Because this :red[does not use predicted pick percentage nor EV], you can use the cached version of EV to speed things up.') 
+    st.write('- All solutions will abide by the prohibited teams and the weeks you selected')
+    st.write('- If you have too many constraints, or the solution is impossible, you will see an error')
+    st.write("- :green[Mathematically, EV is most likely to win, however, using your own rankings has advantages as well, which is why we provide both solutions (Sometimes it's just preposterous to Pick the Jets)]")
+    
+    
+    st.write('')
+    st.write('')
+    schedule_data_retrieved = False #Initialize on first run
+    
+    if st.button("Get Optimized Survivor Picks"):
+        st.write("Step 1/6: Fetching Schedule Data...")
+        schedule_table, schedule_rows = get_schedule() # Call the function   
+        if schedule_table:
+            st.write("Step 1 Completed: Schedule Data Retrieved!")
+            schedule_data_retrieved = True #Set Flag to True after retrieval
+        else:
+            st.write("Error. Could not find the table.")
+            schedule_data_retrieved = False #Set flag to False on error
+             
+        if schedule_rows:
+            st.write(f"Number of Schedule Rows: {len(schedule_rows)}") #Display row length
+            st.write("Step 2/6: Collecting Travel, Ranking, Odds, and Rest Data...")
+            collect_schedule_travel_ranking_data_df = collect_schedule_travel_ranking_data(pd)
+            st.write("Step 2 Completed: Travel, Ranking, Odds, and Rest Data Retrieved!")
+            st.write("Step 3/6: Predicting Future Pick Percentages of Public...")
+        if use_cached_expected_value == 0:
+            nfl_schedule_pick_percentages_df = get_predicted_pick_percentages(pd)
+            st.write("Step 3 Completed: Public Pick Percentages Predicted")
+            #nfl_schedule_circa_df_2 = manually_adjust_pick_predictions()
+        if use_cached_expected_value == 0:
+            if selected_contest == 'Circa':
+                st.write("Step 3a: Predicting Pick Percentages based on Team Availability...")
+                nfl_schedule_pick_percentages_df = get_predicted_pick_percentages_with_availability(pd)
+        if use_cached_expected_value == 1:
+            nfl_schedule_pick_percentages_df = get_predicted_pick_percentages(pd)
+            if selected_contest == 'Circa':
+                full_df_with_ev = nfl_schedule_pick_percentages_df_circa #pd.read_csv('NFL Schedule with full ev_circa.csv')
+            else:
+                full_df_with_ev = nfl_schedule_pick_percentages_df_dk #pd.read_csv('NFL Schedule with full ev_dk.csv')
+            st.write("Step 3 Completed: Public Pick Percentages Predicted")
+            st.write('- Using Cached Expected Values...')
+        else:
+            st.write("Step 4/6: Calculating Live Expected Value (Will take 5-10 mins)...")
+            with st.spinner('Processing...'):
+                full_df_with_ev = calculate_ev(nfl_schedule_pick_percentages_df, starting_week, ending_week, selected_contest, use_cached_expected_value)
+                st.write("Processing Complete!")
+                #st.dataframe(full_df_with_ev)
+        st.write("Step 4 Completed: Expected Value Calculated")
+        st.subheader('Full Dataset')
+        st.write(full_df_with_ev)
+        st.write('Step 5/6: Calculating Best Combination of Picks Based on EV...')
+        st.write('')
+    
+    
+        ending_week_2 = ending_week - 1	
+        if selected_contest == 'Circa':
+            st.subheader(f':blue[Optimal Picks for Circa: Weeks {starting_week} through {ending_week_2}]')
+            st.write('')
+        else:
+            st.subheader(f':green[Optimal Picks for Draftkings: Weeks {starting_week} through {ending_week_2}]')
+            st.write('')
+            st.subheader('Expected Value Optimized Picks')
+    
+        get_survivor_picks_based_on_ev()
+        st.write('Step 5 Completed: Top Picks Determined Based on EV')
+        if yes_i_have_customized_rankings:
+            st.write('Step 6/6: Calculating Best Combination of Picks Based on Customized Rankings...')
+            st.write("---------------------------------------------------------------------------------------------------------------")
+            st.write("---------------------------------------------------------------------------------------------------------------")
+            st.write("---------------------------------------------------------------------------------------------------------------")
+            st.subheader('Customized Ranking Optimized Picks')
+            get_survivor_picks_based_on_internal_rankings()
+            st.write('Step 6 Completed: Top Picks Determined Based on Customized Rankings')
+        else:
+            st.write('Step 6/6: Calculating Best Combination of Picks Based on Default Rankings...')
+            st.write("---------------------------------------------------------------------------------------------------------------")
+            st.write("---------------------------------------------------------------------------------------------------------------")
+            st.write("---------------------------------------------------------------------------------------------------------------")
+            st.subheader('Default Ranking Optimized Picks')
+            get_survivor_picks_based_on_internal_rankings()
+            st.write('Step 6 Completed: Top Picks Determined Based on Default Rankings')
     else:
-        st.write('Step 6/6: Calculating Best Combination of Picks Based on Default Rankings...')
-        st.write("---------------------------------------------------------------------------------------------------------------")
-        st.write("---------------------------------------------------------------------------------------------------------------")
-        st.write("---------------------------------------------------------------------------------------------------------------")
-        st.subheader('Default Ranking Optimized Picks')
-        get_survivor_picks_based_on_internal_rankings()
-        st.write('Step 6 Completed: Top Picks Determined Based on Default Rankings')
-else:
-    schedule_data_retrieved = False #Set flag to False on error
+        schedule_data_retrieved = False #Set flag to False on error
+# --- Main Application Logic (Entry Point) ---
+if __name__ == "__main__":
+    if not st.user.is_logged_in:
+        # User is not logged in, show the login screen
+        login_screen()
+    else:
+        # User is logged in, show the full application
+        main_app()

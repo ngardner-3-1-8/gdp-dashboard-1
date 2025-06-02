@@ -4496,7 +4496,7 @@ def login_screen():
 # --- Function to display the main application content ---
 # All your existing Streamlit code will go inside this function
 def main_app():
-picked_teams = []
+    picked_teams = []
     
     default_az_rank = 1.5
     default_atl_rank = -1

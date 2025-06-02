@@ -8,3 +8,4 @@ ortools
 python-dateutil
 pytz
 python-dateutil
+Authlib

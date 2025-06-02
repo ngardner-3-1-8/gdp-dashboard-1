@@ -18,7 +18,7 @@ from concurrent.futures import ProcessPoolExecutor
 import itertools
 
 def get_schedule():
-    print("Gathering Schedule Data...")
+     print("Gathering Schedule Data...")
     # Make a request to the website
     r = requests.get('https://www.fftoday.com/nfl/schedule.php')
     r_html = r.text

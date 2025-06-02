@@ -18,7 +18,7 @@ from concurrent.futures import ProcessPoolExecutor
 import itertools
 
 def get_schedule():
-     print("Gathering Schedule Data...")
+    print("Gathering Schedule Data...")
     # Make a request to the website
     r = requests.get('https://www.fftoday.com/nfl/schedule.php')
     r_html = r.text
@@ -5490,7 +5490,7 @@ current_week_entries_dk = 20000
 
 
 def login_screen():
-   st.title("Welcome to NFL Survivor Optimization")
+    st.title("Welcome to NFL Survivor Optimization")
     st.subheader("Please log in with Google to access the optimizer.")
     st.write("This tool requires authentication to ensure proper usage and to save your progress.")
     st.write("")

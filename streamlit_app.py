@@ -546,12 +546,10 @@ def collect_schedule_travel_ranking_data(pd):
         headers = {
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/102.0.0.0 Safari/537.36'
         }
-        
+    
         try:
-            response = requests.get(url, headers=headers, timeout=15) # Increased timeout slightly
+            response = requests.get(url, headers=headers, timeout=15)
             print(f"Response Status Code: {response.status_code}")
-            # Optional: Print a small part of the response to check if it's the expected HTML
-            # print(f"Response Text (first 1000 chars): {response.text[:1000]}") 
             response.raise_for_status()
         except requests.exceptions.RequestException as e:
             print(f"Error fetching URL: {e}")
@@ -595,40 +593,59 @@ def collect_schedule_travel_ranking_data(pd):
         }
     
         games = []
-        
-        # Find all date-specific game cards/sections
+    
+        # Define the Eastern Timezone
+        eastern_tz = pytz.timezone('America/New_York')
+    
         game_cards = soup.find_all('div', class_='parlay-card-10-a')
         if not game_cards:
             print("Error: No game cards (div.parlay-card-10-a) found on the page.")
             return pd.DataFrame()
-        
+    
         print(f"Found {len(game_cards)} game date cards/sections.")
     
         for card_index, card in enumerate(game_cards):
-            # Find the table within this card
             table = card.find('table', class_='sportsbook-table')
             if not table:
                 print(f"Warning: No sportsbook-table found in card {card_index + 1}.")
                 continue
     
-            # Extract the date from the table header
-            current_date = "Unknown Date"
+            current_date_str = "Unknown Date"
             thead = table.find('thead')
             if thead:
                 date_header_title = thead.find('div', class_='sportsbook-table-header__title')
                 if date_header_title:
-                    date_span = date_header_title.find_all('span', recursive=False) # Find direct children spans
-                    if len(date_span) > 0 and date_span[0].find('span'): # Check for nested span
-                         current_date = date_span[0].find('span').text.strip()
-                    elif date_span: # Fallback if no nested span
-                        current_date = date_span[0].text.strip()
+                    date_span = date_header_title.find_all('span', recursive=False)
+                    if len(date_span) > 0 and date_span[0].find('span'):
+                        current_date_str = date_span[0].find('span').text.strip()
+                    elif date_span:
+                        current_date_str = date_span[0].text.strip()
+            
+            # Attempt to parse the date
+            current_date_parsed = None
+            try:
+                # Assuming date format like "Thu, Sep 5" or "Sunday, June 2, 2024"
+                # We'll try common formats. Adjust if DraftKings uses a different one.
+                current_date_parsed = pd.to_datetime(current_date_str, errors='coerce')
+                if pd.isna(current_date_parsed):
+                    # Try another common format if the first fails
+                    current_date_parsed = pd.to_datetime(current_date_str + ' ' + str(datetime.now().year), format='%A, %B %d %Y', errors='coerce')
+    
+                if pd.isna(current_date_parsed):
+                     print(f"Warning: Could not parse date string: '{current_date_str}'. Date will remain as string.")
+                     current_date_for_game = current_date_str
+                else:
+                    current_date_for_game = current_date_parsed.strftime('%Y-%m-%d') # Format as YYYY-MM-DD
+            except Exception as e:
+                print(f"Error parsing date '{current_date_str}': {e}. Date will remain as string.")
+                current_date_for_game = current_date_str
     
     
-            print(f"\nProcessing table for date: {current_date}")
+            print(f"\nProcessing table for date: {current_date_str}")
     
             table_body = table.find('tbody', class_='sportsbook-table__body')
             if not table_body:
-                print(f"Warning: No table body found for table under date {current_date}.")
+                print(f"Warning: No table body found for table under date {current_date_str}.")
                 continue
     
             potential_rows = table_body.find_all('tr', recursive=False)
@@ -636,10 +653,10 @@ def collect_schedule_travel_ranking_data(pd):
             for row in potential_rows:
                 if row.find('div', class_='event-cell__name-text'):
                     actual_team_rows.append(row)
-            
-            print(f"Found {len(actual_team_rows)} actual team rows for {current_date}.")
-            
-            game_data = {} # Initialize for each new table/date section
+    
+            print(f"Found {len(actual_team_rows)} actual team rows for {current_date_str}.")
+    
+            game_data = {}
             for i, row in enumerate(actual_team_rows):
                 team_name_element = row.find('div', class_='event-cell__name-text')
                 odds_element = row.find('span', class_='sportsbook-odds american no-margin default-color')
@@ -648,7 +665,7 @@ def collect_schedule_travel_ranking_data(pd):
                 if not team_name_element:
                     print("Warning: Skipping a row that was expected to be a team row but missing name.")
                     continue
-                    
+    
                 team = team_name_element.text.strip()
                 team = team_name_mapping.get(team, team)
     
@@ -659,39 +676,66 @@ def collect_schedule_travel_ranking_data(pd):
                         try:
                             odds = int(odds_text)
                         except ValueError:
-                            print(f"Warning: Could not parse odds for {team} on {current_date}: '{odds_text}'")
+                            print(f"Warning: Could not parse odds for {team} on {current_date_str}: '{odds_text}'")
                             odds = None
-                
+    
                 if i % 2 == 0:  # Away Team
-                    game_data = {'Date': current_date} # Start new game data, include current_date
+                    game_data = {'Date': current_date_for_game} # Use the parsed date
                     if time_element:
-                        game_data['Time'] = time_element.text.strip()
+                        raw_time_str = time_element.text.strip()
+                        game_data['Time_Raw'] = raw_time_str # Keep raw time for debugging if needed
+    
+                        # Combine date and time, then localize to Eastern Time
+                        if current_date_parsed:
+                            try:
+                                # Assuming time format is like "7:00 PM ET" or "7:00 PM"
+                                # We need to strip any "ET" or "PT" etc. for parsing
+                                time_to_parse = raw_time_str.replace('ET', '').replace('PT', '').strip()
+                                # If it includes "AM/PM", use %I for hour, %p for AM/PM
+                                # If it's just H:M, use %H:%M
+                                # Let's try parsing with different formats
+                                try:
+                                    dt_object_naive = datetime.strptime(f"{current_date_parsed.strftime('%Y-%m-%d')} {time_to_parse}", '%Y-%m-%d %I:%M %p')
+                                except ValueError:
+                                    dt_object_naive = datetime.strptime(f"{current_date_parsed.strftime('%Y-%m-%d')} {time_to_parse}", '%Y-%m-%d %H:%M')
+    
+                                # Localize the naive datetime object to Eastern Time
+                                dt_object_eastern = eastern_tz.localize(dt_object_naive)
+                                game_data['Event DateTime (ET)'] = dt_object_eastern.strftime('%Y-%m-%d %H:%M:%S %Z%z')
+                                game_data['Time'] = dt_object_eastern.strftime('%I:%M %p') # Store just the time in ET
+                            except ValueError as ve:
+                                print(f"Warning: Could not parse or localize datetime for {team} on {current_date_str} at {raw_time_str}: {ve}")
+                                game_data['Time'] = raw_time_str # Fallback to raw time
+                                game_data['Event DateTime (ET)'] = None
+                        else:
+                            game_data['Time'] = raw_time_str # If date wasn't parsed, just keep time string
+                            game_data['Event DateTime (ET)'] = None
                     else:
                         game_data['Time'] = 'N/A'
-                        print(f"Warning: Time element not found for Away Team {team} on {current_date}")
-                    
+                        game_data['Event DateTime (ET)'] = None
+                        print(f"Warning: Time element not found for Away Team {team} on {current_date_str}")
+    
                     game_data['Away Team'] = team
                     game_data['Away Odds'] = odds
     
-                    if i == len(actual_team_rows) - 1: # Last row is an unmatched Away team
-                        print(f"Warning: Game for {team} (Away) on {current_date} is incomplete.")
-                        # games.append(game_data) # Optionally append incomplete game
-                        game_data = {} 
-                
+                    if i == len(actual_team_rows) - 1:
+                        print(f"Warning: Game for {team} (Away) on {current_date_str} is incomplete.")
+                        game_data = {}
+    
                 else:  # Home Team
                     if 'Away Team' not in game_data:
-                        print(f"Warning: Home team {team} on {current_date} found without a preceding Away team. Skipping.")
-                        game_data = {} 
+                        print(f"Warning: Home team {team} on {current_date_str} found without a preceding Away team. Skipping.")
+                        game_data = {}
                         continue
     
                     game_data['Home Team'] = team
                     game_data['Home Odds'] = odds
                     games.append(game_data)
-                    game_data = {} # Reset for the next pair
+                    game_data = {}
     
         df = pd.DataFrame(games)
         return df
- 
+    
     live_scraped_odds_df = get_preseason_odds()
 
     st.write("")

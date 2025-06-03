@@ -608,6 +608,7 @@ def collect_schedule_travel_ranking_data(pd):
     
         # Get the current year to use for dates that don't include a year
         current_year = datetime.now().year
+        current_month = datetime.now().month
     
         for card_index, card in enumerate(game_cards):
             table = card.find('table', class_='sportsbook-table')
@@ -626,41 +627,50 @@ def collect_schedule_travel_ranking_data(pd):
                     elif date_span:
                         current_date_str_raw = date_span[0].text.strip()
             
-            # --- Date Parsing Logic (Improved) ---
+            # --- Date Parsing Logic (Improved for year inference) ---
             current_date_for_game = current_date_str_raw
             parsed_date_obj = None
     
             # Clean the date string: remove "TH", "ST", "ND", "RD" suffixes
-            # Ensure conversion to uppercase for consistent matching with 'TH|ST|ND|RD'
             clean_date_str = re.sub(r'(\d+)(TH|ST|ND|RD)', r'\1', current_date_str_raw.upper())
             clean_date_str = clean_date_str.replace(',', '').strip()
     
-            # Attempt to parse the date with common formats, assuming current_year
+            # Attempt to parse the date with common formats
             date_formats = [
                 "%a %b %d",    # "FRI SEP 5"
                 "%A %B %d",    # "FRIDAY SEPTEMBER 5"
-                "%B %d, %Y",   # "SEPTEMBER 5, 2024"
+                "%B %d",       # "SEPTEMBER 5"
                 "%a, %b %d"    # "FRI, SEP 5"
             ]
     
+            temp_parsed_date = None
             for fmt in date_formats:
                 try:
-                    # Add current year to the date string for parsing if not already present
-                    # This check ensures we only add the year if it's missing, and the format expects it.
-                    if "%Y" not in fmt and len(clean_date_str.split()) < 4: # Crude check if year is already in string (e.g., "SEPTEMBER 5" has 2 words, "SEPTEMBER 5 2024" has 3 words)
-                        full_date_str = f"{clean_date_str} {current_year}"
-                        parsed_date_obj = datetime.strptime(full_date_str, fmt + " %Y")
-                    else:
-                         parsed_date_obj = datetime.strptime(clean_date_str, fmt)
-                    
-                    current_date_for_game = parsed_date_obj.strftime('%Y-%m-%d')
-                    break # Break if successful
+                    # First, try parsing with current year
+                    temp_parsed_date = datetime.strptime(f"{clean_date_str} {current_year}", f"{fmt} %Y").date()
+                    break
                 except ValueError:
-                    continue # Try next format
+                    continue
     
-            if not parsed_date_obj:
+            if temp_parsed_date:
+                # Check if the parsed date is in the past compared to current date,
+                # but its month is significantly after the current month.
+                # This heuristic suggests it might belong to the next year.
+                # E.g., if current date is June 2025, and parsed date is Jan 5,
+                # it's likely Jan 5, 2026, not Jan 5, 2025 (which is in the past).
+                if temp_parsed_date.month < current_month and temp_parsed_date < datetime.now().date():
+                    try:
+                        # Attempt to parse with the next year
+                        temp_parsed_date = datetime.strptime(f"{clean_date_str} {current_year + 1}", f"{fmt} %Y").date()
+                    except ValueError:
+                        pass # Keep the current year if next year also fails or doesn't apply
+    
+                parsed_date_obj = temp_parsed_date
+                current_date_for_game = parsed_date_obj.strftime('%Y-%m-%d')
+            else:
                 print(f"Warning: Could not parse date string: '{current_date_str_raw}'. Date will remain as string.")
                 current_date_for_game = current_date_str_raw
+                parsed_date_obj = None # Ensure it's None if parsing failed
     
     
             # This print statement should use `current_date_for_game` for consistency

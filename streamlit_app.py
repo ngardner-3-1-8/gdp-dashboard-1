@@ -5684,7 +5684,7 @@ else:
     st.sidebar.button("Logout", on_click=logout_user_callback)
         # --- Add Logo in Sidebar when logged in ---
     with st.sidebar:
-        st.image(LOGO_PATH, use_column_width=True) # Fills the sidebar width
+        st.image(LOGO_PATH, use_container_width=True) # Fills the sidebar width
         st.button("Logout", on_click=logout_user_callback) # Logout button inside sidebar
     # --- End Logo in Sidebar ---
     st.title("NFL Survivor Optimization")

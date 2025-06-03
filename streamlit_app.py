@@ -4078,7 +4078,7 @@ def get_survivor_picks_based_on_internal_rankings():
                 "Home Team EV": "Hypothetical Current Loser EV",
                 "Away Team EV": "Hypothetical Current Winner EV",
                 "Away Team Adjusted Current Rank": "Hypothetical Current Winner Adjusted Current Rank",
-                "Home Team Adjusted Current Rank": "Hypothetical Current Loser Adjusted Current Rank"
+                "Home Team Adjusted Current Rank": "Hypothetical Current Loser Adjusted Current Rank",
             }, inplace=True)
             
             # Add "Away Team 1" column
@@ -4096,9 +4096,14 @@ def get_survivor_picks_based_on_internal_rankings():
             print(home_ev_df)
             print("\nAway EV DataFrame (away_ev_df):")
             print(away_ev_df)
-            st.write("\nCombined DataFrame (combined_df):")
-            st.write(combined_df['Week_Num'])
+            print("\nCombined DataFrame (combined_df):")
+            print(combined_df['Week_Num'])
             df = combined_df
+            st.subheader('TEST DF: NO ADJUSTED RANK)
+            st.write(df)
+            df['Hypthetical Winner Adjusted Current Difference'] = df['Hypothetical Current Winner Adjusted Current Rank'] - df['Hypothetical Current Loser Adjusted Current Rank']
+            st.subheader('TEST DF: YES ADJUSTED RANK)
+            st.write(df)	
             df = df[~df['Hypothetical Current Winner'].isin(picked_teams)].reset_index(drop=True)
             #print(df)
             # Create the solver

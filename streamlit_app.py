@@ -5636,7 +5636,7 @@ default_current_week_entries_dk = 20000
 current_week_entries_circa = 14221
 current_week_entries_dk = 20000
 
-
+LOGO_PATH = "GSF Survivor Logo Clear BG.png"
 def login_screen():
     st.title("Welcome to NFL Survivor Optimization")
     st.subheader("Please log in with Google to access the optimizer.")
@@ -5682,6 +5682,11 @@ if not st.user.is_logged_in:
 else:
     # User is logged in, display the main application content
     st.sidebar.button("Logout", on_click=logout_user_callback)
+        # --- Add Logo in Sidebar when logged in ---
+    with st.sidebar:
+        st.image(LOGO_PATH, use_column_width=True) # Fills the sidebar width
+        st.button("Logout", on_click=logout_user_callback) # Logout button inside sidebar
+    # --- End Logo in Sidebar ---
     st.title("NFL Survivor Optimization")
     st.subheader("The second best Circa Survivor Contest optimizer")
     contest_options = [

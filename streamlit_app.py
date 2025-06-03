@@ -4099,10 +4099,10 @@ def get_survivor_picks_based_on_internal_rankings():
             print("\nCombined DataFrame (combined_df):")
             print(combined_df['Week_Num'])
             df = combined_df
-            st.subheader('TEST DF: NO ADJUSTED RANK)
+            st.subheader('TEST DF: NO ADJUSTED RANK')
             st.write(df)
             df['Hypthetical Winner Adjusted Current Difference'] = df['Hypothetical Current Winner Adjusted Current Rank'] - df['Hypothetical Current Loser Adjusted Current Rank']
-            st.subheader('TEST DF: YES ADJUSTED RANK)
+            st.subheader('TEST DF: YES ADJUSTED RANK')
             st.write(df)	
             df = df[~df['Hypothetical Current Winner'].isin(picked_teams)].reset_index(drop=True)
             #print(df)

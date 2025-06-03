@@ -694,6 +694,15 @@ def collect_schedule_travel_ranking_data(pd):
  
     live_scraped_odds_df = get_preseason_odds()
 
+    st.write("")
+    st.write("")
+    st.write("")
+    st.subheader("Live Odds from Draftkings")
+    st.write(live_scraped_odds_df)
+    st.write("")
+    st.write("")
+    st.write("")
+	
     def add_odds_to_main_csv():
         # 0: Stadium | 1: Lattitude | 2: Longitude | 3: Timezone | 4: Division | 5: Start of 2023 Season Rank | 6: Current Rank | 7: Average points better than Average Team (Used for Spread and Odds Calculation)
         stadiums = {

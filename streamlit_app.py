@@ -4436,7 +4436,7 @@ def get_survivor_picks_based_on_internal_rankings():
     
             if status == pywraplp.Solver.OPTIMAL:
                 st.write('')
-                st.write(f'**Solution Based on EV: {iteration + 1}**')
+                st.write(f'**Solution Based on Internal Rankings: {iteration + 1}**')
     
                 st.write('Solution found!')
                 st.write('Objective value =', solver.Objective().Value())

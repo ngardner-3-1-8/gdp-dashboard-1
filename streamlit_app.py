@@ -4099,11 +4099,7 @@ def get_survivor_picks_based_on_internal_rankings():
             print("\nCombined DataFrame (combined_df):")
             print(combined_df['Week_Num'])
             df = combined_df
-            st.subheader('TEST DF: NO ADJUSTED RANK')
-            st.write(df)
-            df['Hypthetical Winner Adjusted Current Difference'] = df['Hypothetical Current Winner Adjusted Current Rank'] - df['Hypothetical Current Loser Adjusted Current Rank']
-            st.subheader('TEST DF: YES ADJUSTED RANK')
-            st.write(df)	
+            df['Hypthetical Winner Adjusted Current Difference'] = df['Hypothetical Current Winner Adjusted Current Rank'] - df['Hypothetical Current Loser Adjusted Current Rank']	
             df = df[~df['Hypothetical Current Winner'].isin(picked_teams)].reset_index(drop=True)
             #print(df)
             # Create the solver
@@ -4413,7 +4409,7 @@ def get_survivor_picks_based_on_internal_rankings():
             
     
             # Objective: maximize the sum of Adjusted Current Difference of each game picked
-            solver.Maximize(solver.Sum([picks[i] * df.loc[i, 'Hypothetical Current Winner EV'] for i in range(len(df))]))
+            solver.Maximize(solver.Sum([picks[i] * df.loc[i, 'Hypthetical Winner Adjusted Current Difference'] for i in range(len(df))]))
 
 
     

@@ -596,8 +596,9 @@ def collect_schedule_travel_ranking_data(pd):
     
         games = []
     
-        # Define the Eastern Timezone
+        # Define the Eastern and UTC Timezones
         eastern_tz = pytz.timezone('America/New_York')
+        utc_tz = pytz.utc # Define UTC timezone
     
         game_cards = soup.find_all('div', class_='parlay-card-10-a')
         if not game_cards:
@@ -606,7 +607,7 @@ def collect_schedule_travel_ranking_data(pd):
     
         print(f"Found {len(game_cards)} game date cards/sections.")
     
-        # Get the current year to use for dates that don't include a year
+        # Get the current year and month to determine if the scraped date implies next year
         current_year = datetime.now().year
         current_month = datetime.now().month
     
@@ -616,7 +617,7 @@ def collect_schedule_travel_ranking_data(pd):
                 print(f"Warning: No sportsbook-table found in card {card_index + 1}.")
                 continue
     
-            current_date_str_raw = "Unknown Date" # Use a new variable for the raw string
+            current_date_str_raw = "Unknown Date"
             thead = table.find('thead')
             if thead:
                 date_header_title = thead.find('div', class_='sportsbook-table-header__title')
@@ -626,10 +627,10 @@ def collect_schedule_travel_ranking_data(pd):
                         current_date_str_raw = date_span[0].find('span').text.strip()
                     elif date_span:
                         current_date_str_raw = date_span[0].text.strip()
-            
+    
             # --- Date Parsing Logic (Improved for year inference) ---
             current_date_for_game = current_date_str_raw
-            parsed_date_obj = None
+            parsed_date_obj = None # Renamed for clarity within the loop
     
             # Clean the date string: remove "TH", "ST", "ND", "RD" suffixes
             clean_date_str = re.sub(r'(\d+)(TH|ST|ND|RD)', r'\1', current_date_str_raw.upper())
@@ -673,9 +674,8 @@ def collect_schedule_travel_ranking_data(pd):
                 parsed_date_obj = None # Ensure it's None if parsing failed
     
     
-            # This print statement should use `current_date_for_game` for consistency
             print(f"\nProcessing table for date: {current_date_for_game}")
-            
+    
             table_body = table.find('tbody', class_='sportsbook-table__body')
             if not table_body:
                 print(f"Warning: No table body found for table under date {current_date_for_game}.")
@@ -686,8 +686,7 @@ def collect_schedule_travel_ranking_data(pd):
             for row in potential_rows:
                 if row.find('div', class_='event-cell__name-text'):
                     actual_team_rows.append(row)
-            
-            # This print statement should use `current_date_for_game` for consistency
+    
             print(f"Found {len(actual_team_rows)} actual team rows for {current_date_for_game}.")
     
             game_data = {}
@@ -710,49 +709,61 @@ def collect_schedule_travel_ranking_data(pd):
                         try:
                             odds = int(odds_text)
                         except ValueError:
-                            print(f"Warning: Could not parse odds for {team} on {current_date_for_game}: '{odds_text}'") # Use current_date_for_game
+                            print(f"Warning: Could not parse odds for {team} on {current_date_for_game}: '{odds_text}'")
                             odds = None
     
                 if i % 2 == 0:  # Away Team
-                    game_data = {'Date': current_date_for_game} # Use the parsed date
+                    game_data = {'Date': current_date_for_game}
                     if time_element:
                         raw_time_str = time_element.text.strip()
                         game_data['Time_Raw'] = raw_time_str # Keep raw time for debugging
     
-                        dt_object_eastern = None
+                        converted_to_eastern = None # Initialize to None
                         if parsed_date_obj: # Ensure we have a valid date object to combine with
                             # Remove any common timezone abbreviations (like "ET", "PT", etc.)
                             # In this case, 'PM' is part of the time, so careful with removal
                             time_to_parse = re.sub(r'\s*(ET|PT|CT|MT)\s*', '', raw_time_str, flags=re.IGNORECASE).strip()
-    
                             # This regex inserts a space before AM/PM if missing (e.g., "6:20PM" -> "6:20 PM")
                             time_to_parse = re.sub(r'(\d)([AP]M)', r'\1 \2', time_to_parse)
     
                             time_formats = [
                                 "%I:%M %p", # "12:20 AM", "7:00 PM"
-                                "%I:%M%p",  # "12:20AM", "7:00PM" (this format won't be used if regex worked, but good to have)
+                                "%I:%M%p",  # "12:20AM", "7:00PM" (no space, though the regex should add one)
                                 "%H:%M"     # "19:00" (24-hour format)
                             ]
-                            
+    
                             time_parsed_success = False
                             for fmt in time_formats:
                                 try:
-                                    # Combine date and time to create a full naive datetime object
-                                    dt_object_naive = datetime.strptime(f"{parsed_date_obj.strftime('%Y-%m-%d')} {time_to_parse}", f'%Y-%m-%d {fmt}')
-                                    # Localize to Eastern Time
-                                    dt_object_eastern = eastern_tz.localize(dt_object_naive)
+                                    # 1. COMBINE DATE AND TIME TO CREATE A NAIVE DATETIME OBJECT
+                                    naive_dt_from_site = datetime.strptime(f"{parsed_date_obj.strftime('%Y-%m-%d')} {time_to_parse}", f'%Y-%m-%d {fmt}')
+                                    print(f"\n--- Debugging Time Conversion for {team} ---")
+                                    print(f"1. Raw time string: '{raw_time_str}'")
+                                    print(f"2. Cleaned time for parsing: '{time_to_parse}'")
+                                    print(f"3. Parsed naive datetime (assuming input format): {naive_dt_from_site}")
+    
+                                    # 4. Localize the naive datetime object to UTC (AS WE ARE ASSUMING THE SITE'S TIME IS UTC)
+                                    localized_utc = utc_tz.localize(naive_dt_from_site)
+                                    print(f"4. Localized to UTC: {localized_utc}")
+    
+                                    # 5. Convert the UTC localized datetime to Eastern Time
+                                    converted_to_eastern = localized_utc.astimezone(eastern_tz)
+                                    print(f"5. Converted to Eastern: {converted_to_eastern}")
+    
                                     time_parsed_success = True
                                     break # Exit loop if parsing is successful
-                                except ValueError:
+                                except ValueError as ve:
+                                    # print(f"DEBUG: Time parsing failed with format '{fmt}': {ve}") # Uncomment for very verbose debug
                                     continue # Try the next format
     
-                            if time_parsed_success:
+                            if time_parsed_success and converted_to_eastern:
                                 # Format for display: full datetime with timezone and offset
-                                game_data['Event DateTime (ET)'] = dt_object_eastern.strftime('%Y-%m-%d %I:%M:%S %p %Z')
+                                # Added %z to explicitly show the UTC offset in the output
+                                game_data['Event DateTime (ET)'] = converted_to_eastern.strftime('%Y-%m-%d %I:%M:%S %p %Z%z')
                                 # Format for display: just the time part in 12-hour format
-                                game_data['Time'] = dt_object_eastern.strftime('%I:%M %p')
+                                game_data['Time'] = converted_to_eastern.strftime('%I:%M %p')
                             else:
-                                print(f"Warning: Could not parse or localize datetime for {team} on {current_date_for_game} at '{raw_time_str}'. Time will remain raw.")
+                                print(f"Warning: Could not parse or convert datetime for {team} on {current_date_for_game} at '{raw_time_str}'. Time will remain raw.")
                                 game_data['Time'] = raw_time_str
                                 game_data['Event DateTime (ET)'] = None
                         else:
@@ -762,32 +773,31 @@ def collect_schedule_travel_ranking_data(pd):
                     else:
                         game_data['Time'] = 'N/A'
                         game_data['Event DateTime (ET)'] = None
-                        print(f"Warning: Time element not found for Away Team {team} on {current_date_for_game}") # Use current_date_for_game
+                        print(f"Warning: Time element not found for Away Team {team} on {current_date_for_game}")
     
                     game_data['Away Team'] = team
                     game_data['Away Odds'] = odds
     
                     if i == len(actual_team_rows) - 1:
-                        print(f"Warning: Game for {team} (Away) on {current_date_for_game} is incomplete.") # Use current_date_for_game
-                        game_data = {}
+                        print(f"Warning: Game for {team} (Away) on {current_date_for_game} is incomplete.")
+                        game_data = {} # Reset game_data for incomplete game
     
                 else:  # Home Team
                     if 'Away Team' not in game_data:
-                        print(f"Warning: Home team {team} on {current_date_for_game} found without a preceding Away team. Skipping.") # Use current_date_for_game
+                        print(f"Warning: Home team {team} on {current_date_for_game} found without a preceding Away team. Skipping.")
                         game_data = {}
                         continue
     
                     game_data['Home Team'] = team
                     game_data['Home Odds'] = odds
                     games.append(game_data)
-                    game_data = {}
+                    game_data = {} # Reset for the next pair
     
         df = pd.DataFrame(games)
         return df
     
     live_scraped_odds_df = get_preseason_odds()
     
-    # These lines are for Streamlit, uncomment if you are using Streamlit
     st.write("")
     st.write("")
     st.write("")

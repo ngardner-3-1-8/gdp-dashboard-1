@@ -5680,12 +5680,12 @@ if not st.user.is_logged_in:
     # User is not logged in, show the login screen
     login_screen()
 else:
-    # User is logged in, display the main application content
-    st.sidebar.button("Logout", on_click=logout_user_callback)
         # --- Add Logo in Sidebar when logged in ---
     with st.sidebar:
         st.image(LOGO_PATH, use_container_width=True) # Fills the sidebar width
         st.button("Logout", on_click=logout_user_callback) # Logout button inside sidebar
+    # User is logged in, display the main application content
+    st.sidebar.button("Logout", on_click=logout_user_callback)
     # --- End Logo in Sidebar ---
     st.title("NFL Survivor Optimization")
     st.subheader("The second best Circa Survivor Contest optimizer")

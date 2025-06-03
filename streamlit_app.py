@@ -5646,19 +5646,27 @@ def login_screen():
     if st.button("Log in with Google", use_container_width=True):
         st.login() # This triggers the Google OAuth flow
 
-# --- Logout Function ---
+# --- Logout Function (MODIFIED) ---
 def logout_user_callback():
     # Clear all session state variables.
     # This effectively "logs out" the user from the Streamlit app's perspective.
     for key in st.session_state.keys():
         del st.session_state[key]
     st.info("You have been logged out.")
+
+    # --- THE KEY CHANGE IS HERE ---
+    # Call st.user.logout() to explicitly log out the user from Streamlit's authentication.
+    # This sends a signal to Streamlit's backend to invalidate the user's session.
+    if hasattr(st, 'user') and hasattr(st.user, 'logout'):
+        st.user.logout()
+    else:
+        st.warning("st.user.logout() is not available in this environment. Manual refresh may be needed.")
+    # --- END KEY CHANGE ---
+
     # Set a flag to indicate that a rerun is needed
     st.session_state.logout_triggered = True
 
 
-# --- Function to display the main application content ---
-# All your existing Streamlit code will go inside this function
 # --- Main Application Logic (Entry Point) ---
 # Initialize logout_triggered flag if not already present
 if 'logout_triggered' not in st.session_state:
@@ -5668,10 +5676,12 @@ if 'logout_triggered' not in st.session_state:
 if st.session_state.logout_triggered:
     st.session_state.logout_triggered = False # Reset the flag
     st.rerun() # This call to rerun is now outside the callback, so it will work
+
 if not st.user.is_logged_in:
     # User is not logged in, show the login screen
     login_screen()
 else:
+    # User is logged in, display the main application content
     st.sidebar.button("Logout", on_click=logout_user_callback)
     st.title("NFL Survivor Optimization")
     st.subheader("The second best Circa Survivor Contest optimizer")

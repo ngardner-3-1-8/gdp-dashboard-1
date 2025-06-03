@@ -880,11 +880,14 @@ def collect_schedule_travel_ranking_data(pd):
 
         for index, row in csv_df.iterrows():
             # Implied Odds
+            if row['Away Team Moneyline'] == None:
+                row['Away Team Moneyline'] = row['Internal Away Team Moneyline']
             if row['Away Team Moneyline'] > 0:
                 csv_df.loc[index, 'Away Team Implied Odds to Win'] = 100 / (row['Away Team Moneyline'] + 100)
             else:
                 csv_df.loc[index, 'Away Team Implied Odds to Win'] = abs(row['Away Team Moneyline']) / (abs(row['Away Team Moneyline']) + 100)
-
+            if row['Home Team Moneyline'] == None:
+                row['Home Team Moneyline'] = row['Internal Home Team Moneyline']
             if row['Home Team Moneyline'] > 0:
                 csv_df.loc[index, 'Home team Implied Odds to Win'] = 100 / (row['Home Team Moneyline'] + 100)
             else:

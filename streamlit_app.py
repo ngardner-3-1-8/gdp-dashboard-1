@@ -4096,8 +4096,8 @@ def get_survivor_picks_based_on_internal_rankings():
             print(home_ev_df)
             print("\nAway EV DataFrame (away_ev_df):")
             print(away_ev_df)
-            print("\nCombined DataFrame (combined_df):")
-            print(combined_df['Week_Num'])
+            st.write("\nCombined DataFrame (combined_df):")
+            st.write(combined_df['Week_Num'])
             df = combined_df
             df = df[~df['Hypothetical Current Winner'].isin(picked_teams)].reset_index(drop=True)
             #print(df)

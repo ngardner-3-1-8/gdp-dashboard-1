@@ -4061,7 +4061,13 @@ def get_survivor_picks_based_on_internal_rankings():
                 "Home Team EV": "Hypothetical Current Winner EV",
                 "Away Team EV": "Hypothetical Current Loser EV",
                 "Away Team Adjusted Current Rank": "Hypothetical Current Loser Adjusted Current Rank",
-                "Home Team Adjusted Current Rank": "Hypothetical Current Winner Adjusted Current Rank"
+                "Home Team Adjusted Current Rank": "Hypothetical Current Winner Adjusted Current Rank",
+                "Home Team Preseason Rank": "Hypothetical Current Winner Preseason Rank",
+                "Away Team Preseason Rank": "Hypothetical Current Loser Preseason Rank",
+                "Home Team Adjusted Preseason Rank": "Hypothetical Current Winner Adjusted Preseason Rank",
+                "Away Team Adjusted Preseason Rank": "Hypothetical Current Loser Adjusted Preseason Rank",
+                "Home Team Current Rank": "Hypothetical Current Winner Current Rank",
+                "Away Team Current Rank": "Hypothetical Current Loser Current Rank"
             }, inplace=True)
             
             # Add "Away Team 1" column
@@ -4079,6 +4085,12 @@ def get_survivor_picks_based_on_internal_rankings():
                 "Away Team EV": "Hypothetical Current Winner EV",
                 "Away Team Adjusted Current Rank": "Hypothetical Current Winner Adjusted Current Rank",
                 "Home Team Adjusted Current Rank": "Hypothetical Current Loser Adjusted Current Rank",
+                "Away Team Preseason Rank": "Hypothetical Current Winner Preseason Rank",
+                "Home Team Preseason Rank": "Hypothetical Current Loser Preseason Rank",
+                "Away Team Adjusted Preseason Rank": "Hypothetical Current Winner Adjusted Preseason Rank",
+                "Home Team Adjusted Preseason Rank": "Hypothetical Current Loser Adjusted Preseason Rank",
+                "Away Team Current Rank": "Hypothetical Current Winner Current Rank",
+                "Home Team Current Rank": "Hypothetical Current Loser Current Rank"
             }, inplace=True)
             
             # Add "Away Team 1" column
@@ -4099,8 +4111,14 @@ def get_survivor_picks_based_on_internal_rankings():
             print("\nCombined DataFrame (combined_df):")
             print(combined_df['Week_Num'])
             df = combined_df
+            df['Hypthetical Winner Preseason Difference'] = df['Hypothetical Current Winner Preseason Rank'] - df['Hypothetical Current Loser Preseason Rank']	
+            df['Hypthetical Winner Adjusted Preseason Difference'] = df['Hypothetical Current Winner Adjusted Preseason Rank'] - df['Hypothetical Current Loser Adjusted Preseason Rank']
+            df['Hypthetical Winner Current Difference'] = df['Hypothetical Current Winner Current Rank'] - df['Hypothetical Current Loser Current Rank']	
             df['Hypthetical Winner Adjusted Current Difference'] = df['Hypothetical Current Winner Adjusted Current Rank'] - df['Hypothetical Current Loser Adjusted Current Rank']	
+
+		
             df = df[~df['Hypothetical Current Winner'].isin(picked_teams)].reset_index(drop=True)
+	
             #print(df)
             # Create the solver
             solver = pywraplp.Solver.CreateSolver('SCIP')
@@ -4461,10 +4479,10 @@ def get_survivor_picks_based_on_internal_rankings():
                         
     
                         # Get differences
-                        preseason_difference = df.loc[i, 'Preseason Difference']
-                        adjusted_preseason_difference = df.loc[i, 'Adjusted Preseason Difference']
-                        current_difference = df.loc[i, 'Current Difference']
-                        adjusted_current_difference = df.loc[i, 'Adjusted Current Difference']
+                        preseason_difference = df.loc[i, 'Hypthetical Winner Preseason Difference']
+                        adjusted_preseason_difference = df.loc[i, 'Hypthetical Winner Adjusted Preseason Difference']
+                        current_difference = df.loc[i, 'Hypthetical Winner Current Difference']
+                        adjusted_current_difference = df.loc[i, 'Hypthetical Winner Adjusted Current Difference']
                         # Calculate EV for this game
                         ev = df.loc[i, 'Hypothetical Current Winner EV']
     

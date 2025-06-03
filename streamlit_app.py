@@ -713,6 +713,7 @@ def collect_schedule_travel_ranking_data(pd):
                             odds = None
     
                 if i % 2 == 0:  # Away Team
+                    # Initially assign the original scraped date. Will be updated later if needed.
                     game_data = {'Date': current_date_for_game}
                     if time_element:
                         raw_time_str = time_element.text.strip()
@@ -720,10 +721,7 @@ def collect_schedule_travel_ranking_data(pd):
     
                         converted_to_eastern = None # Initialize to None
                         if parsed_date_obj: # Ensure we have a valid date object to combine with
-                            # Remove any common timezone abbreviations (like "ET", "PT", etc.)
-                            # In this case, 'PM' is part of the time, so careful with removal
                             time_to_parse = re.sub(r'\s*(ET|PT|CT|MT)\s*', '', raw_time_str, flags=re.IGNORECASE).strip()
-                            # This regex inserts a space before AM/PM if missing (e.g., "6:20PM" -> "6:20 PM")
                             time_to_parse = re.sub(r'(\d)([AP]M)', r'\1 \2', time_to_parse)
     
                             time_formats = [
@@ -735,39 +733,33 @@ def collect_schedule_travel_ranking_data(pd):
                             time_parsed_success = False
                             for fmt in time_formats:
                                 try:
-                                    # 1. COMBINE DATE AND TIME TO CREATE A NAIVE DATETIME OBJECT
                                     naive_dt_from_site = datetime.strptime(f"{parsed_date_obj.strftime('%Y-%m-%d')} {time_to_parse}", f'%Y-%m-%d {fmt}')
-                                    print(f"\n--- Debugging Time Conversion for {team} ---")
-                                    print(f"1. Raw time string: '{raw_time_str}'")
-                                    print(f"2. Cleaned time for parsing: '{time_to_parse}'")
-                                    print(f"3. Parsed naive datetime (assuming input format): {naive_dt_from_site}")
+                                    # print(f"\n--- Debugging Time Conversion for {team} ---") # Uncomment for verbose debugging
+                                    # print(f"1. Raw time string: '{raw_time_str}'")
+                                    # print(f"2. Cleaned time for parsing: '{time_to_parse}'")
+                                    # print(f"3. Parsed naive datetime (assuming input format): {naive_dt_from_site}")
     
-                                    # 4. Localize the naive datetime object to UTC (AS WE ARE ASSUMING THE SITE'S TIME IS UTC)
+                                    # Localize the naive datetime object to UTC (assuming site's time is UTC)
                                     localized_utc = utc_tz.localize(naive_dt_from_site)
-                                    print(f"4. Localized to UTC: {localized_utc}")
+                                    # print(f"4. Localized to UTC: {localized_utc}")
     
-                                    # 5. Convert the UTC localized datetime to Eastern Time
+                                    # Convert the UTC localized datetime to Eastern Time
                                     converted_to_eastern = localized_utc.astimezone(eastern_tz)
-                                    print(f"5. Converted to Eastern: {converted_to_eastern}")
+                                    # print(f"5. Converted to Eastern: {converted_to_eastern}")
     
                                     time_parsed_success = True
                                     break # Exit loop if parsing is successful
                                 except ValueError as ve:
-                                    # print(f"DEBUG: Time parsing failed with format '{fmt}': {ve}") # Uncomment for very verbose debug
                                     continue # Try the next format
     
                             if time_parsed_success and converted_to_eastern:
-                                # Format for display: full datetime with timezone and offset
-                                # Added %z to explicitly show the UTC offset in the output
-                                game_data['Event DateTime (ET)'] = converted_to_eastern.strftime('%Y-%m-%d %I:%M:%S %p %Z%z')
-                                # Format for display: just the time part in 12-hour format
+                                game_data['Event DateTime (ET)'] = converted_to_eastern # Store the actual datetime object
                                 game_data['Time'] = converted_to_eastern.strftime('%I:%M %p')
                             else:
                                 print(f"Warning: Could not parse or convert datetime for {team} on {current_date_for_game} at '{raw_time_str}'. Time will remain raw.")
                                 game_data['Time'] = raw_time_str
                                 game_data['Event DateTime (ET)'] = None
                         else:
-                            # If date wasn't successfully parsed, we can't create a full datetime object
                             game_data['Time'] = raw_time_str
                             game_data['Event DateTime (ET)'] = None
                     else:
@@ -780,7 +772,7 @@ def collect_schedule_travel_ranking_data(pd):
     
                     if i == len(actual_team_rows) - 1:
                         print(f"Warning: Game for {team} (Away) on {current_date_for_game} is incomplete.")
-                        game_data = {} # Reset game_data for incomplete game
+                        game_data = {}
     
                 else:  # Home Team
                     if 'Away Team' not in game_data:
@@ -791,9 +783,31 @@ def collect_schedule_travel_ranking_data(pd):
                     game_data['Home Team'] = team
                     game_data['Home Odds'] = odds
                     games.append(game_data)
-                    game_data = {} # Reset for the next pair
+                    game_data = {}
     
         df = pd.DataFrame(games)
+    
+        # --- NEW STEPS FOR POST-PROCESSING THE DATAFRAME ---
+    
+        # 1. Ensure 'Event DateTime (ET)' is a proper datetime object (if not already)
+        # This converts any string representations back to datetime objects if needed,
+        # handling errors by setting them to NaT (Not a Time).
+        df['Event DateTime (ET)'] = pd.to_datetime(df['Event DateTime (ET)'], errors='coerce', utc=True)
+        # The 'utc=True' is important here because we expect it to be a timezone-aware object.
+        # We now convert it to Eastern just in case it's not already.
+        df['Event DateTime (ET)'] = df['Event DateTime (ET)'].dt.tz_convert(eastern_tz)
+    
+    
+        # 2. Update the 'Date' column to reflect the date in Eastern Time
+        # Use .dt.date to get just the date part (yyyy-mm-dd) from the datetime object
+        df['Date'] = df['Event DateTime (ET)'].dt.date.astype(str) # Convert to string 'YYYY-MM-DD' for consistency
+    
+        # 3. Remove the 'Time_Raw' column
+        if 'Time_Raw' in df.columns:
+            df = df.drop(columns=['Time_Raw'])
+    
+        # --- END NEW STEPS ---
+    
         return df
     
     live_scraped_odds_df = get_preseason_odds()

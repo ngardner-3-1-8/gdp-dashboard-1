@@ -1257,7 +1257,6 @@ def collect_schedule_travel_ranking_data(pd):
     
     return collect_schedule_travel_ranking_data_nfl_schedule_df
 collect_schedule_travel_ranking_data_nfl_schedule_df = collect_schedule_travel_ranking_data
-st.write(collect_schedule_travel_ranking_data_nfl_schedule_df)
 
 def get_predicted_pick_percentages(pd):
     # Load your historical data (replace 'historical_pick_data_FV_circa.csv' with your actual file path)

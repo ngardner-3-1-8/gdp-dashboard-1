@@ -5675,7 +5675,15 @@ else:
     st.write('- Christmas Week will be week 18 on this site (If you select Circa)')
     st.write('- In Circa, a tie eliminates you, but in Draftkings, you move on with a tie')
     st.write('- Players in Circa tend to be sharper, making it more difficult to play contrarian')
-    selected_contest = st.selectbox('Choose Contest:', options = contest_options, help = 'Choose the contest you are using this algorithm for: Circa (Advanced) or Draftkings (Traditional and Pathetic)', icon = ":material/info:")
+    help_text = f"""
+    The biggest differences between the two contests:
+    - Circa has 20 Weeks (Christmas and Thanksgiving/Black Friday act as their own individual weeks)
+    - Thanksgiving/Black Friday week will be Week 13 on this site (If you select Circa)
+    - Christmas Week will be week 18 on this site (If you select Circa)
+    - In Circa, a tie eliminates you, but in Draftkings, you move on with a tie
+    - Players in Circa tend to be sharper, making it more difficult to play contrarian
+    """
+    selected_contest = st.selectbox('Choose Contest:', options = contest_options, help = 'Choose the contest you are using this algorithm for: Circa (Advanced) or Draftkings (Traditional and Pathetic)' + help_text)
     if selected_contest == "DraftKings":
     	ending_week = 19
     else:

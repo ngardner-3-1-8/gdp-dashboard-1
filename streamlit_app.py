@@ -5664,18 +5664,18 @@ else:
         "Circa", "DraftKings"
     ]
     st.write("Alright, clowns. This site is built to help you optimize your picks for the Circa Survivor contest (And Draftkings and Splash Sports). :red[This tool is just for informational use. It does not take into account injuries, weather, resting players, or certain other factors. Do not use this tool as your only source of information.] Simply input which week you're in, your team rankings, constraints, etc... and the algorithm will do the rest.")
-    st.write("Caluclating Expected Value, or EV, will take the longest in this process. For a full season, this step will take roughly 5-10 minutes or more. It's worth the wait Good luck!")
+    st.write("Caluclating Expected Value, or EV, will take the longest in this process. For a full season, this step will take roughly 5-10 minutes or more. Do not close your browser. It's worth the wait. Good luck!")
     st.write('')
     st.write('')
     st.subheader('Select Contest')
-    st.info('Choose the contest you are using this algorithm for: Circa (Advanced) or Draftkings (Traditional and Pathetic)', icon = ":material/info:")
+    st.write('Choose the contest you are using this algorithm for: Circa (Advanced) or Draftkings (Traditional and Pathetic)', icon = ":material/info:")
     st.write('The biggest differences between the two contests:')
     st.write('- Circa has 20 Weeks (Christmas and Thanksgiving/Black Friday act as their own indivdual weeks)')
     st.write('- Thanksgiving/Black Friday week will be Week 13 on this site (If you select Circa)')
     st.write('- Christmas Week will be week 18 on this site (If you select Circa)')
     st.write('- In Circa, a tie eliminates you, but in Draftkings, you move on with a tie')
     st.write('- Players in Circa tend to be sharper, making it more difficult to play contrarian')
-    selected_contest = st.selectbox('Choose Contest:', options = contest_options)
+    selected_contest = st.selectbox('Choose Contest:', options = contest_options, help = 'Choose the contest you are using this algorithm for: Circa (Advanced) or Draftkings (Traditional and Pathetic)')
     if selected_contest == "DraftKings":
     	ending_week = 19
     else:

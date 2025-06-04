@@ -5720,7 +5720,7 @@ else:
         if selected_contest == "DraftKings":
             starting_week = st.selectbox("Select Starting Week:", options=range(1, 19), help = remaining_weeks_help_text)
         else:
-            circa_remaining_weeks_warning = f"""Select the upcoming week for the starting week and select the week you want the algorithm to stop at. \n- If you select one week, Calculating EV can take up to 30 seconds. \n- All 20 weeks will take 5-10 minutes.\n- Ending Week must be greater than or equal to Starting Week.\n :red[Week 13 is Thanksgiving/Black Friday Week and Week 18 is Christmas Week]"""
+            circa_remaining_weeks_warning = f"""Select the upcoming week for the starting week and select the week you want the algorithm to stop at. \n- If you select one week, Calculating EV can take up to 30 seconds. \n- All 20 weeks will take 5-10 minutes.\n- Ending Week must be greater than or equal to Starting Week. \n- :red[Week 13 is Thanksgiving/Black Friday Week and Week 18 is Christmas Week]"""
             starting_week = st.selectbox("Select Starting Week:", options=range(1, 21), help = circa_remaining_weeks_warning)
         #if starting_week:
             #st.write(f"Selected Starting Week: {starting_week}")

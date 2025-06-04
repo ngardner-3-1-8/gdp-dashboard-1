@@ -5686,6 +5686,7 @@ else:
         st.button("Logout", on_click=logout_user_callback) # Logout button inside sidebar
     # User is logged in, display the main application content
     # --- End Logo in Sidebar ---
+    st.image(LOGO_PATH)
     st.title("NFL Survivor Optimization")
     st.subheader("The second best Circa Survivor Contest optimizer")
     contest_options = [

@@ -5638,43 +5638,12 @@ current_week_entries_dk = 20000
 
 LOGO_PATH = "GSF Survivor Logo Clear BG.png"
 def login_screen():
-    st.title("Welcome to NFL Survivor Optimization")
+    st.title("Welcome to Generic Sports Fan Survivor Optimization")
     st.subheader("Please log in with Google to access the optimizer.")
     st.write("This tool requires authentication to ensure proper usage and to save your progress.")
     st.write("")
     if st.button("Log in with Google", use_container_width=True):
         st.login() # This triggers the Google OAuth flow
-
-# --- Logout Function (MODIFIED) ---
-def logout_user_callback():
-    # Clear all session state variables.
-    # This effectively "logs out" the user from the Streamlit app's perspective.
-    for key in st.session_state.keys():
-        del st.session_state[key]
-    st.info("You have been logged out.")
-
-    # --- THE KEY CHANGE IS HERE ---
-    # Call st.user.logout() to explicitly log out the user from Streamlit's authentication.
-    # This sends a signal to Streamlit's backend to invalidate the user's session.
-    if hasattr(st, 'user') and hasattr(st.user, 'logout'):
-        st.user.logout()
-    else:
-        st.warning("st.user.logout() is not available in this environment. Manual refresh may be needed.")
-    # --- END KEY CHANGE ---
-
-    # Set a flag to indicate that a rerun is needed
-    st.session_state.logout_triggered = True
-
-
-# --- Main Application Logic (Entry Point) ---
-# Initialize logout_triggered flag if not already present
-if 'logout_triggered' not in st.session_state:
-    st.session_state.logout_triggered = False
-
-# Check if logout was triggered in the previous run and force a rerun
-if st.session_state.logout_triggered:
-    st.session_state.logout_triggered = False # Reset the flag
-    st.rerun() # This call to rerun is now outside the callback, so it will work
 
 if not st.user.is_logged_in:
     # User is not logged in, show the login screen
@@ -5683,7 +5652,9 @@ else:
         # --- Add Logo in Sidebar when logged in ---
     with st.sidebar:
         st.image(LOGO_PATH, use_container_width=True) # Fills the sidebar width
-        st.button("Logout", on_click=logout_user_callback) # Logout button inside sidebar
+        if st.button("Logout")
+	    st.logout()# Logout button inside sidebar
+        st.write(f"Hello, {st.user.name}!")
     # User is logged in, display the main application content
     # --- End Logo in Sidebar ---
     st.image(LOGO_PATH)
@@ -7121,4 +7092,3 @@ else:
             st.write('Step 6 Completed: Top Picks Determined Based on Default Rankings')
     else:
         schedule_data_retrieved = False #Set flag to False on error
-

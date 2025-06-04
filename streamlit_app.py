@@ -5701,8 +5701,8 @@ else:
         "Seattle Seahawks", "Tampa Bay Buccaneers", "Tennessee Titans", "Washington Commanders"
     ]
     if yes_i_have_picked_teams:
-        st.write('Select the teams that you have already used in the survivor contest, or teams that you just do not want to pick in the enirety of the contest')
-        selected_teams = st.multiselect("Prohibited Picks:", options=nfl_teams)
+        selected_teams_help_text = 'Select the teams that you have already used in the survivor contest, or teams that you just do not want to pick in the enirety of the contest'
+        selected_teams = st.multiselect("Prohibited Picks:", options=nfl_teams, help = selected_teams_help_text)
         picked_teams = selected_teams if selected_teams else []
         if picked_teams:
             st.write("You selected:")
@@ -5716,12 +5716,12 @@ else:
     st.subheader('Remaining Weeks:')
     yes_i_would_like_to_choose_weeks = st.checkbox('Would you like to choose a range of weeks, instead of the entire season?')
     if yes_i_would_like_to_choose_weeks:
-        st.text('Select the upcoming week for the starting week. Select the week you want the algorithm to stop at. If you select one week, Calculating EV can take up to 30-45 minutes (If you do not use the Saved EV calculations). All 20 weeks will take 5-6 hours. Ending Week must be greater than or equal to Starting Week.')
+        remaining_weeks_help_text = 'Select the upcoming week for the starting week. Select the week you want the algorithm to stop at. If you select one week, Calculating EV can take up to 30-45 minutes (If you do not use the Saved EV calculations). All 20 weeks will take 5-6 hours. Ending Week must be greater than or equal to Starting Week.'
         if selected_contest == "DraftKings":
-            starting_week = st.selectbox("Select Starting Week:", options=range(1, 19))
+            starting_week = st.selectbox("Select Starting Week:", options=range(1, 19), help = remaining_weeks_help_text)
         else:
-            st.write(":red[Week 13 is Thanksgiving/Black Friday Week and Week 18 is Christmas Week]")
-            starting_week = st.selectbox("Select Starting Week:", options=range(1, 21))
+            circa_remaining_weeks_warning = "\n:red[Week 13 is Thanksgiving/Black Friday Week and Week 18 is Christmas Week]"
+            starting_week = st.selectbox("Select Starting Week:", options=range(1, 21) help = remaining_weeks_help_text + circa_remaining_weeks_warning)
         #if starting_week:
             #st.write(f"Selected Starting Week: {starting_week}")
         # Create a dynamic range for ending week based on starting week

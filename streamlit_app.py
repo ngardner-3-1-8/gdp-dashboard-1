@@ -5675,7 +5675,7 @@ else:
     st.write('- Christmas Week will be week 18 on this site (If you select Circa)')
     st.write('- In Circa, a tie eliminates you, but in Draftkings, you move on with a tie')
     st.write('- Players in Circa tend to be sharper, making it more difficult to play contrarian')
-    selected_contest = st.selectbox('Choose Contest:', options = contest_options, help = 'Choose the contest you are using this algorithm for: Circa (Advanced) or Draftkings (Traditional and Pathetic)')
+    selected_contest = st.selectbox('Choose Contest:', options = contest_options, help = 'Choose the contest you are using this algorithm for: Circa (Advanced) or Draftkings (Traditional and Pathetic)', icon = ":material/info:")
     if selected_contest == "DraftKings":
     	ending_week = 19
     else:

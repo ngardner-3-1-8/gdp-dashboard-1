@@ -5653,7 +5653,7 @@ else:
     with st.sidebar:
         st.image(LOGO_PATH, use_container_width=True) # Fills the sidebar width
         if st.button("Logout"):
-	    st.logout()# Logout button inside sidebar
+            st.logout()# Logout button inside sidebar
         st.write(f"Hello, {st.user.name}!")
     # User is logged in, display the main application content
     # --- End Logo in Sidebar ---

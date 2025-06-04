@@ -5721,7 +5721,7 @@ else:
             starting_week = st.selectbox("Select Starting Week:", options=range(1, 19), help = remaining_weeks_help_text)
         else:
             circa_remaining_weeks_warning = "\n:red[Week 13 is Thanksgiving/Black Friday Week and Week 18 is Christmas Week]"
-            starting_week = st.selectbox("Select Starting Week:", options=range(1, 21) help = remaining_weeks_help_text + circa_remaining_weeks_warning)
+            starting_week = st.selectbox("Select Starting Week:", options=range(1, 21), help = remaining_weeks_help_text + circa_remaining_weeks_warning)
         #if starting_week:
             #st.write(f"Selected Starting Week: {starting_week}")
         # Create a dynamic range for ending week based on starting week

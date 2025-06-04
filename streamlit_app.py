@@ -5664,17 +5664,17 @@ else:
         "Circa", "DraftKings"
     ]
     st.write("Alright, clowns. This site is built to help you optimize your picks for the Circa Survivor contest (And Draftkings and Splash Sports). :red[This tool is just for informational use. It does not take into account injuries, weather, resting players, or certain other factors. Do not use this tool as your only source of information.] Simply input which week you're in, your team rankings, constraints, etc... and the algorithm will do the rest.")
-    st.write("Caluclating Expected Value, or EV, will take the longest in this process. For a full season, this step will take roughly 5-10 minutes or more. Do not close your browser. It's worth the wait. Good luck!")
+    st.write("Calculating Expected Value, or EV, will take the longest in this process. For a full season, this step will take roughly 5-10 minutes or more. Do not close your browser. It's worth the wait. Good luck!")
     st.write('')
     st.write('')
     st.subheader('Select Contest')
     help_text_seletced_contest = f"""
-    The biggest differences between the two contests:
-    - Circa has 20 Weeks (Christmas and Thanksgiving/Black Friday act as their own individual weeks)
-    - Thanksgiving/Black Friday week will be Week 13 on this site (If you select Circa)
-    - Christmas Week will be week 18 on this site (If you select Circa)
-    - In Circa, a tie eliminates you, but in Draftkings, you move on with a tie
-    - Players in Circa tend to be sharper, making it more difficult to play contrarian
+    \nThe biggest differences between the two contests:
+    \n- Circa has 20 Weeks (Christmas and Thanksgiving/Black Friday act as their own individual weeks)
+    \n- Thanksgiving/Black Friday week will be Week 13 on this site (If you select Circa)
+    \n- Christmas Week will be week 18 on this site (If you select Circa)
+    \n- In Circa, a tie eliminates you, but in Draftkings, you move on with a tie
+    \n- Players in Circa tend to be sharper, making it more difficult to play contrarian
     """
     selected_contest = st.selectbox('Choose Contest:', options = contest_options, help = 'Choose the contest you are using this algorithm for: Circa (Advanced) or Draftkings (Traditional and Pathetic)' + help_text_seletced_contest)
     if selected_contest == "DraftKings":

@@ -5716,7 +5716,7 @@ else:
     st.subheader('Remaining Weeks:')
     yes_i_would_like_to_choose_weeks = st.checkbox('Would you like to choose a range of weeks, instead of the entire season?')
     if yes_i_would_like_to_choose_weeks:
-        remaining_weeks_help_text = f"""Select the upcoming week for the starting week and select the week you want the algorithm to stop at. /n- If you select one week, Calculating EV can take up to 30 seconds. /n- All 18 or 20 weeks (depending on the selected contest) will take 5-10 minutes./n- Ending Week must be greater than or equal to Starting Week."""
+        remaining_weeks_help_text = f"""Select the upcoming week for the starting week and select the week you want the algorithm to stop at. \n- If you select one week, Calculating EV can take up to 30 seconds. \n- All 18 or 20 weeks (depending on the selected contest) will take 5-10 minutes.\n- Ending Week must be greater than or equal to Starting Week."""
         if selected_contest == "DraftKings":
             starting_week = st.selectbox("Select Starting Week:", options=range(1, 19), help = remaining_weeks_help_text)
         else:

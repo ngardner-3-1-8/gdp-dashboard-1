@@ -5668,7 +5668,7 @@ else:
     st.write('')
     st.write('')
     st.subheader('Select Contest')
-    st.info('Choose the contest you are using this algorithm for: Circa (Advanced) or Draftkings (Traditional and Pathetic)', icon = ":material/Info:")
+    st.info('Choose the contest you are using this algorithm for: Circa (Advanced) or Draftkings (Traditional and Pathetic)', icon = ":material/info:")
     st.write('The biggest differences between the two contests:')
     st.write('- Circa has 20 Weeks (Christmas and Thanksgiving/Black Friday act as their own indivdual weeks)')
     st.write('- Thanksgiving/Black Friday week will be Week 13 on this site (If you select Circa)')

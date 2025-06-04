@@ -5659,16 +5659,16 @@ else:
     # --- End Logo in Sidebar ---
     st.image(LOGO_PATH)
     st.title("NFL Survivor Optimization")
-    st.subheader("The second best Circa Survivor Contest optimizer")
+    st.subheader("The best NFL Survivor Contest optimizer")
     contest_options = [
         "Circa", "DraftKings"
     ]
-    st.write("Alright, clowns. This site is built to help you optimize your picks for the Circa Survivor contest (Eventually other contests). :red[This tool is just for informational use. It does not take into account injuries, weather, resting players, or certain other factors. Do not use this tool as your only source of information.] Simply input which week you're in, your team rankings, constraints, etc... and the algorithm will do the rest.")
-    st.write('Caluclating EV will take the longest in this process. For a full season, this step will take up to 5 hours or more. For that reason, :green[we recommend using the saved Expected Value Calculations.] Good luck!')
+    st.write("Alright, clowns. This site is built to help you optimize your picks for the Circa Survivor contest (And Draftkings and Splash Sports). :red[This tool is just for informational use. It does not take into account injuries, weather, resting players, or certain other factors. Do not use this tool as your only source of information.] Simply input which week you're in, your team rankings, constraints, etc... and the algorithm will do the rest.")
+    st.write("Caluclating Expected Value, or EV, will take the longest in this process. For a full season, this step will take roughly 5-10 minutes or more. It's worth the wait Good luck!")
     st.write('')
     st.write('')
     st.subheader('Select Contest')
-    st.write('Choose the contest you are using this algorithm for: Circa (Advanced) or Draftkings (Traditional and Pathetic)')
+    st.info('Choose the contest you are using this algorithm for: Circa (Advanced) or Draftkings (Traditional and Pathetic)', icon = ":material/Info:")
     st.write('The biggest differences between the two contests:')
     st.write('- Circa has 20 Weeks (Christmas and Thanksgiving/Black Friday act as their own indivdual weeks)')
     st.write('- Thanksgiving/Black Friday week will be Week 13 on this site (If you select Circa)')

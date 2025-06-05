@@ -7272,17 +7272,21 @@ else:
     number_of_solutions_options = [
         1,5,10,25,50,100
     ]
+
     st.write('How many solutions would you like from each solver?')
-    number_solutions = st.selectbox('Number of Solutions', options = number_of_solutions_options)
+    number_solutions = st.selectbox('Number of Solutions', options = number_of_solutions_options help = "How many solutions do you want to produce? We recommend 10.)
     double_number_solutions = number_solutions * 2
-    st.text(f'This button will find the best picks for each week. It will pump out {double_number_solutions} solutions.')
-    st.write(f'- The first {number_solutions} will be :red[based purely on EV] that is a complicated formula based on predicted pick percentage of each team in each week, and their chances of winning that week.')
-    st.write('- This will use the rankings defined above to determine win probability and thus pick percentage for each team. If you provide your own rankings, :red[you CANNOT use the cached version of EV]. If you use the default rankings, the cached version will be fine') 
-    st.write(f'- The second {number_solutions} solutions will be based on the :red[rankings and constraints you provided]')
-    st.write('- This will use the rankings defined above to determine win probability for each team. Because this :red[does not use predicted pick percentage nor EV], you can use the cached version of EV to speed things up.') 
-    st.write('- All solutions will abide by the prohibited teams and the weeks you selected')
-    st.write('- If you have too many constraints, or the solution is impossible, you will see an error')
-    st.write("- :green[Mathematically, EV is most likely to win, however, using your own rankings has advantages as well, which is why we provide both solutions (Sometimes it's just preposterous to Pick the Jets)]")
+
+    with st.expander("More Infromation"):
+        number_solutions_helper_text = f"""This button will find the best picks for each week. It will pump out :green[{double_number_solutions} solutions].
+	\n- The first {number_solutions} solutions will be :red[based purely on EV] that is a complicated formula based on their predicted pick percentage of each team in each week, and each team's chances of winning that week.
+ 	\n- This will use the rankings defined above (or within our system) to determine win probability and thus pick percentage for each team.
+  	\n- The remaining {number_solutions} solutions will be based on the :red[rankings and constraints you provided]. 
+  	\n- This method finds the teams that are just straight up most likely to win. While helpful, thsi does not provide you with much of a competitive advantage.
+   	\n- All solutions will abide by the constraints you've provided
+   	\n- If you have too many constraints, or the solution is impossible, you will see an error
+       	\n- :green[Mathematically, EV is most likely to win. However, using your own rankings has advantages as well, which is why we provide both solutions (Sometimes it's just preposterous to pick the Jets)]
+        """
     
     
     st.write('')

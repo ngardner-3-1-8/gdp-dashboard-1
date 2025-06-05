@@ -5754,49 +5754,49 @@ else:
         az_current_week_availability = st.slider("Arizona Cardinals Current Week Availability:", -1, 100) / 100
         if az_current_week_availability < 0:
             st.write(f"Arizona Cardinals Current Week Availability: :red[Automatically Calculated]")
-	else:
+        else:
             st.write(f"Arizona Cardinals Current Week Availability: {az_current_week_availability}")
         st.write("")
         atl_current_week_availability = st.slider("Atlanta Falcons Current Week Availability:", -1, 100) / 100
         if az_current_week_availability < 0:
             st.write(f"Arizona Cardinals Current Week Availability: :red[Automatically Calculated]")
-	else:
+        else:
             st.write(f"Arizona Cardinals Current Week Availability: {az_current_week_availability}")
         st.write("")
         bal_current_week_availability = st.slider("Baltimore Ravens Current Week Availability:", -1, 100) / 100
         if az_current_week_availability < 0:
             st.write(f"Arizona Cardinals Current Week Availability: :red[Automatically Calculated]")
-	else:
+        else:
             st.write(f"Arizona Cardinals Current Week Availability: {az_current_week_availability}")
         st.write("")
         buf_current_week_availability = st.slider("Buffalo Bills Current Week Availability:", -1, 100) / 100
         if az_current_week_availability < 0:
             st.write(f"Arizona Cardinals Current Week Availability: :red[Automatically Calculated]")
-	else:
+        else:
             st.write(f"Arizona Cardinals Current Week Availability: {az_current_week_availability}")
         st.write("")
         car_current_week_availability = st.slider("Carolina Panthers Current Week Availability:", -1, 100) / 100
         if az_current_week_availability < 0:
             st.write(f"Arizona Cardinals Current Week Availability: :red[Automatically Calculated]")
-	else:
+        else:
             st.write(f"Arizona Cardinals Current Week Availability: {az_current_week_availability}")
         st.write("")
         chi_current_week_availability = st.slider("Chicago Bears Current Week Availability:", -1, 100) / 100
         if az_current_week_availability < 0:
             st.write(f"Arizona Cardinals Current Week Availability: :red[Automatically Calculated]")
-	else:
+        else:
             st.write(f"Arizona Cardinals Current Week Availability: {az_current_week_availability}")
         st.write("")
         cin_current_week_availability = st.slider("Cincinnati Bengals Current Week Availability:", -1, 100) / 100
         if az_current_week_availability < 0:
             st.write(f"Arizona Cardinals Current Week Availability: :red[Automatically Calculated]")
-	else:
+        else:
             st.write(f"Arizona Cardinals Current Week Availability: {az_current_week_availability}")
         st.write("")
         cle_current_week_availability = st.slider("Cleveland Browns Current Week Availability:", -1, 100) / 100
         if az_current_week_availability < 0:
             st.write(f"Arizona Cardinals Current Week Availability: :red[Automatically Calculated]")
-	else:
+        else:
             st.write(f"Arizona Cardinals Current Week Availability: {az_current_week_availability}")
         st.write("")
         dal_current_week_availability = st.slider("Dallas Cowboys Current Week Availability:", -1, 100) / 100

@@ -5687,7 +5687,7 @@ else:
     st.write('')
     st.write('')
     st.subheader('Picked Teams:')
-    yes_i_have_picked_teams = st.checkbox('Have you already used any teams in the contest, or want to prevent the algorithm from using any specific teams?')
+    yes_i_have_picked_teams = st.checkbox('Have you already used any teams in the contest, or want to prevent the algorithm from using any specific teams at any point in the season?')
     
     #def create_nfl_app():
     

@@ -6088,7 +6088,7 @@ else:
     required_week_options = [0] + list(range(starting_week, ending_week))
     if yes_i_have_a_required_team:
         with st.expander("More Information"):
-            st.write("\n- Select the teams that you woulkd like selected in a specific week. \n- If you would like to select the Philadelphia Eagles in week 4, JUst select '4' Under the Eagles' dropdown.")
+            st.write("\n- Select the teams that you would like to be used in a specific week. \n- For example, if you would like to select the Philadelphia Eagles in week 4, just select '4' Under the Eagles' dropdown.")
 		
         az_req_week = st.selectbox("Arizona Cardinals Week Required to Be Picked:", options=required_week_options)
         atl_req_week = st.selectbox("Atlanta Falcons Week Required to Be Picked:", options=required_week_options)
@@ -6129,7 +6129,8 @@ else:
     st.subheader('Prohibited Teams')
     yes_i_have_prohibited_teams = st.checkbox('Do you have teams that you want to prohibit the alogrithm from choosing in a specifc week?')
     if yes_i_have_prohibited_teams:
-        st.write('Choose which week you do :red[NOT] want a team to be picked. If, for example, you think the 49ers have a bad matchup in Week 15, and you do not want them to be used then, select "15" for the San Francisco 49ers')
+        with st.expander("More Information"):
+            st.write('\n-Choose which week you do :red[NOT] want a team to be picked. \n-If, for example, you think the 49ers have a bad matchup in Week 15, and you do not want them to be used then, select "15" for the San Francisco 49ers. \n- You may select multiple weeks for each team.')
     
         az_prohibited_weeks = st.multiselect("Arizona Cardinals Week to Be Excluded:", options=required_week_options)
         atl_prohibited_weeks = st.multiselect("Atlanta Falcons Week to Be Excluded:", options=required_week_options)
@@ -6204,11 +6205,9 @@ else:
     st.subheader('NFL Team Rankings')
     yes_i_have_customized_rankings = st.checkbox('Would you like to use customized rankings instead of our default rankings?')
     if yes_i_have_customized_rankings:
-        st.write('The Ranking represents :red[how much a team would either win (positive number) or lose (negative number) by to an average NFL team] on a neutral field. 0 means the team is perfectly average. If you leave the "Default" value, the default rankings will be used.')
-        st.write('If you use your own rankings, and do NOT select "Use Cached Expected Value", then we will use your internal rankings in two ways:')
-        st.write('1. We will use them in the calculation based on internal rankings')
-        st.write('2. We will use public Draftkings ML odds to predict pick percentages for the EV calculation, but then use your internal rankinsg to predict win percentage and help you find an EV edge based on your internal rankings')
-        st.write('')
+        with st.expander("More Information"):
+            st.write('\n- The Ranking represents :red[how much a team would either win (positive number) or lose (negative number) by to an average NFL team] on a neutral field. 0 means the team is perfectly average. If you leave the "Default" value, the default rankings will be used. \n- If you use your own rankings, we will use them in the calculation based on internal rankings. \n- If you use your own rankings, We will use public Draftkings ML odds to predict pick percentages for the EV calculation (The public largely relies on public lines to make their decisions), but then we will use your internal rankinsg to predict win percentage and help you find an EV edge based on your internal rankings. \n- If Draftkings moneyline odds are unavailable, we will use your internal rankings throughout.')
+		
         
         
         team_rankings = [
@@ -6219,168 +6218,168 @@ else:
         az_rank = st.selectbox("Arizona Cardinals Ranking:", options=team_rankings)
         if az_rank == "Default":
             az_rank = default_atl_rank
-        st.write(f'Current Arizona Cardinals Ranking: {az_rank}')
+        st.write(f'Current Arizona Cardinals Ranking: :green[{az_rank}]')
         st.write('')
         atl_rank = st.selectbox("Atlanta Falcons Ranking:", options=team_rankings)
         if atl_rank == "Default":
             atl_rank = default_atl_rank
-        st.write(f'Current Atlanta Falcons Ranking: {atl_rank}')
+        st.write(f'Current Atlanta Falcons Ranking: :green[{atl_rank}]')
         st.write('')
         bal_rank = st.selectbox("Baltimore Ravens Ranking:", options=team_rankings)
         if bal_rank == "Default":
             bal_rank = default_bal_rank
-        st.write(f'Current Baltimore Ravens Ranking: {bal_rank}')
+        st.write(f'Current Baltimore Ravens Ranking: :green[{bal_rank}]')
         st.write('')
         buf_rank = st.selectbox("Buffalo Bills Ranking:", options=team_rankings)
         if buf_rank == "Default":
             buf_rank = default_buf_rank
-        st.write(f'Current Buffalo Bills Ranking: {buf_rank}')
+        st.write(f'Current Buffalo Bills Ranking: :green[{buf_rank}]')
         st.write('')
         car_rank = st.selectbox("Carolina Panthers Ranking:", options=team_rankings)
         if car_rank == "Default":
             car_rank = default_car_rank
-        st.write(f'Current Carolina Panthers Ranking: {car_rank}')
+        st.write(f'Current Carolina Panthers Ranking: :green[{car_rank}]')
         st.write('')
         chi_rank = st.selectbox("Chicago Bears Ranking:", options=team_rankings)
         if chi_rank == "Default":
             chi_rank = default_chi_rank
-        st.write(f'Current Chicago Bears Ranking: {chi_rank}')
+        st.write(f'Current Chicago Bears Ranking: :green[{chi_rank}]')
         st.write('')
         cin_rank = st.selectbox("Cincinnati Bengals Ranking:", options=team_rankings)
         if cin_rank == "Default":
             cin_rank = default_cin_rank
-        st.write(f'Current Cincinnati Bengals Ranking: {cin_rank}')
+        st.write(f'Current Cincinnati Bengals Ranking: :green[{cin_rank}]')
         st.write('')
         cle_rank = st.selectbox("Cleveland Browns Ranking:", options=team_rankings)
         if cle_rank == "Default":
             cle_rank = default_cle_rank
-        st.write(f'Current Cleveland Browns Ranking: {cle_rank}')
+        st.write(f'Current Cleveland Browns Ranking: :green[{cle_rank}]')
         st.write('')
         dal_rank = st.selectbox("Dallas Cowboys Ranking:", options=team_rankings)
         if dal_rank == "Default":
             dal_rank = default_dal_rank
-        st.write(f'Current Dallas Cowboys Ranking: {dal_rank}')
+        st.write(f'Current Dallas Cowboys Ranking: :green[{dal_rank}]')
         st.write('')
         den_rank = st.selectbox("Denver Broncos Ranking:", options=team_rankings)
         if den_rank == "Default":
             den_rank = default_den_rank
-        st.write(f'Current Denver Broncos Ranking: {den_rank}')
+        st.write(f'Current Denver Broncos Ranking: :green[{den_rank}]')
         st.write('')
         det_rank = st.selectbox("Detroit Lions Ranking:", options=team_rankings)
         if det_rank == "Default":
             det_rank = default_det_rank
-        st.write(f'Current Detroit Lions Ranking: {det_rank}')
+        st.write(f'Current Detroit Lions Ranking: :green[{det_rank}]')
         st.write('')
         gb_rank = st.selectbox("Green Bay Packers Ranking:", options=team_rankings)
         if gb_rank == "Default":
             gb_rank = default_gb_rank
-        st.write(f'Current Green Bay Packers Ranking: {gb_rank}')
+        st.write(f'Current Green Bay Packers Ranking: :green[{gb_rank}]')
         st.write('')
         hou_rank = st.selectbox("Houston Texans Ranking:", options=team_rankings)
         if hou_rank == "Default":
             hou_rank = default_hou_rank
-        st.write(f'Current Houston Texans Ranking: {hou_rank}')
+        st.write(f'Current Houston Texans Ranking: :green[{hou_rank}]')
         st.write('')
         ind_rank = st.selectbox("Indianapoils Colts Ranking:", options=team_rankings)
         if ind_rank == "Default":
             ind_rank = default_ind_rank
-        st.write(f'Current Indianapoils Colts Ranking: {ind_rank}')
+        st.write(f'Current Indianapoils Colts Ranking: :green[{ind_rank}]')
         st.write('')
         jax_rank = st.selectbox("Jacksonville Jaguars Ranking:", options=team_rankings)
         if jax_rank == "Default":
             jax_rank = default_jax_rank
-        st.write(f'Current Jacksonville Jaguars Ranking: {jax_rank}')
+        st.write(f'Current Jacksonville Jaguars Ranking: :green[{jax_rank}]')
         st.write('')
         kc_rank = st.selectbox("Kansas City Chiefs Ranking:", options=team_rankings)
         if kc_rank == "Default":
             kc_rank = default_kc_rank
-        st.write(f'Current Kansas City Chiefs Ranking: {kc_rank}')
+        st.write(f'Current Kansas City Chiefs Ranking: :green[{kc_rank}]')
         st.write('')
         lv_rank = st.selectbox("Las Vegas Raiders Ranking:", options=team_rankings)
         if lv_rank == "Default":
             lv_rank = default_lv_rank
-        st.write(f'Current Las Vegas Raiders Ranking: {lv_rank}')
+        st.write(f'Current Las Vegas Raiders Ranking: :green[{lv_rank}]')
         st.write('')
         lac_rank = st.selectbox("Los Angeles Chargers Ranking:", options=team_rankings)
         if lac_rank == "Default":
             lac_rank = default_lac_rank
-        st.write(f'Current Los Angeles Chargers Ranking: {lac_rank}')
+        st.write(f'Current Los Angeles Chargers Ranking: :green[{lac_rank}]')
         st.write('')
         lar_rank = st.selectbox("Los Angeles Rams Ranking:", options=team_rankings)
         if lar_rank == "Default":
             lar_rank = default_lar_rank
-        st.write(f'Current Los Angeles Rams Ranking: {lar_rank}')
+        st.write(f'Current Los Angeles Rams Ranking: :green[{lar_rank}]')
         st.write('')
         mia_rank = st.selectbox("Miami Dolphins Ranking:", options=team_rankings)
         if mia_rank == "Default":
             mia_rank = default_mia_rank
-        st.write(f'Current Miami Dolphins Ranking: {mia_rank}')
+        st.write(f'Current Miami Dolphins Ranking: :green[{mia_rank}]')
         st.write('')
         min_rank = st.selectbox("Minnesota Vikings Ranking:", options=team_rankings)
         if min_rank == "Default":
             min_rank = default_min_rank
-        st.write(f'Current Minnesota Vikings Ranking: {min_rank}')
+        st.write(f'Current Minnesota Vikings Ranking: :green[{min_rank}]')
         st.write('')
         ne_rank = st.selectbox("New England Patriots Ranking:", options=team_rankings)
         if ne_rank == "Default":
             ne_rank = default_ne_rank
-        st.write(f'Current New England Patriots Ranking: {ne_rank}')
+        st.write(f'Current New England Patriots Ranking: :green[{ne_rank}]')
         st.write('')
         no_rank = st.selectbox("New Orleans Saints Ranking:", options=team_rankings)
         if no_rank == "Default":
             no_rank = default_no_rank
-        st.write(f'Current New Orleans Saints Ranking: {no_rank}')
+        st.write(f'Current New Orleans Saints Ranking: :green[{no_rank}]')
         st.write('')
         nyg_rank = st.selectbox("New York Giants Ranking:", options=team_rankings)
         if nyg_rank == "Default":
             nyg_rank = default_nyg_rank
-        st.write(f'Current New York Giants Ranking: {nyg_rank}')
+        st.write(f'Current New York Giants Ranking: :green[{nyg_rank}]')
         st.write('')
         nyj_rank = st.selectbox("New York Jets Ranking:", options=team_rankings)
         if nyj_rank == "Default":
             nyj_rank = default_nyj_rank
-        st.write(f'Current New York Jets Ranking: {nyj_rank}')
+        st.write(f'Current New York Jets Ranking: :green[{nyj_rank}]')
         st.write('')
         phi_rank = st.selectbox("Philadelphia Eagles Ranking:", options=team_rankings)
         if phi_rank == "Default":
             phi_rank = default_phi_rank
-        st.write(f'Current Philadelphia Eagles Ranking: {phi_rank}')
+        st.write(f'Current Philadelphia Eagles Ranking: :green[{phi_rank}]')
         st.write('')
         pit_rank = st.selectbox("Pittsburgh Steelers Ranking:", options=team_rankings)
         if pit_rank == "Default":
             pit_rank = default_pit_rank
-        st.write(f'Current Pittsburgh Steelers Ranking: {pit_rank}')
+        st.write(f'Current Pittsburgh Steelers Ranking: :green[{pit_rank}]')
         st.write('')
         sf_rank = st.selectbox("San Francisco 49ers Ranking:", options=team_rankings)
         if sf_rank == "Default":
             sf_rank = default_sf_rank
-        st.write(f'Current San Francisco 49ers Ranking: {sf_rank}')
+        st.write(f'Current San Francisco 49ers Ranking: :green[{sf_rank}]')
         st.write('')
         sea_rank = st.selectbox("Seattle Seahawks Ranking:", options=team_rankings)
         if sea_rank == "Default":
             sea_rank = default_sea_rank
-        st.write(f'Current Seattle Seahawks Ranking: {sea_rank}')
+        st.write(f'Current Seattle Seahawks Ranking: :green[{sea_rank}]')
         st.write('')
         tb_rank = st.selectbox("Tampa Bay Buccaneers Ranking:", options=team_rankings)
         if tb_rank == "Default":
             tb_rank = default_tb_rank
-        st.write(f'Current Tampa Bay Buccaneers Ranking: {tb_rank}')
+        st.write(f'Current Tampa Bay Buccaneers Ranking: :green[{tb_rank}]')
         st.write('')
         ten_rank = st.selectbox("Tennessee Titans Ranking:", options=team_rankings)
         if ten_rank == "Default":
             ten_rank = default_ten_rank
-        st.write(f'Current Tennessee Titans Ranking: {ten_rank}')
+        st.write(f'Current Tennessee Titans Ranking: :green[{ten_rank}]')
         st.write('')
         was_rank = st.selectbox("Washington Commanders Ranking:", options=team_rankings)
         if was_rank == "Default":
             was_rank = default_was_rank
-        st.write(f'Current Washington Commanders Ranking: {was_rank}')
+        st.write(f'Current Washington Commanders Ranking: :green[{was_rank}]')
     
     st.write('')
     st.write('')
     st.write('')
     st.subheader('Pick Exclusively Favorites?')
-    pick_must_be_favored = st.checkbox('All teams picked must be favored at the time of running this script')
+    pick_must_be_favored = st.checkbox('All teams picked must be favored at the time of running this script', help = "When this is selected. All teams that are picked must be favored to win the game in order to be selected for this week. \n- There are many cases where the system may select an underdog to create a larger advantage in a different week. \n- We recommend turning this on for smaller pools, but for Circa we recommend turning this off to give you th best EV advantage.")
     
     st.write('')
     st.write('')
@@ -6389,7 +6388,10 @@ else:
     yes_i_have_constraints = st.checkbox('Would you like to add constraints? For example, "Avoid Teams on Short Rest"')
     
     if yes_i_have_constraints:
-        st.write('These constraints will not work 100% of the time (For example in week 18, all Games are divisional matchups). However, it will require a team to be so heavily favored that the impact of the constrained factor should be minimal.')
+        with st.expander("More Information"):
+            st.write("""These constraints will not work 100% of the time (For example in week 18, all Games are divisional matchups). However, it will require a team to be so heavily favored that the impact of the constrained factor should be minimal.'
+	    \n- We recommend using only a few constraints at a time, to avoid limiting the  system to failure.
+            \n- Most of the time, sprotsbooks' odds take into account these kinds of concerns, however, if you are adamanetly against picking away teams or teams in a divisional matchup, we give you the option to limit them as much as possible.""")
         avoid_away_teams_on_short_rest = 1 if st.checkbox('Avoid Away Teams on Short Rest') else 0
         avoid_close_divisional_matchups = 1 if st.checkbox('Avoid Close Divisional Matchups') else 0
         avoid_3_games_in_10_days = 1 if st.checkbox('Avoid 3 games in 10 days') else 0
@@ -6413,7 +6415,17 @@ else:
         #use_same_current_and_adjusted_current_winners = 1 if st.selectbox('Bayesian, Rest, and Travel Impact:', options = bayesian_and_travel_options) == "Selected team must be projected to win with and without travel and rest impact based on current rankings" else 0
         #use_same_adj_preseason_and_adj_current_winner = 1 if st.selectbox('Bayesian, Rest, and Travel Impact:', options = bayesian_and_travel_options) == "Selected team must have been projected to win based on preseason rankings in addition to current rankings" else 0
         if pick_must_be_favored:
-        	bayesian_rest_travel_constraint = st.selectbox('Bayesian, Rest, and Travel Impact:', options = bayesian_and_travel_options)
+        	bayesian_rest_travel_constraint = st.selectbox('Bayesian, Rest, and Travel Impact:', options = bayesian_and_travel_options, help = """Rest, and Travel Impact allows you to choose teams based on the factors working against them or for them. For example: 
+	                                                                                                                                              \n- Distance traveled.
+																	              \n- Timezones traveled through
+																	              \n- Rest advantage
+																	              \n- Season-long cumulative rest advantage 
+																	              \n- Many more factors
+																	              \n\n Bayesian Impact is the weight/importance of preseason rankings. When checked:
+																	              \n- This takes into account both preseason rankings and current rankings
+																	              \n- Team must have been projected to win this game before the season started and based on currrent rankings
+																	              \n- This is important, because in theory the general public's intitial opinion on a team has validity. For example, if a team has great talent, but hasn't put it together so far this season, they could easily upset a team you picked.
+																	              \n- Use with caution, this can be too large of a constraint and lead to no possible solutions.""")
     
     st.write('')
     st.write('')
@@ -6422,11 +6434,12 @@ else:
     st.subheader('Estimate Pick Percentages')
     yes_i_have_pick_percents = st.checkbox('Would you like to add your own estimated pick percentages, instead of using our estimated picks?')
     if yes_i_have_pick_percents:
-        st.write('Select your own estimated pick percentages for each team. If you do not change the default value of -1, then it will automatically select our own estimated picks. This tool will be especially useful later in the season')
+        with st.expander("More Information")
+            st.write('\n- Select your own estimated pick percentages for each team. \n- If you do not change the default value of -1, then it will automatically calculate the estimated pick percentages for that team. \n- This tool will be especially useful later in the season \n- For teams on bye, you can leave them at -1.')
         st.write('')
         st.write('')
         if starting_week <= 1 and ending_week > 1:
-            week_1_pick_percents = st.checkbox('Add Week 1 Pick Percentages?')
+            week_1_pick_percents = st.checkbox('Add Week 1 Pick Percentages?', help = "Check this box if you want to adjust the estimated pick percentages for each team in week 1.")
             if week_1_pick_percents:
                 st.write('')
                 st.subheader('Week 1 Estimated Pick Percentages')
@@ -6466,7 +6479,7 @@ else:
             st.write('')
             st.write('')
         if starting_week <= 2 and ending_week > 2:
-            week_2_pick_percents = st.checkbox('Add Week 2 Pick Percentages?')
+            week_2_pick_percents = st.checkbox('Add Week 2 Pick Percentages?', help = "Check this box if you want to adjust the estimated pick percentages for each team in week 2.")
             if week_2_pick_percents:
                 st.write('')
                 st.subheader('Week 2 Estimated Pick Percentages')
@@ -6506,7 +6519,7 @@ else:
             st.write('')
             st.write('')
         if starting_week <= 3 and ending_week > 3:
-            week_3_pick_percents = st.checkbox('Add Week 3 Pick Percentages?')
+            week_3_pick_percents = st.checkbox('Add Week 3 Pick Percentages?', help = "Check this box if you want to adjust the estimated pick percentages for each team in week 3.")
             if week_3_pick_percents:
                 st.write('')
                 st.subheader('Week 3 Estimated Pick Percentages')
@@ -6549,7 +6562,7 @@ else:
             week_4_pick_percents = st.checkbox('Add Week 4 Pick Percentages?')
             if week_4_pick_percents:
                 st.write('')
-                st.subheader('Week 4 Estimated Pick Percentages')
+                st.subheader('Week 4 Estimated Pick Percentages', help = "Check this box if you want to adjust the estimated pick percentages for each team in week 4.")
                 st.write('')
                 az_week_4_pick_percent = st.slider("Arizona Cardinals Estimated Week 4 Pick %:", -1, 100) / 100
                 atl_week_4_pick_percent = st.slider("Atlanta Falcons Estimated Week 4 Pick %:", -1, 100) / 100
@@ -6586,7 +6599,7 @@ else:
             st.write('')
             st.write('')
         if starting_week <= 5 and ending_week > 5:
-            week_5_pick_percents = st.checkbox('Add Week 5 Pick Percentages?')
+            week_5_pick_percents = st.checkbox('Add Week 5 Pick Percentages?', help = "Check this box if you want to adjust the estimated pick percentages for each team in week 5.")
             if week_5_pick_percents:
                 st.write('')
                 st.subheader('Week 5 Estimated Pick Percentages')
@@ -6626,7 +6639,7 @@ else:
             st.write('')
             st.write('')
         if starting_week <= 6 and ending_week > 6:
-            week_6_pick_percents = st.checkbox('Add Week 6 Pick Percentages?')
+            week_6_pick_percents = st.checkbox('Add Week 6 Pick Percentages?', help = "Check this box if you want to adjust the estimated pick percentages for each team in week 6.")
             if week_6_pick_percents:
                 st.write('')
                 st.subheader('Week 6 Estimated Pick Percentages')
@@ -6666,7 +6679,7 @@ else:
             st.write('')
             st.write('')
         if starting_week <= 7 and ending_week > 7:
-            week_7_pick_percents = st.checkbox('Add Week 7 Pick Percentages?')
+            week_7_pick_percents = st.checkbox('Add Week 7 Pick Percentages?', help = "Check this box if you want to adjust the estimated pick percentages for each team in week 7.")
             if week_7_pick_percents:
                 st.write('')
                 st.subheader('Week 7 Estimated Pick Percentages')
@@ -6706,7 +6719,7 @@ else:
             st.write('')
             st.write('')
         if starting_week <= 8 and ending_week > 8:
-            week_8_pick_percents = st.checkbox('Add Week 8 Pick Percentages?')
+            week_8_pick_percents = st.checkbox('Add Week 8 Pick Percentages?', help = "Check this box if you want to adjust the estimated pick percentages for each team in week 8.")
             if week_8_pick_percents:
                 st.write('')
                 st.subheader('Week 8 Estimated Pick Percentages')
@@ -6746,7 +6759,7 @@ else:
             st.write('')
             st.write('')
         if starting_week <= 9 and ending_week > 9:
-            week_9_pick_percents = st.checkbox('Add Week 9 Pick Percentages?')
+            week_9_pick_percents = st.checkbox('Add Week 9 Pick Percentages?', help = "Check this box if you want to adjust the estimated pick percentages for each team in week 9.")
             if week_9_pick_percents:
                 st.write('')
                 st.subheader('Week 9 Estimated Pick Percentages')
@@ -6786,7 +6799,7 @@ else:
             st.write('')
             st.write('')
         if starting_week <= 10 and ending_week > 10:
-            week_10_pick_percents = st.checkbox('Add Week 10 Pick Percentages?')
+            week_10_pick_percents = st.checkbox('Add Week 10 Pick Percentages?', help = "Check this box if you want to adjust the estimated pick percentages for each team in week 10.")
             if week_10_pick_percents:
                 st.write('')
                 st.subheader('Week 10 Estimated Pick Percentages')
@@ -6826,7 +6839,7 @@ else:
             st.write('')
             st.write('')
         if starting_week <= 11 and ending_week > 11:
-            week_11_pick_percents = st.checkbox('Add Week 11 Pick Percentages?')
+            week_11_pick_percents = st.checkbox('Add Week 11 Pick Percentages?', help = "Check this box if you want to adjust the estimated pick percentages for each team in week 11.")
             if week_11_pick_percents:
                 st.write('')
                 st.subheader('Week 11 Estimated Pick Percentages')
@@ -6866,7 +6879,7 @@ else:
             st.write('')
             st.write('')
         if starting_week <= 12 and ending_week > 12:
-            week_12_pick_percents = st.checkbox('Add Week 12 Pick Percentages?')
+            week_12_pick_percents = st.checkbox('Add Week 12 Pick Percentages?', help = "Check this box if you want to adjust the estimated pick percentages for each team in week 12.")
             if week_12_pick_percents:
                 st.write('')
                 st.subheader('Week 12 Estimated Pick Percentages')
@@ -6906,7 +6919,7 @@ else:
             st.write('')
             st.write('')
         if starting_week <= 13 and ending_week > 13:
-            week_13_pick_percents = st.checkbox('Add Week 13 Pick Percentages?')
+            week_13_pick_percents = st.checkbox('Add Week 13 (Thanksgiving Week if in Circa Survivor Contest) Pick Percentages?', help = "Check this box if you want to adjust the estimated pick percentages for each team in week 13 (Thanksgiving Week if in Circa Survivor Contest).")
             if week_13_pick_percents:
                 st.write('')
                 st.subheader('Week 13 Estimated Pick Percentages')
@@ -6946,7 +6959,7 @@ else:
             st.write('')
             st.write('')
         if starting_week <= 14 and ending_week > 14:
-            week_14_pick_percents = st.checkbox('Add Week 14 Pick Percentages?')
+            week_14_pick_percents = st.checkbox('Add Week 14 Pick Percentages?', help = "Check this box if you want to adjust the estimated pick percentages for each team in week 14.")
             if week_14_pick_percents:
                 st.write('')
                 st.subheader('Week 14 Estimated Pick Percentages')
@@ -6986,7 +6999,7 @@ else:
             st.write('')
             st.write('')
         if starting_week <= 15 and ending_week > 15:
-            week_15_pick_percents = st.checkbox('Add Week 15 Pick Percentages?')
+            week_15_pick_percents = st.checkbox('Add Week 15 Pick Percentages?', help = "Check this box if you want to adjust the estimated pick percentages for each team in week 15.")
             if week_15_pick_percents:
                 st.write('')
                 st.subheader('Week 15 Estimated Pick Percentages')
@@ -7026,7 +7039,7 @@ else:
             st.write('')
             st.write('')
         if starting_week <= 16 and ending_week > 16:
-            week_16_pick_percents = st.checkbox('Add Week 16 Pick Percentages?')
+            week_16_pick_percents = st.checkbox('Add Week 16 Pick Percentages?', help = "Check this box if you want to adjust the estimated pick percentages for each team in week 16.")
             if week_16_pick_percents:
                 st.write('')
                 st.subheader('Week 16 Estimated Pick Percentages')
@@ -7066,7 +7079,7 @@ else:
             st.write('')
             st.write('')
         if starting_week <= 17 and ending_week > 17:
-            week_17_pick_percents = st.checkbox('Add Week 17 Pick Percentages?')
+            week_17_pick_percents = st.checkbox('Add Week 17 Pick Percentages?', help = "Check this box if you want to adjust the estimated pick percentages for each team in week 17.")
             if week_17_pick_percents:
                 st.write('')
                 st.subheader('Week 17 Estimated Pick Percentages')
@@ -7106,7 +7119,7 @@ else:
             st.write('')
             st.write('')
         if starting_week <= 18 and ending_week > 18:
-            week_18_pick_percents = st.checkbox('Add Week 18 Pick Percentages?')
+            week_18_pick_percents = st.checkbox('Add Week 18 (Christmas Week if in Circa Survivor Contest) Pick Percentages?', help = "Check this box if you want to adjust the estimated pick percentages for each team in week 18. (Christmas Week if in Circa Survivor Contest)")
             if week_18_pick_percents:
                 st.write('')
                 st.subheader('Week 18 Estimated Pick Percentages')
@@ -7147,7 +7160,7 @@ else:
             st.write('')
         if selected_contest == 'Circa':
             if starting_week <= 19 and ending_week > 19:
-                week_19_pick_percents = st.checkbox('Add Week 19 Pick Percentages?')
+                week_19_pick_percents = st.checkbox('Add Week 19 Pick Percentages?', help = "Check this box if you want to adjust the estimated pick percentages for each team in week 19.")
                 if week_19_pick_percents:
                     st.write('')
                     st.subheader('Week 19 Estimated Pick Percentages')
@@ -7188,7 +7201,7 @@ else:
                 st.write('')
         if selected_contest == 'Circa':
             if starting_week <= 20 and ending_week > 20:
-                week_20_pick_percents = st.checkbox('Add Week 20 Pick Percentages?')
+                week_20_pick_percents = st.checkbox('Add Week 20 Pick Percentages?', help = "Check this box if you want to adjust the estimated pick percentages for each team in week 20.")
                 if week_20_pick_percents:
                     st.write('')
                     st.subheader('Week 20 Estimated Pick Percentages')

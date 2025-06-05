@@ -6444,38 +6444,293 @@ else:
                 st.write('')
                 st.subheader('Week 1 Estimated Pick Percentages')
                 st.write('')
-                az_week_1_pick_percent = st.slider("Arizona Cardinals Estimated Week 1 Pick %:", -1, 100) / 100
-                atl_week_1_pick_percent = st.slider("Atlanta Falcons Estimated Week 1 Pick %:", -1, 100) / 100
-                bal_week_1_pick_percent = st.slider("Baltimore Ravens Estimated Week 1 Pick %:", -1, 100) / 100
-                buf_week_1_pick_percent = st.slider("Buffalo Bills Estimated Week 1 Pick %:", -1, 100) / 100
-                car_week_1_pick_percent = st.slider("Carolina Panthers Estimated Week 1 Pick %:", -1, 100) / 100
-                chi_week_1_pick_percent = st.slider("Chicago Bears Estimated Week 1 Pick %:", -1, 100) / 100
-                cin_week_1_pick_percent = st.slider("Cincinnati Bengals Estimated Week 1 Pick %:", -1, 100) / 100
-                cle_week_1_pick_percent = st.slider("Cleveland Browns Estimated Week 1 Pick %:", -1, 100) / 100
-                dal_week_1_pick_percent = st.slider("Dallas Cowboys Estimated Week 1 Pick %:", -1, 100) / 100
-                den_week_1_pick_percent = st.slider("Denver Broncos Estimated Week 1 Pick %:", -1, 100) / 100
-                det_week_1_pick_percent = st.slider("Detroit Lions Estimated Week 1 Pick %:", -1, 100) / 100
-                gb_week_1_pick_percent = st.slider("Green Bay Packers Estimated Week 1 Pick %:", -1, 100) / 100
-                hou_week_1_pick_percent = st.slider("Houston Texans Estimated Week 1 Pick %:", -1, 100) / 100
-                ind_week_1_pick_percent = st.slider("Indianapoils Colts Estimated Week 1 Pick %:", -1, 100) / 100
-                jax_week_1_pick_percent = st.slider("Jacksonville Jaguars Estimated Week 1 Pick %:", -1, 100) / 100
-                kc_week_1_pick_percent = st.slider("Kansas City Chiefs Estimated Week 1 Pick %:", -1, 100) / 100
-                lv_week_1_pick_percent = st.slider("Las Vegas Raiders Estimated Week 1 Pick %:", -1, 100) / 100
-                lac_week_1_pick_percent = st.slider("Los Angeles Chargers Estimated Week 1 Pick %:", -1, 100) / 100
-                lar_week_1_pick_percent = st.slider("Los Angeles Rams Estimated Week 1 Pick %:", -1, 100) / 100
-                mia_week_1_pick_percent = st.slider("Miami Dolphins Estimated Week 1 Pick %:", -1, 100) / 100
-                min_week_1_pick_percent = st.slider("Minnesota Vikings Estimated Week 1 Pick %:", -1, 100) / 100
-                ne_week_1_pick_percent = st.slider("New England Patriots Estimated Week 1 Pick %:", -1, 100) / 100
-                no_week_1_pick_percent = st.slider("New Orleans Saints Estimated Week 1 Pick %:", -1, 100) / 100
-                nyg_week_1_pick_percent = st.slider("New York Giants Estimated Week 1 Pick %:", -1, 100) / 100
-                nyj_week_1_pick_percent = st.slider("New York Jets Estimated Week 1 Pick %:", -1, 100) / 100
-                phi_week_1_pick_percent = st.slider("Philadelphia Eagles Estimated Week 1 Pick %:", -1, 100) / 100
-                pit_week_1_pick_percent = st.slider("Pittsburgh Steelers Estimated Week 1 Pick %:", -1, 100) / 100
-                sf_week_1_pick_percent = st.slider("San Francisco 49ers Estimated Week 1 Pick %:", -1, 100) / 100
-                sea_week_1_pick_percent = st.slider("Seattle Seahawks Estimated Week 1 Pick %:", -1, 100) / 100
-                tb_week_1_pick_percent = st.slider("Tampa Bay Buccaneers Estimated Week 1 Pick %:", -1, 100) / 100
-                ten_week_1_pick_percent = st.slider("Tennessee Titans Estimated Week 1 Pick %:", -1, 100) / 100
-                was_week_1_pick_percent = st.slider("Washington Commanders Estimated Week 1 Pick %:", -1, 100) / 100
+                az_week_1_pick_percent = st.slider("Arizona Cardinals Week 1 Pick Percent:", -1, 100) / 100
+                az_week_1_pick_percent_percent = az_week_1_pick_percent*100
+                if az_week_1_pick_percent < 0:
+                    st.write(f"Arizona Cardinals Week 1 Pick Percent: :red[Automatically Calculated]")
+                else:
+                    st.write(f"Arizona Cardinals Week 1 Pick Percent: :green[{az_week_1_pick_percent_percent}%]")
+                st.write("")
+                st.write("")
+        	    
+                atl_week_1_pick_percent = st.slider("Atlanta Falcons Week 1 Pick Percent:", -1, 100) / 100
+                atl_week_1_pick_percent_percent = atl_week_1_pick_percent*100
+                if atl_week_1_pick_percent < 0:
+                    st.write(f"Atlanta Falcons Week 1 Pick Percent: :red[Automatically Calculated]")
+                else:
+                    st.write(f"Atlanta Falcons Week 1 Pick Percent: :green[{atl_week_1_pick_percent_percent}%]")
+                st.write("")
+                st.write("")
+        	    
+                bal_week_1_pick_percent = st.slider("Baltimore Ravens Week 1 Pick Percent:", -1, 100) / 100
+                bal_week_1_pick_percent_percent = bal_week_1_pick_percent*100
+                if bal_week_1_pick_percent < 0:
+                    st.write(f"Baltimore Ravens Week 1 Pick Percent: :red[Automatically Calculated]")
+                else:
+                    st.write(f"Baltimore Ravenss Week 1 Pick Percent: :green[{bal_week_1_pick_percent_percent}%]")
+                st.write("")
+                st.write("")
+        	    
+                buf_week_1_pick_percent = st.slider("Buffalo Bills Week 1 Pick Percent:", -1, 100) / 100
+                buf_week_1_pick_percent_percent = buf_week_1_pick_percent*100
+                if buf_week_1_pick_percent < 0:
+                    st.write(f"Buffalo Bills Week 1 Pick Percent: :red[Automatically Calculated]")
+                else:
+                    st.write(f"Buffalo Bills Week 1 Pick Percent: :green[{buf_week_1_pick_percent_percent}%]")
+                st.write("")
+                st.write("")
+        	    
+                car_week_1_pick_percent = st.slider("Carolina Panthers Week 1 Pick Percent:", -1, 100) / 100
+                car_week_1_pick_percent_percent = car_week_1_pick_percent*100
+                if car_week_1_pick_percent < 0:
+                    st.write(f"Carolina Panthers Week 1 Pick Percent: :red[Automatically Calculated]")
+                else:
+                    st.write(f"Carolina Panthers Week 1 Pick Percent: :green[{car_week_1_pick_percent_percent}%]")
+                st.write("")
+                st.write("")
+        	    
+                chi_week_1_pick_percent = st.slider("Chicago Bears Week 1 Pick Percent:", -1, 100) / 100
+                chi_week_1_pick_percent_percent = chi_week_1_pick_percent*100
+                if chi_week_1_pick_percent < 0:
+                    st.write(f"Chicago Bears Week 1 Pick Percent: :red[Automatically Calculated]")
+                else:
+                    st.write(f"Chicago Bears Week 1 Pick Percent: :green[{chi_week_1_pick_percent_percent}%]")
+                st.write("")
+                st.write("")
+        	    
+                cin_week_1_pick_percent = st.slider("Cincinnati Bengals Week 1 Pick Percent:", -1, 100) / 100
+                cin_week_1_pick_percent_percent = cin_week_1_pick_percent*100
+                if cin_week_1_pick_percent < 0:
+                    st.write(f"Cincinnati Bengals Week 1 Pick Percent: :red[Automatically Calculated]")
+                else:
+                    st.write(f"Cincinnati Bengals Week 1 Pick Percent: :green[{cin_week_1_pick_percent_percent}%]")
+                st.write("")
+                st.write("")
+        	    
+                cle_week_1_pick_percent = st.slider("Cleveland Browns Week 1 Pick Percent:", -1, 100) / 100
+                cle_week_1_pick_percent_percent = cle_week_1_pick_percent*100
+                if cle_week_1_pick_percent < 0:
+                    st.write(f"Cleveland Browns Week 1 Pick Percent: :red[Automatically Calculated]")
+                else:
+                    st.write(f"Cleveland Browns Week 1 Pick Percent: :green[{cle_week_1_pick_percent_percent}%]")
+                st.write("")
+                st.write("")
+        	    
+                dal_week_1_pick_percent = st.slider("Dallas Cowboys Week 1 Pick Percent:", -1, 100) / 100
+                dal_week_1_pick_percent_percent = dal_week_1_pick_percent*100
+                if dal_week_1_pick_percent < 0:
+                    st.write(f"Dallas Cowboys Week 1 Pick Percent: :red[Automatically Calculated]")
+                else:
+                    st.write(f"Dallas Cowboys Week 1 Pick Percent: :green[{dal_week_1_pick_percent_percent}%]")
+                st.write("")
+                st.write("")
+        	    
+                den_week_1_pick_percent = st.slider("Denver Broncos Week 1 Pick Percent:", -1, 100) / 100
+                den_week_1_pick_percent_percent = den_week_1_pick_percent*100
+                if den_week_1_pick_percent < 0:
+                    st.write(f"Denver Broncos Week 1 Pick Percent: :red[Automatically Calculated]")
+                else:
+                    st.write(f"Denver Broncos Week 1 Pick Percent: :green[{den_week_1_pick_percent_percent}%]")
+                st.write("")
+                st.write("")
+        	    
+                det_week_1_pick_percent = st.slider("Detroit Lions Week 1 Pick Percent:", -1, 100) / 100
+                det_week_1_pick_percent_percent = det_week_1_pick_percent*100
+                if det_week_1_pick_percent < 0:
+                    st.write(f"Detroit Lions Week 1 Pick Percent: :red[Automatically Calculated]")
+                else:
+                    st.write(f"Detroit Lions Week 1 Pick Percent: :green[{det_week_1_pick_percent_percent}%]")
+                st.write("")
+                st.write("")
+        	    
+                gb_week_1_pick_percent = st.slider("Green Bay Packers Week 1 Pick Percent:", -1, 100) / 100
+                gb_week_1_pick_percent_percent = gb_week_1_pick_percent*100
+                if gb_week_1_pick_percent < 0:
+                    st.write(f"Green Bay Packers Week 1 Pick Percent: :red[Automatically Calculated]")
+                else:
+                    st.write(f"Green Bay Packers Week 1 Pick Percent: :green[{gb_week_1_pick_percent_percent}%]")
+                st.write("")
+                st.write("")
+        	    
+                hou_week_1_pick_percent = st.slider("Houston Texans Week 1 Pick Percent:", -1, 100) / 100
+                hou_week_1_pick_percent_percent = hou_week_1_pick_percent*100
+                if hou_week_1_pick_percent < 0:
+                    st.write(f"Houston Texans Week 1 Pick Percent: :red[Automatically Calculated]")
+                else:
+                    st.write(f"Houston Texans Week 1 Pick Percent: :green[{hou_week_1_pick_percent_percent}%]")
+                st.write("")
+                st.write("")
+        	    
+                ind_week_1_pick_percent = st.slider("Indianapoils Colts Week 1 Pick Percent:", -1, 100) / 100
+                ind_week_1_pick_percent_percent = ind_week_1_pick_percent*100
+                if ind_week_1_pick_percent < 0:
+                    st.write(f"Indianapoils Colts Week 1 Pick Percent: :red[Automatically Calculated]")
+                else:
+                    st.write(f"Indianapoils Colts Week 1 Pick Percent: :green[{ind_week_1_pick_percent_percent}%]")
+                st.write("")
+                st.write("")
+        	    
+                jax_week_1_pick_percent = st.slider("Jacksonville Jaguars Week 1 Pick Percent:", -1, 100) / 100
+                jax_week_1_pick_percent_percent = jax_week_1_pick_percent*100
+                if jax_week_1_pick_percent < 0:
+                    st.write(f"Jacksonville Jaguars Week 1 Pick Percent: :red[Automatically Calculated]")
+                else:
+                    st.write(f"Jacksonville Jaguars Week 1 Pick Percent: :green[{jax_week_1_pick_percent_percent}%]")
+                st.write("")
+                st.write("")
+        	    
+                kc_week_1_pick_percent = st.slider("Kansas City Chiefs Week 1 Pick Percent:", -1, 100) / 100
+                kc_week_1_pick_percent_percent = kc_week_1_pick_percent*100
+                if kc_week_1_pick_percent < 0:
+                    st.write(f"Kansas City Chiefs Week 1 Pick Percent: :red[Automatically Calculated]")
+                else:
+                    st.write(f"Kansas City Chiefs Week 1 Pick Percent: :green[{kc_week_1_pick_percent_percent}%]")
+                st.write("")
+                st.write("")
+        	    
+                lv_week_1_pick_percent = st.slider("Las Vegas Raiders Week 1 Pick Percent:", -1, 100) / 100
+                lv_week_1_pick_percent_percent = lv_week_1_pick_percent*100
+                if lv_week_1_pick_percent < 0:
+                    st.write(f"Las Vegas Raiders Week 1 Pick Percent: :red[Automatically Calculated]")
+                else:
+                    st.write(f"Las vegas Raiders Week 1 Pick Percent: :green[{lv_week_1_pick_percent_percent}%]")
+                st.write("")
+                st.write("")
+        	    
+                lac_week_1_pick_percent = st.slider("Los Angeles Chargers Week 1 Pick Percent:", -1, 100) / 100
+                lac_week_1_pick_percent_percent = lac_week_1_pick_percent*100
+                if lac_week_1_pick_percent < 0:
+                    st.write(f"Los Angeles Chargers Week 1 Pick Percent: :red[Automatically Calculated]")
+                else:
+                    st.write(f"Los angeles Chargers Week 1 Pick Percent: :green[{lac_week_1_pick_percent_percent}%]")
+                st.write("")
+                st.write("")
+        	    
+                lar_week_1_pick_percent = st.slider("Los Angeles Rams Week 1 Pick Percent:", -1, 100) / 100
+                lar_week_1_pick_percent_percent = lar_week_1_pick_percent*100
+                if lar_week_1_pick_percent < 0:
+                    st.write(f"Los Angeles Rams Week 1 Pick Percent: :red[Automatically Calculated]")
+                else:
+                    st.write(f"Los Angeles Rams Week 1 Pick Percent: :green[{lar_week_1_pick_percent_percent}%]")
+                st.write("")
+                st.write("")
+        	    
+                mia_week_1_pick_percent = st.slider("Miami Dolphins Week 1 Pick Percent:", -1, 100) / 100
+                mia_week_1_pick_percent_percent = mia_week_1_pick_percent*100
+                if mia_week_1_pick_percent < 0:
+                    st.write(f"Miami Dolphins Week 1 Pick Percent: :red[Automatically Calculated]")
+                else:
+                    st.write(f"Miami Dolphins Week 1 Pick Percent: :green[{mia_week_1_pick_percent_percent}%]")
+                st.write("")
+                st.write("")
+        	    
+                min_week_1_pick_percent = st.slider("Minnesota Vikings Week 1 Pick Percent:", -1, 100) / 100
+                min_week_1_pick_percent_percent = min_week_1_pick_percent*100
+                if min_week_1_pick_percent < 0:
+                    st.write(f"Minnesota Vikings Week 1 Pick Percent: :red[Automatically Calculated]")
+                else:
+                    st.write(f"Minnesota Vikings Week 1 Pick Percent: :green[{min_week_1_pick_percent_percent}%]")
+                st.write("")
+                st.write("")
+        	    
+                ne_week_1_pick_percent = st.slider("New England Patriots Week 1 Pick Percent:", -1, 100) / 100
+                ne_week_1_pick_percent_percent = ne_week_1_pick_percent*100
+                if ne_week_1_pick_percent < 0:
+                    st.write(f"New England Patriots Week 1 Pick Percent: :red[Automatically Calculated]")
+                else:
+                    st.write(f"New England Patriots Week 1 Pick Percent: :green[{ne_week_1_pick_percent_percent}%]")
+                st.write("")
+                st.write("")
+        	    
+                no_week_1_pick_percent = st.slider("New Orleans Saints Week 1 Pick Percent:", -1, 100) / 100
+                no_week_1_pick_percent_percent = no_week_1_pick_percent*100
+                if no_week_1_pick_percent < 0:
+                    st.write(f"New Orleans Saints Week 1 Pick Percent: :red[Automatically Calculated]")
+                else:
+                    st.write(f"New Orleans Saints Week 1 Pick Percent: :green[{no_week_1_pick_percent_percent}%]")
+                st.write("")
+                st.write("")
+        	    
+                nyg_week_1_pick_percent = st.slider("New York Giants Week 1 Pick Percent:", -1, 100) / 100
+                nyg_week_1_pick_percent_percent = nyg_week_1_pick_percent*100
+                if nyg_week_1_pick_percent < 0:
+                    st.write(f"New York Giants Week 1 Pick Percent: :red[Automatically Calculated]")
+                else:
+                    st.write(f"New York Giants Week 1 Pick Percent: :green[{nyg_week_1_pick_percent_percent}%]")
+                st.write("")
+                st.write("")
+        	    
+                nyj_week_1_pick_percent = st.slider("New York Jets Week 1 Pick Percent:", -1, 100) / 100
+                nyj_week_1_pick_percent_percent = nyj_week_1_pick_percent*100
+                if nyj_week_1_pick_percent < 0:
+                    st.write(f"New York Jets Week 1 Pick Percent: :red[Automatically Calculated]")
+                else:
+                    st.write(f"New York Jets Week 1 Pick Percent: :green[{nyj_week_1_pick_percent_percent}%]")
+                st.write("")
+                st.write("")
+        	    
+                phi_week_1_pick_percent = st.slider("Philadelphia Eagles Week 1 Pick Percent:", -1, 100) / 100
+                phi_week_1_pick_percent_percent = phi_week_1_pick_percent*100
+                if phi_week_1_pick_percent < 0:
+                    st.write(f"Philadelphia Eagles Week 1 Pick Percent: :red[Automatically Calculated]")
+                else:
+                    st.write(f"Philadelphia Eagles Week 1 Pick Percent: :green[{phi_week_1_pick_percent_percent}%]")
+                st.write("")
+                st.write("")
+        	    
+                pit_week_1_pick_percent = st.slider("Pittsburgh Steelers Week 1 Pick Percent:", -1, 100) / 100
+                pit_week_1_pick_percent_percent = pit_week_1_pick_percent*100
+                if pit_week_1_pick_percent < 0:
+                    st.write(f"Pittsburgh Steelers Week 1 Pick Percent: :red[Automatically Calculated]")
+                else:
+                    st.write(f"Pittsburgh Steelers Week 1 Pick Percent: :green[{pit_week_1_pick_percent_percent}%]")
+                st.write("")
+                st.write("")
+        	    
+                sf_week_1_pick_percent = st.slider("San Francisco 49ers Week 1 Pick Percent:", -1, 100) / 100
+                sf_week_1_pick_percent_percent = sf_week_1_pick_percent*100
+                if sf_week_1_pick_percent < 0:
+                    st.write(f"San Francisco 49ers Week 1 Pick Percent: :red[Automatically Calculated]")
+                else:
+                    st.write(f"San Francisco 49ers Week 1 Pick Percent: :green[{sf_week_1_pick_percent_percent}%]")
+                st.write("")
+                st.write("")
+        	    
+                sea_week_1_pick_percent = st.slider("Seattle Seahawks Week 1 Pick Percent:", -1, 100) / 100
+                sea_week_1_pick_percent_percent = sea_week_1_pick_percent*100
+                if sea_week_1_pick_percent < 0:
+                    st.write(f"Seattle Seahawks Week 1 Pick Percent: :red[Automatically Calculated]")
+                else:
+                    st.write(f"Seattle Seahawks Week 1 Pick Percent: :green[{sea_week_1_pick_percent_percent}%]")
+                st.write("")
+                st.write("")
+        	    
+                tb_week_1_pick_percent = st.slider("Tampa Bay Buccaneers Week 1 Pick Percent:", -1, 100) / 100
+                tb_week_1_pick_percent_percent = tb_week_1_pick_percent*100
+                if tb_week_1_pick_percent < 0:
+                    st.write(f"Tampa Bay Buccaneers Week 1 Pick Percent: :red[Automatically Calculated]")
+                else:
+                    st.write(f"Tampa Bay Buccaneers Week 1 Pick Percent: :green[{tb_week_1_pick_percent_percent}%]")
+                st.write("")
+                st.write("")
+        	    
+                ten_week_1_pick_percent = st.slider("Tennessee Titans Week 1 Pick Percent:", -1, 100) / 100
+                ten_week_1_pick_percent_percent = ten_week_1_pick_percent*100
+                if ten_week_1_pick_percent < 0:
+                    st.write(f"Tennessee Titans Week 1 Pick Percent: :red[Automatically Calculated]")
+                else:
+                    st.write(f"Tennessee Titans Week 1 Pick Percent: :green[{ten_week_1_pick_percent_percent}%]")
+                st.write("")
+                st.write("")
+        	    
+                was_week_1_pick_percent = st.slider("Washington Commanders Week 1 Pick Percent:", -1, 100) / 100
+                was_week_1_pick_percent_percent = was_week_1_pick_percent*100
+                if was_week_1_pick_percent < 0:
+                    st.write(f"Washington Commanders Week 1 Pick Percent: :red[Automatically Calculated]")
+                else:
+                    st.write(f"Washington Commanders Week 1 Pick Percent: :green[{was_week_1_pick_percent_percent}%]")
+                st.write("")
+                st.write("")
             st.write('')
             st.write('')
         if starting_week <= 2 and ending_week > 2:

@@ -7274,7 +7274,7 @@ else:
     ]
 
     st.write('How many solutions would you like from each solver?')
-    number_solutions = st.selectbox('Number of Solutions', options = number_of_solutions_options help = "How many solutions do you want to produce? We recommend 10.)
+    number_solutions = st.selectbox('Number of Solutions', options = number_of_solutions_options, help = "How many solutions do you want to produce? We recommend 10.")
     double_number_solutions = number_solutions * 2
 
     with st.expander("More Infromation"):

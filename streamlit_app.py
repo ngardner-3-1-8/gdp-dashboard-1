@@ -12360,14 +12360,14 @@ else:
     	st.write('')
     	st.write('')
     	st.write('')
-    	if use_cached_expected_value == 1:
-                use_live_sportsbook_odds = 1 if st.checkbox('Use Live Sportsbook Odds to calculate win probability (If Available?') else 0
-                st.write('')
-                st.write("If this is checked, we will use odds from DraftKings to determine a team's win probability. For games where live odds from DraftKings are unavailable, we will use your own internal rankings to determine the predicted spread and win probability.")	
-                st.write('If this is left unchecked, we will use your own internal rankings to determine the predicted spread and win probability for all games.')	
-    	st.write('')
-    	st.write('')
-    	st.write('')
+#    	if use_cached_expected_value == 1:
+#                use_live_sportsbook_odds = 1 if st.checkbox('Use Live Sportsbook Odds to calculate win probability (If Available?') else 0
+#                st.write('')
+#                st.write("If this is checked, we will use odds from DraftKings to determine a team's win probability. For games where live odds from DraftKings are unavailable, we will use your own internal rankings to determine the predicted spread and win probability.")	
+#                st.write('If this is left unchecked, we will use your own internal rankings to determine the predicted spread and win probability for all games.')	
+#    	st.write('')
+#    	st.write('')
+#    	st.write('')
     st.subheader('Get Optimized Survivor Picks')
     number_of_solutions_options = [
         1,5,10,25,50,100

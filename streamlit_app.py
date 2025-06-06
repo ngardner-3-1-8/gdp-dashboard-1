@@ -1676,33 +1676,47 @@ def get_predicted_pick_percentages(pd):
         home_team = row['Home Team']
         away_team = row['Away Team']
         week = row['Week']
+        week_index = week - 1
 
         home_pick_percent = row.get('Home Pick %')  # Get existing value, defaults to None
         away_pick_percent = row.get('Away Pick %')  # Get existing value, defaults to None
 
         if selected_contest == 'Circa':
+            # Check for Home Team overrides
             if home_team in circa_pick_percentages:
-                home_pick_percent_list = circa_pick_percentages[home_team]
-                week_index = week - 1 #Get index from week
-                if week_index < len(home_pick_percent_list) and home_pick_percent_list[week_index] >= 0: #Check if index is in bounds, then verify value is >-1
-                    home_pick_percent = home_pick_percent_list[week_index]
+                team_pick_percent_list = circa_pick_percentages[home_team]
+                if week_index < len(team_pick_percent_list):
+                    user_override_value = team_pick_percent_list[week_index]
+                    # Apply override ONLY if the user-provided value is NOT -1
+                    if user_override_value >= 0:
+                        home_pick_percent = user_override_value
 
+            # Check for Away Team overrides
             if away_team in circa_pick_percentages:
-                away_pick_percent_list = circa_pick_percentages[away_team]
-                week_index = week - 1
-                if week_index < len(away_pick_percent_list) and away_pick_percent_list[week_index] >= 0:
-                    away_pick_percent = away_pick_percent_list[week_index]
+                team_pick_percent_list = circa_pick_percentages[away_team]
+                if week_index < len(team_pick_percent_list):
+                    user_override_value = team_pick_percent_list[week_index]
+                    # Apply override ONLY if the user-provided value is NOT -1
+                    if user_override_value >= 0:
+                        away_pick_percent = user_override_value
+
         else: # assuming it's DraftKings
             if home_team in dk_pick_percentages:
-                home_pick_percent_list = dk_pick_percentages[home_team]
-                week_index = week - 1
-                if week_index < len(home_pick_percent_list) and home_pick_percent_list[week_index] >= 0:
-                    home_pick_percent = home_pick_percent_list[week_index]
+                team_pick_percent_list = dk_pick_percentages[home_team]
+                if week_index < len(team_pick_percent_list):
+                    user_override_value = team_pick_percent_list[week_index]
+                    # Apply override ONLY if the user-provided value is NOT -1
+                    if user_override_value >= 0:
+                        home_pick_percent = user_override_value
+
+            # Check for Away Team overrides
             if away_team in dk_pick_percentages:
-                away_pick_percent_list = dk_pick_percentages[away_team]
-                week_index = week - 1
-                if week_index < len(away_pick_percent_list) and away_pick_percent_list[week_index] >= 0:
-                    away_pick_percent = away_pick_percent_list[week_index]
+                team_pick_percent_list = dk_pick_percentages[away_team]
+                if week_index < len(team_pick_percent_list):
+                    user_override_value = team_pick_percent_list[week_index]
+                    # Apply override ONLY if the user-provided value is NOT -1
+                    if user_override_value >= 0:
+                        away_pick_percent = user_override_value
 
         return pd.Series({'Home Pick %': home_pick_percent, 'Away Pick %': away_pick_percent})
                                                                  

@@ -2150,7 +2150,7 @@ def get_predicted_pick_percentages_with_availability(pd):
                     if week_index < len(team_pick_percent_list):
                         user_override_value = team_pick_percent_list[week_index]
                         # Apply override ONLY if the user-provided value is NOT -1
-                        if user_override_value != -.01:
+                        if user_override_value >= 0:
                             home_pick_percent = user_override_value
         
                 # Check for Away Team overrides
@@ -2159,7 +2159,7 @@ def get_predicted_pick_percentages_with_availability(pd):
                     if week_index < len(team_pick_percent_list):
                         user_override_value = team_pick_percent_list[week_index]
                         # Apply override ONLY if the user-provided value is NOT -1
-                        if user_override_value != -.01:
+                        if user_override_value >= 0:
                             away_pick_percent = user_override_value
         
                 return pd.Series({'Home Pick %': home_pick_percent, 'Away Pick %': away_pick_percent})

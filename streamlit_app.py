@@ -2139,6 +2139,7 @@ def get_predicted_pick_percentages_with_availability(pd):
                 home_team = row['Home Team']
                 away_team = row['Away Team']
                 week = row['Week']
+                week_index = week - 1
         
                 home_pick_percent = row.get('Home Pick %')  # Get existing value, defaults to None
                 away_pick_percent = row.get('Away Pick %')  # Get existing value, defaults to None

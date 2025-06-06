@@ -12349,17 +12349,17 @@ else:
     use_cached_expected_value = 0
     use_live_sportsbook_odds = 1
     
-    if yes_i_have_customized_rankings:
-    	st.subheader('Use Saved Expected Value')
-    	st.write('Warning, this data may not be nup to date.')
-    	st.write('- Checking this box will ensure the process is fast, (Less than 1 minute, compared to 5-10 mins) and will prevent the risk of crashing')
-    	st.write('- This will not use your customized rankings in the EV calculation process')
-    	st.write('- This will NOT have an impact on your customized ranking output, just the EV output')
-    	st.write('Last Update: :green[01/01/2025]')
-    	use_cached_expected_value = 1 if st.checkbox('Use Cached Expected Value') else 0
-    	st.write('')
-    	st.write('')
-    	st.write('')
+#    if yes_i_have_customized_rankings:
+#    	st.subheader('Use Saved Expected Value')
+#    	st.write('Warning, this data may not be nup to date.')
+#    	st.write('- Checking this box will ensure the process is fast, (Less than 1 minute, compared to 5-10 mins) and will prevent the risk of crashing')
+#    	st.write('- This will not use your customized rankings in the EV calculation process')
+#    	st.write('- This will NOT have an impact on your customized ranking output, just the EV output')
+#    	st.write('Last Update: :green[01/01/2025]')
+#    	use_cached_expected_value = 1 if st.checkbox('Use Cached Expected Value') else 0
+#    	st.write('')
+#    	st.write('')
+#    	st.write('')
 #    	if use_cached_expected_value == 1:
 #                use_live_sportsbook_odds = 1 if st.checkbox('Use Live Sportsbook Odds to calculate win probability (If Available?') else 0
 #                st.write('')

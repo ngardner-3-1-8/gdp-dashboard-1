@@ -4655,7 +4655,7 @@ picked_teams = []
 
 default_az_rank = 1.5
 default_atl_rank = -1
-default_bal_rank = 7
+default_bal_rank = 7.5
 default_buf_rank = 6.5
 default_car_rank = -3.5
 default_chi_rank = -1
@@ -4688,7 +4688,7 @@ default_was_rank = 3.5
 
 preseason_az_rank = 1.5
 preseason_atl_rank = -1
-preseason_bal_rank = 7
+preseason_bal_rank = 7.5
 preseason_buf_rank = 6.5
 preseason_car_rank = -3.5
 preseason_chi_rank = -1

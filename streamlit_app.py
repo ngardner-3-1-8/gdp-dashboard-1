@@ -4683,7 +4683,7 @@ default_pit_rank = -.5
 default_sf_rank = -1.5
 default_sea_rank = -3
 default_tb_rank = 3
-default_ten_rank = -4.5
+default_ten_rank = -6
 default_was_rank = 3.5
 
 preseason_az_rank = 1.5
@@ -4716,7 +4716,7 @@ preseason_pit_rank = -.5
 preseason_sf_rank = -1.5
 preseason_sea_rank = -3
 preseason_tb_rank = 3
-preseason_ten_rank = -4.5
+preseason_ten_rank = -6
 preseason_was_rank = 3.5
 
 

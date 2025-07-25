@@ -1250,6 +1250,8 @@ def collect_schedule_travel_ranking_data(pd):
 
     if selected_contest == 'Circa':
         consolidated_csv_file = "nfl_schedule_circa.csv"
+    elif selected_contest == 'Splash Sports':
+        consolidated_csv_file = "nfl_schedule_splash.csv"
     else:
         consolidated_csv_file = "nfl_schedule_dk.csv"
     consolidated_df.to_csv(consolidated_csv_file, index=False)    
@@ -1262,6 +1264,8 @@ def get_predicted_pick_percentages(pd):
     # Load your historical data (replace 'historical_pick_data_FV_circa.csv' with your actual file path)
     if selected_contest == 'Circa':
         df = pd.read_csv('Circa_historical_data.csv')
+    elif selected_contest == 'Splash Sports':
+        df = pd.read_csv('DK_historical_data.csv')
     else:
         df = pd.read_csv('DK_historical_data.csv')
     df.rename(columns={"Week": "Date"}, inplace=True)
@@ -1467,7 +1471,16 @@ def get_predicted_pick_percentages(pd):
     nfl_schedule_df['Away Team EV'] = 0.0  # Initialize with 0.0
 
     #Handle Week 1 as before
-    nfl_schedule_df.loc[nfl_schedule_df['Week'] == starting_week, 'Total Remaining Entries at Start of Week'] = current_week_entries_circa if selected_contest == 'Circa' else current_week_entries_dk
+    if selected_contest == 'Circa':
+        nfl_schedule_df.loc[nfl_schedule_df['Week'] == starting_week, 'Total Remaining Entries at Start of Week'] = current_week_entries_circa
+    elif selected_contest == 'DraftKings': # Assuming 'DK' was a shorthand for 'DraftKings' or similar
+        nfl_schedule_df.loc[nfl_schedule_df['Week'] == starting_week, 'Total Remaining Entries at Start of Week'] = current_week_entries_dk
+    elif selected_contest == 'Splash Sports':
+        nfl_schedule_df.loc[nfl_schedule_df['Week'] == starting_week, 'Total Remaining Entries at Start of Week'] = current_week_entries_splash_sports # Assuming you'll have a variable for Splash Sports entries
+    else:
+        # Handle an unexpected selected_contest value, e.g., raise an error or set a default
+        print("Warning: Unknown contest type provided.")
+        nfl_schedule_df.loc[nfl_schedule_df['Week'] == starting_week, 'Total Remaining Entries at Start of Week'] = 20000 # Or some default value
 
     nfl_schedule_df['Home Expected Survival Rate'] = nfl_schedule_df['Home Team Fair Odds'] * nfl_schedule_df['Home Pick %']
     nfl_schedule_df['Home Expected Elimination Percent'] = nfl_schedule_df['Home Pick %'] - nfl_schedule_df['Home Expected Survival Rate']
@@ -1491,6 +1504,8 @@ def get_predicted_pick_percentages(pd):
         nfl_schedule_df.loc[nfl_schedule_df['Week'] == week, 'Total Remaining Entries at Start of Week'] = round(previous_week_median - current_week_total)
     if selected_contest == 'Circa':
         nfl_schedule_df['Entry Remaining Percent'] = nfl_schedule_df['Total Remaining Entries at Start of Week'] / circa_total_entries
+    elif selected_contest == 'Splash Sports':
+        nfl_schedule_df['Entry Remaining Percent'] = nfl_schedule_df['Total Remaining Entries at Start of Week'] / splash_total_entries
     else:
         nfl_schedule_df['Entry Remaining Percent'] = nfl_schedule_df['Total Remaining Entries at Start of Week'] / dk_total_entries
         
@@ -1699,7 +1714,24 @@ def get_predicted_pick_percentages(pd):
                     # Apply override ONLY if the user-provided value is NOT -1
                     if user_override_value >= 0:
                         away_pick_percent = user_override_value
+	elif selected_contest == 'Splash Sports': # assuming it's DraftKings
+            if home_team in splash_pick_percentages:
+                team_pick_percent_list = splash_pick_percentages[home_team]
+                if week_index < len(team_pick_percent_list):
+                    user_override_value = team_pick_percent_list[week_index]
+                    # Apply override ONLY if the user-provided value is NOT -1
+                    if user_override_value >= 0:
+                        home_pick_percent = user_override_value
 
+            # Check for Away Team overrides
+            if away_team in splash_pick_percentages:
+                team_pick_percent_list = splash_pick_percentages[away_team]
+                if week_index < len(team_pick_percent_list):
+                    user_override_value = team_pick_percent_list[week_index]
+                    # Apply override ONLY if the user-provided value is NOT -1
+                    if user_override_value >= 0:
+                        away_pick_percent = user_override_value
+	    
         else: # assuming it's DraftKings
             if home_team in dk_pick_percentages:
                 team_pick_percent_list = dk_pick_percentages[home_team]
@@ -1724,11 +1756,13 @@ def get_predicted_pick_percentages(pd):
     nfl_schedule_df[['Home Pick %', 'Away Pick %']] = nfl_schedule_df.apply(
         assign_pick_percentages, 
         axis=1, 
-        args=(selected_contest, circa_pick_percentages, dk_pick_percentages)
+        args=(selected_contest, circa_pick_percentages, dk_pick_percentages, splash_pick_percentages)
     )
     
     if selected_contest == 'Circa':
         nfl_schedule_df.to_csv("Circa_Predicted_pick_percent.csv", index=False)
+    elif selected_contest == 'Splash Sports':
+        nfl_schedule_df.to_csv("Splash_Predicted_pick_percent.csv", index=False)
     else:
         nfl_schedule_df.to_csv("DK_Predicted_pick_percent.csv", index=False)
     return nfl_schedule_df
@@ -1946,7 +1980,16 @@ def get_predicted_pick_percentages_with_availability(pd):
         nfl_schedule_df['Away Team EV'] = 0.0  # Initialize with 0.0
     
         #Handle Week 1 as before
-        nfl_schedule_df.loc[nfl_schedule_df['Week'] == starting_week, 'Total Remaining Entries at Start of Week'] = current_week_entries_circa if selected_contest == 'Circa' else current_week_entries_dk
+        if selected_contest == 'Circa':
+            nfl_schedule_df.loc[nfl_schedule_df['Week'] == starting_week, 'Total Remaining Entries at Start of Week'] = current_week_entries_circa
+        elif selected_contest == 'DraftKings': # Assuming 'DK' was a shorthand for 'DraftKings' or similar
+            nfl_schedule_df.loc[nfl_schedule_df['Week'] == starting_week, 'Total Remaining Entries at Start of Week'] = current_week_entries_dk
+        elif selected_contest == 'Splash Sports':
+            nfl_schedule_df.loc[nfl_schedule_df['Week'] == starting_week, 'Total Remaining Entries at Start of Week'] = current_week_entries_splash_sports # Assuming you'll have a variable for Splash Sports entries
+        else:
+            # Handle an unexpected selected_contest value, e.g., raise an error or set a default
+            print("Warning: Unknown contest type provided.")
+            nfl_schedule_df.loc[nfl_schedule_df['Week'] == starting_week, 'Total Remaining Entries at Start of Week'] = 20000 # Or some default value
     
         nfl_schedule_df['Home Expected Survival Rate'] = nfl_schedule_df['Home Team Fair Odds'] * nfl_schedule_df['Home Pick %']
         nfl_schedule_df['Home Expected Elimination Percent'] = nfl_schedule_df['Home Pick %'] - nfl_schedule_df['Home Expected Survival Rate']
@@ -2147,7 +2190,7 @@ def get_predicted_pick_percentages_with_availability(pd):
         print("Expected Availability calculation complete.")
     
 
-        def assign_pick_percentages_with_availability(row, selected_contest, circa_pick_percentages, dk_pick_percentages):
+        def assign_pick_percentages_with_availability(row, selected_contest, circa_pick_percentages, dk_pick_percentages, splash_pick_percentages):
         #"""Assigns home and away pick percentages to a row, conditionally overwriting."""
             if selected_contest == 'Circa':
                 home_team = row['Home Team']
@@ -2250,6 +2293,8 @@ def calculate_ev(nfl_schedule_pick_percentages_df, starting_week, ending_week, s
 
     if selected_contest == 'Circa':
         nfl_schedule_pick_percentages_df.to_csv("NFL Schedule with full ev_circa.csv", index=False)
+    elif selected_contest == 'Splash Sports':
+        nfl_schedule_pick_percentages_df.to_csv("NFL Schedule with full ev_splash.csv", index=False)
     else:
         nfl_schedule_pick_percentages_df.to_csv("NFL Schedule with full ev_dk.csv", index=False)
     return nfl_schedule_pick_percentages_df
@@ -2773,8 +2818,15 @@ def get_survivor_picks_based_on_ev():
     
     	    
             for week in df['Week_Num'].unique():
-                # One team per week
-                solver.Add(solver.Sum([picks[i] for i in range(len(df)) if df.loc[i, 'Week_Num'] == week]) == 1)
+                # Filter picks for the current week
+                weekly_picks = [picks[i] for i in range(len(df)) if df.loc[i, 'Week_Num'] == week]
+
+                if selected_contest == "Splash Sports" and week >= week_requiring_two_selections:
+                    # For Splash Sports and later weeks, two teams must be selected
+                    solver.Add(solver.Sum(weekly_picks) == 2)
+                else:
+                    # For other contests or earlier weeks, one team per week
+                    solver.Add(solver.Sum(weekly_picks) == 1)
     
             for team in df['Adjusted Current Winner'].unique():
                 # Can't pick a team more than once
@@ -2788,6 +2840,8 @@ def get_survivor_picks_based_on_ev():
                     # Load the picks from the previous iteration
                     if selected_contest == 'Circa':
                         previous_picks_df = pd.read_csv(f"circa_picks_ev_{previous_iteration + 1}.csv")
+                    elif selected_contest == 'Splash Sports':
+                        previous_picks_df = pd.read_csv(f"splash_picks_ev_{previous_iteration + 1}.csv")
                     else:
                         previous_picks_df = pd.read_csv(f"dk_picks_ev_{previous_iteration + 1}.csv")
     
@@ -2937,6 +2991,9 @@ def get_survivor_picks_based_on_ev():
             if selected_contest == 'Circa':
                 picks_df.to_csv(f'circa_picks_ev_{iteration + 1}.csv', index=False)
                 summarized_picks_df.to_csv(f'circa_picks_ev_subset_{iteration + 1}.csv', index=False)
+            elif selected_contest == 'Splash Sports':
+                picks_df.to_csv(f'splash_picks_ev_{iteration + 1}.csv', index=False)
+                summarized_picks_df.to_csv(f'splash_picks_ev_subset_{iteration + 1}.csv', index=False)
             else:
                 picks_df.to_csv(f'dk_picks_ev_{iteration + 1}.csv', index=False)
                 summarized_picks_df.to_csv(f'dk_picks_ev_subset_{iteration + 1}.csv', index=False)
@@ -3273,8 +3330,15 @@ def get_survivor_picks_based_on_ev():
     
     	    
             for week in df['Week_Num'].unique():
-                # One team per week
-                solver.Add(solver.Sum([picks[i] for i in range(len(df)) if df.loc[i, 'Week_Num'] == week]) == 1)
+                # Filter picks for the current week
+                weekly_picks = [picks[i] for i in range(len(df)) if df.loc[i, 'Week_Num'] == week]
+
+                if selected_contest == "Splash Sports" and week >= week_requiring_two_selections:
+                    # For Splash Sports and later weeks, two teams must be selected
+                    solver.Add(solver.Sum(weekly_picks) == 2)
+                else:
+                    # For other contests or earlier weeks, one team per week
+                    solver.Add(solver.Sum(weekly_picks) == 1)
     
             for team in df['Hypothetical Current Winner'].unique():
                 # Can't pick a team more than once
@@ -5539,6 +5603,7 @@ avoid_away_teams_with_travel_disadvantage = 0
 bayesian_rest_travel_constraint = "No Rest, Bayesian, and Travel Constraints"
 circa_total_entries = 14266
 dk_total_entries = 20000
+splash_total_entries = 18519
 number_solutions = 5
 selected_contest = 'Circa'
 starting_week = 1
@@ -5653,9 +5718,11 @@ was_current_week_availability = -1
 
 default_current_week_entries_circa = 14221
 default_current_week_entries_dk = 20000
+default_current_week_entries_splash_sports = 18519
 
 current_week_entries_circa = 14221
 current_week_entries_dk = 20000
+current_week_entries_splash_sports = 18519
 
 LOGO_PATH = "GSF Survivor Logo Clear BG.png"
 def login_screen():
@@ -5682,7 +5749,7 @@ else:
     st.title("NFL Survivor Optimization")
     st.subheader("The best NFL Survivor Contest optimizer")
     contest_options = [
-        "Circa", "DraftKings"
+        "Circa", "DraftKings", "Splash Sports"
     ]
     with st.expander("More Information"):
         st.write("Alright, clowns. This site is built to help you optimize your picks for the Circa Survivor contest (And Draftkings and Splash Sports). :red[This tool is just for informational use. It does not take into account injuries, weather, resting players, or certain other factors. Do not use this tool as your only source of information.] Simply input which week you're in, your team rankings, constraints, etc... and the algorithm will do the rest.")
@@ -5691,16 +5758,34 @@ else:
     st.write('')
     st.subheader('Select Contest')
     help_text_seletced_contest = f"""
-    \nThe biggest differences between the two contests:
+    \nThe biggest differences between the three contests:
+    \n- DraftKings tends to be a standard contest. One pick per week for 18 weeks. A win or tie from your pick means you advance.
+    \n- In Splash Sports, you will be required to make two picks per week usually starting at some point between week 11 and week 14, depending on the contest you entered. 
     \n- Circa has 20 Weeks (Christmas and Thanksgiving/Black Friday act as their own individual weeks)
     \n- Thanksgiving/Black Friday week will be Week 13 on this site (If you select Circa)
     \n- Christmas Week will be week 18 on this site (If you select Circa)
-    \n- In Circa, a tie eliminates you, but in Draftkings, you move on with a tie
-    \n- Players in Circa tend to be sharper, making it more difficult to play contrarian
+    \n- In Circa and Splash Sports, a tie eliminates you, but in Draftkings, you move on with a tie
+    \n- Players in Circa and Splash Sports tend to be sharper, making it more difficult to play contrarian and ultimately win
+    
     """
-    selected_contest = st.selectbox('Choose Contest:', options = contest_options, help = 'Choose the contest you are using this algorithm for: Circa (Advanced) or Draftkings (Traditional and Pathetic)' + help_text_seletced_contest)
+
+    two_team_selections_help_text = f"""
+    \nIn Splash Sports, most survivor contests have a unique requirement: You must select two teams per week starting in the second half of the season.  
+    \n- However, when you start selecting two teams per week varies, depending on which contest you enter. For some, this may begin in week 11, and for others it may begin as late as week 16.
+    \n- Because it varies, we want to give you the option to select which week this applies to you. Plus, it gives you more flexibility to play around with the tool. 
+    
+    """
+	
+    selected_contest = st.selectbox('Choose Contest:', options = contest_options, help = 'Choose the contest you are using this algorithm for: Circa (Advanced), Draftkings (Traditional and Pathetic), or Splash Sports (Somewhere between the other two)' + help_text_seletced_contest)
     if selected_contest == "DraftKings":
     	ending_week = 19
+    elif selected_contest == "Splash Sports":
+    	ending_week = 19
+        st.write('')
+        st.write('')
+        week_requiring_two_selections = st.selectbox("Which week do you need to start selecting two teams?:", options=range(1, 19), help = two_team_selections_help_text)
+	    
+	
     else:
     	ending_week = 21
     st.write('')
@@ -5741,6 +5826,9 @@ else:
         remaining_weeks_help_text = f"""Select the upcoming week for the starting week and select the week you want the algorithm to stop at. \n- If you select one week, Calculating EV can take up to 30 seconds. \n- All 18 weeks will take 5-10 minutes.\n- Ending Week must be greater than or equal to Starting Week."""
         if selected_contest == "DraftKings":
             starting_week = st.selectbox("Select Starting Week:", options=range(1, 19), help = remaining_weeks_help_text)
+        splash_sports_remaining_weeks_help_text = f"""Select the upcoming week for the starting week and select the week you want the algorithm to stop at. \n- If you select one week, Calculating EV can take up to 30 seconds. \n- All 18 weeks will take 5-10 minutes.\n- Ending Week must be greater than or equal to Starting Week. In the later part of the season, you will be required to select two teams per week."""
+        elif selected_contest == "Splash Sports":
+            starting_week = st.selectbox("Select Starting Week:", options=range(1, 19), help = remaining_weeks_help_text)
         else:
             circa_remaining_weeks_warning = f"""Select the upcoming week for the starting week and select the week you want the algorithm to stop at. \n- If you select one week, Calculating EV can take up to 30 seconds. \n- All 20 weeks will take 5-10 minutes.\n- Ending Week must be greater than or equal to Starting Week. \n- :red[Week 13 is Thanksgiving/Black Friday Week and Week 18 is Christmas Week]"""
             starting_week = st.selectbox("Select Starting Week:", options=range(1, 21), help = circa_remaining_weeks_warning)
@@ -5749,6 +5837,8 @@ else:
         # Create a dynamic range for ending week based on starting week
         st.write('')
         if selected_contest == "DraftKings":
+            ending_week_options = range(starting_week, 19)
+        elif selected_contest == "Splash Sports":
             ending_week_options = range(starting_week, 19)
         else:
             ending_week_options = range(starting_week, 21)
@@ -5764,6 +5854,9 @@ else:
         if selected_contest == "DraftKings":
             current_week_entries_dk = st.number_input("Number of Remaining Entries:", value=-1, max_value=None, help = current_week_entries_help_text)
             st.write(f"You entered: {current_week_entries_dk}")
+        if selected_contest == "Splash Sports":
+            current_week_entries_splash_sports = st.number_input("Number of Remaining Entries:", value=-1, max_value=None, help = current_week_entries_help_text)
+            st.write(f"You entered: {current_week_entries_splash_sports}")
         else:
             current_week_entries_circa = st.number_input("Number of Remaining Entries:", value=-1, max_value=None, help = current_week_entries_help_text)
             st.write(f"You entered: {current_week_entries_circa}")

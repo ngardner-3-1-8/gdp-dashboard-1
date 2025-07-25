@@ -5891,8 +5891,8 @@ else:
         remaining_weeks_help_text = f"""Select the upcoming week for the starting week and select the week you want the algorithm to stop at. \n- If you select one week, Calculating EV can take up to 30 seconds. \n- All 18 weeks will take 5-10 minutes.\n- Ending Week must be greater than or equal to Starting Week."""
         if selected_contest == "DraftKings":
             starting_week = st.selectbox("Select Starting Week:", options=range(1, 19), help = remaining_weeks_help_text)
-        splash_sports_remaining_weeks_help_text = f"""Select the upcoming week for the starting week and select the week you want the algorithm to stop at. \n- If you select one week, Calculating EV can take up to 30 seconds. \n- All 18 weeks will take 5-10 minutes.\n- Ending Week must be greater than or equal to Starting Week. In the later part of the season, you will be required to select two teams per week."""
         elif selected_contest == "Splash Sports":
+            splash_sports_remaining_weeks_help_text = f"""Select the upcoming week for the starting week and select the week you want the algorithm to stop at. \n- If you select one week, Calculating EV can take up to 30 seconds. \n- All 18 weeks will take 5-10 minutes.\n- Ending Week must be greater than or equal to Starting Week. In the later part of the season, you will be required to select two teams per week."""
             starting_week = st.selectbox("Select Starting Week:", options=range(1, 19), help = remaining_weeks_help_text)
         else:
             circa_remaining_weeks_warning = f"""Select the upcoming week for the starting week and select the week you want the algorithm to stop at. \n- If you select one week, Calculating EV can take up to 30 seconds. \n- All 20 weeks will take 5-10 minutes.\n- Ending Week must be greater than or equal to Starting Week. \n- :red[Week 13 is Thanksgiving/Black Friday Week and Week 18 is Christmas Week]"""

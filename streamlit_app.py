@@ -5845,7 +5845,7 @@ else:
     if selected_contest == "DraftKings":
     	ending_week = 19
     elif selected_contest == "Splash Sports":
-    	ending_week = 19
+        ending_week = 19
         st.write('')
         st.write('')
         week_requiring_two_selections = st.selectbox("Which week do you need to start selecting two teams?:", options=range(1, 19), help = two_team_selections_help_text)

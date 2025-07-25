@@ -1714,7 +1714,7 @@ def get_predicted_pick_percentages(pd):
                     # Apply override ONLY if the user-provided value is NOT -1
                     if user_override_value >= 0:
                         away_pick_percent = user_override_value
-	elif selected_contest == 'Splash Sports': # assuming it's DraftKings
+        elif selected_contest == 'Splash Sports': # assuming it's DraftKings
             if home_team in splash_pick_percentages:
                 team_pick_percent_list = splash_pick_percentages[home_team]
                 if week_index < len(team_pick_percent_list):

@@ -600,33 +600,29 @@ def collect_schedule_travel_ranking_data(pd):
         eastern_tz = pytz.timezone('America/New_York')
         utc_tz = pytz.utc # Define UTC timezone
     
-        game_cards = soup.find_all('div', class_='parlay-card-10-a')
-        if not game_cards:
-            print("Error: No game cards (div.parlay-card-10-a) found on the page.")
+        game_dates = soup.find_all('div', class_='cms-market-selector-section-wrapper bottom-margin')
+        if not game_dates:
+            print("Error: No game dates (div.cms-market-selector-section-wrapper bottom-margin) found on the page.")
             return pd.DataFrame()
     
-        print(f"Found {len(game_cards)} game date cards/sections.")
+        print(f"Found {len(game_dates)} game date cards/sections.")
     
         # Get the current year and month to determine if the scraped date implies next year
         current_year = datetime.now().year
         current_month = datetime.now().month
     
-        for card_index, card in enumerate(game_cards):
-            table = card.find('table', class_='sportsbook-table')
-            if not table:
-                print(f"Warning: No sportsbook-table found in card {card_index + 1}.")
+        for card_index, card in enumerate(game_dates):
+            game_date_header = card.find('div', class_='cms-market-selector-static-header')
+            if not game_date_header:
+                print(f"Warning: No date found for found in game date {card_index + 1}.")
                 continue
     
             current_date_str_raw = "Unknown Date"
-            thead = table.find('thead')
-            if thead:
-                date_header_title = thead.find('div', class_='sportsbook-table-header__title')
+            date_head = game_date_header.find('div', class_='cms-market-selector-title__wrapper')
+            if date_head:
+                date_header_title = date_head.find('p', class_='cms-market-selector-event-title')
                 if date_header_title:
-                    date_span = date_header_title.find_all('span', recursive=False)
-                    if len(date_span) > 0 and date_span[0].find('span'):
-                        current_date_str_raw = date_span[0].find('span').text.strip()
-                    elif date_span:
-                        current_date_str_raw = date_span[0].text.strip()
+                    current_date_str_raw = date_header_title.text.strip()
     
             # --- Date Parsing Logic (Improved for year inference) ---
             current_date_for_game = current_date_str_raw
@@ -676,24 +672,37 @@ def collect_schedule_travel_ranking_data(pd):
     
             print(f"\nProcessing table for date: {current_date_for_game}")
     
-            table_body = table.find('tbody', class_='sportsbook-table__body')
-            if not table_body:
-                print(f"Warning: No table body found for table under date {current_date_for_game}.")
+            game_body = game_date_header.find_all('div', class_='cms-market-selector-static__event-wrapper')
+            if not game_body:
+                print(f"Warning: No games found under date {current_date_for_game}.")
                 continue
     
-            potential_rows = table_body.find_all('tr', recursive=False)
+            team_data = game_body.find_all('div', class_='cb-market__template cb-market__template--4-columns', recursive=False)
             actual_team_rows = []
-            for row in potential_rows:
-                if row.find('div', class_='event-cell__name-text'):
+            for team in team_dta:
+                if team.find('span', class_='cb-market__label-inner cb-market__label-inner--parlay'):
                     actual_team_rows.append(row)
     
             print(f"Found {len(actual_team_rows)} actual team rows for {current_date_for_game}.")
     
             game_data = {}
             for i, row in enumerate(actual_team_rows):
-                team_name_element = row.find('div', class_='event-cell__name-text')
-                odds_element = row.find('span', class_='sportsbook-odds american no-margin default-color')
-                time_element = row.find('span', class_='event-cell__start-time')
+                team_name_element = team.find('span', class_='cb-market__label-inner cb-market__label-inner--parlay')
+
+                # Find all buttons with the specified class within the 'team' element
+                all_odds_buttons = team.find_all('button', class_='cb-market__button cb-market__button--regular')
+
+                # Check if there are at least 3 buttons (index 2)
+                if len(all_odds_buttons) >= 3:
+                    odds_button_element = all_odds_buttons[2] # Select the third button (0-indexed)
+                    team_moneyline = odds_button_element.find('span', class_='cb-market__button-odds')
+                else:
+                    # Handle cases where there aren't enough buttons
+                    odds_button_element = None # Or set to a default/None value
+                    team_moneyline = None # Or set to a default/None value
+                    print(f"Warning: Not enough odds buttons found for row {i}. Expected 3, got {len(all_odds_buttons)}.")
+
+                time_element = team.find('span', class_='cb-event-cell__start-time')
     
                 if not team_name_element:
                     print("Warning: Skipping a row that was expected to be a team row but missing name.")

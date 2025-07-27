@@ -619,10 +619,17 @@ def collect_schedule_travel_ranking_data(pd):
     
             current_date_str_raw = "Unknown Date"
             date_head = game_date_header.find('div', class_='cms-market-selector-title__wrapper')
+            st.write("Line 622 - date head found:")
+            st.write(date_head)
             if date_head:
                 date_header_title = date_head.find('p', class_='cms-market-selector-event-title')
                 if date_header_title:
                     current_date_str_raw = date_header_title.text.strip()
+                    st.write("Line 628: current date found:")
+                    st.write(current_date_str_raw)
+		else:
+                    st.write("Line 628: ERROR: current date not found:")
+                
     
             # --- Date Parsing Logic (Improved for year inference) ---
             current_date_for_game = current_date_str_raw
@@ -631,6 +638,10 @@ def collect_schedule_travel_ranking_data(pd):
             # Clean the date string: remove "TH", "ST", "ND", "RD" suffixes
             clean_date_str = re.sub(r'(\d+)(TH|ST|ND|RD)', r'\1', current_date_str_raw.upper())
             clean_date_str = clean_date_str.replace(',', '').strip()
+
+            st.write("Line 642: Cleaned Date String:")
+            st.write(clean_date_str)
+		
     
             # Attempt to parse the date with common formats
             date_formats = [

@@ -548,7 +548,7 @@ def collect_schedule_travel_ranking_data(pd):
             df.loc[index, 'Away Team Short Rest'] = 'Yes'
 
     
-    # --- Selenium WebDriver Setup (Cached for Streamlit) ---
+    @st.cache_resource
     def get_webdriver():
         """Initializes and caches the Selenium WebDriver."""
         options = Options()
@@ -557,7 +557,7 @@ def collect_schedule_travel_ranking_data(pd):
         options.add_argument("--disable-dev-shm-usage")  # Overcomes limited /dev/shm size in some environments
         options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/102.0.0.0 Safari/537.36")
         options.add_argument("--window-size=1920,1080") # Set a consistent window size
-    
+        
         try:
             # This will work if chromedriver is in the system's PATH, or if 'chromium-driver'
             # from packages.txt installs it to a discoverable location like /usr/bin/chromedriver

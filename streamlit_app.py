@@ -574,304 +574,288 @@ def collect_schedule_travel_ranking_data(pd):
         url = "https://sportsbook.draftkings.com/leagues/football/nfl?category=game-lines&subcategory=game"
     
         team_name_mapping = {
-            "ARI Cardinals" : "Arizona Cardinals",
-            "ATL Falcons" : "Atlanta Falcons",
-            "BAL Ravens" : "Baltimore Ravens",
-            "BUF Bills" : "Buffalo Bills",
-            "CAR Panthers" : "Carolina Panthers",
-            "CHI Bears" : "Chicago Bears",
-            "CIN Bengals" : 'Cincinnati Bengals',
-            "CLE Browns" : 'Cleveland Browns',
-            "DAL Cowboys" : 'Dallas Cowboys',
-            "DEN Broncos" : 'Denver Broncos',
-            "DET Lions" : 'Detroit Lions',
-            "GB Packers" : 'Green Bay Packers',
-            "HOU Texans" : 'Houston Texans',
-            "IND Colts" : 'Indianapolis Colts',
-            "JAX Jaguars" : 'Jacksonville Jaguars',
-            "KC Chiefs" : 'Kansas City Chiefs',
-            "LV Raiders" : 'Las Vegas Raiders',
-            "LA Chargers" : 'Los Angeles Chargers',
-            "LA Rams" : 'Los Angeles Rams',
-            "MIA Dolphins" : 'Miami Dolphins',
-            "MIN Vikings" : 'Minnesota Vikings',
-            "NE Patriots" : 'New England Patriots',
-            "NO Saints" : 'New Orleans Saints',
-            "NY Giants" : 'New York Giants',
-            "NY Jets" : 'New York Jets',
-            "PHI Eagles" : 'Philadelphia Eagles',
-            "PIT Steelers" : 'Pittsburgh Steelers',
-            "SF 49ers" : 'San Francisco 49ers',
-            "SEA Seahawks" : 'Seattle Seahawks',
-            "TB Buccaneers" : 'Tampa Bay Buccaneers',
-            "TEN Titans" : 'Tennessee Titans',
-            "WAS Commanders" : 'Washington Commanders'
+            "ARI Cardinals" : "Arizona Cardinals", "ATL Falcons" : "Atlanta Falcons",
+            "BAL Ravens" : "Baltimore Ravens", "BUF Bills" : "Buffalo Bills",
+            "CAR Panthers" : "Carolina Panthers", "CHI Bears" : "Chicago Bears",
+            "CIN Bengals" : 'Cincinnati Bengals', "CLE Browns" : 'Cleveland Browns',
+            "DAL Cowboys" : 'Dallas Cowboys', "DEN Broncos" : 'Denver Broncos',
+            "DET Lions" : 'Detroit Lions', "GB Packers" : 'Green Bay Packers',
+            "HOU Texans" : 'Houston Texans', "IND Colts" : 'Indianapolis Colts',
+            "JAX Jaguars" : 'Jacksonville Jaguars', "KC Chiefs" : 'Kansas City Chiefs',
+            "LV Raiders" : 'Las Vegas Raiders', "LA Chargers" : 'Los Angeles Chargers',
+            "LA Rams" : 'Los Angeles Rams', "MIA Dolphins" : 'Miami Dolphins',
+            "MIN Vikings" : 'Minnesota Vikings', "NE Patriots" : 'New England Patriots',
+            "NO Saints" : 'New Orleans Saints', "NY Giants" : 'New York Giants',
+            "NY Jets" : 'New York Jets', "PHI Eagles" : 'Philadelphia Eagles',
+            "PIT Steelers" : 'Pittsburgh Steelers', "SF 49ers" : 'San Francisco 49ers',
+            "SEA Seahawks" : 'Seattle Seahawks', "TB Buccaneers" : 'Tampa Bay Buccaneers',
+            "TEN Titans" : 'Tennessee Titans', "WAS Commanders" : 'Washington Commanders'
         }
     
         games = []
-    
+        
         # Define the Eastern and UTC Timezones
         eastern_tz = pytz.timezone('America/New_York')
-        utc_tz = pytz.utc # Define UTC timezone
-
+        utc_tz = pytz.utc
+    
         try:
             driver = get_webdriver() # Get the cached WebDriver instance
             st.info(f"Navigating to URL with Selenium: {url}")
             driver.get(url)
-
+    
             # --- Selenium Wait Condition ---
-            # This is the MOST IMPORTANT line to verify. You need a selector that
-            # represents content being loaded dynamically. The old `cms-market-selector-section-wrapper`
-            # is probably not it for the *rendered* page.
-            # Use browser dev tools to find a stable class for a main container, like an "event card" or "odds table".
-            # I'm providing a very common DK pattern, but YOU MUST VERIFY.
+            # This selector needs to be something present when the main dynamic content loads.
+            # Given your original code was looking for `cms-market-selector-section-wrapper bottom-margin`,
+            # we'll use that as the target for the wait, assuming it *does* appear after JS loads.
+            # If this still fails, THIS is the first place to re-inspect in the browser's Elements tab.
+            main_content_load_selector = 'div.cms-market-selector-section-wrapper.bottom-margin'
             try:
                 WebDriverWait(driver, 30).until(
-                    EC.presence_of_element_located((By.CSS_SELECTOR, 'div[class*="sportsbook-event-card"]')) # Common DK game card class
-                    # Alternatively: EC.presence_of_element_located((By.CLASS_NAME, 'sportsbook-event-card'))
-                    # Or a main content wrapper: EC.presence_of_element_located((By.CLASS_NAME, 'sportsbook-main-content'))
+                    EC.presence_of_element_located((By.CSS_SELECTOR, main_content_load_selector))
                 )
-                st.success("Selenium: Dynamic content appears loaded.")
+                st.success(f"Selenium: Dynamic content appears loaded (found: '{main_content_load_selector}').")
             except Exception as e:
-                st.error(f"Selenium: Timeout waiting for dynamic content. Page might not have loaded correctly or selector is wrong: {e}")
+                st.error(f"Selenium: Timeout waiting for dynamic content on '{main_content_load_selector}'. "
+                         f"Page might not have loaded correctly or selector is wrong: {e}")
                 st.info("Attempting to get page source anyway for debugging.")
-                # Even if wait fails, get current page source to debug
-        
+            
             # Get the page source *after* JavaScript has had a chance to render
             html_content = driver.page_source
             soup = BeautifulSoup(html_content, 'html.parser')
-
+    
             st.markdown("### Rendered HTML (First 5000 characters for debugging):")
             st.code(html_content[:5000]) # Use st.code for better display in Streamlit
     
-        game_dates = soup.find_all('div', class_='cms-market-selector-section-wrapper bottom-margin')
-        if not game_dates:
-            print("Error: No game dates (div.cms-market-selector-section-wrapper bottom-margin) found on the page.")
-            return pd.DataFrame()
-    
-        print(f"Found {len(game_dates)} game date cards/sections.")
-    
-        # Get the current year and month to determine if the scraped date implies next year
-        current_year = datetime.now().year
-        current_month = datetime.now().month
-    
-        for card_index, card in enumerate(game_dates):
-            game_date_header = card.find('div', class_='cms-market-selector-static-header')
-            if not game_date_header:
-                print(f"Warning: No date found for found in game date {card_index + 1}.")
-                continue
-    
-            current_date_str_raw = "Unknown Date"
-            date_head = game_date_header.find('div', class_='cms-market-selector-title__wrapper')
-            st.write("Line 622 - date head found:")
-            st.write(date_head)
-            if date_head:
-                date_header_title = date_head.find('p', class_='cms-market-selector-event-title')
-                if date_header_title:
-                    current_date_str_raw = date_header_title.text.strip()
-                    st.write("Line 628: current date found:")
-                    st.write(current_date_str_raw)
-                else:
-                    st.write("Line 628: ERROR: current date not found:")
+            # --- Your Original BeautifulSoup Parsing Logic (Adapted for Selenium's HTML) ---
+            # Assuming these classes are now present in the `html_content` from Selenium
+            
+            game_dates = soup.find_all('div', class_='cms-market-selector-section-wrapper bottom-margin')
+            if not game_dates:
+                st.error("Error: No game dates (div.cms-market-selector-section-wrapper bottom-margin) found on the rendered page.")
+                return pd.DataFrame()
+            
+            st.info(f"Found {len(game_dates)} game date cards/sections.")
+            
+            current_year = datetime.now().year
+            current_month = datetime.now().month
+            
+            for card_index, card in enumerate(game_dates):
+                game_date_header = card.find('div', class_='cms-market-selector-static-header')
+                if not game_date_header:
+                    st.warning(f"Warning: No date header found for game date section {card_index + 1}.")
+                    continue
                 
-    
-            # --- Date Parsing Logic (Improved for year inference) ---
-            current_date_for_game = current_date_str_raw
-            parsed_date_obj = None # Renamed for clarity within the loop
-    
-            # Clean the date string: remove "TH", "ST", "ND", "RD" suffixes
-            clean_date_str = re.sub(r'(\d+)(TH|ST|ND|RD)', r'\1', current_date_str_raw.upper())
-            clean_date_str = clean_date_str.replace(',', '').strip()
-
-            st.write("Line 642: Cleaned Date String:")
-            st.write(clean_date_str)
-		
-    
-            # Attempt to parse the date with common formats
-            date_formats = [
-                "%a %b %d",    # "FRI SEP 5"
-                "%A %B %d",    # "FRIDAY SEPTEMBER 5"
-                "%B %d",       # "SEPTEMBER 5"
-                "%a, %b %d"    # "FRI, SEP 5"
-            ]
-    
-            temp_parsed_date = None
-            for fmt in date_formats:
-                try:
-                    # First, try parsing with current year
-                    temp_parsed_date = datetime.strptime(f"{clean_date_str} {current_year}", f"{fmt} %Y").date()
-                    break
-                except ValueError:
-                    continue
-    
-            if temp_parsed_date:
-                # Check if the parsed date is in the past compared to current date,
-                # but its month is significantly after the current month.
-                # This heuristic suggests it might belong to the next year.
-                # E.g., if current date is June 2025, and parsed date is Jan 5,
-                # it's likely Jan 5, 2026, not Jan 5, 2025 (which is in the past).
-                if temp_parsed_date.month < current_month and temp_parsed_date < datetime.now().date():
+                current_date_str_raw = "Unknown Date"
+                date_head = game_date_header.find('div', class_='cms-market-selector-title__wrapper')
+                # st.write("Line [approx 622] - date head found:") # Removed line numbers
+                # st.write(date_head)
+                if date_head:
+                    date_header_title = date_head.find('p', class_='cms-market-selector-event-title')
+                    if date_header_title:
+                        current_date_str_raw = date_header_title.text.strip()
+                        # st.write("Line [approx 628]: current date found:")
+                        # st.write(current_date_str_raw)
+                    else:
+                        st.warning("Line [approx 628]: ERROR: current date title not found.")
+                
+                # --- Date Parsing Logic ---
+                parsed_date_obj = None
+                clean_date_str = re.sub(r'(\d+)(TH|ST|ND|RD)', r'\1', current_date_str_raw.upper())
+                clean_date_str = clean_date_str.replace(',', '').strip()
+                
+                # st.write("Line [approx 642]: Cleaned Date String:")
+                # st.write(clean_date_str)
+                
+                date_formats = [
+                    "%a %b %d",     # "FRI SEP 5"
+                    "%A %B %d",     # "FRIDAY SEPTEMBER 5"
+                    "%B %d",        # "SEPTEMBER 5"
+                    "%a, %b %d"     # "FRI, SEP 5"
+                ]
+                
+                temp_parsed_date = None
+                format_used = None
+                for fmt in date_formats:
                     try:
-                        # Attempt to parse with the next year
-                        temp_parsed_date = datetime.strptime(f"{clean_date_str} {current_year + 1}", f"{fmt} %Y").date()
+                        # First, try parsing with current year
+                        temp_parsed_date = datetime.strptime(f"{clean_date_str} {current_year}", f"{fmt} %Y").date()
+                        format_used = fmt
+                        break
                     except ValueError:
-                        pass # Keep the current year if next year also fails or doesn't apply
-    
-                parsed_date_obj = temp_parsed_date
-                current_date_for_game = parsed_date_obj.strftime('%Y-%m-%d')
-            else:
-                print(f"Warning: Could not parse date string: '{current_date_str_raw}'. Date will remain as string.")
-                current_date_for_game = current_date_str_raw
-                parsed_date_obj = None # Ensure it's None if parsing failed
-    
-    
-            print(f"\nProcessing table for date: {current_date_for_game}")
-    
-            game_body = game_date_header.find_all('div', class_='cms-market-selector-static__event-wrapper')
-            if not game_body:
-                print(f"Warning: No games found under date {current_date_for_game}.")
-                continue
-    
-            team_data = game_body.find_all('div', class_='cb-market__template cb-market__template--4-columns', recursive=False)
-            actual_team_rows = []
-            for team in team_dta:
-                if team.find('span', class_='cb-market__label-inner cb-market__label-inner--parlay'):
-                    actual_team_rows.append(row)
-    
-            print(f"Found {len(actual_team_rows)} actual team rows for {current_date_for_game}.")
-    
-            game_data = {}
-            for i, row in enumerate(actual_team_rows):
-                team_name_element = team.find('span', class_='cb-market__label-inner cb-market__label-inner--parlay')
-
-                # Find all buttons with the specified class within the 'team' element
-                all_odds_buttons = team.find_all('button', class_='cb-market__button cb-market__button--regular')
-
-                # Check if there are at least 3 buttons (index 2)
-                if len(all_odds_buttons) >= 3:
-                    odds_button_element = all_odds_buttons[2] # Select the third button (0-indexed)
-                    team_moneyline = odds_button_element.find('span', class_='cb-market__button-odds')
-                else:
-                    # Handle cases where there aren't enough buttons
-                    odds_button_element = None # Or set to a default/None value
-                    team_moneyline = None # Or set to a default/None value
-                    print(f"Warning: Not enough odds buttons found for row {i}. Expected 3, got {len(all_odds_buttons)}.")
-
-                time_element = team.find('span', class_='cb-event-cell__start-time')
-    
-                if not team_name_element:
-                    print("Warning: Skipping a row that was expected to be a team row but missing name.")
-                    continue
-    
-                team = team_name_element.text.strip()
-                team = team_name_mapping.get(team, team)
-    
-                odds = None
-                if odds_element:
-                    odds_text = odds_element.text.strip().replace('−', '-')
-                    if odds_text:
+                        continue
+                
+                if temp_parsed_date:
+                    # Heuristic for next year: if month is earlier than current month AND date is in the past
+                    if temp_parsed_date.month < current_month and temp_parsed_date < datetime.now().date():
                         try:
-                            odds = int(odds_text)
+                            # Attempt to parse with the next year
+                            temp_parsed_date = datetime.strptime(f"{clean_date_str} {current_year + 1}", f"{format_used} %Y").date()
                         except ValueError:
-                            print(f"Warning: Could not parse odds for {team} on {current_date_for_game}: '{odds_text}'")
-                            odds = None
+                            pass # Keep the current year if next year also fails or doesn't apply
+                    
+                    parsed_date_obj = temp_parsed_date
+                    current_date_for_game = parsed_date_obj.strftime('%Y-%m-%d')
+                else:
+                    st.warning(f"Warning: Could not parse date string: '{current_date_str_raw}'. Date will remain as string.")
+                    current_date_for_game = current_date_str_raw
+                    parsed_date_obj = None # Ensure it's None if parsing failed
+                
+                st.info(f"Processing table for date: {current_date_for_game}")
+                
+                game_body = card.find('div', class_='cms-market-selector-static__event-wrapper') # Changed from find_all to find as per original logic
+                if not game_body:
+                    st.warning(f"Warning: No games found under date header for {current_date_for_game}.")
+                    continue
+                
+                # This class `cb-market__template cb-market__template--4-columns` is very specific.
+                # If `game_body` exists, then `find_all` on it for this class should yield rows.
+                team_data_rows = game_body.find_all('div', class_='cb-market__template cb-market__template--4-columns', recursive=False)
+                
+                actual_team_rows = []
+                for row in team_data_rows: # Iterating over `team_data_rows` not `team_dta`
+                    # Your original code used `row` here, not `team`. Corrected.
+                    if row.find('span', class_='cb-market__label-inner cb-market__label-inner--parlay'):
+                        actual_team_rows.append(row)
+                
+                st.info(f"Found {len(actual_team_rows)} actual team rows for {current_date_for_game}.")
+                
+                game_data = {} # Reset for each new date section
+                for i, row in enumerate(actual_team_rows):
+                    team_name_element = row.find('span', class_='cb-market__label-inner cb-market__label-inner--parlay')
     
-                if i % 2 == 0:  # Away Team
-                    # Initially assign the original scraped date. Will be updated later if needed.
-                    game_data = {'Date': current_date_for_game}
-                    if time_element:
-                        raw_time_str = time_element.text.strip()
-                        game_data['Time_Raw'] = raw_time_str # Keep raw time for debugging
+                    all_odds_buttons = row.find_all('button', class_='cb-market__button cb-market__button--regular')
+                    
+                    odds_button_element = None
+                    team_moneyline_element = None # Renamed from team_moneyline to avoid conflict with `odds` later
+                    if len(all_odds_buttons) >= 3:
+                        odds_button_element = all_odds_buttons[2] # Select the third button (0-indexed)
+                        team_moneyline_element = odds_button_element.find('span', class_='cb-market__button-odds')
+                    else:
+                        st.warning(f"Warning: Not enough odds buttons found for row {i} in date {current_date_for_game}. Expected 3, got {len(all_odds_buttons)}.")
+                    
+                    time_element = row.find('span', class_='cb-event-cell__start-time') # This might be the time for each game
     
-                        converted_to_eastern = None # Initialize to None
-                        if parsed_date_obj: # Ensure we have a valid date object to combine with
-                            time_to_parse = re.sub(r'\s*(ET|PT|CT|MT)\s*', '', raw_time_str, flags=re.IGNORECASE).strip()
-                            time_to_parse = re.sub(r'(\d)([AP]M)', r'\1 \2', time_to_parse)
-    
-                            time_formats = [
-                                "%I:%M %p", # "12:20 AM", "7:00 PM"
-                                "%I:%M%p",  # "12:20AM", "7:00PM" (no space, though the regex should add one)
-                                "%H:%M"     # "19:00" (24-hour format)
-                            ]
-    
-                            time_parsed_success = False
-                            for fmt in time_formats:
-                                try:
-                                    naive_dt_from_site = datetime.strptime(f"{parsed_date_obj.strftime('%Y-%m-%d')} {time_to_parse}", f'%Y-%m-%d {fmt}')
-                                    # print(f"\n--- Debugging Time Conversion for {team} ---") # Uncomment for verbose debugging
-                                    # print(f"1. Raw time string: '{raw_time_str}'")
-                                    # print(f"2. Cleaned time for parsing: '{time_to_parse}'")
-                                    # print(f"3. Parsed naive datetime (assuming input format): {naive_dt_from_site}")
-    
-                                    # Localize the naive datetime object to UTC (assuming site's time is UTC)
-                                    localized_utc = utc_tz.localize(naive_dt_from_site)
-                                    # print(f"4. Localized to UTC: {localized_utc}")
-    
-                                    # Convert the UTC localized datetime to Eastern Time
-                                    converted_to_eastern = localized_utc.astimezone(eastern_tz)
-                                    # print(f"5. Converted to Eastern: {converted_to_eastern}")
-    
-                                    time_parsed_success = True
-                                    break # Exit loop if parsing is successful
-                                except ValueError as ve:
-                                    continue # Try the next format
-    
-                            if time_parsed_success and converted_to_eastern:
-                                game_data['Event DateTime (ET)'] = converted_to_eastern # Store the actual datetime object
-                                game_data['Time'] = converted_to_eastern.strftime('%I:%M %p')
+                    if not team_name_element:
+                        st.warning("Warning: Skipping a row that was expected to be a team row but missing name.")
+                        continue
+                    
+                    team_raw = team_name_element.text.strip()
+                    team = team_name_mapping.get(team_raw, team_raw)
+                    
+                    odds_val = None
+                    if team_moneyline_element: # Check the specific moneyline span
+                        odds_text = team_moneyline_element.text.strip().replace('−', '-')
+                        if odds_text:
+                            try:
+                                odds_val = int(odds_text) # Odds are usually ints for moneyline
+                            except ValueError:
+                                st.warning(f"Warning: Could not parse odds for {team} on {current_date_for_game}: '{odds_text}'")
+                                odds_val = None
+                    
+                    # Logic for Home/Away teams and collecting game data
+                    # This assumes alternating Away/Home rows within actual_team_rows
+                    if i % 2 == 0:  # Away Team
+                        # Initialize game_data for a new game
+                        game_data = {'Date': current_date_for_game} 
+                        
+                        if time_element:
+                            raw_time_str = time_element.text.strip()
+                            game_data['Time_Raw'] = raw_time_str # Keep raw time for debugging
+                            
+                            converted_to_eastern = None
+                            if parsed_date_obj: # Ensure we have a valid date object to combine with
+                                # This time parsing logic needs to be robust. 
+                                # If DK uses a simple 'HH:MM AM/PM' then this is fine.
+                                time_to_parse = re.sub(r'\s*(ET|PT|CT|MT)\s*', '', raw_time_str, flags=re.IGNORECASE).strip()
+                                time_to_parse = re.sub(r'(\d)([AP]M)', r'\1 \2', time_to_parse) # Ensure space before AM/PM
+                                
+                                time_formats_for_dt = [
+                                    "%I:%M %p", # "12:20 AM", "7:00 PM"
+                                    "%I:%M%p",  # "12:20AM", "7:00PM" (no space, regex should add one)
+                                    "%H:%M"     # "19:00" (24-hour format)
+                                ]
+                                
+                                time_parsed_success = False
+                                for fmt in time_formats_for_dt:
+                                    try:
+                                        naive_dt_from_site = datetime.strptime(f"{parsed_date_obj.strftime('%Y-%m-%d')} {time_to_parse}", f'%Y-%m-%d {fmt}')
+                                        
+                                        # Assuming the time on DraftKings is in Eastern Time (America/New_York)
+                                        localized_dt_eastern = eastern_tz.localize(naive_dt_from_site)
+                                        converted_to_eastern = localized_dt_eastern.isoformat() # Store as ISO string with TZ info
+                                        
+                                        time_parsed_success = True
+                                        break
+                                    except ValueError as ve:
+                                        continue # Try the next format
+                                
+                                if time_parsed_success and converted_to_eastern:
+                                    game_data['Event DateTime (ET)'] = converted_to_eastern
+                                    game_data['Time'] = datetime.fromisoformat(converted_to_eastern).strftime('%I:%M %p')
+                                else:
+                                    st.warning(f"Warning: Could not parse or convert datetime for {team} on {current_date_for_game} at '{raw_time_str}'. Time will remain raw.")
+                                    game_data['Time'] = raw_time_str
+                                    game_data['Event DateTime (ET)'] = None
                             else:
-                                print(f"Warning: Could not parse or convert datetime for {team} on {current_date_for_game} at '{raw_time_str}'. Time will remain raw.")
                                 game_data['Time'] = raw_time_str
                                 game_data['Event DateTime (ET)'] = None
                         else:
-                            game_data['Time'] = raw_time_str
+                            game_data['Time'] = 'N/A'
                             game_data['Event DateTime (ET)'] = None
-                    else:
-                        game_data['Time'] = 'N/A'
-                        game_data['Event DateTime (ET)'] = None
-                        print(f"Warning: Time element not found for Away Team {team} on {current_date_for_game}")
+                            st.warning(f"Warning: Time element not found for Away Team {team} on {current_date_for_game}")
+                        
+                        game_data['Away Team'] = team
+                        game_data['Away Odds'] = odds_val # Renamed variable
     
-                    game_data['Away Team'] = team
-                    game_data['Away Odds'] = odds
-    
-                    if i == len(actual_team_rows) - 1:
-                        print(f"Warning: Game for {team} (Away) on {current_date_for_game} is incomplete.")
-                        game_data = {}
-    
-                else:  # Home Team
-                    if 'Away Team' not in game_data:
-                        print(f"Warning: Home team {team} on {current_date_for_game} found without a preceding Away team. Skipping.")
-                        game_data = {}
-                        continue
-    
-                    game_data['Home Team'] = team
-                    game_data['Home Odds'] = odds
-                    games.append(game_data)
-                    game_data = {}
+                        # If this is the last row and it's an Away Team, it means the Home team is missing.
+                        if i == len(actual_team_rows) - 1:
+                            st.warning(f"Warning: Game for {team} (Away) on {current_date_for_game} is incomplete (missing Home team).")
+                            # You might choose to append game_data anyway with N/A for home, or discard.
+                            # For now, we'll clear it so it doesn't get processed further.
+                            game_data = {} 
+                    else:  # Home Team
+                        if 'Away Team' not in game_data:
+                            st.warning(f"Warning: Home team {team} on {current_date_for_game} found without a preceding Away team. Skipping this pair.")
+                            game_data = {} # Clear potentially orphaned data
+                            continue
+                        
+                        game_data['Home Team'] = team
+                        game_data['Home Odds'] = odds_val # Renamed variable
+                        
+                        games.append(game_data)
+                        game_data = {} # Reset for the next pair
+                
+        except Exception as e:
+            st.error(f"An overarching error occurred during the overall scraping process: {e}")
+            return pd.DataFrame()
+        finally:
+            # No driver.quit() here as the driver is managed by st.cache_resource
+            pass
     
         df = pd.DataFrame(games)
-    
-        # --- NEW STEPS FOR POST-PROCESSING THE DATAFRAME ---
-    
-        # 1. Ensure 'Event DateTime (ET)' is a proper datetime object (if not already)
-        # This converts any string representations back to datetime objects if needed,
-        # handling errors by setting them to NaT (Not a Time).
+        
+        # --- Post-processing the DataFrame ---
+        # Ensure 'Event DateTime (ET)' is a proper datetime object and correctly localized
         df['Event DateTime (ET)'] = pd.to_datetime(df['Event DateTime (ET)'], errors='coerce', utc=True)
-        # The 'utc=True' is important here because we expect it to be a timezone-aware object.
-        # We now convert it to Eastern just in case it's not already.
         df['Event DateTime (ET)'] = df['Event DateTime (ET)'].dt.tz_convert(eastern_tz)
-    
-    
-        # 2. Update the 'Date' column to reflect the date in Eastern Time
-        # Use .dt.date to get just the date part (yyyy-mm-dd) from the datetime object
-        df['Date'] = df['Event DateTime (ET)'].dt.date.astype(str) # Convert to string 'YYYY-MM-DD' for consistency
-    
-        # 3. Remove the 'Time_Raw' column
+        
+        # Update the 'Date' column to reflect the date in Eastern Time from the datetime object
+        df['Date'] = df['Event DateTime (ET)'].dt.date.astype(str) # Format as 'YYYY-MM-DD'
+        
+        # Remove the 'Time_Raw' column as it's for debugging
         if 'Time_Raw' in df.columns:
             df = df.drop(columns=['Time_Raw'])
+        
+        # Reorder columns to match your desired output format
+        desired_columns = [
+            'Date', 'Time', 'Event DateTime (ET)',
+            'Away Team', 'Away Odds',
+            'Home Team', 'Home Odds'
+        ]
+        # Handle cases where some columns might be missing if data wasn't found
+        df = df[[col for col in desired_columns if col in df.columns]]
     
-        # --- END NEW STEPS ---
-    
+        st.dataframe(df) # Display the final DataFrame in Streamlit
         return df
     
     live_scraped_odds_df = get_preseason_odds()

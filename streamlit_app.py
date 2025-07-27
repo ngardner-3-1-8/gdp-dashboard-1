@@ -637,12 +637,12 @@ def collect_schedule_travel_ranking_data(pd):
                 st.info("Attempting to get page source anyway for debugging.")
                 # Even if wait fails, get current page source to debug
         
-        # Get the page source *after* JavaScript has had a chance to render
-        html_content = driver.page_source
-        soup = BeautifulSoup(html_content, 'html.parser')
+            # Get the page source *after* JavaScript has had a chance to render
+            html_content = driver.page_source
+            soup = BeautifulSoup(html_content, 'html.parser')
 
-        st.markdown("### Rendered HTML (First 5000 characters for debugging):")
-        st.code(html_content[:5000]) # Use st.code for better display in Streamlit
+            st.markdown("### Rendered HTML (First 5000 characters for debugging):")
+            st.code(html_content[:5000]) # Use st.code for better display in Streamlit
     
         game_dates = soup.find_all('div', class_='cms-market-selector-section-wrapper bottom-margin')
         if not game_dates:

@@ -2294,7 +2294,7 @@ def get_predicted_pick_percentages_with_availability(pd):
         nfl_schedule_df[['Home Pick %', 'Away Pick %']] = nfl_schedule_df.apply(
             assign_pick_percentages_with_availability, 
             axis=1, 
-            args=(selected_contest, circa_pick_percentages, dk_pick_percentages)
+            args=(selected_contest, circa_pick_percentages, dk_pick_percentages, splash_pick_percentages)
         )
         
         if selected_contest == 'Circa':

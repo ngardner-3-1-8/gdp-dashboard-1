@@ -551,7 +551,7 @@ def collect_schedule_travel_ranking_data(pd):
     
         try:
             response = requests.get(url, headers=headers, timeout=15)
-            print(f"Response Status Code: {response.status_code}")
+            print(f"Response Status Code for DraftKings: {response.status_code}")
             response.raise_for_status()
         except requests.exceptions.RequestException as e:
             print(f"Error fetching URL: {e}")

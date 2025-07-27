@@ -600,9 +600,9 @@ def collect_schedule_travel_ranking_data(pd):
         eastern_tz = pytz.timezone('America/New_York')
         utc_tz = pytz.utc # Define UTC timezone
     
-        game_dates = soup.find_all('div', class_='cms-market-selector-section-wrapper bottom-margin')
+        game_dates = soup.find_all('div', class_='cms-market-selector-section-wrapper.bottom-margin')
         if not game_dates:
-            print("Error: No game dates (div.cms-market-selector-section-wrapper bottom-margin) found on the page.")
+            print("Error: No game dates (div.cms-market-selector-section-wrapper.bottom-margin) found on the page.")
             return pd.DataFrame()
     
         print(f"Found {len(game_dates)} game date cards/sections.")

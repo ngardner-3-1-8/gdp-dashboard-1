@@ -12794,7 +12794,7 @@ else:
         if selected_contest == 'Circa':
             st.subheader(f':blue[Optimal Picks for Circa: Weeks {starting_week} through {ending_week_2}]')
             st.write('')
-        if selected_contest == 'Splash Sports':
+        elif selected_contest == 'Splash Sports':
             st.subheader(f':yellow[Optimal Picks for Splash Sports: Weeks {starting_week} through {ending_week_2}]')
             st.write('')
         else:

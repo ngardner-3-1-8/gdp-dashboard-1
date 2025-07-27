@@ -560,7 +560,7 @@ def collect_schedule_travel_ranking_data(pd):
         soup = BeautifulSoup(response.text, 'html.parser')
 
         print("\n--- HTML Content (first 2000 characters) ---")
-        print(response.text[:2000]) # Print only the first 2000 characters to avoid overwhelming output
+        print(response.text) # Print only the first 2000 characters to avoid overwhelming output
         print("-------------------------------------------\n")
     
         team_name_mapping = {

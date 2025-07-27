@@ -874,40 +874,7 @@ def collect_schedule_travel_ranking_data(pd):
     st.write("")
     st.write("")
 	
-    def add_odds_to_main_csv(df, live_scraped_odds_df,
-                             preseason_az_rank, az_rank, az_home_adv, az_away_adj,
-                             preseason_atl_rank, atl_rank, atl_home_adv, atl_away_adj,
-                             preseason_bal_rank, bal_rank, bal_home_adv, bal_away_adj,
-                             preseason_buf_rank, buf_rank, buf_home_adv, buf_away_adj,
-                             preseason_car_rank, car_rank, car_home_adv, car_away_adj,
-                             preseason_chi_rank, chi_rank, chi_home_adv, chi_away_adj,
-                             preseason_cin_rank, cin_rank, cin_home_adv, cin_away_adj,
-                             preseason_cle_rank, cle_rank, cle_home_adv, cle_away_adj,
-                             preseason_dal_rank, dal_rank, dal_home_adv, dal_away_adj,
-                             preseason_den_rank, den_rank, den_home_adv, den_away_adj,
-                             preseason_det_rank, det_rank, det_home_adv, det_away_adj,
-                             preseason_gb_rank, gb_rank, gb_home_adv, gb_away_adj,
-                             preseason_hou_rank, hou_rank, hou_home_adv, hou_away_adj,
-                             preseason_ind_rank, ind_rank, ind_home_adv, ind_away_adj,
-                             preseason_jax_rank, jax_rank, jax_home_adv, jax_away_adj,
-                             preseason_kc_rank, kc_rank, kc_home_adv, kc_away_adj,
-                             preseason_lv_rank, lv_rank, lv_home_adv, lv_away_adj,
-                             preseason_lac_rank, lac_rank, lac_home_adv, lac_away_adj,
-                             preseason_lar_rank, lar_rank, lar_home_adv, lar_away_adj,
-                             preseason_mia_rank, mia_rank, mia_home_adv, mia_away_adj,
-                             preseason_min_rank, min_rank, min_home_adv, min_away_adj,
-                             preseason_ne_rank, ne_rank, ne_home_adv, ne_away_adj,
-                             preseason_no_rank, no_rank, no_home_adv, no_away_adj,
-                             preseason_nyg_rank, nyg_rank, nyg_home_adv, nyg_away_adj,
-                             preseason_nyj_rank, nyj_rank, nyj_home_adv, nyj_away_adj,
-                             preseason_phi_rank, phi_rank, phi_home_adv, phi_away_adj,
-                             preseason_pit_rank, pit_rank, pit_home_adv, pit_away_adj,
-                             preseason_sf_rank, sf_rank, sf_home_adv, sf_away_adj,
-                             preseason_sea_rank, sea_rank, sea_home_adv, sea_away_adj,
-                             preseason_tb_rank, tb_rank, tb_home_adv, tb_away_adj,
-                             preseason_ten_rank, ten_rank, ten_home_adv, ten_away_adj,
-                             preseason_was_rank, was_rank, was_home_adv, was_away_adj
-                             ):
+    def add_odds_to_main_csv():
         """
         Adds odds data to the main DataFrame, prioritizing DraftKings data if available and complete.
         If DraftKings data is missing or incomplete for a game, it overrides with internal calculations.

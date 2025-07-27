@@ -627,7 +627,7 @@ def collect_schedule_travel_ranking_data(pd):
                     current_date_str_raw = date_header_title.text.strip()
                     st.write("Line 628: current date found:")
                     st.write(current_date_str_raw)
-		else:
+                else:
                     st.write("Line 628: ERROR: current date not found:")
                 
     

@@ -979,6 +979,13 @@ def collect_schedule_travel_ranking_data(pd):
         csv_df['Adjusted Away Points'] = csv_df['Away Team Adjusted Current Rank']
     
         csv_df['Preseason Spread'] = abs(csv_df['Away Team Adjusted Preseason Rank'] - csv_df['Home Team Adjusted Preseason Rank'])
+
+        # Determine Favorite and Underdog
+        csv_df['Favorite'] = csv_df.apply(lambda row: row['Home Team'] if row['Home Team Adjusted Current Rank'] >= row['Away Team Adjusted Current Rank'] else row['Away Team'], axis=1)
+        csv_df['Underdog'] = csv_df.apply(lambda row: row['Home Team'] if row['Home Team Adjusted Current Rank'] < row['Away Team Adjusted Current Rank'] else row['Away Team'], axis=1)
+
+        # Adjust Spread based on Favorite
+        csv_df['Adjusted Spread'] = abs(csv_df['Away Team Adjusted Current Rank'] - csv_df['Home Team Adjusted Current Rank'])
     
         # Helper function to get moneyline based on calculated spread and internal odds dictionary
         def get_moneyline(row, odds, team_type):

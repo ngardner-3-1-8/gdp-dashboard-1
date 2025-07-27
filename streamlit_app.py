@@ -562,6 +562,7 @@ def collect_schedule_travel_ranking_data(pd):
             # This will work if chromedriver is in the system's PATH, or if 'chromium-driver'
             # from packages.txt installs it to a discoverable location like /usr/bin/chromedriver
             driver = webdriver.Chrome(options=options)
+            print("Web Driver Initialized Successfully")
         except Exception as e:
             st.error(f"Failed to initialize WebDriver directly: {e}. Attempting specific path.")
             try:

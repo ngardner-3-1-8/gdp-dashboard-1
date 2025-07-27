@@ -10,3 +10,4 @@ pytz
 python-dateutil
 Authlib
 datetime
+selenium

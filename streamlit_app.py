@@ -544,7 +544,6 @@ def collect_schedule_travel_ranking_data(pd):
 
     
     # --- Selenium WebDriver Setup (Cached for Streamlit) ---
-    @st.cache_resource
     def get_webdriver():
         """Initializes and caches the Selenium WebDriver."""
         options = Options()

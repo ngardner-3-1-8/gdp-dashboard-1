@@ -18,6 +18,11 @@ import concurrent.futures
 from concurrent.futures import ProcessPoolExecutor
 import itertools
 import re
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options # Make sure this is present!
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
 
 def get_schedule():
     print("Gathering Schedule Data...")
@@ -598,7 +603,7 @@ def collect_schedule_travel_ranking_data(pd):
         utc_tz = pytz.utc
     
         try:
-            driver = get_webdriver() # Get the cached WebDriver instance
+            driver = webdriver.Chrome(options=options) # Get the cached WebDriver instance
             st.info(f"Navigating to URL with Selenium: {url}")
             driver.get(url)
     

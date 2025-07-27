@@ -1754,7 +1754,7 @@ def get_predicted_pick_percentages(pd):
     print("Expected Availability calculation complete.")
     
 
-    def assign_pick_percentages(row, selected_contest, circa_pick_percentages, dk_pick_percentages):
+    def assign_pick_percentages(row, selected_contest, circa_pick_percentages, dk_pick_percentages, splash_pick_percentages):
     #"""Assigns home and away pick percentages to a row, conditionally overwriting."""
 
         home_team = row['Home Team']
@@ -1783,7 +1783,7 @@ def get_predicted_pick_percentages(pd):
                     # Apply override ONLY if the user-provided value is NOT -1
                     if user_override_value >= 0:
                         away_pick_percent = user_override_value
-        elif selected_contest == 'Splash Sports': # assuming it's DraftKings
+        elif selected_contest == 'Splash Sports': 
             if home_team in splash_pick_percentages:
                 team_pick_percent_list = splash_pick_percentages[home_team]
                 if week_index < len(team_pick_percent_list):

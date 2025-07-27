@@ -543,25 +543,35 @@ def collect_schedule_travel_ranking_data(pd):
             df.loc[index, 'Away Team Short Rest'] = 'Yes'
 
     
-    def get_preseason_odds():
-        url = "https://sportsbook.draftkings.com/leagues/football/nfl?category=game-lines&subcategory=game"
-        headers = {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/102.0.0.0 Safari/537.36'
-        }
+    # --- Selenium WebDriver Setup (Cached for Streamlit) ---
+    @st.cache_resource
+    def get_webdriver():
+        """Initializes and caches the Selenium WebDriver."""
+        options = Options()
+        options.add_argument("--headless")  # Run in headless mode (no browser UI)
+        options.add_argument("--no-sandbox")  # Required for running in many Linux environments (like Docker/Streamlit Cloud)
+        options.add_argument("--disable-dev-shm-usage")  # Overcomes limited /dev/shm size in some environments
+        options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/102.0.0.0 Safari/537.36")
+        options.add_argument("--window-size=1920,1080") # Set a consistent window size
     
         try:
-            response = requests.get(url, headers=headers, timeout=15)
-            print(f"Response Status Code for DraftKings: {response.status_code}")
-            response.raise_for_status()
-        except requests.exceptions.RequestException as e:
-            print(f"Error fetching URL: {e}")
-            return pd.DataFrame()
-    
-        soup = BeautifulSoup(response.text, 'html.parser')
+            # This will work if chromedriver is in the system's PATH, or if 'chromium-driver'
+            # from packages.txt installs it to a discoverable location like /usr/bin/chromedriver
+            driver = webdriver.Chrome(options=options)
+        except Exception as e:
+            st.error(f"Failed to initialize WebDriver directly: {e}. Attempting specific path.")
+            try:
+                # Common path for chromedriver installed via apt in Debian-based systems (like Streamlit Cloud's base)
+                service = webdriver.chrome.service.Service('/usr/bin/chromedriver')
+                driver = webdriver.Chrome(service=service, options=options)
+            except Exception as e_path:
+                st.error(f"Failed to initialize WebDriver even with explicit path: {e_path}. "
+                         "Ensure Chromium and Chromedriver are correctly installed and accessible.")
+                raise e_path # Re-raise to stop execution if essential component fails
+        return driver
 
-        print("\n--- HTML Content ---")
-        print(response.text) # Print only the first 2000 characters to avoid overwhelming output
-        print("-------------------------------------------\n")
+    def get_preseason_odds():
+        url = "https://sportsbook.draftkings.com/leagues/football/nfl?category=game-lines&subcategory=game"
     
         team_name_mapping = {
             "ARI Cardinals" : "Arizona Cardinals",
@@ -603,6 +613,36 @@ def collect_schedule_travel_ranking_data(pd):
         # Define the Eastern and UTC Timezones
         eastern_tz = pytz.timezone('America/New_York')
         utc_tz = pytz.utc # Define UTC timezone
+
+        try:
+            driver = get_webdriver() # Get the cached WebDriver instance
+            st.info(f"Navigating to URL with Selenium: {url}")
+            driver.get(url)
+
+            # --- Selenium Wait Condition ---
+            # This is the MOST IMPORTANT line to verify. You need a selector that
+            # represents content being loaded dynamically. The old `cms-market-selector-section-wrapper`
+            # is probably not it for the *rendered* page.
+            # Use browser dev tools to find a stable class for a main container, like an "event card" or "odds table".
+            # I'm providing a very common DK pattern, but YOU MUST VERIFY.
+            try:
+                WebDriverWait(driver, 30).until(
+                    EC.presence_of_element_located((By.CSS_SELECTOR, 'div[class*="sportsbook-event-card"]')) # Common DK game card class
+                    # Alternatively: EC.presence_of_element_located((By.CLASS_NAME, 'sportsbook-event-card'))
+                    # Or a main content wrapper: EC.presence_of_element_located((By.CLASS_NAME, 'sportsbook-main-content'))
+                )
+                st.success("Selenium: Dynamic content appears loaded.")
+            except Exception as e:
+                st.error(f"Selenium: Timeout waiting for dynamic content. Page might not have loaded correctly or selector is wrong: {e}")
+                st.info("Attempting to get page source anyway for debugging.")
+                # Even if wait fails, get current page source to debug
+        
+        # Get the page source *after* JavaScript has had a chance to render
+        html_content = driver.page_source
+        soup = BeautifulSoup(html_content, 'html.parser')
+
+        st.markdown("### Rendered HTML (First 5000 characters for debugging):")
+        st.code(html_content[:5000]) # Use st.code for better display in Streamlit
     
         game_dates = soup.find_all('div', class_='cms-market-selector-section-wrapper bottom-margin')
         if not game_dates:

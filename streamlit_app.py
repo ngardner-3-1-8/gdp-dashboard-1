@@ -576,6 +576,7 @@ def collect_schedule_travel_ranking_data(pd):
         return driver
 
     def get_preseason_odds():
+        st.write ("Getting Oreseason Odds")
         url = "https://sportsbook.draftkings.com/leagues/football/nfl?category=game-lines&subcategory=game"
     
         team_name_mapping = {
@@ -605,7 +606,7 @@ def collect_schedule_travel_ranking_data(pd):
     
         try:
             driver = webdriver.Chrome(options=options) # Get the cached WebDriver instance
-            st.info(f"Navigating to URL with Selenium: {url}")
+            st.write(f"Navigating to URL with Selenium: {url}")
             driver.get(url)
     
             # --- Selenium Wait Condition ---

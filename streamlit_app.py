@@ -616,7 +616,7 @@ def collect_schedule_travel_ranking_data(pd):
             # If this still fails, THIS is the first place to re-inspect in the browser's Elements tab.
             main_content_load_selector = 'div.cms-market-selector-section-wrapper.bottom-margin'
             try:
-                WebDriverWait(driver, 30).until(
+                WebDriverWait(driver, 10).until(
                     EC.presence_of_element_located((By.CSS_SELECTOR, main_content_load_selector))
                 )
                 st.success(f"Selenium: Dynamic content appears loaded (found: '{main_content_load_selector}').")
@@ -629,8 +629,8 @@ def collect_schedule_travel_ranking_data(pd):
             html_content = driver.page_source
             soup = BeautifulSoup(html_content, 'html.parser')
     
-            st.markdown("### Rendered HTML (First 20,000 characters for debugging):")
-            st.code(html_content[:20000]) # Use st.code for better display in Streamlit
+            st.markdown("### Rendered HTML (First 100,000 characters for debugging):")
+            st.code(html_content[:100000]) # Use st.code for better display in Streamlit
     
             # --- Your Original BeautifulSoup Parsing Logic (Adapted for Selenium's HTML) ---
             # Assuming these classes are now present in the `html_content` from Selenium

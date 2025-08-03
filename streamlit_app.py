@@ -605,7 +605,7 @@ def collect_schedule_travel_ranking_data(pd):
         utc_tz = pytz.utc
     
         try:
-            driver = webdriver.Chrome(options=options) # Get the cached WebDriver instance
+            driver = get_webdriver() # Get the cached WebDriver instance
             st.write(f"Navigating to URL with Selenium: {url}")
             driver.get(url)
     

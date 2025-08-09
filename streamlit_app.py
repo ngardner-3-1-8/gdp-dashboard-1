@@ -550,154 +550,127 @@ def collect_schedule_travel_ranking_data(pd):
             df.loc[index, 'Away Team Short Rest'] = 'Yes'
 
     
-#    @st.cache_resource
-    def get_webdriver():
-        """
-        Initializes and returns an undetected_chromedriver instance using custom options
-        designed to avoid bot detection.
-        """
-        st.write("Initializing WebDriver with advanced stealth options...")
-        options = uc.ChromeOptions()
-        
-        # Using the new headless mode is less detectable than the old one
-        options.add_argument("--headless=new") 
-        options.add_argument("--no-sandbox")
-        options.add_argument("--disable-dev-shm-usage")
-        options.add_argument("--window-size=1920,1080")
-    
-    
-        try:
-            # Explicitly set the browser version to match your environment.
-            driver = uc.Chrome(options=options, version_main=120)
-    
-            # Further remove automation signatures after the driver has started
-            driver.execute_script("Object.defineProperty(navigator, 'webdriver', {get: () => undefined})")
-    
-            st.success("WebDriver initialized and cached successfully.")
-            return driver
-        except Exception as e:
-            st.error(f"Failed to initialize undetected_chromedriver: {e}")
-            st.error("This can happen if there's an issue with the Chrome installation or network access to download the driver.")
-            raise e # Stop execution if the driver fails, as it's essential.
 
-    def get_preseason_odds():
-        st.write ("Getting Preseason Odds")
-        url = "https://sportsbook.draftkings.com/leagues/football/nfl"
+
+    import requests
+    import pandas as pd
+    import pytz # for timezone handling, as in your original code
+    import datetime
     
-        team_name_mapping = {
-            "ARI Cardinals" : "Arizona Cardinals", "ATL Falcons" : "Atlanta Falcons",
-            "BAL Ravens" : "Baltimore Ravens", "BUF Bills" : "Buffalo Bills",
-            "CAR Panthers" : "Carolina Panthers", "CHI Bears" : "Chicago Bears",
-            "CIN Bengals" : 'Cincinnati Bengals', "CLE Browns" : 'Cleveland Browns',
-            "DAL Cowboys" : 'Dallas Cowboys', "DEN Broncos" : 'Denver Broncos',
-            "DET Lions" : 'Detroit Lions', "GB Packers" : 'Green Bay Packers',
-            "HOU Texans" : 'Houston Texans', "IND Colts" : 'Indianapolis Colts',
-            "JAX Jaguars" : 'Jacksonville Jaguars', "KC Chiefs" : 'Kansas City Chiefs',
-            "LV Raiders" : 'Las Vegas Raiders', "LA Chargers" : 'Los Angeles Chargers',
-            "LA Rams" : 'Los Angeles Rams', "MIA Dolphins" : 'Miami Dolphins',
-            "MIN Vikings" : 'Minnesota Vikings', "NE Patriots" : 'New England Patriots',
-            "NO Saints" : 'New Orleans Saints', "NY Giants" : 'New York Giants',
-            "NY Jets" : 'New York Jets', "PHI Eagles" : 'Philadelphia Eagles',
-            "PIT Steelers" : 'Pittsburgh Steelers', "SF 49ers" : 'San Francisco 49ers',
-            "SEA Seahawks" : 'Seattle Seahawks', "TB Buccaneers" : 'Tampa Bay Buccaneers',
-            "TEN Titans" : 'Tennessee Titans', "WAS Commanders" : 'Washington Commanders'
-        }
+    def get_api_nfl_odds(api_key):
+        # API key and parameters
+        SPORT = 'americanfootball_nfl'
+        # Fetch odds from US bookmakers
+        REGIONS = 'us'
+        # Request moneyline odds
+        MARKETS = 'h2h'
+        # Use decimal odds format for easier averaging
+        ODDS_FORMAT = 'decimal'
+        # Request ISO format for dates, which includes UTC timezone info
+        DATE_FORMAT = 'iso'
     
-        games = []
-        
-        # Define the Eastern and UTC Timezones
+        url = f'https://api.the-odds-api.com/v4/sports/{SPORT}/odds/?apiKey={api_key}&regions={REGIONS}&markets={MARKETS}&oddsFormat={ODDS_FORMAT}&dateFormat={DATE_FORMAT}'
+    
+        # Make the GET request
+        response = requests.get(url)
+    
+        # Handle potential errors
+        if response.status_code != 200:
+            print(f'Failed to get odds from The Odds API: status_code {response.status_code}, response body {response.text}')
+            return pd.DataFrame() # Return an empty DataFrame on error
+    
+        odds_data = response.json()
+    
+        # Prepare a list to hold data for the DataFrame
+        formatted_games = []
+    
+        # Define the Eastern Timezone (for formatting like your original code)
         eastern_tz = pytz.timezone('America/New_York')
-        utc_tz = pytz.utc
     
-        #try:
-        driver = get_webdriver() # Get the cached WebDriver instance
-        st.write(f"Navigating to URL with Selenium: {url}")
-        driver.get(url)
-
-        # --- Selenium Wait Condition ---
-        # This selector needs to be something present when the main dynamic content loads.
-        # Given your original code was looking for `cms-market-selector-section-wrapper bottom-margin`,
-        # we'll use that as the target for the wait, assuming it *does* appear after JS loads.
-        # If this still fails, THIS is the first place to re-inspect in the browser's Elements tab.
-        
-        main_content_load_selector = 'div.parlay-card-10-a'
-        try:
-            WebDriverWait(driver, 10).until(
-                EC.presence_of_element_located((By.CSS_SELECTOR, main_content_load_selector))
-            )
-            st.success(f"Selenium: Dynamic content appears loaded (found: '{main_content_load_selector}').")
-        except Exception as e:
-            st.error(f"Selenium: Timeout waiting for dynamic content on '{main_content_load_selector}'. "
-                     f"Page might not have loaded correctly or selector is wrong: {e}")
-            st.info("Attempting to get page source anyway for debugging.")
-        
-        # Get the page source *after* JavaScript has had a chance to render
-        html_content = driver.page_source
-        soup = BeautifulSoup(html_content, 'html.parser')
-
-        st.markdown("### Rendered HTML (All characters for debugging):")
-        st.code(html_content) # Use st.code for better display in Streamlit
-
-
-        # --- Your Original BeautifulSoup Parsing Logic (Adapted for Selenium's HTML) ---
-        # Assuming these classes are now present in the `html_content` from Selenium
-
-        # Find all the table rows containing game data
-        game_rows = soup.find_all('tr', class_=['break-line', ''])
-
-        games = []
-        game_data = {}  # Temporary dictionary to store game data
-
-        for i, row in enumerate(game_rows):
-            # Extract time only from the first row of a game
-            if 'break-line' in row['class']:
-                time = row.find('span', class_='event-cell__start-time').text
-                game_data['Time'] = time
-
-            # Extract team and odds - handle potential missing elements
-            team = row.find('div', class_='event-cell__name-text')
-            if team:
-                team = team.text.strip()
-                team = team_name_mapping.get(team, team)
-            else:
-                team = None  # Set team to None if not found
-
-            odds_element = row.find('span', class_='sportsbook-odds american no-margin default-color')
-            if odds_element:
-                odds = odds_element.text.strip().replace('−', '-')
-                odds = int(odds)
-            else:
-                odds = None  # Set odds to None if not found
-
-            # Assign team and odds to the appropriate key in the game_data dictionary
-            if i % 2 == 0:  # Even index: Away Team
-                game_data['Away Team'] = team
-                game_data['Away Odds'] = odds
-            else:  # Odd index: Home Team
-                game_data['Home Team'] = team
-                game_data['Home Odds'] = odds
-
-                # Append complete game data to the games list and reset game_data
-                games.append(game_data)
-                game_data = {}
-
-        # Create pandas DataFrame from the extracted data
-        df = pd.DataFrame(games)
-
-        print(df)
-        df.to_csv('Live Scraped Odds.csv', index=False)
-
-        live_scraped_odds_nfl_df = df
-
-        return live_scraped_odds_nfl_df
+        for event in odds_data:
+            game_id = event['id']
+            home_team = event['home_team']
+            away_team = event['away_team']
             
-    live_scraped_odds_df = get_preseason_odds() 
+            # Convert commence_time to datetime object and then to Eastern Time
+            # The API returns UTC, so localize it as UTC first, then convert
+            utc_commence_time = datetime.datetime.fromisoformat(event['commence_time'].replace('Z', '+00:00'))
+            eastern_commence_time = utc_commence_time.astimezone(eastern_tz)
+            
+            # Format the time for display like your original code ('8:20 PM ET')
+            # %I: Hour (12-hour clock) as a zero-padded decimal number [01, 12]
+            # %M: Minute as a zero-padded decimal number [00, 59]
+            # %p: Locale's equivalent of either AM or PM
+            formatted_time = eastern_commence_time.strftime('%I:%M %p ET').replace('AM ET', 'am').replace('PM ET', 'pm').lstrip('0')
+            # Removing leading zero for hours for single-digit hours, e.g., '8:20 pm' instead of '08:20 pm'
+            # Your original example showed "8:20 PM ET", which implies a leading zero was present in original text but might be removed in the final format.
+            # This formatting is to match your original output as closely as possible.
+    
+            # Create a temporary dictionary to store odds for this game
+            game_odds_avg = {'home': [], 'away': []}
+            
+            for bookmaker in event['bookmakers']:
+                for market in bookmaker['markets']:
+                    if market['key'] == 'h2h':  # Moneyline market
+                        for outcome in market['outcomes']:
+                            if outcome['name'] == home_team:
+                                game_odds_avg['home'].append(outcome['price'])
+                            elif outcome['name'] == away_team:
+                                game_odds_avg['away'].append(outcome['price'])
+    
+            # Calculate average odds (if available)
+            avg_home_odds = sum(game_odds_avg['home']) / len(game_odds_avg['home']) if game_odds_avg['home'] else None
+            avg_away_odds = sum(game_odds_avg['away']) / len(game_odds_avg['away']) if game_odds_avg['away'] else None
+    
+            # Convert decimal odds to American odds format
+            # If decimal odds are >= 2.0, American odds = (decimal odds - 1) * 100
+            # If decimal odds are < 2.0, American odds = -100 / (decimal odds - 1)
+            # Use round() to get integer odds like your original output
+    
+            american_home_odds = None
+            if avg_home_odds:
+                if avg_home_odds >= 2.0:
+                    american_home_odds = round((avg_home_odds - 1) * 100)
+                else:
+                    american_home_odds = round(-100 / (avg_home_odds - 1))
+    
+            american_away_odds = None
+            if avg_away_odds:
+                if avg_away_odds >= 2.0:
+                    american_away_odds = round((avg_away_odds - 1) * 100)
+                else:
+                    american_away_odds = round(-100 / (avg_away_odds - 1))
+    
+            formatted_games.append({
+                'Time': formatted_time,
+                'Away Team': away_team,
+                'Away Odds': american_away_odds,
+                'Home Team': home_team,
+                'Home Odds': american_home_odds,
+            })
+    
+        # Create pandas DataFrame from the extracted data
+        live_api_odds_nfl_df = pd.DataFrame(formatted_games)
+        return live_api_odds_nfl_df
+    
+    # Example usage (replace 'YOUR_API_KEY' with your actual API key)
+    # Make sure to set your API_KEY environment variable or replace directly
+    API_KEY = '34671f7aeaa8f4fbee2398163f2f45d3'  # Replace with your actual API key
+    
+    # Only run if API_KEY is set (for example usage)
+    if API_KEY != 'YOUR_API_KEY':
+        live_api_odds_df = get_api_nfl_odds(API_KEY)
+        print(live_api_odds_df)
+        # You can save it to CSV as well
+        # live_api_odds_df.to_csv('Live_API_Odds_NFL.csv', index=False)
+    else:
+        print("Please replace 'YOUR_API_KEY' with your actual API key to fetch data.")
     
     st.write("")
     st.write("")
     st.write("")
-    st.subheader("Live Odds from Draftkings")
-    st.write(live_scraped_odds_df)
+    st.subheader("Live Odds Aggregated from Multiple Sportsbooks")
+    st.write(live_api_odds_df)
     st.write("")
     st.write("")
     st.write("")

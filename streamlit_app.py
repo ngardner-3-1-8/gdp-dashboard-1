@@ -674,7 +674,7 @@ def collect_schedule_travel_ranking_data(pd):
     
         Args:
             df (pd.DataFrame): The main DataFrame to which odds will be added.
-            live_scraped_odds_df (pd.DataFrame): DataFrame containing live odds scraped from DraftKings.
+            live_api_odds_df (pd.DataFrame): DataFrame containing live odds scraped from DraftKings.
             # ... (all preseason_X_rank, X_rank, X_home_adv, X_away_adj parameters for each team)
     
         Returns:
@@ -744,13 +744,13 @@ def collect_schedule_travel_ranking_data(pd):
         csv_df['Underdog'] = np.nan
         
         # Attempt to update CSV data with scraped odds from DraftKings
-        # This block only executes if live_scraped_odds_df is not empty
-        if not live_scraped_odds_df.empty:
+        # This block only executes if live_api_odds_df is not empty
+        if not live_api_odds_df.empty:
             for index, row in csv_df.iterrows():
                 # Find a matching row in the scraped DraftKings data
-                matching_row = live_scraped_odds_df[
-                    (live_scraped_odds_df['Away Team'] == row['Away Team']) & 
-                    (live_scraped_odds_df['Home Team'] == row['Home Team'])
+                matching_row = live_api_odds_df[
+                    (live_api_odds_df['Away Team'] == row['Away Team']) & 
+                    (live_api_odds_df['Home Team'] == row['Home Team'])
                 ]
                 if not matching_row.empty:
                     # If a match is found, apply DraftKings moneyline odds

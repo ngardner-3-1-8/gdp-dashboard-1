@@ -12806,6 +12806,7 @@ else:
         st.write('')
         st.write('')
         st.subheader('Full Cleaned Dataset')
+		combined_df = reformat_df()
         st.write(combined_df)
         st.write('Step 5/6: Calculating Best Combination of Picks Based on EV...')
         st.write('')

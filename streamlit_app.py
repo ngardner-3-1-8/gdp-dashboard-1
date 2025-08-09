@@ -645,7 +645,7 @@ def collect_schedule_travel_ranking_data(pd):
         soup = BeautifulSoup(response.text, 'html.parser')
 
         st.markdown("### Rendered HTML (All characters for debugging):")
-        st.code(response) # Use st.code for better display in Streamlit
+        st.code(response.text) # Use st.code for better display in Streamlit
 
         # --- Your Original BeautifulSoup Parsing Logic (Adapted for Selenium's HTML) ---
         # Assuming these classes are now present in the `html_content` from Selenium

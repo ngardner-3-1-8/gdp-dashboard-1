@@ -548,14 +548,6 @@ def collect_schedule_travel_ranking_data(pd):
         if (away_team_rest < 7) and (away_team_rest < home_team_rest):
             # Update the 'Away Team Short Rest' for the specific row
             df.loc[index, 'Away Team Short Rest'] = 'Yes'
-
-    
-
-
-    import requests
-    import pandas as pd
-    import pytz # for timezone handling, as in your original code
-    import datetime
     
     def get_api_nfl_odds(api_key):
         # API key and parameters

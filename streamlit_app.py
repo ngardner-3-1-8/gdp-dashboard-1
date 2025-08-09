@@ -560,7 +560,7 @@ def collect_schedule_travel_ranking_data(pd):
         options = uc.ChromeOptions()
         
         # Using the new headless mode is less detectable than the old one
-        options.add_argument("--headless=new") 
+        #options.add_argument("--headless=new") 
         options.add_argument("--no-sandbox")
         options.add_argument("--disable-dev-shm-usage")
         options.add_argument("--window-size=1920,1080")

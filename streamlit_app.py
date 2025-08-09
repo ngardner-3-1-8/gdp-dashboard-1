@@ -2162,6 +2162,7 @@ def calculate_ev(nfl_schedule_pick_percentages_df, starting_week, ending_week, s
     return nfl_schedule_pick_percentages_df
 
 
+
 def get_survivor_picks_based_on_ev():
     if pick_must_be_favored:
         for iteration in range(number_solutions):

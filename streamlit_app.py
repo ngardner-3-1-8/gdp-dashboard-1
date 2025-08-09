@@ -620,7 +620,7 @@ def collect_schedule_travel_ranking_data(pd):
         # we'll use that as the target for the wait, assuming it *does* appear after JS loads.
         # If this still fails, THIS is the first place to re-inspect in the browser's Elements tab.
         
-		main_content_load_selector = 'div.parlay-card-10-a'
+        main_content_load_selector = 'div.parlay-card-10-a'
         try:
             WebDriverWait(driver, 10).until(
                 EC.presence_of_element_located((By.CSS_SELECTOR, main_content_load_selector))

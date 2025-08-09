@@ -552,30 +552,29 @@ def collect_schedule_travel_ranking_data(pd):
     
     @st.cache_resource
     def get_webdriver():
-        """Initializes and caches the Selenium WebDriver."""
-        options = Options()
+        """
+        Initializes and returns an undetected_chromedriver instance using custom options.
+        The @st.cache_resource decorator ensures this function is only run once,
+        caching the driver instance for reuse across Streamlit reruns.
+        """
+        st.write("Initializing WebDriver with custom options...")
+        options = uc.ChromeOptions()
         options.add_argument("--headless")  # Run in headless mode (no browser UI)
-        options.add_argument("--no-sandbox")  # Required for running in many Linux environments (like Docker/Streamlit Cloud)
-        options.add_argument("--disable-dev-shm-usage")  # Overcomes limited /dev/shm size in some environments
+        options.add_argument("--no-sandbox")  # Required for running in many Linux environments
+        options.add_argument("--disable-dev-shm-usage")  # Overcomes limited resource problems
         options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/102.0.0.0 Safari/537.36")
         options.add_argument("--window-size=1920,1080") # Set a consistent window size
-        
+    
         try:
-            # This will work if chromedriver is in the system's PATH, or if 'chromium-driver'
-            # from packages.txt installs it to a discoverable location like /usr/bin/chromedriver
-            driver = webdriver.Chrome(options=options)
-            print("Web Driver Initialized Successfully")
+            # undetected-chromedriver handles driver download and patching automatically.
+            # The complex try/except for paths is no longer needed.
+            driver = uc.Chrome(options=options)
+            st.success("WebDriver initialized and cached successfully.")
+            return driver
         except Exception as e:
-            st.error(f"Failed to initialize WebDriver directly: {e}. Attempting specific path.")
-            try:
-                # Common path for chromedriver installed via apt in Debian-based systems (like Streamlit Cloud's base)
-                service = webdriver.chrome.service.Service('/usr/bin/chromedriver')
-                driver = webdriver.Chrome(service=service, options=options)
-            except Exception as e_path:
-                st.error(f"Failed to initialize WebDriver even with explicit path: {e_path}. "
-                         "Ensure Chromium and Chromedriver are correctly installed and accessible.")
-                raise e_path # Re-raise to stop execution if essential component fails
-        return driver
+            st.error(f"Failed to initialize undetected_chromedriver: {e}")
+            st.error("This can happen if there's an issue with the Chrome installation or network access to download the driver.")
+            raise e # Stop execution if the driver fails, as it's essential.
 
     def get_preseason_odds():
         st.write ("Getting Oreseason Odds")

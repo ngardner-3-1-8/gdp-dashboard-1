@@ -581,48 +581,64 @@ def collect_schedule_travel_ranking_data(pd):
             raise e # Stop execution if the driver fails, as it's essential.
 
     def get_preseason_odds():
-        url = "https://sportsbook.draftkings.com/leagues/football/nfl"
-
-        headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/102.0.0.0 Safari/537.36'}
-        response = requests.get(url, headers=headers)
-
-        soup = BeautifulSoup(response.text, 'html.parser')
-
-
+        st.write ("Getting Preseason Odds")
+        url = "https://sportsbook.draftkings.com/leagues/football/nfl?category=game-lines&subcategory=game"
+    
         team_name_mapping = {
-            "ARI Cardinals" : "Arizona Cardinals",
-            "ATL Falcons" : "Atlanta Falcons",
-            "BAL Ravens" : "Baltimore Ravens",
-            "BUF Bills" : "Buffalo Bills",
-            "CAR Panthers" : "Carolina Panthers",
-            "CHI Bears" : "Chicago Bears",
-            "CIN Bengals" : 'Cincinnati Bengals',
-            "CLE Browns" : 'Cleveland Browns',
-            "DAL Cowboys" : 'Dallas Cowboys',
-            "DEN Broncos" : 'Denver Broncos',
-            "DET Lions" : 'Detroit Lions',
-            "GB Packers" : 'Green Bay Packers',
-            "HOU Texans" : 'Houston Texans',
-            "IND Colts" : 'Indianapolis Colts',
-            "JAX Jaguars" : 'Jacksonville Jaguars',
-            "KC Chiefs" : 'Kansas City Chiefs',
-            "LV Raiders" : 'Las Vegas Raiders',
-            "LA Chargers" : 'Los Angeles Chargers',
-            "LA Rams" : 'Los Angeles Rams',
-            "MIA Dolphins" : 'Miami Dolphins',
-            "MIN Vikings" : 'Minnesota Vikings',
-            "NE Patriots" : 'New England Patriots',
-            "NO Saints" : 'New Orleans Saints',
-            "NY Giants" : 'New York Giants',
-            "NY Jets" : 'New York Jets',
-            "PHI Eagles" : 'Philadelphia Eagles',
-            "PIT Steelers" : 'Pittsburgh Steelers',
-            "SF 49ers" : 'San Francisco 49ers',
-            "SEA Seahawks" : 'Seattle Seahawks',
-            "TB Buccaneers" : 'Tampa Bay Buccaneers',
-            "TEN Titans" : 'Tennessee Titans',
-            "WAS Commanders" : 'Washington Commanders'
+            "ARI Cardinals" : "Arizona Cardinals", "ATL Falcons" : "Atlanta Falcons",
+            "BAL Ravens" : "Baltimore Ravens", "BUF Bills" : "Buffalo Bills",
+            "CAR Panthers" : "Carolina Panthers", "CHI Bears" : "Chicago Bears",
+            "CIN Bengals" : 'Cincinnati Bengals', "CLE Browns" : 'Cleveland Browns',
+            "DAL Cowboys" : 'Dallas Cowboys', "DEN Broncos" : 'Denver Broncos',
+            "DET Lions" : 'Detroit Lions', "GB Packers" : 'Green Bay Packers',
+            "HOU Texans" : 'Houston Texans', "IND Colts" : 'Indianapolis Colts',
+            "JAX Jaguars" : 'Jacksonville Jaguars', "KC Chiefs" : 'Kansas City Chiefs',
+            "LV Raiders" : 'Las Vegas Raiders', "LA Chargers" : 'Los Angeles Chargers',
+            "LA Rams" : 'Los Angeles Rams', "MIA Dolphins" : 'Miami Dolphins',
+            "MIN Vikings" : 'Minnesota Vikings', "NE Patriots" : 'New England Patriots',
+            "NO Saints" : 'New Orleans Saints', "NY Giants" : 'New York Giants',
+            "NY Jets" : 'New York Jets', "PHI Eagles" : 'Philadelphia Eagles',
+            "PIT Steelers" : 'Pittsburgh Steelers', "SF 49ers" : 'San Francisco 49ers',
+            "SEA Seahawks" : 'Seattle Seahawks', "TB Buccaneers" : 'Tampa Bay Buccaneers',
+            "TEN Titans" : 'Tennessee Titans', "WAS Commanders" : 'Washington Commanders'
         }
+    
+        games = []
+        
+        # Define the Eastern and UTC Timezones
+        eastern_tz = pytz.timezone('America/New_York')
+        utc_tz = pytz.utc
+    
+        try:
+            driver = get_webdriver() # Get the cached WebDriver instance
+            st.write(f"Navigating to URL with Selenium: {url}")
+            driver.get(url)
+    
+            # --- Selenium Wait Condition ---
+            # This selector needs to be something present when the main dynamic content loads.
+            # Given your original code was looking for `cms-market-selector-section-wrapper bottom-margin`,
+            # we'll use that as the target for the wait, assuming it *does* appear after JS loads.
+            # If this still fails, THIS is the first place to re-inspect in the browser's Elements tab.
+            main_content_load_selector = 'div.cms-market-selector-section-wrapper.bottom-margin'
+            try:
+                WebDriverWait(driver, 10).until(
+                    EC.presence_of_element_located((By.CSS_SELECTOR, main_content_load_selector))
+                )
+                st.success(f"Selenium: Dynamic content appears loaded (found: '{main_content_load_selector}').")
+            except Exception as e:
+                st.error(f"Selenium: Timeout waiting for dynamic content on '{main_content_load_selector}'. "
+                         f"Page might not have loaded correctly or selector is wrong: {e}")
+                st.info("Attempting to get page source anyway for debugging.")
+            
+            # Get the page source *after* JavaScript has had a chance to render
+            html_content = driver.page_source
+            soup = BeautifulSoup(html_content, 'html.parser')
+    
+            st.markdown("### Rendered HTML (All characters for debugging):")
+            st.code(html_content) # Use st.code for better display in Streamlit
+    
+            # --- Your Original BeautifulSoup Parsing Logic (Adapted for Selenium's HTML) ---
+            # Assuming these classes are now present in the `html_content` from Selenium
 
         # Find all the table rows containing game data
         game_rows = soup.find_all('tr', class_=['break-line', ''])

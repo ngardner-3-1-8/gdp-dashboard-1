@@ -568,7 +568,7 @@ def collect_schedule_travel_ranking_data(pd):
         try:
             # undetected-chromedriver handles driver download and patching automatically.
             # The complex try/except for paths is no longer needed.
-            driver = uc.Chrome(options=options)
+            driver = uc.Chrome(options=options, version_main=120)
             st.success("WebDriver initialized and cached successfully.")
             return driver
         except Exception as e:

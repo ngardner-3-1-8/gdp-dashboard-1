@@ -2167,21 +2167,21 @@ def reformat_df():
 	full_df_with_ev['ID'] = full_df_with_ev.index + 1
     # Correctly selects columns using a list of strings
     away_reformatted_df = full_df_with_ev[['Week_x', 'Date', 'Time', 'Away Team', 'Home Team', 'Away Team Weekly Rest', 'Weekly Away Rest Advantage', 
-                                           'Away Cumulative Rest Advantage', 'Away Team Current Week Cumulative Rest Advantage', 'Actual Stadium', 
-                                           'Back to Back Away Games', 'Away Team Previous Opponent', 'Away Team Previous Location', 
-                                           'Away Previous Game Actual Stadium TimeZone','Away Weekly Timezone Difference', 'Away Team Next Opponent', 
-                                           'Away Team Next Location', 'Away Travel Advantage', 'Away Timezone Change', 'Away Team Preseason Rank', 
-                                           'Away Team Adjusted Preseason Rank', 'Away Team Current Rank', 'Away Team Adjusted Current Rank', 
-                                           'Thursday Night Game', 'Divisional Matchup?', 'Away Team 3 games in 10 days', 'Away Team 4 games in 17 days', 
-                                           'Away Team Short Rest', 'Away Team Moneyline', 'Favorite', 'Underdog', 'Adjusted Away Points', 
-                                           'Adjusted Home Points', 'Internal Away Team Moneyline', 'Away Team Implied Odds to Win', 
-                                           'Internal Away Team Implied Odds to Win', 'Away Team Fair Odds', 'Internal Away Team Fair Odds', 
-                                           'Away Team Star Rating', 'Away Team Thanksgiving Favorite', 'Away Team Christmas Favorite', 
-                                           'Away Team Expected Availability','Away Pick %', 'Away Team EV', 'Total Remaining Entries at Start of Week', 
-                                           'Away Expected Survival Rate', 'Away Expected Elimination Percent', 'Expected Away Team Picks', 
-                                           'Expected Away Team Eliminations', 'Expected Away Team Survivors', 'Same Winner?', 
-                                           'Same Current and Adjusted Current Winner?', 'Same Adjusted Preseason Winner?', 'Adjusted Current Winner', 
-                                           'Adjusted Current Difference', 'Home Team Preseason Rank', 'Home Team Adjusted Preseason Rank', 'Home Team Current Rank', 'Home Team Adjusted Current Rank', 'ID']]
+                                            'Away Cumulative Rest Advantage', 'Away Team Current Week Cumulative Rest Advantage', 'Actual Stadium', 
+                                            'Back to Back Away Games', 'Away Team Previous Opponent', 'Away Team Previous Location', 
+                                            'Away Previous Game Actual Stadium TimeZone','Away Weekly Timezone Difference', 'Away Team Next Opponent', 
+                                            'Away Team Next Location', 'Away Travel Advantage', 'Away Timezone Change', 'Away Team Preseason Rank', 
+                                            'Away Team Adjusted Preseason Rank', 'Away Team Current Rank', 'Away Team Adjusted Current Rank', 
+                                            'Thursday Night Game', 'Divisional Matchup?', 'Away Team 3 games in 10 days', 'Away Team 4 games in 17 days', 
+                                            'Away Team Short Rest', 'Away Team Moneyline', 'Favorite', 'Underdog', 'Adjusted Away Points', 
+                                            'Adjusted Home Points', 'Internal Away Team Moneyline', 'Away Team Implied Odds to Win', 
+                                            'Internal Away Team Implied Odds to Win', 'Away Team Fair Odds', 'Internal Away Team Fair Odds', 
+                                            'Away Team Star Rating', 'Away Team Thanksgiving Favorite', 'Away Team Christmas Favorite', 
+                                            'Away Team Expected Availability','Away Pick %', 'Away Team EV', 'Total Remaining Entries at Start of Week', 
+                                            'Away Expected Survival Rate', 'Away Expected Elimination Percent', 'Expected Away Team Picks', 
+                                            'Expected Away Team Eliminations', 'Expected Away Team Survivors', 'Same Winner?', 
+                                            'Same Current and Adjusted Current Winner?', 'Same Adjusted Preseason Winner?', 'Adjusted Current Winner', 
+                                            'Adjusted Current Difference', 'Home Team Preseason Rank', 'Home Team Adjusted Preseason Rank', 'Home Team Current Rank', 'Home Team Adjusted Current Rank', 'ID']]
 
     new_column_names = {
         'Week_x': 'Week',

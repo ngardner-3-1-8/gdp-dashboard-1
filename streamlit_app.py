@@ -12804,9 +12804,9 @@ else:
         st.subheader('Full Raw Dataset')
         st.write(full_df_with_ev)
         st.write('')
-	    st.write('')
-        st.subheader('Full Cleaned Dataset')
-        st.write(combined_df)
+		st.write('')
+		st.subheader('Full Cleaned Dataset')
+		st.write(combined_df)
         st.write('Step 5/6: Calculating Best Combination of Picks Based on EV...')
         st.write('')
     

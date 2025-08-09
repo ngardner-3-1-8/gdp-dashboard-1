@@ -553,22 +553,35 @@ def collect_schedule_travel_ranking_data(pd):
     @st.cache_resource
     def get_webdriver():
         """
-        Initializes and returns an undetected_chromedriver instance using custom options.
-        The @st.cache_resource decorator ensures this function is only run once,
-        caching the driver instance for reuse across Streamlit reruns.
+        Initializes and returns an undetected_chromedriver instance using custom options
+        designed to avoid bot detection.
         """
-        st.write("Initializing WebDriver with custom options...")
+        st.write("Initializing WebDriver with advanced stealth options...")
         options = uc.ChromeOptions()
-        options.add_argument("--headless")  # Run in headless mode (no browser UI)
-        options.add_argument("--no-sandbox")  # Required for running in many Linux environments
-        options.add_argument("--disable-dev-shm-usage")  # Overcomes limited resource problems
-        options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/102.0.0.0 Safari/537.36")
-        options.add_argument("--window-size=1920,1080") # Set a consistent window size
+        
+        # Using the new headless mode is less detectable than the old one
+        options.add_argument("--headless=new") 
+        options.add_argument("--no-sandbox")
+        options.add_argument("--disable-dev-shm-usage")
+        options.add_argument("--window-size=1920,1080")
+        
+        # --- Advanced Stealth Options ---
+        # This is the most important part for avoiding detection.
+        # It removes the "navigator.webdriver" flag that automation tools leave behind.
+        options.add_argument("--disable-blink-features=AutomationControlled")
+        
+        # Exclude switches that can reveal automation
+        options.add_experimental_option("excludeSwitches", ["enable-automation"])
+        options.add_experimental_option('useAutomationExtension', False)
+    
     
         try:
-            # undetected-chromedriver handles driver download and patching automatically.
-            # The complex try/except for paths is no longer needed.
+            # Explicitly set the browser version to match your environment.
             driver = uc.Chrome(options=options, version_main=120)
+    
+            # Further remove automation signatures after the driver has started
+            driver.execute_script("Object.defineProperty(navigator, 'webdriver', {get: () => undefined})")
+    
             st.success("WebDriver initialized and cached successfully.")
             return driver
         except Exception as e:

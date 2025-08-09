@@ -586,7 +586,7 @@ def collect_schedule_travel_ranking_data(pd):
             
             # Convert commence_time to datetime object and then to Eastern Time
             # The API returns UTC, so localize it as UTC first, then convert
-            utc_commence_time = datetime.datetime.fromisoformat(event['commence_time'].replace('Z', '+00:00'))
+            utc_commence_time = datetime.fromisoformat(event['commence_time'].replace('Z', '+00:00'))
             eastern_commence_time = utc_commence_time.astimezone(eastern_tz)
             
             # Format the time for display like your original code ('8:20 PM ET')

@@ -582,7 +582,7 @@ def collect_schedule_travel_ranking_data(pd):
 
     def get_preseason_odds():
         st.write ("Getting Preseason Odds")
-        url = "https://sportsbook.draftkings.com/leagues/football/nfl?category=game-lines&subcategory=game"
+        url = "https://sportsbook.draftkings.com/leagues/football/nfl"
     
         team_name_mapping = {
             "ARI Cardinals" : "Arizona Cardinals", "ATL Falcons" : "Atlanta Falcons",

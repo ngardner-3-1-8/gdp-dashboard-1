@@ -2226,60 +2226,49 @@ def reformat_df():
         'Home Team Current Rank': 'Opp Current Rank',
         'Home Team Adjusted Current Rank': 'Opp Adjusted Current Rank'
     }
+	away_reformatted_df.rename(columns=new_column_names, inplace=True)
 
-    away_reformatted_df.rename(columns=new_column_names, inplace=True)
-
-    away_reformatted_df['Date'] = pd.to_datetime(away_reformatted_df['Date'])
-    away_reformatted_df['Date'] = away_reformatted_df['Date'].dt.strftime('%m-%d-%Y')
+	away_reformatted_df['Date'] = pd.to_datetime(away_reformatted_df['Date'])
+	away_reformatted_df['Date'] = away_reformatted_df['Date'].dt.strftime('%m-%d-%Y')
 
 
-    away_reformatted_df['Expected EV'] = round(away_reformatted_df['Expected EV'], 4)
-    away_reformatted_df['Fair Odds Based on Sportsbook Odds'] = round(away_reformatted_df['Fair Odds Based on Sportsbook Odds'], 2)
-    away_reformatted_df['Fair Odds Based on Internal Rankings'] = round(away_reformatted_df['Fair Odds Based on Internal Rankings'], 2)
-    away_reformatted_df['Expected Pick Percent'] = round(away_reformatted_df['Expected Pick Percent'], 2)
-    away_reformatted_df['Expected Availability'] = round(away_reformatted_df['Expected Availability'], 2)
-    away_reformatted_df['Expected Survival Rate'] = round(away_reformatted_df['Expected Survival Rate'], 2)
-    away_reformatted_df['Expected Contest Elimination Percent'] = round(away_reformatted_df['Expected Contest Elimination Percent'], 2)
-    away_reformatted_df['Expected Picks'] = round(away_reformatted_df['Expected Picks'])
-    away_reformatted_df['Expected Eliminations'] = round(away_reformatted_df['Expected Eliminations'])
-    away_reformatted_df['Expected Survivors'] = round(away_reformatted_df['Expected Survivors'])
+	away_reformatted_df['Expected EV'] = round(away_reformatted_df['Expected EV'], 4)
+	away_reformatted_df['Fair Odds Based on Sportsbook Odds'] = round(away_reformatted_df['Fair Odds Based on Sportsbook Odds'], 2)
+	away_reformatted_df['Fair Odds Based on Internal Rankings'] = round(away_reformatted_df['Fair Odds Based on Internal Rankings'], 2)
+	away_reformatted_df['Expected Pick Percent'] = round(away_reformatted_df['Expected Pick Percent'], 2)
+	away_reformatted_df['Expected Availability'] = round(away_reformatted_df['Expected Availability'], 2)
+	away_reformatted_df['Expected Survival Rate'] = round(away_reformatted_df['Expected Survival Rate'], 2)
+	away_reformatted_df['Expected Contest Elimination Percent'] = round(away_reformatted_df['Expected Contest Elimination Percent'], 2)
+	away_reformatted_df['Expected Picks'] = round(away_reformatted_df['Expected Picks'])
+	away_reformatted_df['Expected Eliminations'] = round(away_reformatted_df['Expected Eliminations'])
+	away_reformatted_df['Expected Survivors'] = round(away_reformatted_df['Expected Survivors'])
 
     
-    away_reformatted_df['Preseason Difference'] = round(away_reformatted_df['Preseason Rank'] - away_reformatted_df['Opp Preseason Rank'], 1)
-    away_reformatted_df['Adjusted Preseason Difference'] = round(away_reformatted_df['Adjusted Preseason Rank'] - away_reformatted_df['Opp Adjusted Preseason Rank'], 1)
-    away_reformatted_df['Current Difference'] = round(away_reformatted_df['Current Rank'] - away_reformatted_df['Opp Current Rank'], 1)
-    away_reformatted_df['Adjusted Current Difference'] = round(away_reformatted_df['Adjusted Current Rank'] - away_reformatted_df['Opp Adjusted Current Rank'], 1)
+	away_reformatted_df['Preseason Difference'] = round(away_reformatted_df['Preseason Rank'] - away_reformatted_df['Opp Preseason Rank'], 1)
+	away_reformatted_df['Adjusted Preseason Difference'] = round(away_reformatted_df['Adjusted Preseason Rank'] - away_reformatted_df['Opp Adjusted Preseason Rank'], 1)
+	away_reformatted_df['Current Difference'] = round(away_reformatted_df['Current Rank'] - away_reformatted_df['Opp Current Rank'], 1)
+	away_reformatted_df['Adjusted Current Difference'] = round(away_reformatted_df['Adjusted Current Rank'] - away_reformatted_df['Opp Adjusted Current Rank'], 1)
 
-    away_reformatted_df['Same Winner?'] = away_reformatted_df.apply(lambda row: 'Yes' if (row['Preseason Difference'] > 0 and row['Adjusted Preseason Difference'] > 0 and row['Current Difference'] > 0 and row['Adjusted Current Difference'] > 0) else 'No', axis=1)
-    away_reformatted_df['Week'] = away_reformatted_df['Week'].str.extract(r'(\d+)').astype(int)
+	away_reformatted_df['Same Winner?'] = away_reformatted_df.apply(lambda row: 'Yes' if (row['Preseason Difference'] > 0 and row['Adjusted Preseason Difference'] > 0 and row['Current Difference'] > 0 and row['Adjusted Current Difference'] > 0) else 'No', axis=1)
+	away_reformatted_df['Week'] = away_reformatted_df['Week'].str.extract(r'(\d+)').astype(int)
 
-    away_reformatted_df['Same Adjusted Preseason Winner?'] = away_reformatted_df.apply(lambda row: 'Yes' if (row['Adjusted Preseason Difference'] > 0 and row['Adjusted Current Difference'] > 0) else 'No', axis=1)
-    away_reformatted_df['Same Current and Adjusted Current Winner?'] = away_reformatted_df.apply(lambda row: 'Yes' if (row['Current Difference'] > 0 and row['Adjusted Current Difference'] > 0) else 'No', axis=1)
-    away_reformatted_df['Team Is Away'] = 'True'
-    away_reformatted_df['Same Internal Ranking + Sportsbook Winner'] = away_reformatted_df.apply(lambda row: 'Yes' if (row['Fair Odds Based on Sportsbook Odds'] > 0.5 and row['Fair Odds Based on Internal Rankings'] > 0.5) else 'No', axis=1)
+	away_reformatted_df['Same Adjusted Preseason Winner?'] = away_reformatted_df.apply(lambda row: 'Yes' if (row['Adjusted Preseason Difference'] > 0 and row['Adjusted Current Difference'] > 0) else 'No', axis=1)
+	away_reformatted_df['Same Current and Adjusted Current Winner?'] = away_reformatted_df.apply(lambda row: 'Yes' if (row['Current Difference'] > 0 and row['Adjusted Current Difference'] > 0) else 'No', axis=1)
+	away_reformatted_df['Team Is Away'] = 'True'
+	away_reformatted_df['Same Internal Ranking + Sportsbook Winner'] = away_reformatted_df.apply(lambda row: 'Yes' if (row['Fair Odds Based on Sportsbook Odds'] > 0.5 and row['Fair Odds Based on Internal Rankings'] > 0.5) else 'No', axis=1)
     
     
     # Use the .rename() method to rename the columns
     # The inplace=True argument modifies the DataFrame directly
-    new_order = ['Week', 'Date', 'Time', 'Team', 'Opponent', 'Team Is Away', 'Location', 'Expected EV', 'Moneyline Based on Sportsbook Odds', 
-                 'Moneyline Based on Internal Rankings', 'Fair Odds Based on Sportsbook Odds', 'Fair Odds Based on Internal Rankings', 'Preseason Rank', 
-                 'Adjusted Preseason Rank', 'Current Rank', 'Adjusted Current Rank', 'Preseason Difference', 'Adjusted Preseason Difference', 
-                 'Current Difference', 'Adjusted Current Difference','Expected Pick Percent', 'Expected Availability', 'Future Value', 'Weekly Rest', 
-                 'Weekly Rest Advantage', 'Season-Long Rest Advantage', 'Season-Long Rest Advantage Including This Week', 'Travel Advantage', 
-                 'Weekly Timezone Difference', 'Previous Opponent', 'Previous Game Location', 'Previous Game Timezone', 'Next Opponent', 
-                 'Next Game Location', 'Back to Back Away Games', 'Thursday Night Game', 'Divisional Matchup?', '3 Games in 10 Days', '4 Games in 17 Days', 
-                 'Away Team Short Rest', 'Thanksgiving Favorite', 'Christmas Favorite', 'Total Remaining Entries at Start of Week', 'Expected Picks', 
-                 'Expected Survival Rate', 'Expected Contest Elimination Percent', 'Expected Eliminations', 'Expected Survivors', 'Adjusted Current Winner', 
-                 'Favorite', 'Underdog', 'Opp Preseason Rank', 'Opp Adjusted Preseason Rank', 'Opp Current Rank', 'Opp Adjusted Current Rank', 
-                 'Same Internal Ranking + Sportsbook Winner', 'Same Current and Adjusted Current Winner?', 'Same Adjusted Preseason Winner?', 'ID']
+	new_order = ['Week', 'Date', 'Time', 'Team', 'Opponent', 'Team Is Away', 'Location', 'Expected EV', 'Moneyline Based on Sportsbook Odds', 'Moneyline Based on Internal Rankings', 'Fair Odds Based on Sportsbook Odds', 'Fair Odds Based on Internal Rankings', 'Preseason Rank', 'Adjusted Preseason Rank', 'Current Rank', 'Adjusted Current Rank', 'Preseason Difference', 'Adjusted Preseason Difference', 'Current Difference', 'Adjusted Current Difference','Expected Pick Percent', 'Expected Availability', 'Future Value', 'Weekly Rest', 'Weekly Rest Advantage', 'Season-Long Rest Advantage', 'Season-Long Rest Advantage Including This Week', 'Travel Advantage', 'Weekly Timezone Difference', 'Previous Opponent', 'Previous Game Location', 'Previous Game Timezone', 'Next Opponent', 'Next Game Location', 'Back to Back Away Games', 'Thursday Night Game', 'Divisional Matchup?', '3 Games in 10 Days', '4 Games in 17 Days', 'Away Team Short Rest', 'Thanksgiving Favorite', 'Christmas Favorite', 'Total Remaining Entries at Start of Week', 'Expected Picks', 'Expected Survival Rate', 'Expected Contest Elimination Percent', 'Expected Eliminations', 'Expected Survivors', 'Adjusted Current Winner', 'Favorite', 'Underdog', 'Opp Preseason Rank', 'Opp Adjusted Preseason Rank', 'Opp Current Rank', 'Opp Adjusted Current Rank', 'Same Internal Ranking + Sportsbook Winner', 'Same Current and Adjusted Current Winner?', 'Same Adjusted Preseason Winner?', 'ID']
 
     # Reorder the DataFrame using the new list of column names
-    away_reformatted_df = away_reformatted_df[new_order]
+	away_reformatted_df = away_reformatted_df[new_order]
 
         # Correctly selects columns using a list of strings
-    home_reformatted_df = full_df_with_ev[['Week_x', 'Date', 'Time', 'Home Team', 'Away Team', 'Home Team Weekly Rest', 'Weekly Home Rest Advantage', 'Home Cumulative Rest Advantage', 'Home Team Current Week Cumulative Rest Advantage', 'Actual Stadium', 'Back to Back Away Games', 'Home Team Previous Opponent', 'Home Team Previous Location', 'Home Previous Game Actual Stadium TimeZone','Home Weekly Timezone Difference', 'Home Team Next Opponent', 'Home Team Next Location', 'Home Travel Advantage', 'Home Timezone Change', 'Home Team Preseason Rank', 'Home Team Adjusted Preseason Rank', 'Home Team Current Rank', 'Home Team Adjusted Current Rank', 'Thursday Night Game', 'Divisional Matchup?', 'Home Team 3 games in 10 days', 'Home Team 4 games in 17 days', 'Away Team Short Rest', 'Home Team Moneyline', 'Favorite', 'Underdog', 'Adjusted Home Points', 'Adjusted Away Points', 'Internal Home Team Moneyline', 'Home team Implied Odds to Win', 'Internal Home team Implied Odds to Win', 'Home Team Fair Odds', 'Internal Home Team Fair Odds', 'Home Team Star Rating', 'Home Team Thanksgiving Favorite', 'Home Team Christmas Favorite', 'Home Team Expected Availability','Home Pick %', 'Home Team EV', 'Total Remaining Entries at Start of Week', 'Home Expected Survival Rate', 'Home Expected Elimination Percent', 'Expected Home Team Picks', 'Expected Home Team Eliminations', 'Expected Home Team Survivors', 'Same Winner?', 'Same Current and Adjusted Current Winner?', 'Same Adjusted Preseason Winner?', 'Adjusted Current Winner', 'Adjusted Current Difference', 'Away Team Preseason Rank', 'Away Team Adjusted Preseason Rank', 'Away Team Current Rank', 'Away Team Adjusted Current Rank', 'ID']]
+	home_reformatted_df = full_df_with_ev[['Week_x', 'Date', 'Time', 'Home Team', 'Away Team', 'Home Team Weekly Rest', 'Weekly Home Rest Advantage', 'Home Cumulative Rest Advantage', 'Home Team Current Week Cumulative Rest Advantage', 'Actual Stadium', 'Back to Back Away Games', 'Home Team Previous Opponent', 'Home Team Previous Location', 'Home Previous Game Actual Stadium TimeZone','Home Weekly Timezone Difference', 'Home Team Next Opponent', 'Home Team Next Location', 'Home Travel Advantage', 'Home Timezone Change', 'Home Team Preseason Rank', 'Home Team Adjusted Preseason Rank', 'Home Team Current Rank', 'Home Team Adjusted Current Rank', 'Thursday Night Game', 'Divisional Matchup?', 'Home Team 3 games in 10 days', 'Home Team 4 games in 17 days', 'Away Team Short Rest', 'Home Team Moneyline', 'Favorite', 'Underdog', 'Adjusted Home Points', 'Adjusted Away Points', 'Internal Home Team Moneyline', 'Home team Implied Odds to Win', 'Internal Home team Implied Odds to Win', 'Home Team Fair Odds', 'Internal Home Team Fair Odds', 'Home Team Star Rating', 'Home Team Thanksgiving Favorite', 'Home Team Christmas Favorite', 'Home Team Expected Availability','Home Pick %', 'Home Team EV', 'Total Remaining Entries at Start of Week', 'Home Expected Survival Rate', 'Home Expected Elimination Percent', 'Expected Home Team Picks', 'Expected Home Team Eliminations', 'Expected Home Team Survivors', 'Same Winner?', 'Same Current and Adjusted Current Winner?', 'Same Adjusted Preseason Winner?', 'Adjusted Current Winner', 'Adjusted Current Difference', 'Away Team Preseason Rank', 'Away Team Adjusted Preseason Rank', 'Away Team Current Rank', 'Away Team Adjusted Current Rank', 'ID']]
 
-    new_column_names = {
+	new_column_names = {
         'Week_x': 'Week',
         'Date': 'Date',
         'Time': 'Time',
@@ -2340,42 +2329,42 @@ def reformat_df():
         'Away Team Adjusted Current Rank': 'Opp Adjusted Current Rank'
     }
 
-    home_reformatted_df.rename(columns=new_column_names, inplace=True)
+	home_reformatted_df.rename(columns=new_column_names, inplace=True)
 
-    home_reformatted_df['Date'] = pd.to_datetime(home_reformatted_df['Date'])
-    home_reformatted_df['Date'] = home_reformatted_df['Date'].dt.strftime('%m-%d-%Y')
-    home_reformatted_df['Away Team Short Rest'] = 'No'
-    home_reformatted_df['Back to Back Away Games'] = 'False'
+	home_reformatted_df['Date'] = pd.to_datetime(home_reformatted_df['Date'])
+	home_reformatted_df['Date'] = home_reformatted_df['Date'].dt.strftime('%m-%d-%Y')
+	home_reformatted_df['Away Team Short Rest'] = 'No'
+	home_reformatted_df['Back to Back Away Games'] = 'False'
 
-    home_reformatted_df['Expected EV'] = round(home_reformatted_df['Expected EV'], 4)
-    home_reformatted_df['Fair Odds Based on Sportsbook Odds'] = round(home_reformatted_df['Fair Odds Based on Sportsbook Odds'], 2)
-    home_reformatted_df['Fair Odds Based on Internal Rankings'] = round(home_reformatted_df['Fair Odds Based on Internal Rankings'], 2)
-    home_reformatted_df['Expected Pick Percent'] = round(home_reformatted_df['Expected Pick Percent'], 2)
-    home_reformatted_df['Expected Availability'] = round(home_reformatted_df['Expected Availability'], 2)
-    home_reformatted_df['Expected Survival Rate'] = round(home_reformatted_df['Expected Survival Rate'], 2)
-    home_reformatted_df['Expected Contest Elimination Percent'] = round(home_reformatted_df['Expected Contest Elimination Percent'], 2)
-    home_reformatted_df['Expected Picks'] = round(home_reformatted_df['Expected Picks'])
-    home_reformatted_df['Expected Eliminations'] = round(home_reformatted_df['Expected Eliminations'])
-    home_reformatted_df['Expected Survivors'] = round(home_reformatted_df['Expected Survivors'])
+	home_reformatted_df['Expected EV'] = round(home_reformatted_df['Expected EV'], 4)
+	home_reformatted_df['Fair Odds Based on Sportsbook Odds'] = round(home_reformatted_df['Fair Odds Based on Sportsbook Odds'], 2)
+	home_reformatted_df['Fair Odds Based on Internal Rankings'] = round(home_reformatted_df['Fair Odds Based on Internal Rankings'], 2)
+	home_reformatted_df['Expected Pick Percent'] = round(home_reformatted_df['Expected Pick Percent'], 2)
+	home_reformatted_df['Expected Availability'] = round(home_reformatted_df['Expected Availability'], 2)
+	home_reformatted_df['Expected Survival Rate'] = round(home_reformatted_df['Expected Survival Rate'], 2)
+	home_reformatted_df['Expected Contest Elimination Percent'] = round(home_reformatted_df['Expected Contest Elimination Percent'], 2)
+	home_reformatted_df['Expected Picks'] = round(home_reformatted_df['Expected Picks'])
+	home_reformatted_df['Expected Eliminations'] = round(home_reformatted_df['Expected Eliminations'])
+	home_reformatted_df['Expected Survivors'] = round(home_reformatted_df['Expected Survivors'])
 
     
-    home_reformatted_df['Preseason Difference'] = round(home_reformatted_df['Preseason Rank'] - home_reformatted_df['Opp Preseason Rank'], 1)
-    home_reformatted_df['Adjusted Preseason Difference'] = round(home_reformatted_df['Adjusted Preseason Rank'] - home_reformatted_df['Opp Adjusted Preseason Rank'], 1)
-    home_reformatted_df['Current Difference'] = round(home_reformatted_df['Current Rank'] - home_reformatted_df['Opp Current Rank'], 1)
-    home_reformatted_df['Adjusted Current Difference'] = round(home_reformatted_df['Adjusted Current Rank'] - home_reformatted_df['Opp Adjusted Current Rank'], 1)
+	home_reformatted_df['Preseason Difference'] = round(home_reformatted_df['Preseason Rank'] - home_reformatted_df['Opp Preseason Rank'], 1)
+	home_reformatted_df['Adjusted Preseason Difference'] = round(home_reformatted_df['Adjusted Preseason Rank'] - home_reformatted_df['Opp Adjusted Preseason Rank'], 1)
+	home_reformatted_df['Current Difference'] = round(home_reformatted_df['Current Rank'] - home_reformatted_df['Opp Current Rank'], 1)
+	home_reformatted_df['Adjusted Current Difference'] = round(home_reformatted_df['Adjusted Current Rank'] - home_reformatted_df['Opp Adjusted Current Rank'], 1)
 
-    home_reformatted_df['Same Winner?'] = home_reformatted_df.apply(lambda row: 'Yes' if (row['Preseason Difference'] > 0 and row['Adjusted Preseason Difference'] > 0 and row['Current Difference'] > 0 and row['Adjusted Current Difference'] > 0) else 'No', axis=1)
-    home_reformatted_df['Week'] = home_reformatted_df['Week'].str.extract(r'(\d+)').astype(int)
+	home_reformatted_df['Same Winner?'] = home_reformatted_df.apply(lambda row: 'Yes' if (row['Preseason Difference'] > 0 and row['Adjusted Preseason Difference'] > 0 and row['Current Difference'] > 0 and row['Adjusted Current Difference'] > 0) else 'No', axis=1)
+	home_reformatted_df['Week'] = home_reformatted_df['Week'].str.extract(r'(\d+)').astype(int)
 
-    home_reformatted_df['Same Adjusted Preseason Winner?'] = home_reformatted_df.apply(lambda row: 'Yes' if (row['Adjusted Preseason Difference'] > 0 and row['Adjusted Current Difference'] > 0) else 'No', axis=1)
-    home_reformatted_df['Same Current and Adjusted Current Winner?'] = home_reformatted_df.apply(lambda row: 'Yes' if (row['Current Difference'] > 0 and row['Adjusted Current Difference'] > 0) else 'No', axis=1)
-    home_reformatted_df['Team Is Away'] = 'False'
-    home_reformatted_df['Same Internal Ranking + Sportsbook Winner'] = home_reformatted_df.apply(lambda row: 'Yes' if (row['Fair Odds Based on Sportsbook Odds'] > 0.5 and row['Fair Odds Based on Internal Rankings'] > 0.5) else 'No', axis=1)
+	home_reformatted_df['Same Adjusted Preseason Winner?'] = home_reformatted_df.apply(lambda row: 'Yes' if (row['Adjusted Preseason Difference'] > 0 and row['Adjusted Current Difference'] > 0) else 'No', axis=1)
+	home_reformatted_df['Same Current and Adjusted Current Winner?'] = home_reformatted_df.apply(lambda row: 'Yes' if (row['Current Difference'] > 0 and row['Adjusted Current Difference'] > 0) else 'No', axis=1)
+	home_reformatted_df['Team Is Away'] = 'False'
+	home_reformatted_df['Same Internal Ranking + Sportsbook Winner'] = home_reformatted_df.apply(lambda row: 'Yes' if (row['Fair Odds Based on Sportsbook Odds'] > 0.5 and row['Fair Odds Based on Internal Rankings'] > 0.5) else 'No', axis=1)
     
     
     # Use the .rename() method to rename the columns
     # The inplace=True argument modifies the DataFrame directly
-    new_order = ['Week', 'Date', 'Time', 'Team', 'Opponent', 'Team Is Away', 'Location', 'Expected EV', 'Moneyline Based on Sportsbook Odds', 
+	new_order = ['Week', 'Date', 'Time', 'Team', 'Opponent', 'Team Is Away', 'Location', 'Expected EV', 'Moneyline Based on Sportsbook Odds', 
                  'Moneyline Based on Internal Rankings', 'Fair Odds Based on Sportsbook Odds', 'Fair Odds Based on Internal Rankings', 'Preseason Rank', 
                  'Adjusted Preseason Rank', 'Current Rank', 'Adjusted Current Rank', 'Preseason Difference', 'Adjusted Preseason Difference', 'Current Difference', 
                  'Adjusted Current Difference','Expected Pick Percent', 'Expected Availability', 'Future Value', 'Weekly Rest', 'Weekly Rest Advantage', 
@@ -2388,13 +2377,13 @@ def reformat_df():
                  'Same Adjusted Preseason Winner?', 'ID']
 
     # Reorder the DataFrame using the new list of column names
-    home_reformatted_df = home_reformatted_df[new_order]
+	home_reformatted_df = home_reformatted_df[new_order]
 
-    combined_df = pd.concat([home_reformatted_df, away_reformatted_df], ignore_index=True)
+	combined_df = pd.concat([home_reformatted_df, away_reformatted_df], ignore_index=True)
 
-    combined_df = combined_df.sort_values(by=['ID', 'Team Is Away'], ascending=True)
+	combined_df = combined_df.sort_values(by=['ID', 'Team Is Away'], ascending=True)
     
-    return combined_df
+	return combined_df
 
 
 def get_survivor_picks_based_on_ev():

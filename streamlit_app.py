@@ -6827,7 +6827,7 @@ else:
     favored_qualifier = 'Live Sportsbook Odds (If Available)'
     must_be_favored_options = ['Live Sportsbook Odds (If Available)', 'Internal Rankings', 'Both Live Sportsbook Odds and Internal Rankings']
     if pick_must_be_favored:
-        favored_qualifier = st.selectbox('What qualifies a team to be favored?', must_be_favored_options, help = """The three options may change your results greatly. Here's how they work: 
+        favored_qualifier = st.selectbox('What qualifies a team as favored?', must_be_favored_options, help = """The three options may change your results greatly. Here's how they work: 
 	                                                                                                                                           \n- If you select 'Live Sportsbook Odds', then we will use an API to gather live game information and aggregate the data from multiple sportsbooks. Data includes moneyline, fair odds, and thus favotites and underdogs. For games where data is unavailable, we will fill in the gaps with the Internal Rankings.   
 																				  \n- Selecting 'Internal Rankings' means that we will use your personal rankings, (or ours if you did not input any) to build an estimated spread. From there we use historical data to calculate the estimated moneyline and thus the favorite and underdog in each game.
 																	              \n- If you select 'Both Live Sportsbook Odds and Internal Rankings', then the team must be favored using both the live sportsbook odds and the internal ranking methods. For games where sportsbook odds are unavauilable, it will solely rely on the internal ranking method.""")

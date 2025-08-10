@@ -3190,9 +3190,9 @@ def get_survivor_picks_based_on_ev():
                     if df.loc[i, 'Away Team 3 games in 10 days'] == 'Yes' and df.loc[i, 'Away Team 1'] == df.loc[i, 'Hypothetical Current Winner'] and df.loc[i, 'Home Team 3 games in 10 days'] == 'No':
                         solver.Add(picks[i] == 0)
                 if avoid_international_game == 1:    
-                    if df.loc[i, 'City'] == 'London, UK' and df.loc[i, 'Home Team 1'] == df.loc[i, 'Hypothetical Current Winner']:
+                    if df.loc[i, 'Actual Stadium'] == 'London, UK' and df.loc[i, 'Home Team 1'] == df.loc[i, 'Hypothetical Current Winner']:
                         solver.Add(picks[i] == 0)
-                    if df.loc[i, 'City'] == 'London, UK' and df.loc[i, 'Away Team 1'] == df.loc[i, 'Hypothetical Current Winner']:
+                    if df.loc[i, 'Actual Stadium'] == 'London, UK' and df.loc[i, 'Away Team 1'] == df.loc[i, 'Hypothetical Current Winner']:
                         solver.Add(picks[i] == 0)
                 if avoid_thursday_night == 1:
                     if df.loc[i, 'Thursday Night Game'] == 'True':
@@ -3684,9 +3684,9 @@ def get_survivor_picks_based_on_internal_rankings():
                     if df.loc[i, 'Away Team 3 games in 10 days'] == 'Yes' and df.loc[i, 'Away Team'] == df.loc[i, 'Adjusted Current Winner'] and df.loc[i, 'Home Team 3 games in 10 days'] == 'No':
                         solver.Add(picks[i] == 0)
                 if avoid_international_game == 1:    
-                    if df.loc[i, 'City'] == 'London, UK' and df.loc[i, 'Home Team'] == df.loc[i, 'Adjusted Current Winner']:
+                    if df.loc[i, 'Actual Stadium'] == 'London, UK' and df.loc[i, 'Home Team'] == df.loc[i, 'Adjusted Current Winner']:
                         solver.Add(picks[i] == 0)
-                    if df.loc[i, 'City'] == 'London, UK' and df.loc[i, 'Away Team'] == df.loc[i, 'Adjusted Current Winner']:
+                    if df.loc[i, 'Actual Stadium'] == 'London, UK' and df.loc[i, 'Away Team'] == df.loc[i, 'Adjusted Current Winner']:
                         solver.Add(picks[i] == 0)
                 if avoid_thursday_night == 1:
                     if df.loc[i, 'Thursday Night Game'] == 'True':
@@ -4419,9 +4419,9 @@ def get_survivor_picks_based_on_internal_rankings():
                     if df.loc[i, 'Away Team 3 games in 10 days'] == 'Yes' and df.loc[i, 'Away Team 1'] == df.loc[i, 'Hypothetical Current Winner'] and df.loc[i, 'Home Team 3 games in 10 days'] == 'No':
                         solver.Add(picks[i] == 0)
                 if avoid_international_game == 1:    
-                    if df.loc[i, 'City'] == 'London, UK' and df.loc[i, 'Home Team 1'] == df.loc[i, 'Hypothetical Current Winner']:
+                    if df.loc[i, 'Actual Stadium'] == 'London, UK' and df.loc[i, 'Home Team 1'] == df.loc[i, 'Hypothetical Current Winner']:
                         solver.Add(picks[i] == 0)
-                    if df.loc[i, 'City'] == 'London, UK' and df.loc[i, 'Away Team 1'] == df.loc[i, 'Hypothetical Current Winner']:
+                    if df.loc[i, 'Actual Stadium'] == 'London, UK' and df.loc[i, 'Away Team 1'] == df.loc[i, 'Hypothetical Current Winner']:
                         solver.Add(picks[i] == 0)
                 if avoid_thursday_night == 1:
                     if df.loc[i, 'Thursday Night Game'] == 'True':

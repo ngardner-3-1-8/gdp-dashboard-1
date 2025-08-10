@@ -813,7 +813,23 @@ def collect_schedule_travel_ranking_data(pd):
         csv_df['Internal Away Team Moneyline'] = csv_df.apply(
             lambda row: get_moneyline(row, odds, 'away'), axis=1
         )
-    
+        override_condition = pd.isna(csv_df['Away Team Moneyline']) | pd.isna(csv_df['Home Team Moneyline'])
+        overridden_games_df = csv_df[override_condition]
+        overridden_games_df = csv_df[override_condition][['Home Team', 'Away Team', 'Actual Stadium', 'Date', 'Home Team Moneyline', 'Away Team Moneyline', 'Internal Home Team Moneyline', 'Internal Away Team Moneyline']].copy()
+
+        for index, row in overridden_games_df.iterrows():
+            # Override Moneyline if DraftKings data was missing (still NaN)
+            if pd.isna(row['Away Team Moneyline']):
+                overridden_games_df.loc[index, 'Away Team Moneyline'] = row['Internal Away Team Moneyline']
+            if pd.isna(row['Home Team Moneyline']):
+                overridden_games_df.loc[index, 'Home Team Moneyline'] = row['Internal Home Team Moneyline']
+        st.subheader('Games with Unavailable Live Odds')
+        st.write('This dataframe contains the games where live odds from the Live Odds API were unavailable. This will likely happen for lookahead lines and future weeks')
+        st.write(overridden_games_df)
+        st.write('')
+        st.write('')
+        st.write('')
+
         # Iterate through the DataFrame to apply overrides and calculate implied/fair odds
         for index, row in csv_df.iterrows():
             # Override Moneyline if DraftKings data was missing (still NaN)
@@ -2991,8 +3007,8 @@ def get_survivor_picks_based_on_ev():
                         pick = df.loc[i,'Adjusted Current Winner']
                         opponent = df.loc[i, 'Home Team'] if df.loc[i, 'Adjusted Current Winner'] == df.loc[i, 'Away Team'] else df.loc[i, 'Away Team']
                         win_odds = round(df.loc[i, 'Home Team Fair Odds'] if df.loc[i, 'Adjusted Current Winner'] == df.loc[i, 'Home Team'] else df.loc[i, 'Away Team Fair Odds'], 2)
-                        pick_percent = df.loc[i, 'Home Pick %'] if df.loc[i, 'Adjusted Current Winner'] == df.loc[i, 'Home Team'] else df.loc[i, 'Away Pick %']
-                        expected_availability = df.loc[i, 'Home Team Expected Availability'] if df.loc[i, 'Adjusted Current Winner'] == df.loc[i, 'Home Team'] else df.loc[i, 'Away Team Expected Availability']
+                        pick_percent = round(df.loc[i, 'Home Pick %'] if df.loc[i, 'Adjusted Current Winner'] == df.loc[i, 'Home Team'] else df.loc[i, 'Away Pick %'], 2)
+                        expected_availability = round(df.loc[i, 'Home Team Expected Availability'] if df.loc[i, 'Adjusted Current Winner'] == df.loc[i, 'Home Team'] else df.loc[i, 'Away Team Expected Availability'], 2)
                         divisional_game = 'Divisional' if df.loc[i, 'Divisional Matchup Boolean'] else ''
                         home_team = 'Home Team' if df.loc[i, 'Adjusted Current Winner'] == df.loc[i, 'Home Team'] else 'Away Team'
                         weekly_rest = df.loc[i, 'Home Team Weekly Rest'] if df.loc[i, 'Adjusted Current Winner'] == df.loc[i, 'Home Team'] else df.loc[i, 'Away Team Weekly Rest']
@@ -3007,6 +3023,12 @@ def get_survivor_picks_based_on_ev():
                         previous_game_location = df.loc[i, 'Home Team Previous Location'] if df.loc[i, 'Adjusted Current Winner'] == df.loc[i, 'Home Team'] else df.loc[i, 'Away Team Previous Location']
                         next_opponent = df.loc[i, 'Home Team Next Opponent'] if df.loc[i, 'Adjusted Current Winner'] == df.loc[i, 'Home Team'] else df.loc[i, 'Away Team Next Opponent']
                         next_game_location = df.loc[i, 'Home Team Next Location'] if df.loc[i, 'Adjusted Current Winner'] == df.loc[i, 'Home Team'] else df.loc[i, 'Away Team Next Location']
+
+						internal_rankimg_fair_odds =
+						future_value =
+						sportbook_moneyline = 
+						internal_moneyline =
+						
 
                         
     

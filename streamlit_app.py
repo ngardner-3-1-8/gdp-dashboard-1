@@ -3124,8 +3124,8 @@ def get_survivor_picks_based_on_ev():
                         thanksgiving_underdog = df.loc[i, 'Home Team Thanksgiving Underdog'] if df.loc[i, 'Adjusted Current Winner'] == df.loc[i, 'Home Team'] else df.loc[i, 'Away Team Thanksgiving Underdog']
                         christmas_underdog = df.loc[i, 'Home Team Christmas Underdog'] if df.loc[i, 'Adjusted Current Winner'] == df.loc[i, 'Home Team'] else df.loc[i, 'Away Team Christmas Underdog']
                         live_odds_unavailable = df.loc[i, 'No Live Odds Available - Internal Rankings Used for Moneyline Calculation']
-						live_odds_spread = df.loc[i, 'Home Team Sportsbook Spread'] if df.loc[i, 'Adjusted Current Winner'] == df.loc[i, 'Home Team'] else df.loc[i, 'Away Team Sportsbook Spread']
-						internal_spread = df.loc[i, 'Internal Home Team Spread'] if df.loc[i, 'Adjusted Current Winner'] == df.loc[i, 'Home Team'] else df.loc[i, 'Internal Away Team Spread']
+                        live_odds_spread = df.loc[i, 'Home Team Sportsbook Spread'] if df.loc[i, 'Adjusted Current Winner'] == df.loc[i, 'Home Team'] else df.loc[i, 'Away Team Sportsbook Spread']
+                        internal_spread = df.loc[i, 'Internal Home Team Spread'] if df.loc[i, 'Adjusted Current Winner'] == df.loc[i, 'Home Team'] else df.loc[i, 'Internal Away Team Spread']
 
                         
     
@@ -3747,8 +3747,8 @@ def get_survivor_picks_based_on_ev():
                         thanksgiving_underdog = df.loc[i, 'Home Team Thanksgiving Underdog'] if df.loc[i, 'Adjusted Current Winner'] == df.loc[i, 'Home Team'] else df.loc[i, 'Away Team Thanksgiving Underdog']
                         christmas_underdog = df.loc[i, 'Home Team Christmas Underdog'] if df.loc[i, 'Adjusted Current Winner'] == df.loc[i, 'Home Team'] else df.loc[i, 'Away Team Christmas Underdog']
                         live_odds_unavailable = df.loc[i, 'No Live Odds Available - Internal Rankings Used for Moneyline Calculation']
-						live_odds_spread = df.loc[i, 'Home Team Sportsbook Spread'] if df.loc[i, 'Adjusted Current Winner'] == df.loc[i, 'Home Team'] else df.loc[i, 'Away Team Sportsbook Spread']
-						internal_spread = df.loc[i, 'Internal Home Team Spread'] if df.loc[i, 'Adjusted Current Winner'] == df.loc[i, 'Home Team'] else df.loc[i, 'Internal Away Team Spread']
+                        live_odds_spread = df.loc[i, 'Home Team Sportsbook Spread'] if df.loc[i, 'Adjusted Current Winner'] == df.loc[i, 'Home Team'] else df.loc[i, 'Away Team Sportsbook Spread']
+                        internal_spread = df.loc[i, 'Internal Home Team Spread'] if df.loc[i, 'Adjusted Current Winner'] == df.loc[i, 'Home Team'] else df.loc[i, 'Internal Away Team Spread']
                         
     
                         # Get differences
@@ -4557,8 +4557,8 @@ def get_survivor_picks_based_on_internal_rankings():
                         thanksgiving_underdog = df.loc[i, 'Home Team Thanksgiving Underdog'] if df.loc[i, 'Adjusted Current Winner'] == df.loc[i, 'Home Team'] else df.loc[i, 'Away Team Thanksgiving Underdog']
                         christmas_underdog = df.loc[i, 'Home Team Christmas Underdog'] if df.loc[i, 'Adjusted Current Winner'] == df.loc[i, 'Home Team'] else df.loc[i, 'Away Team Christmas Underdog']
                         live_odds_unavailable = df.loc[i, 'No Live Odds Available - Internal Rankings Used for Moneyline Calculation']
-						live_odds_spread = df.loc[i, 'Home Team Sportsbook Spread'] if df.loc[i, 'Adjusted Current Winner'] == df.loc[i, 'Home Team'] else df.loc[i, 'Away Team Sportsbook Spread']
-						internal_spread = df.loc[i, 'Internal Home Team Spread'] if df.loc[i, 'Adjusted Current Winner'] == df.loc[i, 'Home Team'] else df.loc[i, 'Internal Away Team Spread']
+                        live_odds_spread = df.loc[i, 'Home Team Sportsbook Spread'] if df.loc[i, 'Adjusted Current Winner'] == df.loc[i, 'Home Team'] else df.loc[i, 'Away Team Sportsbook Spread']
+                        internal_spread = df.loc[i, 'Internal Home Team Spread'] if df.loc[i, 'Adjusted Current Winner'] == df.loc[i, 'Home Team'] else df.loc[i, 'Internal Away Team Spread']
 
                         
     
@@ -5203,8 +5203,8 @@ def get_survivor_picks_based_on_internal_rankings():
                         thanksgiving_underdog = df.loc[i, 'Home Team Thanksgiving Underdog'] if df.loc[i, 'Hypothetical Current Winner'] == df.loc[i, 'Home Team'] else df.loc[i, 'Away Team Thanksgiving Underdog']
                         christmas_underdog = df.loc[i, 'Home Team Christmas Underdog'] if df.loc[i, 'Hypothetical Current Winner'] == df.loc[i, 'Home Team'] else df.loc[i, 'Away Team Christmas Underdog']
                         live_odds_unavailable = df.loc[i, 'No Live Odds Available - Internal Rankings Used for Moneyline Calculation']
-						live_odds_spread = df.loc[i, 'Home Team Sportsbook Spread'] if df.loc[i, 'Adjusted Current Winner'] == df.loc[i, 'Home Team'] else df.loc[i, 'Away Team Sportsbook Spread']
-						internal_spread = df.loc[i, 'Internal Home Team Spread'] if df.loc[i, 'Adjusted Current Winner'] == df.loc[i, 'Home Team'] else df.loc[i, 'Internal Away Team Spread']
+                        live_odds_spread = df.loc[i, 'Home Team Sportsbook Spread'] if df.loc[i, 'Adjusted Current Winner'] == df.loc[i, 'Home Team'] else df.loc[i, 'Away Team Sportsbook Spread']
+                        internal_spread = df.loc[i, 'Internal Home Team Spread'] if df.loc[i, 'Adjusted Current Winner'] == df.loc[i, 'Home Team'] else df.loc[i, 'Internal Away Team Spread']
                         
     
                         # Get differences

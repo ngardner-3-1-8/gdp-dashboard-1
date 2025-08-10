@@ -3759,8 +3759,8 @@ def get_survivor_picks_based_on_ev():
                         thanksgiving_underdog = df.loc[i, 'Home Team Thanksgiving Underdog'] if df.loc[i, 'Hypothetical Current Winner'] == df.loc[i, 'Home Team 1'] else df.loc[i, 'Away Team Thanksgiving Underdog']
                         christmas_underdog = df.loc[i, 'Home Team Christmas Underdog'] if df.loc[i, 'Hypothetical Current Winner'] == df.loc[i, 'Home Team 1'] else df.loc[i, 'Away Team Christmas Underdog']
                         live_odds_unavailable = df.loc[i, 'No Live Odds Available - Internal Rankings Used for Moneyline Calculation']
-                        live_odds_spread = df.loc[i, 'Hypthetical Winner Sportsbook Spread']
-                        internal_spread = df.loc[i, 'Internal Hypthetical Winner Spread']
+                        live_odds_spread = df.loc[i, 'Hypothetical Current Winner Sportsbook Spread']
+                        internal_spread = df.loc[i, 'Internal Hypothetical Current Winner Spread']
                         
     
                         # Get differences
@@ -4828,10 +4828,10 @@ def get_survivor_picks_based_on_internal_rankings():
             print("\nCombined DataFrame (combined_df):")
             print(combined_df['Week_Num'])
             df = combined_df
-            df['Hypthetical Winner Preseason Difference'] = df['Hypothetical Current Winner Preseason Rank'] - df['Hypothetical Current Loser Preseason Rank']	
-            df['Hypthetical Winner Adjusted Preseason Difference'] = df['Hypothetical Current Winner Adjusted Preseason Rank'] - df['Hypothetical Current Loser Adjusted Preseason Rank']
-            df['Hypthetical Winner Current Difference'] = df['Hypothetical Current Winner Current Rank'] - df['Hypothetical Current Loser Current Rank']	
-            df['Hypthetical Winner Adjusted Current Difference'] = df['Hypothetical Current Winner Adjusted Current Rank'] - df['Hypothetical Current Loser Adjusted Current Rank']	
+            df['Hypothetical Winner Preseason Difference'] = df['Hypothetical Current Winner Preseason Rank'] - df['Hypothetical Current Loser Preseason Rank']	
+            df['Hypothetical Winner Adjusted Preseason Difference'] = df['Hypothetical Current Winner Adjusted Preseason Rank'] - df['Hypothetical Current Loser Adjusted Preseason Rank']
+            df['Hypothetical Winner Current Difference'] = df['Hypothetical Current Winner Current Rank'] - df['Hypothetical Current Loser Current Rank']	
+            df['Hypothetical Winner Adjusted Current Difference'] = df['Hypothetical Current Winner Adjusted Current Rank'] - df['Hypothetical Current Loser Adjusted Current Rank']	
 
 		
             df = df[~df['Hypothetical Current Winner'].isin(picked_teams)].reset_index(drop=True)
@@ -5154,7 +5154,7 @@ def get_survivor_picks_based_on_internal_rankings():
             
     
             # Objective: maximize the sum of Adjusted Current Difference of each game picked
-            solver.Minimize(solver.Sum([picks[i] * df.loc[i, 'Hypthetical Current Winner Sportsbook Spread'] for i in range(len(df))]))
+            solver.Minimize(solver.Sum([picks[i] * df.loc[i, 'Hypothetical Current Winner Sportsbook Spread'] for i in range(len(df))]))
 
 
     
@@ -5236,10 +5236,10 @@ def get_survivor_picks_based_on_internal_rankings():
                         
     
                         # Get differences
-                        preseason_difference = df.loc[i, 'Hypthetical Winner Preseason Difference']
-                        adjusted_preseason_difference = df.loc[i, 'Hypthetical Winner Adjusted Preseason Difference']
-                        current_difference = df.loc[i, 'Hypthetical Winner Current Difference']
-                        adjusted_current_difference = df.loc[i, 'Hypthetical Winner Adjusted Current Difference']
+                        preseason_difference = df.loc[i, 'Hypothetical Winner Preseason Difference']
+                        adjusted_preseason_difference = df.loc[i, 'Hypothetical Winner Adjusted Preseason Difference']
+                        current_difference = df.loc[i, 'Hypothetical Winner Current Difference']
+                        adjusted_current_difference = df.loc[i, 'Hypothetical Winner Adjusted Current Difference']
                         # Calculate EV for this game
                         ev = df.loc[i, 'Hypothetical Current Winner EV']
     

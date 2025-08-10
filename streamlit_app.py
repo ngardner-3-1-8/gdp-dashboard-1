@@ -860,7 +860,7 @@ def collect_schedule_travel_ranking_data(pd):
         st.write('')
         st.write('')
         csv_df['Internal Home Team Spread'] = csv_df['Away Team Adjusted Current Rank'] - csv_df['Home Team Adjusted Current Rank']
-		csv_df['Internal Away Team Spread'] = csv_df['Home Team Adjusted Current Rank'] - csv_df['Away Team Adjusted Current Rank']
+        csv_df['Internal Away Team Spread'] = csv_df['Home Team Adjusted Current Rank'] - csv_df['Away Team Adjusted Current Rank']
         # Iterate through the DataFrame to apply overrides and calculate implied/fair odds
         for index, row in csv_df.iterrows():
             # Override Moneyline if DraftKings data was missing (still NaN)

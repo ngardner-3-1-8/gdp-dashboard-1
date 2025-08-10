@@ -3324,7 +3324,9 @@ def get_survivor_picks_based_on_ev():
                 "Away Team Adjusted Current Rank": "Hypothetical Current Loser Adjusted Current Rank",
                 "Home Team Adjusted Current Rank": "Hypothetical Current Winner Adjusted Current Rank",
                 "Home Team Sportsbook Spread": "Hypothetical Current Winner Sportsbook Spread",
-                "Away Team Sportsbook Spread": "Hypothetical Current Loser Sportsbook Spread"
+                "Away Team Sportsbook Spread": "Hypothetical Current Loser Sportsbook Spread",
+                "Internal Home Team Spread": "Internal Hypothetical Current Winner Spread",
+                "Internal Away Team Spread": "Internal Hypothetical Current Loser Spread"
             }, inplace=True)
             
             # Add "Away Team 1" column
@@ -3343,7 +3345,9 @@ def get_survivor_picks_based_on_ev():
                 "Away Team Adjusted Current Rank": "Hypothetical Current Winner Adjusted Current Rank",
                 "Home Team Adjusted Current Rank": "Hypothetical Current Loser Adjusted Current Rank",
                 "Away Team Sportsbook Spread": "Hypothetical Current Winner Sportsbook Spread" ,
-                "Home Team Sportsbook Spread": "Hypothetical Current Loser Sportsbook Spread"
+                "Home Team Sportsbook Spread": "Hypothetical Current Loser Sportsbook Spread",
+                "Internal Away Team Spread": "Internal Hypothetical Current Winner Spread",
+                "Internal Home Team Spread": "Internal Hypothetical Current Loser Spread"
             }, inplace=True)
             
             # Add "Away Team 1" column
@@ -4782,7 +4786,9 @@ def get_survivor_picks_based_on_internal_rankings():
                 "Home Team Current Rank": "Hypothetical Current Winner Current Rank",
                 "Away Team Current Rank": "Hypothetical Current Loser Current Rank",
                 "Home Team Sportsbook Spread": "Hypothetical Current Winner Sportsbook Spread" ,
-                "Away Team Sportsbook Spread": "Hypothetical Current Loser Sportsbook Spread"
+                "Away Team Sportsbook Spread": "Hypothetical Current Loser Sportsbook Spread",
+                "Internal Home Team Spread": "Internal Hypothetical Current Winner Spread",
+                "Internal Away Team Spread": "Internal Hypothetical Current Loser Spread"
             }, inplace=True)
             
             # Add "Away Team 1" column
@@ -4807,7 +4813,9 @@ def get_survivor_picks_based_on_internal_rankings():
                 "Away Team Current Rank": "Hypothetical Current Winner Current Rank",
                 "Home Team Current Rank": "Hypothetical Current Loser Current Rank",
                 "Away Team Sportsbook Spread": "Hypothetical Current Winner Sportsbook Spread",
-                "Home Team Sportsbook Spread": "Hypothetical Current Loser Sportsbook Spread"
+                "Home Team Sportsbook Spread": "Hypothetical Current Loser Sportsbook Spread",
+                "Internal Away Team Spread": "Internal Hypothetical Current Winner Spread",
+                "Internal Home Team Spread": "Internal Hypothetical Current Loser Spread"
             }, inplace=True)
             
             # Add "Away Team 1" column

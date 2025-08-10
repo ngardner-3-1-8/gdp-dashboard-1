@@ -5231,7 +5231,7 @@ def get_survivor_picks_based_on_internal_rankings():
                         adjusted_preseason_rank = df.loc[i, 'Hypothetical Current Winner Adjusted Preseason Rank']
                         current_rank = df.loc[i, 'Hypothetical Current Winner Current Rank']
                         adjusted_current_rank = df.loc[i, 'Hypothetical Current Winner Adjusted Current Rank']
-                        away_team_short_rest = 'True' if df.loc[i, 'Hypothetical Current Winner'] == df.loc[i, 'Away Team'] and df.loc[i, 'Away Team Short Rest'] == 'True' else 'False'
+                        away_team_short_rest = 'True' if df.loc[i, 'Hypothetical Current Winner'] == df.loc[i, 'Away Team 1'] and df.loc[i, 'Away Team Short Rest'] == 'True' else 'False'
                         three_games_in_10_days = df.loc[i, 'Home Team 3 games in 10 days'] if df.loc[i, 'Hypothetical Current Winner'] == df.loc[i, 'Home Team 1'] else df.loc[i, 'Away Team 3 games in 10 days']
                         four_games_in_17_days = df.loc[i, 'Home Team 4 games in 17 days'] if df.loc[i, 'Hypothetical Current Winner'] == df.loc[i, 'Home Team 1'] else df.loc[i, 'Away Team Fair Odds']
                         thanksgiving_favorite = df.loc[i, 'Home Team Thanksgiving Favorite'] if df.loc[i, 'Hypothetical Current Winner'] == df.loc[i, 'Home Team 1'] else df.loc[i, 'Away Team Thanksgiving Favorite']

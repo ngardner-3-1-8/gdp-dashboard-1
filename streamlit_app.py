@@ -2984,6 +2984,10 @@ def get_survivor_picks_based_on_ev():
                         # Determine if it's a divisional game and if the picked team is the home team
     
                         week = df.loc[i, 'Week']
+						date = df.loc[i, 'Date']
+						date = date.dt.strftime('%m-%d-%Y')
+						time = df.loc[i, 'Time']
+						location = df.loc[i, 'Actual Stadium']
                         pick = df.loc[i,'Adjusted Current Winner']
                         opponent = df.loc[i, 'Home Team'] if df.loc[i, 'Adjusted Current Winner'] == df.loc[i, 'Away Team'] else df.loc[i, 'Away Team']
                         win_odds = df.loc[i, 'Home Team Fair Odds'] if df.loc[i, 'Adjusted Current Winner'] == df.loc[i, 'Home Team'] else df.loc[i, 'Away Team Fair Odds']
@@ -3022,31 +3026,31 @@ def get_survivor_picks_based_on_ev():
                             'Week': week,
                             'Pick': pick,
                             'Opponent': opponent,
-							'Date':
-							'Time':
-							'Location':
+							'Date': date,
+							'Time': ,
+							'Location': ,
                             'Home or Away': home_team,
                             'EV': ev,
                             'Fair Odds Based on Sportsbook Odds': win_odds,
-							'Fair Odds Based on Internal Rankings':
+							'Fair Odds Based on Internal Rankings': ,
                             'Expected Pick Percent': pick_percent,	
                             'Expected Availability': expected_availability,
-							'Future Value': 
-							'Moneyline Based on Sportsbook Odds':
-							'Moneyline Based on Internal Rankings':
-							'Expected Contest Selections':
-							'Expected Survival Rate':
-							'Expected Elimination Rate':
-							'Expected Survivors':
-							'Expected Eliminations':
-							'Preseason Rank':
-							'Adjusted Preseason Rank':
-							'Current Rank':
-							'Adjusted Current Rank':
+							'Future Value': ,
+							'Moneyline Based on Sportsbook Odds': ,
+							'Moneyline Based on Internal Rankings': ,
+							'Expected Contest Selections': ,
+							'Expected Survival Rate': ,
+							'Expected Elimination Rate': ,
+							'Expected Survivors': ,
+							'Expected Eliminations': ,
+							'Preseason Rank': ,
+							'Adjusted Preseason Rank': ,
+							'Current Rank': ,
+							'Adjusted Current Rank': ,
                             'Preseason Difference': preseason_difference,
                             'Adjusted Preseason Difference': adjusted_preseason_difference,
                             'Current Difference': current_difference,
-                            'Adjusted Current Difference': adjusted_current_difference
+                            'Adjusted Current Difference': adjusted_current_difference,
                             'Thursday Night Game': thursday_night_game,
                             'International Game': international_game,
                             'Divisional Game': divisional_game,
@@ -3056,17 +3060,18 @@ def get_survivor_picks_based_on_ev():
                             'Season Long Rest Including This Week': cumulative_rest_advantage,
                             'Travel Advantage': travel_advantage,
                             'Back to Back Away Games': back_to_back_away_games,
-							'Away Team on Short Rest':
-							'Four Games in 17 Days':
+							'Away Team on Short Rest': ,
+							'Three Games in 10 Days': ,
+							'Four Games in 17 Days': ,
+							'Thanksgiving Favorite': ,
+							'Christmas Favorite': ,
+							'Thanksgiving Underdog': ,
+							'Christmas Underdog': ,
                             'Previous Opponent': previous_opponent,
                             'Previous Game Location': previous_game_location,
                             'Next Opponent': next_opponent,
-                            'Next Game Location': next_game_location,
-							'Three Games in 10 Days':
-							'Thanksgiving Favorite':
-							'Christmas Favorite':
-							'Thanksgiving Underdog':
-							'Christmas Underdog':
+                            'Next Game Location': next_game_location
+
 							
 
                         }

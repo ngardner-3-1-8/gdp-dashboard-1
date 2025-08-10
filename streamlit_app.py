@@ -555,7 +555,7 @@ def collect_schedule_travel_ranking_data(pd):
         # Fetch odds from US bookmakers
         REGIONS = 'us'
         # Request moneyline odds
-        MARKETS = 'h2h'
+        MARKETS = 'h2h,spreads'
         # Use decimal odds format for easier averaging
         ODDS_FORMAT = 'decimal'
         # Request ISO format for dates, which includes UTC timezone info
@@ -609,10 +609,20 @@ def collect_schedule_travel_ranking_data(pd):
                                 game_odds_avg['home'].append(outcome['price'])
                             elif outcome['name'] == away_team:
                                 game_odds_avg['away'].append(outcome['price'])
+                # 2. ADDITION: New logic for spreads
+                    elif market['key'] == 'spreads':
+                        for outcome in market['outcomes']:
+                            if outcome['name'] == home_team:
+                                game_odds['home_spread'].append(outcome['point'])
+                            elif outcome['name'] == away_team:
+                                game_odds['away_spread'].append(outcome['point'])
     
             # Calculate average odds (if available)
             avg_home_odds = sum(game_odds_avg['home']) / len(game_odds_avg['home']) if game_odds_avg['home'] else None
             avg_away_odds = sum(game_odds_avg['away']) / len(game_odds_avg['away']) if game_odds_avg['away'] else None
+
+            avg_home_spread = sum(game_odds['home_spread']) / len(game_odds['home_spread']) if game_odds['home_spread'] else None
+            avg_away_spread = sum(game_odds['away_spread']) / len(game_odds['away_spread']) if game_odds['away_spread'] else None
     
             # Convert decimal odds to American odds format
             # If decimal odds are >= 2.0, American odds = (decimal odds - 1) * 100
@@ -639,6 +649,8 @@ def collect_schedule_travel_ranking_data(pd):
                 'Away Odds': american_away_odds,
                 'Home Team': home_team,
                 'Home Odds': american_home_odds,
+				'Away Spread': avg_away_spread,
+				'Home Spread': avg_home_spread
             })
     
         # Create pandas DataFrame from the extracted data
@@ -742,6 +754,8 @@ def collect_schedule_travel_ranking_data(pd):
         csv_df['Away Team Moneyline'] = np.nan
         csv_df['Favorite'] = np.nan
         csv_df['Underdog'] = np.nan
+        csv_df['Home Team Sportsbook Spread'] = np.nan
+        csv_df['Away Team Sportsbook Spread'] = np.nan
         
         # Attempt to update CSV data with scraped odds from DraftKings
         # This block only executes if live_api_odds_df is not empty
@@ -756,6 +770,8 @@ def collect_schedule_travel_ranking_data(pd):
                     # If a match is found, apply DraftKings moneyline odds
                     csv_df.loc[index, 'Away Team Moneyline'] = matching_row.iloc[0]['Away Odds']
                     csv_df.loc[index, 'Home Team Moneyline'] = matching_row.iloc[0]['Home Odds']
+                    csv_df.loc[index, 'Away Team Sportsbook Spread'] = matching_row.iloc[0]['Away Spread']
+                    csv_df.loc[index, 'Home Team Sportsbook Spread'] = matching_row.iloc[0]['Home Spread']					
                     
                     # Determine Favorite/Underdog based on DraftKings odds
                     # Assuming odds <= -110 typically indicates the favorite
@@ -833,13 +849,18 @@ def collect_schedule_travel_ranking_data(pd):
                 overridden_games_df.loc[index, 'Away Team Moneyline'] = row['Internal Away Team Moneyline']
             if pd.isna(row['Home Team Moneyline']):
                 overridden_games_df.loc[index, 'Home Team Moneyline'] = row['Internal Home Team Moneyline']
+			if pd.isna(row['Home Team Sportsbook Spread']):
+				overridden_games_df.loc[index, 'Home Team Sportsbook Spread'] = row['Away Team Adjusted Current Rank'] - row['Home Team Adjusted Current Rank']
+            if pd.isna(row['Away Team Sportsbook Spread']):
+                overridden_games_df.loc[index, 'Away Team Sportsbook Spread'] = row['Home Team Adjusted Current Rank'] - row['Away Team Adjusted Current Rank']
         st.subheader('Games with Unavailable Live Odds')
         st.write('This dataframe contains the games where live odds from the Live Odds API were unavailable. This will likely happen for lookahead lines and future weeks')
         st.write(overridden_games_df)
         st.write('')
         st.write('')
         st.write('')
-
+        csv_df['Internal Home Team Spread'] = csv_df['Away Team Adjusted Current Rank'] - csv_df['Home Team Adjusted Current Rank']
+		csv_df['Internal Away Team Spread'] = csv_df['Home Team Adjusted Current Rank'] - csv_df['Away Team Adjusted Current Rank']
         # Iterate through the DataFrame to apply overrides and calculate implied/fair odds
         for index, row in csv_df.iterrows():
             # Override Moneyline if DraftKings data was missing (still NaN)

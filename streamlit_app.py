@@ -3261,8 +3261,8 @@ def get_survivor_picks_based_on_ev():
                         sum_current_difference += current_difference
                         sum_adjusted_current_difference += adjusted_current_difference
                         sum_ev += ev
-						sum_sportsbook_spread += live_odds_spread
-						sum_internal_spread += internal_spread
+                        sum_sportsbook_spread += live_odds_spread
+                        sum_internal_spread += internal_spread
                         picks_df = pd.concat([picks_df, df.loc[[i]]], ignore_index=True)
                         picks_df['Divisional Matchup?'] = divisional_game
                 summarized_picks_df = pd.DataFrame(picks_rows_2)
@@ -3273,8 +3273,8 @@ def get_survivor_picks_based_on_ev():
                 st.write('Adjusted Preseason Difference:', sum_adjusted_preseason_difference)
                 st.write('Current Difference:', sum_current_difference)
                 st.write('Adjusted Current Difference:', sum_adjusted_current_difference)
-				st.write('Total Sportsbook Spread: ', sum_sportsbook_spread)
-				st.write('Total Internal Spread: ', sum_internal_spread)
+                st.write('Total Sportsbook Spread: ', sum_sportsbook_spread)
+                st.write('Total Internal Spread: ', sum_internal_spread)
                 st.write(f'Total EV: :blue[{sum_ev}]')
             else:
                 st.write('No solution found. Consider using fewer constraints. Or you may just be fucked')

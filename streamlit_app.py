@@ -3124,6 +3124,8 @@ def get_survivor_picks_based_on_ev():
                         thanksgiving_underdog = df.loc[i, 'Home Team Thanksgiving Underdog'] if df.loc[i, 'Adjusted Current Winner'] == df.loc[i, 'Home Team'] else df.loc[i, 'Away Team Thanksgiving Underdog']
                         christmas_underdog = df.loc[i, 'Home Team Christmas Underdog'] if df.loc[i, 'Adjusted Current Winner'] == df.loc[i, 'Home Team'] else df.loc[i, 'Away Team Christmas Underdog']
                         live_odds_unavailable = df.loc[i, 'No Live Odds Available - Internal Rankings Used for Moneyline Calculation']
+						live_odds_spread = df.loc[i, 'Home Team Sportsbook Spread'] if df.loc[i, 'Adjusted Current Winner'] == df.loc[i, 'Home Team'] else df.loc[i, 'Away Team Sportsbook Spread']
+						internal_spread = df.loc[i, 'Internal Home Team Spread'] if df.loc[i, 'Adjusted Current Winner'] == df.loc[i, 'Home Team'] else df.loc[i, 'Internal Away Team Spread']
 
                         
     
@@ -3156,6 +3158,8 @@ def get_survivor_picks_based_on_ev():
                                 'Future Value': future_value,
                                 'Moneyline Based on Sportsbook Odds': sportbook_moneyline,
                                 'Moneyline Based on Internal Rankings': internal_moneyline,
+                                'Spread Based on Sportsbook Odds': live_odds_spread,
+                                'Spread Based on Internal Rankings': internal_spread,
                                 'No Live Odds Available - Internal Rankings Used for Moneyline Calculation': live_odds_unavailable,
                                 'Expected Contest Selections': contest_selections,
                                 'Expected Survival Rate': survival_rate,
@@ -3208,6 +3212,8 @@ def get_survivor_picks_based_on_ev():
                                 'Future Value': future_value,
                                 'Moneyline Based on Sportsbook Odds': sportbook_moneyline,
                                 'Moneyline Based on Internal Rankings': internal_moneyline,
+                                'Spread Based on Sportsbook Odds': live_odds_spread,
+                                'Spread Based on Internal Rankings': internal_spread,
                                 'No Live Odds Available - Internal Rankings Used for Moneyline Calculation': live_odds_unavailable,
                                 'Expected Contest Selections': contest_selections,
                                 'Expected Survival Rate': survival_rate,
@@ -3741,6 +3747,8 @@ def get_survivor_picks_based_on_ev():
                         thanksgiving_underdog = df.loc[i, 'Home Team Thanksgiving Underdog'] if df.loc[i, 'Adjusted Current Winner'] == df.loc[i, 'Home Team'] else df.loc[i, 'Away Team Thanksgiving Underdog']
                         christmas_underdog = df.loc[i, 'Home Team Christmas Underdog'] if df.loc[i, 'Adjusted Current Winner'] == df.loc[i, 'Home Team'] else df.loc[i, 'Away Team Christmas Underdog']
                         live_odds_unavailable = df.loc[i, 'No Live Odds Available - Internal Rankings Used for Moneyline Calculation']
+						live_odds_spread = df.loc[i, 'Home Team Sportsbook Spread'] if df.loc[i, 'Adjusted Current Winner'] == df.loc[i, 'Home Team'] else df.loc[i, 'Away Team Sportsbook Spread']
+						internal_spread = df.loc[i, 'Internal Home Team Spread'] if df.loc[i, 'Adjusted Current Winner'] == df.loc[i, 'Home Team'] else df.loc[i, 'Internal Away Team Spread']
                         
     
                         # Get differences
@@ -3772,6 +3780,8 @@ def get_survivor_picks_based_on_ev():
                                 'Future Value': future_value,
                                 'Moneyline Based on Sportsbook Odds': sportbook_moneyline,
                                 'Moneyline Based on Internal Rankings': internal_moneyline,
+                                'Spread Based on Sportsbook Odds': live_odds_spread,
+                                'Spread Based on Internal Rankings': internal_spread,
                                 'No Live Odds Available - Internal Rankings Used for Moneyline Calculation': live_odds_unavailable,
                                 'Expected Contest Selections': contest_selections,
                                 'Expected Survival Rate': survival_rate,
@@ -3824,6 +3834,8 @@ def get_survivor_picks_based_on_ev():
                                 'Future Value': future_value,
                                 'Moneyline Based on Sportsbook Odds': sportbook_moneyline,
                                 'Moneyline Based on Internal Rankings': internal_moneyline,
+                                'Spread Based on Sportsbook Odds': live_odds_spread,
+                                'Spread Based on Internal Rankings': internal_spread,
                                 'No Live Odds Available - Internal Rankings Used for Moneyline Calculation': live_odds_unavailable,
                                 'Expected Contest Selections': contest_selections,
                                 'Expected Survival Rate': survival_rate,
@@ -4545,6 +4557,8 @@ def get_survivor_picks_based_on_internal_rankings():
                         thanksgiving_underdog = df.loc[i, 'Home Team Thanksgiving Underdog'] if df.loc[i, 'Adjusted Current Winner'] == df.loc[i, 'Home Team'] else df.loc[i, 'Away Team Thanksgiving Underdog']
                         christmas_underdog = df.loc[i, 'Home Team Christmas Underdog'] if df.loc[i, 'Adjusted Current Winner'] == df.loc[i, 'Home Team'] else df.loc[i, 'Away Team Christmas Underdog']
                         live_odds_unavailable = df.loc[i, 'No Live Odds Available - Internal Rankings Used for Moneyline Calculation']
+						live_odds_spread = df.loc[i, 'Home Team Sportsbook Spread'] if df.loc[i, 'Adjusted Current Winner'] == df.loc[i, 'Home Team'] else df.loc[i, 'Away Team Sportsbook Spread']
+						internal_spread = df.loc[i, 'Internal Home Team Spread'] if df.loc[i, 'Adjusted Current Winner'] == df.loc[i, 'Home Team'] else df.loc[i, 'Internal Away Team Spread']
 
                         
     
@@ -4577,6 +4591,8 @@ def get_survivor_picks_based_on_internal_rankings():
                                 'Future Value': future_value,
                                 'Moneyline Based on Sportsbook Odds': sportbook_moneyline,
                                 'Moneyline Based on Internal Rankings': internal_moneyline,
+                                'Spread Based on Sportsbook Odds': live_odds_spread,
+                                'Spread Based on Internal Rankings': internal_spread,
                                 'No Live Odds Available - Internal Rankings Used for Moneyline Calculation': live_odds_unavailable,
                                 'Expected Contest Selections': contest_selections,
                                 'Expected Survival Rate': survival_rate,
@@ -4629,6 +4645,8 @@ def get_survivor_picks_based_on_internal_rankings():
                                 'Future Value': future_value,
                                 'Moneyline Based on Sportsbook Odds': sportbook_moneyline,
                                 'Moneyline Based on Internal Rankings': internal_moneyline,
+                                'Spread Based on Sportsbook Odds': live_odds_spread,
+                                'Spread Based on Internal Rankings': internal_spread,
                                 'No Live Odds Available - Internal Rankings Used for Moneyline Calculation': live_odds_unavailable,
                                 'Expected Contest Selections': contest_selections,
                                 'Expected Survival Rate': survival_rate,
@@ -4736,7 +4754,9 @@ def get_survivor_picks_based_on_internal_rankings():
                 "Home Team Adjusted Preseason Rank": "Hypothetical Current Winner Adjusted Preseason Rank",
                 "Away Team Adjusted Preseason Rank": "Hypothetical Current Loser Adjusted Preseason Rank",
                 "Home Team Current Rank": "Hypothetical Current Winner Current Rank",
-                "Away Team Current Rank": "Hypothetical Current Loser Current Rank"
+                "Away Team Current Rank": "Hypothetical Current Loser Current Rank",
+                "Home Team Sportsbook Spread": "Hypothetical Winner Sportsbook Spread" ,
+                "Away Team Sportsbook Spread": "Hypothetical Loser Sportsbook Spread"
             }, inplace=True)
             
             # Add "Away Team 1" column
@@ -4759,7 +4779,9 @@ def get_survivor_picks_based_on_internal_rankings():
                 "Away Team Adjusted Preseason Rank": "Hypothetical Current Winner Adjusted Preseason Rank",
                 "Home Team Adjusted Preseason Rank": "Hypothetical Current Loser Adjusted Preseason Rank",
                 "Away Team Current Rank": "Hypothetical Current Winner Current Rank",
-                "Home Team Current Rank": "Hypothetical Current Loser Current Rank"
+                "Home Team Current Rank": "Hypothetical Current Loser Current Rank",
+                "Away Team Sportsbook Spread": "Hypothetical Winner Sportsbook Spread",
+                "Home Team Sportsbook Spread": "Hypothetical Loser Sportsbook Spread"
             }, inplace=True)
             
             # Add "Away Team 1" column
@@ -4801,7 +4823,7 @@ def get_survivor_picks_based_on_internal_rankings():
             for i in range(len(df)):
                 # Can only pick an away team if 'Adjusted Current Difference' > 10
                 if avoid_away_teams_in_close_matchups == 1:
-                    if df.loc[i, 'Away Team 1'] == df.loc[i, 'Hypothetical Current Winner'] and df.loc[i, 'Adjusted Current Difference'] < 10 and df.loc[i, 'Hypothetical Current Winner Adjusted Current Rank'] > df.loc[i, 'Hypothetical Current Loser Adjusted Current Rank']:
+                    if df.loc[i, 'Away Team 1'] == df.loc[i, 'Hypothetical Current Winner'] and df.loc[i, 'Adjusted Current Difference'] <= 7 and df.loc[i, 'Hypothetical Current Winner Adjusted Current Rank'] > df.loc[i, 'Hypothetical Current Loser Adjusted Current Rank']:
                         solver.Add(picks[i] == 0)
                 #if df.loc[i, 'Away Team'] == df.loc[i, 'Adjusted Current Winner'] and df.loc[i, 'Divisional Matchup?'] == 'Divisional':
                     #solver.Add(picks[i] == 0)
@@ -4811,7 +4833,7 @@ def get_survivor_picks_based_on_internal_rankings():
     
                 # If 'Divisional Matchup?' is "Divisional", can only pick if 'Adjusted Current Difference' > 10
                 if avoid_close_divisional_matchups == 1:
-                    if df.loc[i, 'Divisional Matchup?'] == 'Divisional' and df.loc[i, 'Adjusted Current Difference'] < 10 and df.loc[i, 'Hypothetical Current Winner Adjusted Current Rank'] > df.loc[i, 'Hypothetical Current Loser Adjusted Current Rank']:
+                    if df.loc[i, 'Divisional Matchup?'] == 'Divisional' and df.loc[i, 'Adjusted Current Difference'] <= 7 and df.loc[i, 'Hypothetical Current Winner Adjusted Current Rank'] > df.loc[i, 'Hypothetical Current Loser Adjusted Current Rank']:
                         solver.Add(picks[i] == 0)
                 # Constraints for short rest and 4 games in 17 days (only if team is the Adjusted Current Winner)
                 if avoid_away_teams_on_short_rest == 1:
@@ -5140,47 +5162,49 @@ def get_survivor_picks_based_on_internal_rankings():
                         date = pd.to_datetime(date, format='%b %d, %Y')
                         time = df.loc[i, 'Time']
                         location = df.loc[i, 'Actual Stadium']
-                        pick = df.loc[i,'Adjusted Current Winner']
-                        opponent = df.loc[i, 'Home Team'] if df.loc[i, 'Adjusted Current Winner'] == df.loc[i, 'Away Team'] else df.loc[i, 'Away Team']
-                        win_odds = round(df.loc[i, 'Home Team Fair Odds'] if df.loc[i, 'Adjusted Current Winner'] == df.loc[i, 'Home Team'] else df.loc[i, 'Away Team Fair Odds'], 2)
-                        pick_percent = round(df.loc[i, 'Home Pick %'] if df.loc[i, 'Adjusted Current Winner'] == df.loc[i, 'Home Team'] else df.loc[i, 'Away Pick %'], 2)
-                        expected_availability = round(df.loc[i, 'Home Team Expected Availability'] if df.loc[i, 'Adjusted Current Winner'] == df.loc[i, 'Home Team'] else df.loc[i, 'Away Team Expected Availability'], 2)
+                        pick = df.loc[i,'Hypothetical Current Winner']
+                        opponent = df.loc[i, 'Hypothetical Current Loser']
+                        win_odds = round(df.loc[i, 'Home Team Fair Odds'] if df.loc[i, 'Hypothetical Current Winner'] == df.loc[i, 'Home Team'] else df.loc[i, 'Away Team Fair Odds'], 2)
+                        pick_percent = round(df.loc[i, 'Home Pick %'] if df.loc[i, 'Hypothetical Current Winner'] == df.loc[i, 'Home Team'] else df.loc[i, 'Away Pick %'], 2)
+                        expected_availability = round(df.loc[i, 'Home Team Expected Availability'] if df.loc[i, 'Hypothetical Current Winner'] == df.loc[i, 'Home Team'] else df.loc[i, 'Away Team Expected Availability'], 2)
                         divisional_game = 'Divisional' if df.loc[i, 'Divisional Matchup Boolean'] else ''
-                        home_team = 'Home Team' if df.loc[i, 'Adjusted Current Winner'] == df.loc[i, 'Home Team'] else 'Away Team'
-                        weekly_rest = df.loc[i, 'Home Team Weekly Rest'] if df.loc[i, 'Adjusted Current Winner'] == df.loc[i, 'Home Team'] else df.loc[i, 'Away Team Weekly Rest']
-                        weekly_rest_advantage = df.loc[i, 'Weekly Home Rest Advantage'] if df.loc[i, 'Adjusted Current Winner'] == df.loc[i, 'Home Team'] else df.loc[i, 'Weekly Away Rest Advantage']
-                        cumulative_rest = df.loc[i, 'Home Cumulative Rest Advantage'] if df.loc[i, 'Adjusted Current Winner'] == df.loc[i, 'Home Team'] else df.loc[i, 'Away Cumulative Rest Advantage']
-                        cumulative_rest_advantage = df.loc[i, 'Home Team Current Week Cumulative Rest Advantage'] if df.loc[i, 'Adjusted Current Winner'] == df.loc[i, 'Home Team'] else df.loc[i, 'Away Team Current Week Cumulative Rest Advantage']
-                        travel_advantage = df.loc[i, 'Home Travel Advantage'] if df.loc[i, 'Adjusted Current Winner'] == df.loc[i, 'Home Team'] else df.loc[i, 'Away Travel Advantage']
-                        back_to_back_away_games = 'True' if df.loc[i, 'Adjusted Current Winner'] == df.loc[i, 'Away Team'] and df.loc[i, 'Back to Back Away Games'] == 'True' else 'False'
+                        home_team = 'Home Team' if df.loc[i, 'Hypothetical Current Winner'] == df.loc[i, 'Home Team'] else 'Away Team'
+                        weekly_rest = df.loc[i, 'Home Team Weekly Rest'] if df.loc[i, 'Hypothetical Current Winner'] == df.loc[i, 'Home Team'] else df.loc[i, 'Away Team Weekly Rest']
+                        weekly_rest_advantage = df.loc[i, 'Weekly Home Rest Advantage'] if df.loc[i, 'Hypothetical Current Winner'] == df.loc[i, 'Home Team'] else df.loc[i, 'Weekly Away Rest Advantage']
+                        cumulative_rest = df.loc[i, 'Home Cumulative Rest Advantage'] if df.loc[i, 'Hypothetical Current Winner'] == df.loc[i, 'Home Team'] else df.loc[i, 'Away Cumulative Rest Advantage']
+                        cumulative_rest_advantage = df.loc[i, 'Home Team Current Week Cumulative Rest Advantage'] if df.loc[i, 'Hypothetical Current Winner'] == df.loc[i, 'Home Team'] else df.loc[i, 'Away Team Current Week Cumulative Rest Advantage']
+                        travel_advantage = df.loc[i, 'Home Travel Advantage'] if df.loc[i, 'Hypothetical Current Winner'] == df.loc[i, 'Home Team'] else df.loc[i, 'Away Travel Advantage']
+                        back_to_back_away_games = 'True' if df.loc[i, 'Hypothetical Current Winner'] == df.loc[i, 'Away Team'] and df.loc[i, 'Back to Back Away Games'] == 'True' else 'False'
                         thursday_night_game = 'Thursday Night Game' if df.loc[i, "Thursday Night Game"] == 'True' else 'Sunday/Monday Game'
                         international_game = 'International Game' if df.loc[i, 'Actual Stadium'] == 'London, UK' else 'Domestic Game'
-                        previous_opponent = df.loc[i, 'Home Team Previous Opponent'] if df.loc[i, 'Adjusted Current Winner'] == df.loc[i, 'Home Team'] else df.loc[i, 'Away Team Previous Opponent']
-                        previous_game_location = df.loc[i, 'Home Team Previous Location'] if df.loc[i, 'Adjusted Current Winner'] == df.loc[i, 'Home Team'] else df.loc[i, 'Away Team Previous Location']
-                        next_opponent = df.loc[i, 'Home Team Next Opponent'] if df.loc[i, 'Adjusted Current Winner'] == df.loc[i, 'Home Team'] else df.loc[i, 'Away Team Next Opponent']
-                        next_game_location = df.loc[i, 'Home Team Next Location'] if df.loc[i, 'Adjusted Current Winner'] == df.loc[i, 'Home Team'] else df.loc[i, 'Away Team Next Location']
+                        previous_opponent = df.loc[i, 'Home Team Previous Opponent'] if df.loc[i, 'Hypothetical Current Winner'] == df.loc[i, 'Home Team'] else df.loc[i, 'Away Team Previous Opponent']
+                        previous_game_location = df.loc[i, 'Home Team Previous Location'] if df.loc[i, 'Hypothetical Current Winner'] == df.loc[i, 'Home Team'] else df.loc[i, 'Away Team Previous Location']
+                        next_opponent = df.loc[i, 'Home Team Next Opponent'] if df.loc[i, 'Hypothetical Current Winner'] == df.loc[i, 'Home Team'] else df.loc[i, 'Away Team Next Opponent']
+                        next_game_location = df.loc[i, 'Home Team Next Location'] if df.loc[i, 'Hypothetical Current Winner'] == df.loc[i, 'Home Team'] else df.loc[i, 'Away Team Next Location']
 
-                        internal_ranking_fair_odds = df.loc[i, 'Internal Home Team Fair Odds'] if df.loc[i, 'Adjusted Current Winner'] == df.loc[i, 'Home Team'] else df.loc[i, 'Internal Away Team Fair Odds']
-                        future_value = df.loc[i, 'Home Team Star Rating'] if df.loc[i, 'Adjusted Current Winner'] == df.loc[i, 'Home Team'] else df.loc[i, 'Away Team Star Rating']
-                        sportbook_moneyline = df.loc[i, 'Home Team Moneyline'] if df.loc[i, 'Adjusted Current Winner'] == df.loc[i, 'Home Team'] else df.loc[i, 'Away Team Moneyline']
-                        internal_moneyline = df.loc[i, 'Internal Home Team Moneyline'] if df.loc[i, 'Adjusted Current Winner'] == df.loc[i, 'Home Team'] else df.loc[i, 'Internal Away Team Moneyline']
-                        contest_selections = df.loc[i, 'Expected Home Team Picks'] if df.loc[i, 'Adjusted Current Winner'] == df.loc[i, 'Home Team'] else df.loc[i, 'Expected Away Team Picks']
-                        survival_rate = df.loc[i, 'Home Expected Survival Rate'] if df.loc[i, 'Adjusted Current Winner'] == df.loc[i, 'Home Team'] else df.loc[i, 'Away Expected Survival Rate']
-                        elimination_percent = df.loc[i, 'Home Expected Elimination Percent'] if df.loc[i, 'Adjusted Current Winner'] == df.loc[i, 'Home Team'] else df.loc[i, 'Away Expected Elimination Percent']
-                        survivors = df.loc[i, 'Expected Home Team Survivors'] if df.loc[i, 'Adjusted Current Winner'] == df.loc[i, 'Home Team'] else df.loc[i, 'Expected Away Team Survivors']
-                        eliminations = df.loc[i, 'Expected Home Team Eliminations'] if df.loc[i, 'Adjusted Current Winner'] == df.loc[i, 'Home Team'] else df.loc[i, 'Expected Away Team Eliminations']
-                        preseason_rank = df.loc[i, 'Home Team Preseason Rank'] if df.loc[i, 'Adjusted Current Winner'] == df.loc[i, 'Home Team'] else df.loc[i, 'Away Team Preseason Rank']
-                        adjusted_preseason_rank = df.loc[i, 'Home Team Adjusted Preseason Rank'] if df.loc[i, 'Adjusted Current Winner'] == df.loc[i, 'Home Team'] else df.loc[i, 'Away Team Adjusted Preseason Rank']
-                        current_rank = df.loc[i, 'Home Team Current Rank'] if df.loc[i, 'Adjusted Current Winner'] == df.loc[i, 'Home Team'] else df.loc[i, 'Away Team Current Rank']
-                        adjusted_current_rank = df.loc[i, 'Home Team Adjusted Current Rank'] if df.loc[i, 'Adjusted Current Winner'] == df.loc[i, 'Home Team'] else df.loc[i, 'Away Team Adjusted Current Rank']
-                        away_team_short_rest = 'True' if df.loc[i, 'Adjusted Current Winner'] == df.loc[i, 'Away Team'] and df.loc[i, 'Away Team Short Rest'] == 'True' else 'False'
-                        three_games_in_10_days = df.loc[i, 'Home Team 3 games in 10 days'] if df.loc[i, 'Adjusted Current Winner'] == df.loc[i, 'Home Team'] else df.loc[i, 'Away Team 3 games in 10 days']
-                        four_games_in_17_days = df.loc[i, 'Home Team 4 games in 17 days'] if df.loc[i, 'Adjusted Current Winner'] == df.loc[i, 'Home Team'] else df.loc[i, 'Away Team Fair Odds']
-                        thanksgiving_favorite = df.loc[i, 'Home Team Thanksgiving Favorite'] if df.loc[i, 'Adjusted Current Winner'] == df.loc[i, 'Home Team'] else df.loc[i, 'Away Team Thanksgiving Favorite']
-                        christmas_favorite = df.loc[i, 'Home Team Christmas Favorite'] if df.loc[i, 'Adjusted Current Winner'] == df.loc[i, 'Home Team'] else df.loc[i, 'Away Team Christmas Favorite']
-                        thanksgiving_underdog = df.loc[i, 'Home Team Thanksgiving Underdog'] if df.loc[i, 'Adjusted Current Winner'] == df.loc[i, 'Home Team'] else df.loc[i, 'Away Team Thanksgiving Underdog']
-                        christmas_underdog = df.loc[i, 'Home Team Christmas Underdog'] if df.loc[i, 'Adjusted Current Winner'] == df.loc[i, 'Home Team'] else df.loc[i, 'Away Team Christmas Underdog']
+                        internal_ranking_fair_odds = df.loc[i, 'Internal Home Team Fair Odds'] if df.loc[i, 'Hypothetical Current Winner'] == df.loc[i, 'Home Team'] else df.loc[i, 'Internal Away Team Fair Odds']
+                        future_value = df.loc[i, 'Home Team Star Rating'] if df.loc[i, 'Hypothetical Current Winner'] == df.loc[i, 'Home Team'] else df.loc[i, 'Away Team Star Rating']
+                        sportbook_moneyline = df.loc[i, 'Home Team Moneyline'] if df.loc[i, 'Hypothetical Current Winner'] == df.loc[i, 'Home Team'] else df.loc[i, 'Away Team Moneyline']
+                        internal_moneyline = df.loc[i, 'Internal Home Team Moneyline'] if df.loc[i, 'Hypothetical Current Winner'] == df.loc[i, 'Home Team'] else df.loc[i, 'Internal Away Team Moneyline']
+                        contest_selections = df.loc[i, 'Expected Home Team Picks'] if df.loc[i, 'Hypothetical Current Winner'] == df.loc[i, 'Home Team'] else df.loc[i, 'Expected Away Team Picks']
+                        survival_rate = df.loc[i, 'Home Expected Survival Rate'] if df.loc[i, 'Hypothetical Current Winner'] == df.loc[i, 'Home Team'] else df.loc[i, 'Away Expected Survival Rate']
+                        elimination_percent = df.loc[i, 'Home Expected Elimination Percent'] if df.loc[i, 'Hypothetical Current Winner'] == df.loc[i, 'Home Team'] else df.loc[i, 'Away Expected Elimination Percent']
+                        survivors = df.loc[i, 'Expected Home Team Survivors'] if df.loc[i, 'Hypothetical Current Winner'] == df.loc[i, 'Home Team'] else df.loc[i, 'Expected Away Team Survivors']
+                        eliminations = df.loc[i, 'Expected Home Team Eliminations'] if df.loc[i, 'Hypothetical Current Winner'] == df.loc[i, 'Home Team'] else df.loc[i, 'Expected Away Team Eliminations']
+                        preseason_rank = df.loc[i, 'Home Team Preseason Rank'] if df.loc[i, 'Hypothetical Current Winner'] == df.loc[i, 'Home Team'] else df.loc[i, 'Away Team Preseason Rank']
+                        adjusted_preseason_rank = df.loc[i, 'Home Team Adjusted Preseason Rank'] if df.loc[i, 'Hypothetical Current Winner'] == df.loc[i, 'Home Team'] else df.loc[i, 'Away Team Adjusted Preseason Rank']
+                        current_rank = df.loc[i, 'Home Team Current Rank'] if df.loc[i, 'Hypothetical Current Winner'] == df.loc[i, 'Home Team'] else df.loc[i, 'Away Team Current Rank']
+                        adjusted_current_rank = df.loc[i, 'Home Team Adjusted Current Rank'] if df.loc[i, 'Hypothetical Current Winner'] == df.loc[i, 'Home Team'] else df.loc[i, 'Away Team Adjusted Current Rank']
+                        away_team_short_rest = 'True' if df.loc[i, 'Hypothetical Current Winner'] == df.loc[i, 'Away Team'] and df.loc[i, 'Away Team Short Rest'] == 'True' else 'False'
+                        three_games_in_10_days = df.loc[i, 'Home Team 3 games in 10 days'] if df.loc[i, 'Hypothetical Current Winner'] == df.loc[i, 'Home Team'] else df.loc[i, 'Away Team 3 games in 10 days']
+                        four_games_in_17_days = df.loc[i, 'Home Team 4 games in 17 days'] if df.loc[i, 'Hypothetical Current Winner'] == df.loc[i, 'Home Team'] else df.loc[i, 'Away Team Fair Odds']
+                        thanksgiving_favorite = df.loc[i, 'Home Team Thanksgiving Favorite'] if df.loc[i, 'Hypothetical Current Winner'] == df.loc[i, 'Home Team'] else df.loc[i, 'Away Team Thanksgiving Favorite']
+                        christmas_favorite = df.loc[i, 'Home Team Christmas Favorite'] if df.loc[i, 'Hypothetical Current Winner'] == df.loc[i, 'Home Team'] else df.loc[i, 'Away Team Christmas Favorite']
+                        thanksgiving_underdog = df.loc[i, 'Home Team Thanksgiving Underdog'] if df.loc[i, 'Hypothetical Current Winner'] == df.loc[i, 'Home Team'] else df.loc[i, 'Away Team Thanksgiving Underdog']
+                        christmas_underdog = df.loc[i, 'Home Team Christmas Underdog'] if df.loc[i, 'Hypothetical Current Winner'] == df.loc[i, 'Home Team'] else df.loc[i, 'Away Team Christmas Underdog']
                         live_odds_unavailable = df.loc[i, 'No Live Odds Available - Internal Rankings Used for Moneyline Calculation']
+						live_odds_spread = df.loc[i, 'Home Team Sportsbook Spread'] if df.loc[i, 'Adjusted Current Winner'] == df.loc[i, 'Home Team'] else df.loc[i, 'Away Team Sportsbook Spread']
+						internal_spread = df.loc[i, 'Internal Home Team Spread'] if df.loc[i, 'Adjusted Current Winner'] == df.loc[i, 'Home Team'] else df.loc[i, 'Internal Away Team Spread']
                         
     
                         # Get differences
@@ -5212,6 +5236,8 @@ def get_survivor_picks_based_on_internal_rankings():
                                 'Future Value': future_value,
                                 'Moneyline Based on Sportsbook Odds': sportbook_moneyline,
                                 'Moneyline Based on Internal Rankings': internal_moneyline,
+                                'Spread Based on Sportsbook Odds': live_odds_spread,
+                                'Spread Based on Internal Rankings': internal_spread,
                                 'No Live Odds Available - Internal Rankings Used for Moneyline Calculation': live_odds_unavailable,
                                 'Expected Contest Selections': contest_selections,
                                 'Expected Survival Rate': survival_rate,
@@ -5264,6 +5290,8 @@ def get_survivor_picks_based_on_internal_rankings():
                                 'Future Value': future_value,
                                 'Moneyline Based on Sportsbook Odds': sportbook_moneyline,
                                 'Moneyline Based on Internal Rankings': internal_moneyline,
+                                'Spread Based on Sportsbook Odds': live_odds_spread,
+                                'Spread Based on Internal Rankings': internal_spread,
                                 'No Live Odds Available - Internal Rankings Used for Moneyline Calculation': live_odds_unavailable,
                                 'Expected Contest Selections': contest_selections,
                                 'Expected Survival Rate': survival_rate,

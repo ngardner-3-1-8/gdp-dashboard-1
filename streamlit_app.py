@@ -5128,7 +5128,7 @@ def get_survivor_picks_based_on_internal_rankings():
             
     
             # Objective: maximize the sum of Adjusted Current Difference of each game picked
-            solver.Maximize(solver.Sum([picks[i] * df.loc[i, 'Hypthetical Winner Adjusted Current Difference'] for i in range(len(df))]))
+            solver.Minimize(solver.Sum([picks[i] * df.loc[i, 'Hypthetical Winner Sportsbook Spread'] for i in range(len(df))]))
 
 
     

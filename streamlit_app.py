@@ -4519,8 +4519,8 @@ def get_survivor_picks_based_on_internal_rankings():
                 sum_current_difference = 0
                 sum_adjusted_current_difference = 0
                 sum_ev = 0
-				sum_sportsbook_spread = 0
-				sum_internal_spread = 0
+                sum_sportsbook_spread = 0
+                sum_internal_spread = 0
     
                 # Initialize picks_df
                 picks_df = pd.DataFrame(columns=df.columns)
@@ -4709,8 +4709,8 @@ def get_survivor_picks_based_on_internal_rankings():
                         sum_current_difference += current_difference
                         sum_adjusted_current_difference += adjusted_current_difference
                         sum_ev += ev
-						sum_sportsbook_spread += live_odds_spread
-						sum_internal_spread += internal_spread
+                        sum_sportsbook_spread += live_odds_spread
+                        sum_internal_spread += internal_spread
                         picks_df = pd.concat([picks_df, df.loc[[i]]], ignore_index=True)
                         picks_df['Divisional Matchup?'] = divisional_game
                 summarized_picks_df = pd.DataFrame(picks_rows_2)
@@ -4721,14 +4721,14 @@ def get_survivor_picks_based_on_internal_rankings():
                 st.write('\nPreseason Difference:', sum_preseason_difference)
                 st.write('Adjusted Preseason Difference:', sum_adjusted_preseason_difference)
                 st.write('Current Difference:', sum_current_difference)
-				if favored_qualifier == 'Internal Rankings':
-				    st.write('Total Sportsbook Spread: ', sum_sportsbook_spread)
-				    st.write('Total Internal Spread: ', sum_internal_spread)
+                if favored_qualifier == 'Internal Rankings':
+                    st.write('Total Sportsbook Spread: ', sum_sportsbook_spread)
+                    st.write('Total Internal Spread: ', sum_internal_spread)
                     st.write(f'Adjusted Current Difference: :blue[{sum_adjusted_current_difference}]')
-			    else:
+                else:
                     st.write(f'Adjusted Current Difference: {sum_adjusted_current_difference}')				
                     st.write('Total Internal Spread: ', sum_internal_spread)
-					st.write(f'Total Sportsbook Spread: , :blue[{sum_sportsbook_spread]}')
+                    st.write(f'Total Sportsbook Spread: , :blue[{sum_sportsbook_spread]}')
             else:
                 st.write('No solution found. Consider using fewer constraints. Or you may just be fucked')
                 st.write('No solution found. Consider using fewer constraints. Or you may just be fucked')

@@ -3024,10 +3024,26 @@ def get_survivor_picks_based_on_ev():
                         next_opponent = df.loc[i, 'Home Team Next Opponent'] if df.loc[i, 'Adjusted Current Winner'] == df.loc[i, 'Home Team'] else df.loc[i, 'Away Team Next Opponent']
                         next_game_location = df.loc[i, 'Home Team Next Location'] if df.loc[i, 'Adjusted Current Winner'] == df.loc[i, 'Home Team'] else df.loc[i, 'Away Team Next Location']
 
-						internal_rankimg_fair_odds =
-						future_value =
-						sportbook_moneyline = 
-						internal_moneyline =
+                        internal_rankimg_fair_odds =
+                        future_value =
+                        sportbook_moneyline = 
+                        internal_moneyline =
+						contest_selections =
+						survival_rate =
+						elimination_percent =
+						survivors =
+						eliminations =
+						preseason_rank =
+						adjusted_preseason_rank =
+						current_rank =
+						adjusted_current_rank =
+						away_team_short_rest =
+						three_games_in_10_days =
+						four_games_in_17_days =
+						thanksgiving_favorite =
+						christmas_favorite =
+						thanksgiving_underdog =
+						christmas_underdog =
 						
 
                         

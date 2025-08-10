@@ -599,7 +599,7 @@ def collect_schedule_travel_ranking_data(pd):
             # This formatting is to match your original output as closely as possible.
     
             # Create a temporary dictionary to store odds for this game
-            game_odds_avg = {'home': [], 'away': []}
+            game_odds_avg = {'home': [], 'away': [], 'home_spread': [], 'away_spread': []}
             
             for bookmaker in event['bookmakers']:
                 for market in bookmaker['markets']:
@@ -613,9 +613,9 @@ def collect_schedule_travel_ranking_data(pd):
                     elif market['key'] == 'spreads':
                         for outcome in market['outcomes']:
                             if outcome['name'] == home_team:
-                                game_odds['home_spread'].append(outcome['point'])
+                                game_odds_avg['home_spread'].append(outcome['point'])
                             elif outcome['name'] == away_team:
-                                game_odds['away_spread'].append(outcome['point'])
+                                game_odds_avg['away_spread'].append(outcome['point'])
     
             # Calculate average odds (if available)
             avg_home_odds = sum(game_odds_avg['home']) / len(game_odds_avg['home']) if game_odds_avg['home'] else None
@@ -4465,9 +4465,14 @@ def get_survivor_picks_based_on_internal_rankings():
                 # Add the constraint
                 solver.Add(solver.Sum([1 - picks[i] for i in forbidden_indices_1]) >= 1)
      
-    
+            if favored_qualifier == 'Internal Rankings':
+                solver.Minimize(solver.Sum([picks[i] * (df.loc[i, 'Home Team Sportsbook Spread'] if df.loc[i, 'Adjusted Current Winner'] == df.loc[i, 'Home Team'] else df.loc[i, 'Away Team Sportsbook Spread']) for i in range(len(df))]))
+            elif favored_qualifier == 'Live Sportsbook Odds (If Available)':
+                solver.Minimize(solver.Sum([picks[i] * (df.loc[i, 'Home Team Sportsbook Spread'] if df.loc[i, 'Favorite'] == df.loc[i, 'Home Team'] else df.loc[i, 'Away Team Sportsbook Spread']) for i in range(len(df))]))
+            else:
+                solver.Minimize(solver.Sum([picks[i] * (df.loc[i, 'Home Team Sportsbook Spread'] if (df.loc[i, 'Adjusted Current Winner'] == df.loc[i, 'Home Team'] and df.loc[i, 'Favorite'] == df.loc[i, 'Home Team']) else (df.loc[i, 'Away Team Sportsbook Spread'] if (df.loc[i, 'Adjusted Current Winner'] == df.loc[i, 'Away Team'] and df.loc[i, 'Favorite'] == df.loc[i, 'Away Team']) else 0)) for i in range(len(df))]))
             # Objective: maximize the sum of Adjusted Current Difference of each game picked
-            solver.Maximize(solver.Sum([picks[i] * df.loc[i, 'Adjusted Current Difference'] for i in range(len(df))]))
+#            solver.Maximize(solver.Sum([picks[i] * df.loc[i, 'Adjusted Current Difference'] for i in range(len(df))]))
     
             # Solve the problem and print the solution
             status = solver.Solve()

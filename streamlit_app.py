@@ -5175,8 +5175,8 @@ def get_survivor_picks_based_on_internal_rankings():
                 sum_current_difference = 0
                 sum_adjusted_current_difference = 0
                 sum_ev = 0
-				sum_sportsbook_spread = 0
-				sum_internal_spread = 0
+                sum_sportsbook_spread = 0
+                sum_internal_spread = 0
     
                 # Initialize picks_df
                 picks_df = pd.DataFrame(columns=df.columns)
@@ -5363,8 +5363,8 @@ def get_survivor_picks_based_on_internal_rankings():
                         sum_adjusted_preseason_difference += adjusted_preseason_difference
                         sum_current_difference += current_difference
                         sum_ev += ev
-						sum_sportsbook_spread += live_odds_spread
-						sum_internal_spread += internal_spread
+                        sum_sportsbook_spread += live_odds_spread
+                        sum_internal_spread += internal_spread
                         sum_adjusted_current_difference += adjusted_current_difference
                         picks_df = pd.concat([picks_df, df.loc[[i]]], ignore_index=True)
                         picks_df['Divisional Matchup?'] = divisional_game

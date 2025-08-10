@@ -3022,28 +3022,53 @@ def get_survivor_picks_based_on_ev():
                             'Week': week,
                             'Pick': pick,
                             'Opponent': opponent,
+							'Date':
+							'Time':
+							'Location':
+                            'Home or Away': home_team,
                             'EV': ev,
-                            'Win Odds': win_odds,
-                            'Pick %': pick_percent,	
+                            'Fair Odds Based on Sportsbook Odds': win_odds,
+							'Fair Odds Based on Internal Rankings':
+                            'Expected Pick Percent': pick_percent,	
                             'Expected Availability': expected_availability,
-                            'Divisional Game': divisional_game,
-                            'Home Team Status': home_team,
-                            'Weekly Rest': weekly_rest,
-                            'Weekly Rest Advantage': weekly_rest_advantage,
-                            'Cumulative Rest': cumulative_rest,
-                            'Cumulative Rest Advantage': cumulative_rest_advantage,
-                            'Travel Advantage': travel_advantage,
-                            'Back to Back Away Games': back_to_back_away_games,
-                            'Thursday Night Game': thursday_night_game,
-                            'International Game': international_game,
-                            'Previous Opponent': previous_opponent,
-                            'Previous Game Location': previous_game_location,
-                            'Next Opponent': next_opponent,
-                            'Next Game Location': next_game_location,
+							'Future Value': 
+							'Moneyline Based on Sportsbook Odds':
+							'Moneyline Based on Internal Rankings':
+							'Expected Contest Selections':
+							'Expected Survival Rate':
+							'Expected Elimination Rate':
+							'Expected Survivors':
+							'Expected Eliminations':
+							'Preseason Rank':
+							'Adjusted Preseason Rank':
+							'Current Rank':
+							'Adjusted Current Rank':
                             'Preseason Difference': preseason_difference,
                             'Adjusted Preseason Difference': adjusted_preseason_difference,
                             'Current Difference': current_difference,
                             'Adjusted Current Difference': adjusted_current_difference
+                            'Thursday Night Game': thursday_night_game,
+                            'International Game': international_game,
+                            'Divisional Game': divisional_game,
+                            'Weekly Rest': weekly_rest,
+                            'Weekly Rest Advantage': weekly_rest_advantage,
+                            'Season Long Rest Advantage': cumulative_rest,
+                            'Season Long Rest Including This Week': cumulative_rest_advantage,
+                            'Travel Advantage': travel_advantage,
+                            'Back to Back Away Games': back_to_back_away_games,
+							'Away Team on Short Rest':
+							'Four Games in 17 Days':
+                            'Previous Opponent': previous_opponent,
+                            'Previous Game Location': previous_game_location,
+                            'Next Opponent': next_opponent,
+                            'Next Game Location': next_game_location,
+							'Three Games in 10 Days':
+							'Thanksgiving Favorite':
+							'Christmas Favorite':
+							'Thanksgiving Underdog':
+							'Christmas Underdog':
+							
+
                         }
                         picks_rows_2.append(new_row_2)
     

@@ -2990,7 +2990,7 @@ def get_survivor_picks_based_on_ev():
                         location = df.loc[i, 'Actual Stadium']
                         pick = df.loc[i,'Adjusted Current Winner']
                         opponent = df.loc[i, 'Home Team'] if df.loc[i, 'Adjusted Current Winner'] == df.loc[i, 'Away Team'] else df.loc[i, 'Away Team']
-                        win_odds = df.loc[i, 'Home Team Fair Odds'] if df.loc[i, 'Adjusted Current Winner'] == df.loc[i, 'Home Team'] else df.loc[i, 'Away Team Fair Odds']
+                        win_odds = round(df.loc[i, 'Home Team Fair Odds'] if df.loc[i, 'Adjusted Current Winner'] == df.loc[i, 'Home Team'] else df.loc[i, 'Away Team Fair Odds'], 2)
                         pick_percent = df.loc[i, 'Home Pick %'] if df.loc[i, 'Adjusted Current Winner'] == df.loc[i, 'Home Team'] else df.loc[i, 'Away Pick %']
                         expected_availability = df.loc[i, 'Home Team Expected Availability'] if df.loc[i, 'Adjusted Current Winner'] == df.loc[i, 'Home Team'] else df.loc[i, 'Away Team Expected Availability']
                         divisional_game = 'Divisional' if df.loc[i, 'Divisional Matchup Boolean'] else ''
@@ -3027,8 +3027,8 @@ def get_survivor_picks_based_on_ev():
                             'Pick': pick,
                             'Opponent': opponent,
 							'Date': date,
-							'Time': '',
-							'Location': '',
+							'Time': time,
+							'Location': location,
                             'Home or Away': home_team,
                             'EV': ev,
                             'Fair Odds Based on Sportsbook Odds': win_odds,

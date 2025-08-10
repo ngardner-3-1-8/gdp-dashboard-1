@@ -3027,7 +3027,7 @@ def get_survivor_picks_based_on_ev():
             # Objective: maximize the sum of Adjusted Current Difference of each game picked
             if favored_qualifier == 'Internal Rankings':
                 solver.Maximize(solver.Sum([picks[i] * (df.loc[i, 'Home Team EV'] if df.loc[i, 'Adjusted Current Winner'] == df.loc[i, 'Home Team'] else df.loc[i, 'Away Team EV']) for i in range(len(df))]))
-            elif favored_qualifier == 'Live Sportsbook Odds (If available)':
+            elif favored_qualifier == 'Live Sportsbook Odds (If Available)':
                 solver.Maximize(solver.Sum([picks[i] * (df.loc[i, 'Home Team EV'] if df.loc[i, 'Favorite'] == df.loc[i, 'Home Team'] else df.loc[i, 'Away Team EV']) for i in range(len(df))]))
             else:
                 solver.Maximize(solver.Sum([picks[i] * (df.loc[i, 'Home Team EV'] if (df.loc[i, 'Adjusted Current Winner'] == df.loc[i, 'Home Team'] and df.loc[i, 'Favorite'] == df.loc[i, 'Home Team']) else (df.loc[i, 'Away Team EV'] if (df.loc[i, 'Adjusted Current Winner'] == df.loc[i, 'Away Team'] and df.loc[i, 'Favorite'] == df.loc[i, 'Away Team']) else 0)) for i in range(len(df))]))
@@ -6824,7 +6824,8 @@ else:
     st.subheader('Pick Exclusively Favorites?')
     pick_must_be_favored = st.checkbox('All teams picked must be favored at the time of running this script', help = "When this is selected. All teams that are picked must be favored to win the game in order to be selected for this week. \n- There are many cases where the system may select an underdog to create a larger advantage in a different week. \n- We recommend turning this on for smaller pools, but for Circa we recommend turning this off to give you th best EV advantage.")
     st.write('')
-	must_be_favored_options = ['Internal Rankings','Live Sportsbook Odds (If available)','Both Internal Rankings and Live Sportsbook Odds']
+	favored_qualifier = 'Live Sportsbook Odds (If Available)'
+	must_be_favored_options = ['Internal Rankings','Live Sportsbook Odds (If Available)','Both Internal Rankings and Live Sportsbook Odds']
     if pick_must_be_favored:
 		favored_qualifier = st.selectbox('What qualifies a team to be favored?', must_be_favored_options, help = """The three options may change your results greatly. Here's how they work: 
 	                                                                                                                                              \n- Selecting 'Internal Rankings' means that we will use your personal rankings, (or ours if you did not input any) to build an estimated spread. From there we use historical data to calculate the estimated moneyline and thus the favorite and underdog in each game.

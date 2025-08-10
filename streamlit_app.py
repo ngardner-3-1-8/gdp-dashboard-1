@@ -4466,7 +4466,7 @@ def get_survivor_picks_based_on_internal_rankings():
                 solver.Add(solver.Sum([1 - picks[i] for i in forbidden_indices_1]) >= 1)
      
             if favored_qualifier == 'Internal Rankings':
-                solver.Minimize(solver.Sum([picks[i] * (df.loc[i, 'Home Team Sportsbook Spread'] if df.loc[i, 'Adjusted Current Winner'] == df.loc[i, 'Home Team'] else df.loc[i, 'Away Team Sportsbook Spread']) for i in range(len(df))]))
+                solver.Maximize(solver.Sum([picks[i] * df.loc[i, 'Adjusted Current Difference'] for i in range(len(df))]))
             elif favored_qualifier == 'Live Sportsbook Odds (If Available)':
                 solver.Minimize(solver.Sum([picks[i] * (df.loc[i, 'Home Team Sportsbook Spread'] if df.loc[i, 'Favorite'] == df.loc[i, 'Home Team'] else df.loc[i, 'Away Team Sportsbook Spread']) for i in range(len(df))]))
             else:

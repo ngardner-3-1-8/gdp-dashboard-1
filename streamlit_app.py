@@ -2984,10 +2984,10 @@ def get_survivor_picks_based_on_ev():
                         # Determine if it's a divisional game and if the picked team is the home team
     
                         week = df.loc[i, 'Week']
-			date = df.loc[i, 'Date']
-			date = date.dt.strftime('%m-%d-%Y')
-			time = df.loc[i, 'Time']
-			location = df.loc[i, 'Actual Stadium']
+                        date = df.loc[i, 'Date']
+                        date = date.dt.strftime('%m-%d-%Y')
+                        time = df.loc[i, 'Time']
+                        location = df.loc[i, 'Actual Stadium']
                         pick = df.loc[i,'Adjusted Current Winner']
                         opponent = df.loc[i, 'Home Team'] if df.loc[i, 'Adjusted Current Winner'] == df.loc[i, 'Away Team'] else df.loc[i, 'Away Team']
                         win_odds = df.loc[i, 'Home Team Fair Odds'] if df.loc[i, 'Adjusted Current Winner'] == df.loc[i, 'Home Team'] else df.loc[i, 'Away Team Fair Odds']

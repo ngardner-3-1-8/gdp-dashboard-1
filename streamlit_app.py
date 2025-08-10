@@ -621,7 +621,7 @@ def collect_schedule_travel_ranking_data(pd):
             avg_home_odds = sum(game_odds_avg['home']) / len(game_odds_avg['home']) if game_odds_avg['home'] else None
             avg_away_odds = sum(game_odds_avg['away']) / len(game_odds_avg['away']) if game_odds_avg['away'] else None
 
-            avg_home_spread = sum(game_odds_avg['home_spread']) / len(game_odds_avg['home_spread']) if game_odds_avg['home_spread'] else None
+             avg_home_spread = sum(game_odds_avg['home_spread']) / len(game_odds_avg['home_spread']) if game_odds_avg['home_spread'] else None
             avg_away_spread = sum(game_odds_avg['away_spread']) / len(game_odds_avg['away_spread']) if game_odds_avg['away_spread'] else None
     
             # Convert decimal odds to American odds format

@@ -3025,8 +3025,12 @@ def get_survivor_picks_based_on_ev():
             
     
             # Objective: maximize the sum of Adjusted Current Difference of each game picked
-            solver.Maximize(solver.Sum([picks[i] * (df.loc[i, 'Home Team EV'] if df.loc[i, 'Adjusted Current Winner'] == df.loc[i, 'Home Team'] else df.loc[i, 'Away Team EV']) for i in range(len(df))]))
-#            solver.Maximize(solver.Sum([picks[i] * (df.loc[i, 'Home Team EV'] if (df.loc[i, 'Adjusted Current Winner'] == df.loc[i, 'Home Team'] and df.loc[i, 'Favorite'] == df.loc[i, 'Home Team']) else (df.loc[i, 'Away Team EV'] if (df.loc[i, 'Adjusted Current Winner'] == df.loc[i, 'Away Team'] and df.loc[i, 'Favorite'] == df.loc[i, 'Away Team']) else 0)) for i in range(len(df))]))
+            if favored_qualifier == 'Internal Rankings':
+                solver.Maximize(solver.Sum([picks[i] * (df.loc[i, 'Home Team EV'] if df.loc[i, 'Adjusted Current Winner'] == df.loc[i, 'Home Team'] else df.loc[i, 'Away Team EV']) for i in range(len(df))]))
+            elif favored_qualifier == 'Live Sportsbook Odds (If available)':
+                solver.Maximize(solver.Sum([picks[i] * (df.loc[i, 'Home Team EV'] if df.loc[i, 'Favorite'] == df.loc[i, 'Home Team'] else df.loc[i, 'Away Team EV']) for i in range(len(df))]))
+            else:
+                solver.Maximize(solver.Sum([picks[i] * (df.loc[i, 'Home Team EV'] if (df.loc[i, 'Adjusted Current Winner'] == df.loc[i, 'Home Team'] and df.loc[i, 'Favorite'] == df.loc[i, 'Home Team']) else (df.loc[i, 'Away Team EV'] if (df.loc[i, 'Adjusted Current Winner'] == df.loc[i, 'Away Team'] and df.loc[i, 'Favorite'] == df.loc[i, 'Away Team']) else 0)) for i in range(len(df))]))
     
             # Solve the problem and print the solution
             status = solver.Solve()

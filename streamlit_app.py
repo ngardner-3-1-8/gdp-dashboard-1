@@ -3070,8 +3070,8 @@ def get_survivor_picks_based_on_ev():
                 sum_current_difference = 0
                 sum_adjusted_current_difference = 0
                 sum_ev = 0
-				sum_sportsbook_spread = 0
-				sum_internal_spread = 0
+                sum_sportsbook_spread = 0
+                sum_internal_spread = 0
     
                 # Initialize picks_df
                 picks_df = pd.DataFrame(columns=df.columns)

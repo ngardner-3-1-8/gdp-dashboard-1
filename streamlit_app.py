@@ -4728,7 +4728,7 @@ def get_survivor_picks_based_on_internal_rankings():
                 else:
                     st.write(f'Adjusted Current Difference: {sum_adjusted_current_difference}')				
                     st.write('Total Internal Spread: ', sum_internal_spread)
-                    st.write(f'Total Sportsbook Spread: , :blue[{sum_sportsbook_spread]}')
+                    st.write(f'Total Sportsbook Spread: , :blue[{sum_sportsbook_spread}]')
             else:
                 st.write('No solution found. Consider using fewer constraints. Or you may just be fucked')
                 st.write('No solution found. Consider using fewer constraints. Or you may just be fucked')

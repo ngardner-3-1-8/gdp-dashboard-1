@@ -4221,7 +4221,7 @@ def get_survivor_picks_based_on_internal_rankings():
                         current_difference = df.loc[i, 'Current Difference']
                         adjusted_current_difference = df.loc[i, 'Adjusted Current Difference']
                         # Calculate EV for this game
-                        #ev = (df.loc[i, 'Home Team EV'] if df.loc[i, 'Adjusted Current Winner'] == df.loc[i, 'Home Team'] else df.loc[i, 'Away Team EV'])
+                        ev = (df.loc[i, 'Home Team EV'] if df.loc[i, 'Adjusted Current Winner'] == df.loc[i, 'Home Team'] else df.loc[i, 'Away Team EV'])
     
     
                         #print('Week %i: Pick %s %s %s (%i, %i, %i, %i, %.4f)' % (df.loc[i, 'Week_Num'], df.loc[i, 'Adjusted Current Winner'], divisional_game, home_team,

@@ -3548,54 +3548,54 @@ def get_survivor_picks_based_on_ev():
                 if df.loc[i, 'Favorite'] in picked_teams:
                     solver.Add(picks[i] == 0)  
     	    
-	            for week in df['Week_Num'].unique():
+                for week in df['Week_Num'].unique():
 	                # Filter picks for the current week
-	                weekly_picks = [picks[i] for i in range(len(df)) if df.loc[i, 'Week_Num'] == week]
+                    weekly_picks = [picks[i] for i in range(len(df)) if df.loc[i, 'Week_Num'] == week]
 	
 	                if selected_contest == "Splash Sports" and week >= week_requiring_two_selections:
 	                    # For Splash Sports and later weeks, two teams must be selected
-	                    solver.Add(solver.Sum(weekly_picks) == 2)
-	                else:
+                        solver.Add(solver.Sum(weekly_picks) == 2)
+                    else:
 	                    # For other contests or earlier weeks, one team per week
-	                    solver.Add(solver.Sum(weekly_picks) == 1)
+                        solver.Add(solver.Sum(weekly_picks) == 1)
 	    
-	            for team in df['Favorite'].unique():
+                for team in df['Favorite'].unique():
 	                # Can't pick a team more than once
-	                solver.Add(solver.Sum([picks[i] for i in range(len(df)) if df.loc[i, 'Favorite'] == team]) <= 1)
+                    solver.Add(solver.Sum([picks[i] for i in range(len(df)) if df.loc[i, 'Favorite'] == team]) <= 1)
     
     
 	            # Dynamically create the forbidden solution list
-	            forbidden_solutions_1 = []
-	            if iteration > 0: 
-	                for previous_iteration in range(iteration):
+                forbidden_solutions_1 = []
+                if iteration > 0: 
+                    for previous_iteration in range(iteration):
 	                    # Load the picks from the previous iteration
-	                    if selected_contest == 'Circa':
-	                        previous_picks_df = pd.read_csv(f"circa_picks_ev_{previous_iteration + 1}.csv")
-	                    elif selected_contest == 'Splash Sports':
-	                        previous_picks_df = pd.read_csv(f"splash_picks_ev_{previous_iteration + 1}.csv")
-	                    else:
-	                        previous_picks_df = pd.read_csv(f"dk_picks_ev_{previous_iteration + 1}.csv")
+                        if selected_contest == 'Circa':
+                            previous_picks_df = pd.read_csv(f"circa_picks_ev_{previous_iteration + 1}.csv")
+                        elif selected_contest == 'Splash Sports':
+                            previous_picks_df = pd.read_csv(f"splash_picks_ev_{previous_iteration + 1}.csv")
+                        else:
+                            previous_picks_df = pd.read_csv(f"dk_picks_ev_{previous_iteration + 1}.csv")
 	    
 	                    # Extract the forbidden solution for this iteration
-	                    forbidden_solution_1 = previous_picks_df['Favorite'].tolist()
-	                    forbidden_solutions_1.append(forbidden_solution_1)
+                        forbidden_solution_1 = previous_picks_df['Favorite'].tolist()
+                        forbidden_solutions_1.append(forbidden_solution_1)
 	    
 	            # Add constraints for all forbidden solutions
-	            for forbidden_solution_1 in forbidden_solutions_1:
+                for forbidden_solution_1 in forbidden_solutions_1:
 	                # Get the indices of the forbidden solution in the DataFrame
-	                forbidden_indices_1 = []
-	                for i in range(len(df)):
+                    forbidden_indices_1 = []
+                    for i in range(len(df)):
 	                    # Calculate the relative week number within the forbidden solution
-	                    df_week = df.loc[i, 'Week_Num']
-	                    relative_week = df_week - starting_week  # Adjust week to be relative to starting week
+                        df_week = df.loc[i, 'Week_Num']
+                        relative_week = df_week - starting_week  # Adjust week to be relative to starting week
 	    
 	                    #Check if the week is within the range and the solution is forbidden
-	                    if 0 <= relative_week < len(forbidden_solution_1) and df_week >= starting_week and df_week < ending_week: #Added this to make sure we are only looking at the range
-	                        if (df.loc[i, 'Favorite'] == forbidden_solution_1[relative_week]):
-	                            forbidden_indices_1.append(i)
+                        if 0 <= relative_week < len(forbidden_solution_1) and df_week >= starting_week and df_week < ending_week: #Added this to make sure we are only looking at the range
+                            if (df.loc[i, 'Favorite'] == forbidden_solution_1[relative_week]):
+                                forbidden_indices_1.append(i)
 	    
 	                # Add the constraint
-	                solver.Add(solver.Sum([1 - picks[i] for i in forbidden_indices_1]) >= 1)
+                    solver.Add(solver.Sum([1 - picks[i] for i in forbidden_indices_1]) >= 1)
     
     
             

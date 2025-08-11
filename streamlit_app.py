@@ -3024,7 +3024,7 @@ def get_survivor_picks_based_on_ev():
 	    
 	                    # Extract the forbidden solution for this iteration
                         forbidden_solution_1 = previous_picks_df['Adjusted Current Winner'].tolist()
-	                    forbidden_solutions_1.append(forbidden_solution_1)
+                        forbidden_solutions_1.append(forbidden_solution_1)
 	    
                 # Add constraints for all forbidden solutions
                 for forbidden_solution_1 in forbidden_solutions_1:

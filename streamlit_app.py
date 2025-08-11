@@ -3552,7 +3552,7 @@ def get_survivor_picks_based_on_ev():
 	                # Filter picks for the current week
                     weekly_picks = [picks[i] for i in range(len(df)) if df.loc[i, 'Week_Num'] == week]
 	
-	                if selected_contest == "Splash Sports" and week >= week_requiring_two_selections:
+                    if selected_contest == "Splash Sports" and week >= week_requiring_two_selections:
 	                    # For Splash Sports and later weeks, two teams must be selected
                         solver.Add(solver.Sum(weekly_picks) == 2)
                     else:

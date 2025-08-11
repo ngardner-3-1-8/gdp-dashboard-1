@@ -3853,7 +3853,7 @@ def get_survivor_picks_based_on_ev():
             # Append the new forbidden solution to the list
             if favored_qualifier == 'Internal Rankings':
                 forbidden_solutions_1.append(picks_df['Adjusted Current Winner'].tolist())
-			else:
+            else:
                 forbidden_solutions_1.append(picks_df['Favorite'].tolist())            
 			#print(forbidden_solutions)
 

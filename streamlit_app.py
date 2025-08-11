@@ -3851,8 +3851,11 @@ def get_survivor_picks_based_on_ev():
                 summarized_picks_df.to_csv(f'dk_picks_ev_subset_{iteration + 1}.csv', index=False)
             
             # Append the new forbidden solution to the list
-            forbidden_solutions_1.append(picks_df['Adjusted Current Winner'].tolist())
-            #print(forbidden_solutions)
+            if favored_qualifier == 'Internal Rankings':
+                forbidden_solutions_1.append(picks_df['Adjusted Current Winner'].tolist())
+			else:
+                forbidden_solutions_1.append(picks_df['Favorite'].tolist())            
+			#print(forbidden_solutions)
 
     else:
         for iteration in range(number_solutions):
@@ -5867,7 +5870,10 @@ def get_survivor_picks_based_on_internal_rankings():
                 summarized_picks_df.to_csv(f'dk_picks_ir_subset_{iteration + 1}.csv', index=False)
             
             # Append the new forbidden solution to the list
-            forbidden_solutions_1.append(picks_df['Adjusted Current Winner'].tolist())
+            if favored_qualifier == 'Internal Rankings':
+                forbidden_solutions_1.append(picks_df['Adjusted Current Winner'].tolist())
+			else:
+                forbidden_solutions_1.append(picks_df['Favorite'].tolist())
             #print(forbidden_solutions)
     else:
         for iteration in range(number_solutions):
@@ -6522,7 +6528,7 @@ def get_survivor_picks_based_on_internal_rankings():
                 summarized_picks_df.to_csv(f'dk_picks_ir_subset_{iteration + 1}.csv', index=False)
             
             # Append the new forbidden solution to the list
-            forbidden_solutions_1.append(picks_df['Adjusted Current Winner'].tolist())
+            forbidden_solutions_1.append(picks_df['Hypothetical Current Winner'].tolist())
             #print(forbidden_solutions)
 
 

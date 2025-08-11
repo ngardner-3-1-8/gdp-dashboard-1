@@ -5239,8 +5239,8 @@ def get_survivor_picks_based_on_internal_rankings():
                         thanksgiving_underdog = df.loc[i, 'Home Team Thanksgiving Underdog'] if df.loc[i, 'Hypothetical Current Winner'] == df.loc[i, 'Home Team 1'] else df.loc[i, 'Away Team Thanksgiving Underdog']
                         christmas_underdog = df.loc[i, 'Home Team Christmas Underdog'] if df.loc[i, 'Hypothetical Current Winner'] == df.loc[i, 'Home Team 1'] else df.loc[i, 'Away Team Christmas Underdog']
                         live_odds_unavailable = df.loc[i, 'No Live Odds Available - Internal Rankings Used for Moneyline Calculation']
-                        live_odds_spread = df.loc[i, 'Hypothetical Winner Sportsbook Spread']
-                        internal_spread = df.loc[i, 'Internal Hypothetical Winner Spread']
+                        live_odds_spread = df.loc[i, 'Hypothetical Current Winner Sportsbook Spread']
+                        internal_spread = df.loc[i, 'Internal Hypothetical Current Winner Spread']
                         
     
                         # Get differences

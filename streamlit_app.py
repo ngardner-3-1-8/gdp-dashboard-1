@@ -5033,11 +5033,11 @@ def get_survivor_picks_based_on_internal_rankings():
                     for previous_iteration in range(iteration):
 	                    # Load the picks from the previous iteration
                         if selected_contest == 'Circa':
-                            previous_picks_df = pd.read_csv(f"circa_picks_ev_{previous_iteration + 1}.csv")
+                            previous_picks_df = pd.read_csv(f"circa_picks_ir_{previous_iteration + 1}.csv")
                         elif selected_contest == 'Splash Sports':
-                            previous_picks_df = pd.read_csv(f"splash_picks_ev_{previous_iteration + 1}.csv")
+                            previous_picks_df = pd.read_csv(f"splash_picks_ir_{previous_iteration + 1}.csv")
                         else:
-                            previous_picks_df = pd.read_csv(f"dk_picks_ev_{previous_iteration + 1}.csv")
+                            previous_picks_df = pd.read_csv(f"dk_picks_ir_{previous_iteration + 1}.csv")
 	    
 	                    # Extract the forbidden solution for this iteration
                         forbidden_solution_1 = previous_picks_df['Adjusted Current Winner'].tolist()

@@ -851,7 +851,7 @@ def collect_schedule_travel_ranking_data(pd):
                 overridden_games_df.loc[index, 'Home Team Moneyline'] = row['Internal Home Team Moneyline']
             if pd.isna(row['Home Team Sportsbook Spread']) or row['Home Team Sportsbook Spread'] is None:
                 overridden_games_df.loc[index, 'Home Team Sportsbook Spread'] = row['Away Team Adjusted Current Rank'] - row['Home Team Adjusted Current Rank']
-            if pd.isna(row['Away Team Sportsbook Spread']) or row['Away Team Sportsbook Spread'] is None::
+            if pd.isna(row['Away Team Sportsbook Spread']) or row['Away Team Sportsbook Spread'] is None:
                 overridden_games_df.loc[index, 'Away Team Sportsbook Spread'] = row['Home Team Adjusted Current Rank'] - row['Away Team Adjusted Current Rank']
         st.subheader('Games with Unavailable Live Odds')
         st.write('This dataframe contains the games where live odds from the Live Odds API were unavailable. This will likely happen for lookahead lines and future weeks')

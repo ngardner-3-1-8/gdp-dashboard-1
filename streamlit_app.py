@@ -947,7 +947,7 @@ def collect_schedule_travel_ranking_data(pd):
                         'Internal Away Team Fair Odds', 'Internal Home Team Fair Odds']:
                 if not pd.isna(csv_df.loc[index, col]): # Only round if not NaN
                     csv_df.loc[index, col] = round(csv_df.loc[index, col], 4)
-			if pd.isna(row['Away Team Moneyline']) or row['Away Team Moneyline'] is None:
+            if pd.isna(row['Away Team Moneyline']) or row['Away Team Moneyline'] is None:
                 overridden_games_df.loc[index, 'Away Team Moneyline'] = row['Internal Away Team Moneyline']
             if pd.isna(row['Home Team Moneyline']) or row['Home Team Moneyline'] is None:
                 overridden_games_df.loc[index, 'Home Team Moneyline'] = row['Internal Home Team Moneyline']

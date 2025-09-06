@@ -4458,6 +4458,8 @@ def get_survivor_picks_based_on_ev():
                         sum_current_difference += current_difference
                         sum_adjusted_current_difference += adjusted_current_difference
                         sum_ev += ev
+						st.write('ERROR HERE')
+						st.write(live_odds_spread)
                         sum_sportsbook_spread += float(live_odds_spread)
                         sum_internal_spread += internal_spread
                         picks_df = pd.concat([picks_df, df.loc[[i]]], ignore_index=True)

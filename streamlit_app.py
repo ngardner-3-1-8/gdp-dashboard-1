@@ -841,7 +841,7 @@ def collect_schedule_travel_ranking_data(pd):
         override_condition = pd.isna(csv_df['Away Team Moneyline']) | pd.isna(csv_df['Home Team Moneyline'])
         csv_df['No Live Odds Available - Internal Rankings Used for Moneyline Calculation'] = np.where(override_condition, 'True', 'False')
         overridden_games_df = csv_df[override_condition]
-        overridden_games_df = csv_df[override_condition][['Home Team', 'Away Team', 'Actual Stadium', 'Date', 'Home Team Moneyline', 'Away Team Moneyline', 'Internal Home Team Moneyline', 'Internal Away Team Moneyline', 'Home Team Sportsbook Spread', 'Away Team Sportsbook Spread']].copy()
+        overridden_games_df = csv_df[override_condition][['Home Team', 'Away Team', 'Actual Stadium', 'Date', 'Home Team Moneyline', 'Away Team Moneyline', 'Internal Home Team Moneyline', 'Internal Away Team Moneyline', 'Home Team Sportsbook Spread', 'Away Team Sportsbook Spread', 'Home Team Adjusted Current Rank', 'Away Team Adjusted Current Rank']].copy()
 
         for index, row in overridden_games_df.iterrows():
             # Override Moneyline if DraftKings data was missing (still NaN)

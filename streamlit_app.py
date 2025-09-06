@@ -870,7 +870,7 @@ def collect_schedule_travel_ranking_data(pd):
                 csv_df.loc[index, 'Home Team Moneyline'] = row['Internal Home Team Moneyline']
             
             # Override Favorite/Underdog if not set by DraftKings (i.e., still NaN)
-            if pd.isna(row['Favorite']):
+            if pd.isna(row['Favorite']) or row['Favorite'] is None:
                 # Determine Favorite and Underdog based on internal ranks
                 if row['Home Team Adjusted Current Rank'] >= row['Away Team Adjusted Current Rank']:
                     csv_df.loc[index, 'Favorite'] = row['Home Team']

@@ -3002,7 +3002,7 @@ def get_survivor_picks_based_on_ev():
 	                # Filter picks for the current week
                     weekly_picks = [picks[i] for i in range(len(df)) if df.loc[i, 'Week_Num'] == week]
 	
-                    if selected_contest == "Splash Sports" and week >= week_requiring_two_selections:
+                    if selected_contest == "Splash Sports" and week in week_requiring_two_selections:
 	                    # For Splash Sports and later weeks, two teams must be selected
                         solver.Add(solver.Sum(weekly_picks) == 2)
                     else:
@@ -3556,7 +3556,7 @@ def get_survivor_picks_based_on_ev():
 	                # Filter picks for the current week
                     weekly_picks = [picks[i] for i in range(len(df)) if df.loc[i, 'Week_Num'] == week]
 	
-                    if selected_contest == "Splash Sports" and week >= week_requiring_two_selections:
+                    if selected_contest == "Splash Sports" and week in week_requiring_two_selections:
 	                    # For Splash Sports and later weeks, two teams must be selected
                         solver.Add(solver.Sum(weekly_picks) == 2)
                     else:
@@ -4200,7 +4200,7 @@ def get_survivor_picks_based_on_ev():
                 # Filter picks for the current week
                 weekly_picks = [picks[i] for i in range(len(df)) if df.loc[i, 'Week_Num'] == week]
 
-                if selected_contest == "Splash Sports" and week >= week_requiring_two_selections:
+                if selected_contest == "Splash Sports" and week in week_requiring_two_selections:
                     # For Splash Sports and later weeks, two teams must be selected
                     solver.Add(solver.Sum(weekly_picks) == 2)
                 else:
@@ -5019,7 +5019,7 @@ def get_survivor_picks_based_on_internal_rankings():
 	                # Filter picks for the current week
                     weekly_picks = [picks[i] for i in range(len(df)) if df.loc[i, 'Week_Num'] == week]
 	
-                    if selected_contest == "Splash Sports" and week >= week_requiring_two_selections:
+                    if selected_contest == "Splash Sports" and week in week_requiring_two_selections:
 	                    # For Splash Sports and later weeks, two teams must be selected
                         solver.Add(solver.Sum(weekly_picks) == 2)
                     else:
@@ -5573,7 +5573,7 @@ def get_survivor_picks_based_on_internal_rankings():
 	                # Filter picks for the current week
                     weekly_picks = [picks[i] for i in range(len(df)) if df.loc[i, 'Week_Num'] == week]
 	
-                    if selected_contest == "Splash Sports" and week >= week_requiring_two_selections:
+                    if selected_contest == "Splash Sports" and week in week_requiring_two_selections:
 	                    # For Splash Sports and later weeks, two teams must be selected
                         solver.Add(solver.Sum(weekly_picks) == 2)
                     else:
@@ -6238,7 +6238,7 @@ def get_survivor_picks_based_on_internal_rankings():
                 # Filter picks for the current week
                 weekly_picks = [picks[i] for i in range(len(df)) if df.loc[i, 'Week_Num'] == week]
 
-                if selected_contest == "Splash Sports" and week >= week_requiring_two_selections:
+                if selected_contest == "Splash Sports" and week in week_requiring_two_selections:
                     # For Splash Sports and later weeks, two teams must be selected
                     solver.Add(solver.Sum(weekly_picks) == 2)
                 else:
@@ -7626,7 +7626,7 @@ else:
     """
 
     two_team_selections_help_text = f"""
-    \nIn Splash Sports, most survivor contests have a unique requirement: You must select two teams per week starting in the second half of the season.  
+    \nIn Splash Sports, most survivor contests have a unique requirement: You must select two teams per week in select weeks. Sometimes this is weeks where all 32 teams play, or sometimes it's the last few weeks of the season.  
     \n- However, when you start selecting two teams per week varies, depending on which contest you enter. For some, this may begin in week 11, and for others it may begin as late as week 16.
     \n- Because it varies, we want to give you the option to select which week this applies to you. Plus, it gives you more flexibility to play around with the tool. 
     
@@ -7639,7 +7639,7 @@ else:
         ending_week = 19
         st.write('')
         st.write('')
-        week_requiring_two_selections = st.selectbox("Which week do you need to start selecting two teams?:", options=range(1, 19), help = two_team_selections_help_text)
+        week_requiring_two_selections = st.multiselect("Which weeks do you need to select two teams?:", options=range(1, 19), help = two_team_selections_help_text)
 	    
 	
     else:

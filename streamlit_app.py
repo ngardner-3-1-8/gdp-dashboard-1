@@ -869,7 +869,7 @@ def collect_schedule_travel_ranking_data(pd):
             if pd.isna(row['Home Team Moneyline']):
                 csv_df.loc[index, 'Home Team Moneyline'] = row['Internal Home Team Moneyline']
             if pd.isna(row['Home Team Sportsbook Spread']) or row['Home Team Sportsbook Spread'] is None:
-                csv_df.loc[index, 'Home Team Sportsbook Spread'] = ['Internal Home Team Spread']
+                csv_df.loc[index, 'Home Team Sportsbook Spread'] = row['Internal Home Team Spread']
             if pd.isna(row['Away Team Sportsbook Spread']) or row['Away Team Sportsbook Spread'] is None:
                 csv_df.loc[index, 'Away Team Sportsbook Spread'] = row['Internal Away Team Spread']		            
             # Override Favorite/Underdog if not set by DraftKings (i.e., still NaN)

@@ -7425,6 +7425,13 @@ bayesian_rest_travel_constraint = "No Rest, Bayesian, and Travel Constraints"
 circa_total_entries = 18718
 dk_total_entries = 1111
 splash_total_entries = 18519
+splash_high_roller_total_entries = 1000
+splash_4_for_4_total_entries = 9753
+splash_25_to_win_million_total_entries = 33846
+splash_for_the_fans = 10000
+splash_free_entry = 8383
+
+
 number_solutions = 5
 selected_contest = 'Circa'
 starting_week = 1
@@ -7576,9 +7583,15 @@ default_current_week_entries_circa = 17500
 default_current_week_entries_dk = 20000
 default_current_week_entries_splash_sports = 18519
 
-current_week_entries_circa = 17500
-current_week_entries_dk = 20000
-current_week_entries_splash_sports = 18519
+
+current_week_entries_circa = 18718
+current_week_entries_dk = 1111
+current_week_entries_big_splash = 18519
+current_week_entries_splash_high_roller = 1000
+current_week_entries_splash_4_for_4 = 9753
+current_week_entries_splash_walker_ultimate = 33846
+current_week_entries_splash_for_the_fans = 10000
+current_week_entries_splash__rotowire_free_entry = 8383
 
 LOGO_PATH = "GSF Survivor Logo Clear BG.png"
 def login_screen():

@@ -7664,20 +7664,20 @@ else:
         st.write('')
         subcontest = st.selectbox('Choose Specific Contest from Splash Sports: ', options = subcontest_options, help = subcontest_help_text)
         week_requiring_two_selections = st.multiselect("Which weeks do you need to select two teams?:", options=range(1, 19), help = two_team_selections_help_text)
-	    if subcontest == "The Big Splash ($150 Entry)":
-			st.write("Weeks requiring double picks in The Big Splash Survivor Contest: :green[11, 12, 13, 14, 15, 16, 17, 18]")
-		elif subcontest == "4 for 4 ($50 Entry)":
-			st.write("Weeks requiring double picks in the 4 for 4 Survivor Contest: :green[11, 12, 13, 14, 15, 16, 17, 18]")
-		elif subcontest == "Free RotoWire (Free Entry)":
-			st.write("Weeks requiring double picks in the Free RotoWire Survivor Contest: :green[None]")
-		elif subcontest == "For the Fans ($40 Entry)":
-			st.write("Weeks requiring double picks in the For the Fan Survivor Contest: :green[14, 15, 16, 17, 18]")
-		elif subcontest == "Walker's Ultimate Survivor ($25 Entry)":
-			st.write("Weeks requiring double picks in Walker's Ultimate Survivor Survivor Contest: :green[6, 12, 13, 14, 15, 16, 17, 18]")
-		elif subcontest == "Ship It Nation ($25 Entry)":
-			st.write("Weeks requiring double picks in the Ship It Nation Survivor Contest: :green[12, 13, 14, 15, 16, 17, 18]")
-		elif subcontest == "High Roller ($1000 Entry)":
-			st.write("Weeks requiring double picks in the High Roller Survivor Contest: :green[None]")
+        if subcontest == "The Big Splash ($150 Entry)":
+            st.write("Weeks requiring double picks in The Big Splash Survivor Contest: :green[11, 12, 13, 14, 15, 16, 17, 18]")
+        elif subcontest == "4 for 4 ($50 Entry)":
+            st.write("Weeks requiring double picks in the 4 for 4 Survivor Contest: :green[11, 12, 13, 14, 15, 16, 17, 18]")
+        elif subcontest == "Free RotoWire (Free Entry)":
+            st.write("Weeks requiring double picks in the Free RotoWire Survivor Contest: :green[None]")
+        elif subcontest == "For the Fans ($40 Entry)":
+            st.write("Weeks requiring double picks in the For the Fan Survivor Contest: :green[14, 15, 16, 17, 18]")
+        elif subcontest == "Walker's Ultimate Survivor ($25 Entry)":
+            st.write("Weeks requiring double picks in Walker's Ultimate Survivor Survivor Contest: :green[6, 12, 13, 14, 15, 16, 17, 18]")
+        elif subcontest == "Ship It Nation ($25 Entry)":
+            st.write("Weeks requiring double picks in the Ship It Nation Survivor Contest: :green[12, 13, 14, 15, 16, 17, 18]")
+        elif subcontest == "High Roller ($1000 Entry)":
+            st.write("Weeks requiring double picks in the High Roller Survivor Contest: :green[None]")
 		
     else:
     	ending_week = 21

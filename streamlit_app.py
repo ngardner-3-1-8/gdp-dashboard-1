@@ -7662,7 +7662,7 @@ else:
         st.write('')
         st.write('')
         st.write('')
-        subcontest = st.selectbox('Choose Specific Contest from Splash Sports: ', options = subcontest_options, help = subcontext_help)
+        subcontest = st.selectbox('Choose Specific Contest from Splash Sports: ', options = subcontest_options, help = subcontest_help)
         week_requiring_two_selections = st.multiselect("Which weeks do you need to select two teams?:", options=range(1, 19), help = two_team_selections_help_text)
 	    
 	

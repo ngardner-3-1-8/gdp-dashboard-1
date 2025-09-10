@@ -7621,7 +7621,7 @@ else:
         "Circa", "DraftKings", "Splash Sports"
     ]
     subcontest_options = [
-		"The Big Splash","Free RotoWire","4 for 4","For the Fans","Walker's Ultimate Survivor","Ship It Nation"
+		"The Big Splash ($150 Entry)","High Roller ($1000 Entry)", "Free RotoWire (Free Entry)","4 for 4 ($50 Entry)","For the Fans ($40 Entry)","Walker's Ultimate Survivor ($25 Entry)","Ship It Nation ($25 Entry)"
     ]
     with st.expander("More Information"):
         st.write("Alright, clowns. This site is built to help you optimize your picks for the Circa Survivor contest (And Draftkings and Splash Sports). :red[This tool is just for informational use. It does not take into account injuries, weather, resting players, or certain other factors. Do not use this tool as your only source of information.] Simply input which week you're in, your team rankings, constraints, etc... and the algorithm will do the rest.")
@@ -7664,8 +7664,21 @@ else:
         st.write('')
         subcontest = st.selectbox('Choose Specific Contest from Splash Sports: ', options = subcontest_options, help = subcontest_help_text)
         week_requiring_two_selections = st.multiselect("Which weeks do you need to select two teams?:", options=range(1, 19), help = two_team_selections_help_text)
-	    
-	
+	    if subcontest == "The Big Splash ($150 Entry)":
+			st.write("Weeks requiring double picks in The Big Splash Survivor Contest: :green[11, 12, 13, 14, 15, 16, 17, 18]")
+		elif subcontest == "4 for 4 ($50 Entry)":
+			st.write("Weeks requiring double picks in the 4 for 4 Survivor Contest: :green[11, 12, 13, 14, 15, 16, 17, 18]")
+		elif subcontest == "Free RotoWire (Free Entry)":
+			st.write("Weeks requiring double picks in the Free RotoWire Survivor Contest: :green[None]")
+		elif subcontest == "For the Fans ($40 Entry)":
+			st.write("Weeks requiring double picks in the For the Fan Survivor Contest: :green[14, 15, 16, 17, 18]")
+		elif subcontest == "Walker's Ultimate Survivor ($25 Entry)":
+			st.write("Weeks requiring double picks in Walker's Ultimate Survivor Survivor Contest: :green[6, 12, 13, 14, 15, 16, 17, 18]")
+		elif subcontest == "Ship It Nation ($25 Entry)":
+			st.write("Weeks requiring double picks in the Ship It Nation Survivor Contest: :green[12, 13, 14, 15, 16, 17, 18]")
+		elif subcontest == "High Roller ($1000 Entry)":
+			st.write("Weeks requiring double picks in the High Roller Survivor Contest: :green[None]")
+		
     else:
     	ending_week = 21
     st.write('')

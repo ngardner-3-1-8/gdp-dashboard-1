@@ -7620,9 +7620,9 @@ else:
     contest_options = [
         "Circa", "DraftKings", "Splash Sports"
     ]
-	subcontest_options = [
+    subcontest_options = [
 		"The Big Splash","Free RotoWire","4 for 4","For the Fans","Walker's Ultimate Survivor","Ship It Nation"
-	]
+    ]
     with st.expander("More Information"):
         st.write("Alright, clowns. This site is built to help you optimize your picks for the Circa Survivor contest (And Draftkings and Splash Sports). :red[This tool is just for informational use. It does not take into account injuries, weather, resting players, or certain other factors. Do not use this tool as your only source of information.] Simply input which week you're in, your team rankings, constraints, etc... and the algorithm will do the rest.")
         st.write("Calculating Expected Value, or EV, will take the longest in this process. For a full season, this step will take roughly 5-10 minutes or more. Do not close your browser. It's worth the wait. Good luck!")
@@ -7662,7 +7662,7 @@ else:
         st.write('')
         st.write('')
 		st.write('')
-		subcontest = st.selectbox('Choose Specific Contest from Splash Sports: ', options = subcontest_options, help = subcontext_help)
+        subcontest = st.selectbox('Choose Specific Contest from Splash Sports: ', options = subcontest_options, help = subcontext_help)
         week_requiring_two_selections = st.multiselect("Which weeks do you need to select two teams?:", options=range(1, 19), help = two_team_selections_help_text)
 	    
 	

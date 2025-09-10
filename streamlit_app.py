@@ -7620,6 +7620,9 @@ else:
     contest_options = [
         "Circa", "DraftKings", "Splash Sports"
     ]
+	subcontest_options = [
+		"The Big Splash","Free RotoWire","4 for 4","For the Fans","Walker's Ultimate Survivor","Ship It Nation"
+	]
     with st.expander("More Information"):
         st.write("Alright, clowns. This site is built to help you optimize your picks for the Circa Survivor contest (And Draftkings and Splash Sports). :red[This tool is just for informational use. It does not take into account injuries, weather, resting players, or certain other factors. Do not use this tool as your only source of information.] Simply input which week you're in, your team rankings, constraints, etc... and the algorithm will do the rest.")
         st.write("Calculating Expected Value, or EV, will take the longest in this process. For a full season, this step will take roughly 5-10 minutes or more. Do not close your browser. It's worth the wait. Good luck!")
@@ -7644,14 +7647,22 @@ else:
     \n- Because it varies, we want to give you the option to select which week this applies to you. Plus, it gives you more flexibility to play around with the tool. 
     
     """
+
+    subcontest_help_text = f"""
+    \n- Choose the specific contest you're playing on Splash Sports.
+    \n- Differences in contests include which weeks require double picks, entry stake, number of entries, and weekly percentage picks.
+    
+    """	
 	
-    selected_contest = st.selectbox('Choose Contest:', options = contest_options, help = 'Choose the contest you are using this algorithm for: Circa (Advanced), Draftkings (Traditional and Pathetic), or Splash Sports (Somewhere between the other two)' + help_text_seletced_contest)
+    selected_contest = st.selectbox('Choose Platform:', options = contest_options, help = 'Choose the contest you are using this algorithm for: Circa (Advanced), Draftkings (Traditional and Pathetic), or Splash Sports (Somewhere between the other two)' + help_text_seletced_contest)
     if selected_contest == "DraftKings":
     	ending_week = 19
     elif selected_contest == "Splash Sports":
         ending_week = 19
         st.write('')
         st.write('')
+		st.write('')
+		subcontest = st.selectbox('Choose Specific Contest from Splash Sports: ', options = subcontest_options, help = subcontext_help)
         week_requiring_two_selections = st.multiselect("Which weeks do you need to select two teams?:", options=range(1, 19), help = two_team_selections_help_text)
 	    
 	

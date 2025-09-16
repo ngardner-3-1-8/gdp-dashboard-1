@@ -1715,7 +1715,7 @@ def get_predicted_pick_percentages(pd):
     else:
         nfl_schedule_df.to_csv("DK_Predicted_pick_percent.csv", index=False)
     st.subheader('Estimated Pick Percenteages Without Availability')
-	st.write(nfl_schedule_df)
+    st.write(nfl_schedule_df)
     return nfl_schedule_df
 
 def get_predicted_pick_percentages_with_availability(pd):

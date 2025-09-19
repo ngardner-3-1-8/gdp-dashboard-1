@@ -3863,7 +3863,7 @@ def get_survivor_picks_based_on_ev():
                 forbidden_solutions_1.append(picks_df['Adjusted Current Winner'].tolist())
             else:
                 forbidden_solutions_1.append(picks_df['Favorite'].tolist())            
-            st.write(forbidden_solutions_1)
+            #st.write(forbidden_solutions_1)
 
     else:
         for iteration in range(number_solutions):
@@ -4220,34 +4220,38 @@ def get_survivor_picks_based_on_ev():
     
             # Dynamically create the forbidden solution list
             forbidden_solutions_1 = []
-            if iteration > 0: 
+            if iteration > 0:
                 for previous_iteration in range(iteration):
-                    # Load the picks from the previous iteration
                     if selected_contest == 'Circa':
-                        previous_picks_df = pd.read_csv(f"circa_picks_ev_{previous_iteration + 1}.csv")
+                        previous_picks_df = pd.read_csv(f"circa_picks_ev_subset_{previous_iteration + 1}.csv")
                     elif selected_contest == 'Splash Sports':
-                        previous_picks_df = pd.read_csv(f"splash_picks_ev_{previous_iteration + 1}.csv")
+                        previous_picks_df = pd.read_csv(f"splash_picks_ev_subset_{previous_iteration + 1}.csv")
                     else:
-                        previous_picks_df = pd.read_csv(f"dk_picks_ev_{previous_iteration + 1}.csv")
+                        previous_picks_df = pd.read_csv(f"dk_picks_ev_subset_{previous_iteration + 1}.csv")
     
-                    # Extract the forbidden solution for this iteration
-                    forbidden_solution_1 = previous_picks_df['Hypothetical Current Winner'].tolist()
-                    forbidden_solutions_1.append(forbidden_solution_1)
+                    # Group picks by week for the forbidden solution
+                    forbidden_solution_by_week = previous_picks_df.groupby('Week')['Pick'].apply(list).to_dict()
+                    forbidden_solutions_1.append(forbidden_solution_by_week)
     
             # Add constraints for all forbidden solutions
-            for forbidden_solution_1 in forbidden_solutions_1:
-                # Get the indices of the forbidden solution in the DataFrame
-                forbidden_indices_1 = []
-                for i in range(len(df)):
-                    # Calculate the relative week number within the forbidden solution
-                    df_week = df.loc[i, 'Week_Num']
-                    relative_week = df_week - starting_week  # Adjust week to be relative to starting week
+            for forbidden_solution_dict in forbidden_solutions_1:
+                # Create a list of the picked variables from the previous solution
+                forbidden_pick_variables = []
+
+                # Iterate through each week and its corresponding forbidden picks
+                for week, picks_in_week in forbidden_solution_dict.items():
+                    # Find all rows in the current DataFrame for this specific week
+                    weekly_rows = df[df['Week'] == week]
     
-                    #Check if the week is within the range and the solution is forbidden
-                    if 0 <= relative_week < len(forbidden_solution_1) and df_week >= starting_week and df_week < ending_week: #Added this to make sure we are only looking at the range
-                        if (df.loc[i, 'Hypothetical Current Winner'] == forbidden_solution_1[relative_week]):
-                            forbidden_indices_1.append(i)
-                solver.Add(solver.Sum([1 - picks[i] for i in forbidden_indices_1]) >= 1)
+                    # Check if any of these rows match a forbidden pick from that week
+                    for _, row in weekly_rows.iterrows():
+                        if row['Hypothetical Current Winner'] in picks_in_week: # The 'Favorite' column is what you're using to identify the pick
+                            # Get the index of this row
+                            pick_index = row.name
+                            forbidden_pick_variables.append(picks[pick_index])
+
+                # The constraint now ensures that at least one of the forbidden picks is not selected
+                solver.Add(solver.Sum([1 - v for v in forbidden_pick_variables]) >= 1)
     
             
     

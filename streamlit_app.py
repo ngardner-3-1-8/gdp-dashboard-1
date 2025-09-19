@@ -3076,68 +3076,32 @@ def get_survivor_picks_based_on_ev():
 	                # Can't pick a team more than once
                     solver.Add(solver.Sum([picks[i] for i in range(len(df)) if df.loc[i, 'Adjusted Current Winner'] == team]) <= 1)
     
-                def create_simple_ev_dataframe(current_solution_dict, df, favored_qualifier):
+                def create_simple_ev_dataframe(summarized_picks_df, favored_qualifier):
                     """
-                    Creates a new DataFrame with Survival Rate, Pick Percentage, and EV for a single pick combination.
+                    Creates a DataFrame with one row per week, summarizing picks and their metrics.
                 
                     Args:
-                        current_solution_dict: A dictionary mapping week to a list of picks for the current solution.
-                        nfl_schedule_df: The main DataFrame with all game and team data.
-                        favored_qualifier: 'Internal Rankings' or 'Sportsbook'.
+                        summarized_picks_df (pd.DataFrame): DataFrame containing 'Week', 'Pick', 
+                                                            'Fair Odds', 'Pick %', and 'EV'.
+                        favored_qualifier (str): 'Internal Rankings' or 'Sportsbook'.
                 
                     Returns:
-                        A new pandas DataFrame with the calculated metrics.
+                        pd.DataFrame: A new DataFrame with the calculated metrics per week.
                     """
-                    
-                    pick_list = []
-                    survival_rate = 1.0
-                    pick_percentage = 1.0
-                    expected_value = 1.0
-                    
-                    # Calculate metrics for the single solution
-                    for week, picks_in_week in current_solution_dict.items():
-                        for team in picks_in_week:
-                            # Find the row for this team in the main schedule DataFrame
-                            game_row = df[
-                                ((df['Week_Num'] == week) & (df['Home Team'] == team)) |
-                                ((df['Week_Num'] == week) & (df['Away Team'] == team))
-                            ]
-                            
-                            if not game_row.empty:
-                                game_row = game_row.iloc[0]  # Get the first matching row
-                                
-                                # Determine if the team is home or away
-                                is_home = game_row['Home Team'] == team
-                                
-                                # Calculate Survival Rate
-                                if favored_qualifier == 'Internal Rankings':
-                                    odds_column = 'Internal Home Team Fair Odds' if is_home else 'Internal Away Team Fair Odds'
-                                else:
-                                    odds_column = 'Home Team Fair Odds' if is_home else 'Away Team Fair Odds'
-                                    
-                                survival_rate *= game_row[odds_column]
-                                
-                                # Calculate Pick Percentage
-                                pick_perc_column = 'Home Pick %' if is_home else 'Away Pick %'
-                                pick_percentage *= game_row[pick_perc_column]
-                                
-                                # Calculate EV
-                                ev_column = 'Home Team EV' if is_home else 'Away Team EV'
-                                expected_value *= game_row[ev_column]
-                            
-                            # Add the team to the list of picks
-                            pick_list.append(team)
-                            
-                    # Create the new DataFrame with a single row
-                    data = [{
-                        'Picks': pick_list,
-                        'Survival Rate': survival_rate,
-                        'Pick Percentage': pick_percentage,
-                        'EV': expected_value
-                    }]
-                    
-                    simple_ev_df = pd.DataFrame(data)
-                    
+                    # Create a mapping for the Fair Odds column based on the favored_qualifier
+                    if favored_qualifier == 'Internal Rankings':
+                        odds_col = '=Fair Odds Based on Internal Rankings'
+                    else:
+                        odds_col = 'Fair Odds Based on Sportsbook Odds'
+                
+                    # Group the DataFrame by week and aggregate the desired metrics
+                    simple_ev_df = summarized_picks_df.groupby('Week').agg(
+                        Picks=('Pick', lambda x: x.tolist()),
+                        Survival_Rate=(odds_col, 'prod'),
+                        Pick_Percentage=('Expected Pick Percent', 'prod'),
+                        EV=('EV', 'prod')
+                    ).reset_index()
+                
                     return simple_ev_df   
                 # Dynamically create the forbidden solution list
                 forbidden_solutions_1 = []
@@ -4376,68 +4340,32 @@ def get_survivor_picks_based_on_ev():
                 solver.Add(solver.Sum([picks[i] for i in range(len(df)) if df.loc[i, 'Hypothetical Current Winner'] == team]) <= 1)
 
             
-            def create_simple_ev_dataframe(current_solution_dict, df, favored_qualifier):
+            def create_simple_ev_dataframe(summarized_picks_df, favored_qualifier):
                 """
-                Creates a new DataFrame with Survival Rate, Pick Percentage, and EV for a single pick combination.
+                Creates a DataFrame with one row per week, summarizing picks and their metrics.
             
                 Args:
-                    current_solution_dict: A dictionary mapping week to a list of picks for the current solution.
-                    nfl_schedule_df: The main DataFrame with all game and team data.
-                    favored_qualifier: 'Internal Rankings' or 'Sportsbook'.
+                    summarized_picks_df (pd.DataFrame): DataFrame containing 'Week', 'Pick', 
+                                                        'Fair Odds', 'Pick %', and 'EV'.
+                    favored_qualifier (str): 'Internal Rankings' or 'Sportsbook'.
             
                 Returns:
-                    A new pandas DataFrame with the calculated metrics.
+                    pd.DataFrame: A new DataFrame with the calculated metrics per week.
                 """
-                
-                pick_list = []
-                survival_rate = 1.0
-                pick_percentage = 1.0
-                expected_value = 1.0
-                
-                # Calculate metrics for the single solution
-                for week, picks_in_week in current_solution_dict.items():
-                    for team in picks_in_week:
-                        # Find the row for this team in the main schedule DataFrame
-                        game_row = df[
-                            ((df['Week_Num'] == week) & (df['Home Team'] == team)) |
-                            ((df['Week_Num'] == week) & (df['Away Team'] == team))
-                        ]
-                        
-                        if not game_row.empty:
-                            game_row = game_row.iloc[0]  # Get the first matching row
-                            
-                            # Determine if the team is home or away
-                            is_home = game_row['Home Team'] == team
-                            
-                            # Calculate Survival Rate
-                            if favored_qualifier == 'Internal Rankings':
-                                odds_column = 'Internal Home Team Fair Odds' if is_home else 'Internal Away Team Fair Odds'
-                            else:
-                                odds_column = 'Home Team Fair Odds' if is_home else 'Away Team Fair Odds'
-                                
-                            survival_rate *= game_row[odds_column]
-                            
-                            # Calculate Pick Percentage
-                            pick_perc_column = 'Home Pick %' if is_home else 'Away Pick %'
-                            pick_percentage *= game_row[pick_perc_column]
-                            
-                            # Calculate EV
-                            ev_column = 'Home Team EV' if is_home else 'Away Team EV'
-                            expected_value *= game_row[ev_column]
-                        
-                        # Add the team to the list of picks
-                        pick_list.append(team)
-                        
-                # Create the new DataFrame with a single row
-                data = [{
-                    'Picks': pick_list,
-                    'Survival Rate': survival_rate,
-                    'Pick Percentage': pick_percentage,
-                    'EV': expected_value
-                }]
-                
-                simple_ev_df = pd.DataFrame(data)
-                
+                # Create a mapping for the Fair Odds column based on the favored_qualifier
+                if favored_qualifier == 'Internal Rankings':
+                    odds_col = '=Fair Odds Based on Internal Rankings'
+                else:
+                    odds_col = 'Fair Odds Based on Sportsbook Odds'
+            
+                # Group the DataFrame by week and aggregate the desired metrics
+                simple_ev_df = summarized_picks_df.groupby('Week').agg(
+                    Picks=('Pick', lambda x: x.tolist()),
+                    Survival_Rate=(odds_col, 'prod'),
+                    Pick_Percentage=('Expected Pick Percent', 'prod'),
+                    EV=('EV', 'prod')
+                ).reset_index()
+            
                 return simple_ev_df
     
             # Dynamically create the forbidden solution list
@@ -4722,6 +4650,13 @@ def get_survivor_picks_based_on_ev():
             else:
                 picks_df.to_csv(f'dk_picks_ev_{iteration + 1}.csv', index=False)
                 summarized_picks_df.to_csv(f'dk_picks_ev_subset_{iteration + 1}.csv', index=False)
+				
+            # Group the picks from the current iteration to create the solution dictionary
+            current_solution_dict = summarized_picks_df.groupby('Week')['Pick'].apply(list).to_dict()
+            # Call the function to create the simple EV dataframe for the current solution
+            simple_ev_df = create_simple_ev_dataframe(summarized_picks_df, favored_qualifier)
+            # Now, you can use simple_ev_df for your analysis or display
+            st.write(simple_ev_df)
 				
             
             # Append the new forbidden solution to the list
@@ -5296,68 +5231,32 @@ def get_survivor_picks_based_on_internal_rankings():
     
                     # The constraint now ensures that at least one of the forbidden picks is not selected
                     solver.Add(solver.Sum([1 - v for v in forbidden_pick_variables]) >= 1)
-                def create_simple_ev_dataframe(current_solution_dict, df, favored_qualifier):
+                def create_simple_ev_dataframe(summarized_picks_df, favored_qualifier):
                     """
-                    Creates a new DataFrame with Survival Rate, Pick Percentage, and EV for a single pick combination.
+                    Creates a DataFrame with one row per week, summarizing picks and their metrics.
                 
                     Args:
-                        current_solution_dict: A dictionary mapping week to a list of picks for the current solution.
-                        nfl_schedule_df: The main DataFrame with all game and team data.
-                        favored_qualifier: 'Internal Rankings' or 'Sportsbook'.
+                        summarized_picks_df (pd.DataFrame): DataFrame containing 'Week', 'Pick', 
+                                                            'Fair Odds', 'Pick %', and 'EV'.
+                        favored_qualifier (str): 'Internal Rankings' or 'Sportsbook'.
                 
                     Returns:
-                        A new pandas DataFrame with the calculated metrics.
+                        pd.DataFrame: A new DataFrame with the calculated metrics per week.
                     """
-                    
-                    pick_list = []
-                    survival_rate = 1.0
-                    pick_percentage = 1.0
-                    expected_value = 1.0
-                    
-                    # Calculate metrics for the single solution
-                    for week, picks_in_week in current_solution_dict.items():
-                        for team in picks_in_week:
-                            # Find the row for this team in the main schedule DataFrame
-                            game_row = df[
-                                ((df['Week_Num'] == week) & (df['Home Team'] == team)) |
-                                ((df['Week_Num'] == week) & (df['Away Team'] == team))
-                            ]
-                            
-                            if not game_row.empty:
-                                game_row = game_row.iloc[0]  # Get the first matching row
-                                
-                                # Determine if the team is home or away
-                                is_home = game_row['Home Team'] == team
-                                
-                                # Calculate Survival Rate
-                                if favored_qualifier == 'Internal Rankings':
-                                    odds_column = 'Internal Home Team Fair Odds' if is_home else 'Internal Away Team Fair Odds'
-                                else:
-                                    odds_column = 'Home Team Fair Odds' if is_home else 'Away Team Fair Odds'
-                                    
-                                survival_rate *= game_row[odds_column]
-                                
-                                # Calculate Pick Percentage
-                                pick_perc_column = 'Home Pick %' if is_home else 'Away Pick %'
-                                pick_percentage *= game_row[pick_perc_column]
-                                
-                                # Calculate EV
-                                ev_column = 'Home Team EV' if is_home else 'Away Team EV'
-                                expected_value *= game_row[ev_column]
-                            
-                            # Add the team to the list of picks
-                            pick_list.append(team)
-                            
-                    # Create the new DataFrame with a single row
-                    data = [{
-                        'Picks': pick_list,
-                        'Survival Rate': survival_rate,
-                        'Pick Percentage': pick_percentage,
-                        'EV': expected_value
-                    }]
-                    
-                    simple_ev_df = pd.DataFrame(data)
-                    
+                    # Create a mapping for the Fair Odds column based on the favored_qualifier
+                    if favored_qualifier == 'Internal Rankings':
+                        odds_col = '=Fair Odds Based on Internal Rankings'
+                    else:
+                        odds_col = 'Fair Odds Based on Sportsbook Odds'
+                
+                    # Group the DataFrame by week and aggregate the desired metrics
+                    simple_ev_df = summarized_picks_df.groupby('Week').agg(
+                        Picks=('Pick', lambda x: x.tolist()),
+                        Survival_Rate=(odds_col, 'prod'),
+                        Pick_Percentage=('Expected Pick Percent', 'prod'),
+                        EV=('EV', 'prod')
+                    ).reset_index()
+                
                     return simple_ev_df
 ###########
 
@@ -5917,68 +5816,32 @@ def get_survivor_picks_based_on_internal_rankings():
     
                     # The constraint now ensures that at least one of the forbidden picks is not selected
                     solver.Add(solver.Sum([1 - v for v in forbidden_pick_variables]) >= 1)
-                def create_simple_ev_dataframe(current_solution_dict, df, favored_qualifier):
+                def create_simple_ev_dataframe(summarized_picks_df, favored_qualifier):
                     """
-                    Creates a new DataFrame with Survival Rate, Pick Percentage, and EV for a single pick combination.
+                    Creates a DataFrame with one row per week, summarizing picks and their metrics.
                 
                     Args:
-                        current_solution_dict: A dictionary mapping week to a list of picks for the current solution.
-                        df: The main DataFrame with all game and team data.
-                        favored_qualifier: 'Internal Rankings' or 'Sportsbook'.
+                        summarized_picks_df (pd.DataFrame): DataFrame containing 'Week', 'Pick', 
+                                                            'Fair Odds', 'Pick %', and 'EV'.
+                        favored_qualifier (str): 'Internal Rankings' or 'Sportsbook'.
                 
                     Returns:
-                        A new pandas DataFrame with the calculated metrics.
+                        pd.DataFrame: A new DataFrame with the calculated metrics per week.
                     """
-                    
-                    pick_list = []
-                    survival_rate = 1.0
-                    pick_percentage = 1.0
-                    expected_value = 1.0
-                    
-                    # Calculate metrics for the single solution
-                    for week, picks_in_week in current_solution_dict.items():
-                        for team in picks_in_week:
-                            # Find the row for this team in the main schedule DataFrame
-                            game_row = df[
-                                ((df['Week_Num'] == week) & (df['Home Team'] == team)) |
-                                ((df['Week_Num'] == week) & (df['Away Team'] == team))
-                            ]
-                            
-                            if not game_row.empty:
-                                game_row = game_row.iloc[0]  # Get the first matching row
-                                
-                                # Determine if the team is home or away
-                                is_home = game_row['Home Team'] == team
-                                
-                                # Calculate Survival Rate
-                                if favored_qualifier == 'Internal Rankings':
-                                    odds_column = 'Internal Home Team Fair Odds' if is_home else 'Internal Away Team Fair Odds'
-                                else:
-                                    odds_column = 'Home Team Fair Odds' if is_home else 'Away Team Fair Odds'
-                                    
-                                survival_rate *= game_row[odds_column]
-                                
-                                # Calculate Pick Percentage
-                                pick_perc_column = 'Home Pick %' if is_home else 'Away Pick %'
-                                pick_percentage *= game_row[pick_perc_column]
-                                
-                                # Calculate EV
-                                ev_column = 'Home Team EV' if is_home else 'Away Team EV'
-                                expected_value *= game_row[ev_column]
-                            
-                            # Add the team to the list of picks
-                            pick_list.append(team)
-                            
-                    # Create the new DataFrame with a single row
-                    data = [{
-                        'Picks': pick_list,
-                        'Survival Rate': survival_rate,
-                        'Pick Percentage': pick_percentage,
-                        'EV': expected_value
-                    }]
-                    
-                    simple_ev_df = pd.DataFrame(data)
-                    
+                    # Create a mapping for the Fair Odds column based on the favored_qualifier
+                    if favored_qualifier == 'Internal Rankings':
+                        odds_col = '=Fair Odds Based on Internal Rankings'
+                    else:
+                        odds_col = 'Fair Odds Based on Sportsbook Odds'
+                
+                    # Group the DataFrame by week and aggregate the desired metrics
+                    simple_ev_df = summarized_picks_df.groupby('Week').agg(
+                        Picks=('Pick', lambda x: x.tolist()),
+                        Survival_Rate=(odds_col, 'prod'),
+                        Pick_Percentage=('Expected Pick Percent', 'prod'),
+                        EV=('EV', 'prod')
+                    ).reset_index()
+                
                     return simple_ev_df
      
             if favored_qualifier == 'Internal Rankings':
@@ -6235,6 +6098,12 @@ def get_survivor_picks_based_on_internal_rankings():
             else:
                 picks_df.to_csv(f'dk_picks_ir_{iteration + 1}.csv', index=False)
                 summarized_picks_df.to_csv(f'dk_picks_ir_subset_{iteration + 1}.csv', index=False)
+            # Group the picks from the current iteration to create the solution dictionary
+            current_solution_dict = summarized_picks_df.groupby('Week')['Pick'].apply(list).to_dict()
+            # Call the function to create the simple EV dataframe for the current solution
+            simple_ev_df = create_simple_ev_dataframe(summarized_picks_df, favored_qualifier)
+            # Now, you can use simple_ev_df for your analysis or display
+            st.write(simple_ev_df)
             
             # Append the new forbidden solution to the list
             if favored_qualifier == 'Internal Rankings':
@@ -6649,68 +6518,32 @@ def get_survivor_picks_based_on_internal_rankings():
 
                 # The constraint now ensures that at least one of the forbidden picks is not selected
                 solver.Add(solver.Sum([1 - v for v in forbidden_pick_variables]) >= 1)
-            def create_simple_ev_dataframe(current_solution_dict, df, favored_qualifier):
+            def create_simple_ev_dataframe(summarized_picks_df, favored_qualifier):
                 """
-                Creates a new DataFrame with Survival Rate, Pick Percentage, and EV for a single pick combination.
+                Creates a DataFrame with one row per week, summarizing picks and their metrics.
             
                 Args:
-                    current_solution_dict: A dictionary mapping week to a list of picks for the current solution.
-                    df: The main DataFrame with all game and team data.
-                    favored_qualifier: 'Internal Rankings' or 'Sportsbook'.
+                    summarized_picks_df (pd.DataFrame): DataFrame containing 'Week', 'Pick', 
+                                                        'Fair Odds', 'Pick %', and 'EV'.
+                    favored_qualifier (str): 'Internal Rankings' or 'Sportsbook'.
             
                 Returns:
-                    A new pandas DataFrame with the calculated metrics.
+                    pd.DataFrame: A new DataFrame with the calculated metrics per week.
                 """
-                
-                pick_list = []
-                survival_rate = 1.0
-                pick_percentage = 1.0
-                expected_value = 1.0
-                
-                # Calculate metrics for the single solution
-                for week, picks_in_week in current_solution_dict.items():
-                    for team in picks_in_week:
-                        # Find the row for this team in the main schedule DataFrame
-                        game_row = df[
-                            ((df['Week_Num'] == week) & (df['Home Team'] == team)) |
-                            ((df['Week_Num'] == week) & (df['Away Team'] == team))
-                        ]
-                        
-                        if not game_row.empty:
-                            game_row = game_row.iloc[0]  # Get the first matching row
-                            
-                            # Determine if the team is home or away
-                            is_home = game_row['Home Team'] == team
-                            
-                            # Calculate Survival Rate
-                            if favored_qualifier == 'Internal Rankings':
-                                odds_column = 'Internal Home Team Fair Odds' if is_home else 'Internal Away Team Fair Odds'
-                            else:
-                                odds_column = 'Home Team Fair Odds' if is_home else 'Away Team Fair Odds'
-                                
-                            survival_rate *= game_row[odds_column]
-                            
-                            # Calculate Pick Percentage
-                            pick_perc_column = 'Home Pick %' if is_home else 'Away Pick %'
-                            pick_percentage *= game_row[pick_perc_column]
-                            
-                            # Calculate EV
-                            ev_column = 'Home Team EV' if is_home else 'Away Team EV'
-                            expected_value *= game_row[ev_column]
-                        
-                        # Add the team to the list of picks
-                        pick_list.append(team)
-                        
-                # Create the new DataFrame with a single row
-                data = [{
-                    'Picks': pick_list,
-                    'Survival Rate': survival_rate,
-                    'Pick Percentage': pick_percentage,
-                    'EV': expected_value
-                }]
-                
-                simple_ev_df = pd.DataFrame(data)
-                
+                # Create a mapping for the Fair Odds column based on the favored_qualifier
+                if favored_qualifier == 'Internal Rankings':
+                    odds_col = '=Fair Odds Based on Internal Rankings'
+                else:
+                    odds_col = 'Fair Odds Based on Sportsbook Odds'
+            
+                # Group the DataFrame by week and aggregate the desired metrics
+                simple_ev_df = summarized_picks_df.groupby('Week').agg(
+                    Picks=('Pick', lambda x: x.tolist()),
+                    Survival_Rate=(odds_col, 'prod'),
+                    Pick_Percentage=('Expected Pick Percent', 'prod'),
+                    EV=('EV', 'prod')
+                ).reset_index()
+            
                 return simple_ev_df
             
     
@@ -6959,13 +6792,13 @@ def get_survivor_picks_based_on_internal_rankings():
             else:
                 picks_df.to_csv(f'dk_picks_ir_{iteration + 1}.csv', index=False)
                 summarized_picks_df.to_csv(f'dk_picks_ir_subset_{iteration + 1}.csv', index=False)
-				
             # Group the picks from the current iteration to create the solution dictionary
-            current_solution_dict = picks_df.groupby('Week')['Pick'].apply(list).to_dict()
+            current_solution_dict = summarized_picks_df.groupby('Week')['Pick'].apply(list).to_dict()
             # Call the function to create the simple EV dataframe for the current solution
-            simple_ev_df = create_simple_ev_dataframe(current_solution_dict, df, favored_qualifier)
+            simple_ev_df = create_simple_ev_dataframe(summarized_picks_df, favored_qualifier)
             # Now, you can use simple_ev_df for your analysis or display
             st.write(simple_ev_df)
+				
             
             # Append the new forbidden solution to the list
             forbidden_solutions_1.append(picks_df['Hypothetical Current Winner'].tolist())

@@ -14618,7 +14618,7 @@ else:
         else:
             st.write("Step 4/6: Calculating Live Expected Value (Will take 5-10 mins)...")
             with st.spinner('Processing...'):
-                full_df_with_ev = calculate_ev(nfl_schedule_pick_percentages_df, starting_week, ending_week, selected_contest, use_cached_expected_value)
+                full_df_with_ev = calculate_ev(nfl_schedule_pick_percentages_df, starting_week, ending_week, selected_contest, use_cached_expected_value, week_requiring_two_selections)
                 st.write("Processing Complete!")
                 #st.dataframe(full_df_with_ev)
         st.write("Step 4 Completed: Expected Value Calculated")

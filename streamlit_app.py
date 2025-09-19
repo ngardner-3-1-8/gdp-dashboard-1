@@ -3709,14 +3709,13 @@ def get_survivor_picks_based_on_ev():
                     Returns:
                         A new pandas DataFrame with the calculated metrics.
                     """
-                    
-                    pick_list = []
-                    survival_rate = 1.0
-                    pick_percentage = 1.0
-                    expected_value = 1.0
-                    
-                    # Calculate metrics for the single solution
+                    data = []
                     for week, picks_in_week in current_solution_dict.items():
+                        pick_list = picks_in_week
+                        survival_rate = 1.0
+                        pick_percentage = 1.0
+                        expected_value = 1.0
+                    
                         for team in picks_in_week:
                             # Find the row for this team in the main schedule DataFrame
                             game_row = df[
@@ -3749,13 +3748,14 @@ def get_survivor_picks_based_on_ev():
                             # Add the team to the list of picks
                             pick_list.append(team)
                             
-                    # Create the new DataFrame with a single row
-                    data = [{
-                        'Picks': pick_list,
-                        'Survival Rate': survival_rate,
-                        'Pick Percentage': pick_percentage,
-                        'EV': expected_value
-                    }]
+                        # Create the new DataFrame with a single row
+                        data.append = [{
+                            'Week': week,					
+                            'Picks': pick_list,
+                            'Survival Rate': survival_rate,
+                            'Pick Percentage': pick_percentage,
+                            'EV': expected_value
+                        }]
                     
                     simple_ev_df = pd.DataFrame(data)
                     

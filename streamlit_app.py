@@ -3711,15 +3711,15 @@ def get_survivor_picks_based_on_ev():
                     """
                     # Create a mapping for the Fair Odds column based on the favored_qualifier
                     if favored_qualifier == 'Internal Rankings':
-                        odds_col = 'Internal Fair Odds'
+                        odds_col = '=Fair Odds Based on Internal Rankings'
                     else:
-                        odds_col = 'Fair Odds'
+                        odds_col = 'Fair Odds Based on Sportsbook Odds'
                 
                     # Group the DataFrame by week and aggregate the desired metrics
                     simple_ev_df = summarized_picks_df.groupby('Week').agg(
                         Picks=('Pick', lambda x: x.tolist()),
                         Survival_Rate=(odds_col, 'prod'),
-                        Pick_Percentage=('Pick %', 'prod'),
+                        Pick_Percentage=('Expected Pick Percent', 'prod'),
                         EV=('EV', 'prod')
                     ).reset_index()
                 

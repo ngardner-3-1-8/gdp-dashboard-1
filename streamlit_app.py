@@ -2284,12 +2284,12 @@ def calculate_ev(nfl_schedule_pick_percentages_df, starting_week, ending_week, s
     for week in tqdm(range(starting_week, ending_week), desc="Processing Weeks", leave=False):
         week_df = nfl_schedule_pick_percentages_df[nfl_schedule_pick_percentages_df['Week_Num'] == week].copy() # Create a copy to avoid SettingWithCopyWarning
         # Check if the current week requires two picks
-        if week in week_requiring_two_selections:
+#        if week in week_requiring_two_selections:
             # Call a new function to handle two-pick calculations
-            weighted_avg_ev, all_outcomes, scenario_weights = calculate_all_scenarios_two_picks(week_df)
-        else:
+#            weighted_avg_ev, all_outcomes, scenario_weights = calculate_all_scenarios_two_picks(week_df)
+#        else:
             # Use the existing function for single-pick weeks
-            weighted_avg_ev, all_outcomes, scenario_weights = calculate_all_scenarios(week_df)
+        weighted_avg_ev, all_outcomes, scenario_weights = calculate_all_scenarios(week_df)
 
         #Store the EV values for the current week
         all_weeks_ev[week] = weighted_avg_ev
@@ -3926,7 +3926,7 @@ def get_survivor_picks_based_on_ev():
                 forbidden_solutions_1.append(picks_df['Adjusted Current Winner'].tolist())
             else:
                 forbidden_solutions_1.append(picks_df['Favorite'].tolist())            
-            #st.write(forbidden_solutions_1)
+            st.write(forbidden_solutions_1)
 
     else:
         for iteration in range(number_solutions):

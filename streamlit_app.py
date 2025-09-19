@@ -3076,7 +3076,7 @@ def get_survivor_picks_based_on_ev():
 	                # Can't pick a team more than once
                     solver.Add(solver.Sum([picks[i] for i in range(len(df)) if df.loc[i, 'Adjusted Current Winner'] == team]) <= 1)
     
-                def create_simple_ev_dataframe(current_solution_dict, nfl_schedule_df, favored_qualifier):
+                def create_simple_ev_dataframe(current_solution_dict, df, favored_qualifier):
                     """
                     Creates a new DataFrame with Survival Rate, Pick Percentage, and EV for a single pick combination.
                 
@@ -3098,9 +3098,9 @@ def get_survivor_picks_based_on_ev():
                     for week, picks_in_week in current_solution_dict.items():
                         for team in picks_in_week:
                             # Find the row for this team in the main schedule DataFrame
-                            game_row = nfl_schedule_df[
-                                ((nfl_schedule_df['Week_Num'] == week) & (nfl_schedule_df['Home Team'] == team)) |
-                                ((nfl_schedule_df['Week_Num'] == week) & (nfl_schedule_df['Away Team'] == team))
+                            game_row = df[
+                                ((df['Week_Num'] == week) & (df['Home Team'] == team)) |
+                                ((df['Week_Num'] == week) & (df['Away Team'] == team))
                             ]
                             
                             if not game_row.empty:
@@ -3697,7 +3697,7 @@ def get_survivor_picks_based_on_ev():
                 
                 nfl_schedule_df = df
     
-                def create_simple_ev_dataframe(current_solution_dict, nfl_schedule_df, favored_qualifier):
+                def create_simple_ev_dataframe(current_solution_dict, df, favored_qualifier):
                     """
                     Creates a new DataFrame with Survival Rate, Pick Percentage, and EV for a single pick combination.
                 
@@ -3719,9 +3719,9 @@ def get_survivor_picks_based_on_ev():
                     for week, picks_in_week in current_solution_dict.items():
                         for team in picks_in_week:
                             # Find the row for this team in the main schedule DataFrame
-                            game_row = nfl_schedule_df[
-                                ((nfl_schedule_df['Week_Num'] == week) & (nfl_schedule_df['Home Team'] == team)) |
-                                ((nfl_schedule_df['Week_Num'] == week) & (nfl_schedule_df['Away Team'] == team))
+                            game_row = df[
+                                ((df['Week_Num'] == week) & (df['Home Team'] == team)) |
+                                ((df['Week_Num'] == week) & (df['Away Team'] == team))
                             ]
                             
                             if not game_row.empty:
@@ -4058,7 +4058,7 @@ def get_survivor_picks_based_on_ev():
             # Group the picks from the current iteration to create the solution dictionary
             current_solution_dict = summarized_picks_df.groupby('Week')['Pick'].apply(list).to_dict()
             # Call the function to create the simple EV dataframe for the current solution
-            simple_ev_df = create_simple_ev_dataframe(current_solution_dict, nfl_schedule_df, favored_qualifier)
+            simple_ev_df = create_simple_ev_dataframe(current_solution_dict, df, favored_qualifier)
             # Now, you can use simple_ev_df for your analysis or display
             st.write(simple_ev_df)
 
@@ -4413,7 +4413,7 @@ def get_survivor_picks_based_on_ev():
                 solver.Add(solver.Sum([picks[i] for i in range(len(df)) if df.loc[i, 'Hypothetical Current Winner'] == team]) <= 1)
 
             
-            def create_simple_ev_dataframe(current_solution_dict, nfl_schedule_df, favored_qualifier):
+            def create_simple_ev_dataframe(current_solution_dict, df, favored_qualifier):
                 """
                 Creates a new DataFrame with Survival Rate, Pick Percentage, and EV for a single pick combination.
             
@@ -4435,9 +4435,9 @@ def get_survivor_picks_based_on_ev():
                 for week, picks_in_week in current_solution_dict.items():
                     for team in picks_in_week:
                         # Find the row for this team in the main schedule DataFrame
-                        game_row = nfl_schedule_df[
-                            ((nfl_schedule_df['Week_Num'] == week) & (nfl_schedule_df['Home Team'] == team)) |
-                            ((nfl_schedule_df['Week_Num'] == week) & (nfl_schedule_df['Away Team'] == team))
+                        game_row = df[
+                            ((df['Week_Num'] == week) & (df['Home Team'] == team)) |
+                            ((df['Week_Num'] == week) & (df['Away Team'] == team))
                         ]
                         
                         if not game_row.empty:
@@ -4760,13 +4760,6 @@ def get_survivor_picks_based_on_ev():
                 picks_df.to_csv(f'dk_picks_ev_{iteration + 1}.csv', index=False)
                 summarized_picks_df.to_csv(f'dk_picks_ev_subset_{iteration + 1}.csv', index=False)
 				
-            # Group the picks from the current iteration to create the solution dictionary
-            current_solution_dict = picks_df.groupby('Week')['Pick'].apply(list).to_dict()
-            # Call the function to create the simple EV dataframe for the current solution
-            simple_ev_df = create_simple_ev_dataframe(current_solution_dict, nfl_schedule_df, favored_qualifier)
-            # Now, you can use simple_ev_df for your analysis or display
-            st.write('SIMPLE EV DF')
-            st.write(simple_ev_df)
             
             # Append the new forbidden solution to the list
             forbidden_solutions_1.append(picks_df['Hypothetical Current Winner'].tolist())
@@ -5340,7 +5333,7 @@ def get_survivor_picks_based_on_internal_rankings():
     
                     # The constraint now ensures that at least one of the forbidden picks is not selected
                     solver.Add(solver.Sum([1 - v for v in forbidden_pick_variables]) >= 1)
-                def create_simple_ev_dataframe(current_solution_dict, nfl_schedule_df, favored_qualifier):
+                def create_simple_ev_dataframe(current_solution_dict, df, favored_qualifier):
                     """
                     Creates a new DataFrame with Survival Rate, Pick Percentage, and EV for a single pick combination.
                 
@@ -5362,9 +5355,9 @@ def get_survivor_picks_based_on_internal_rankings():
                     for week, picks_in_week in current_solution_dict.items():
                         for team in picks_in_week:
                             # Find the row for this team in the main schedule DataFrame
-                            game_row = nfl_schedule_df[
-                                ((nfl_schedule_df['Week_Num'] == week) & (nfl_schedule_df['Home Team'] == team)) |
-                                ((nfl_schedule_df['Week_Num'] == week) & (nfl_schedule_df['Away Team'] == team))
+                            game_row = df[
+                                ((df['Week_Num'] == week) & (df['Home Team'] == team)) |
+                                ((df['Week_Num'] == week) & (df['Away Team'] == team))
                             ]
                             
                             if not game_row.empty:
@@ -5961,13 +5954,13 @@ def get_survivor_picks_based_on_internal_rankings():
     
                     # The constraint now ensures that at least one of the forbidden picks is not selected
                     solver.Add(solver.Sum([1 - v for v in forbidden_pick_variables]) >= 1)
-                def create_simple_ev_dataframe(current_solution_dict, nfl_schedule_df, favored_qualifier):
+                def create_simple_ev_dataframe(current_solution_dict, df, favored_qualifier):
                     """
                     Creates a new DataFrame with Survival Rate, Pick Percentage, and EV for a single pick combination.
                 
                     Args:
                         current_solution_dict: A dictionary mapping week to a list of picks for the current solution.
-                        nfl_schedule_df: The main DataFrame with all game and team data.
+                        df: The main DataFrame with all game and team data.
                         favored_qualifier: 'Internal Rankings' or 'Sportsbook'.
                 
                     Returns:
@@ -5983,9 +5976,9 @@ def get_survivor_picks_based_on_internal_rankings():
                     for week, picks_in_week in current_solution_dict.items():
                         for team in picks_in_week:
                             # Find the row for this team in the main schedule DataFrame
-                            game_row = nfl_schedule_df[
-                                ((nfl_schedule_df['Week_Num'] == week) & (nfl_schedule_df['Home Team'] == team)) |
-                                ((nfl_schedule_df['Week_Num'] == week) & (nfl_schedule_df['Away Team'] == team))
+                            game_row = df[
+                                ((df['Week_Num'] == week) & (df['Home Team'] == team)) |
+                                ((df['Week_Num'] == week) & (df['Away Team'] == team))
                             ]
                             
                             if not game_row.empty:
@@ -6693,13 +6686,13 @@ def get_survivor_picks_based_on_internal_rankings():
 
                 # The constraint now ensures that at least one of the forbidden picks is not selected
                 solver.Add(solver.Sum([1 - v for v in forbidden_pick_variables]) >= 1)
-            def create_simple_ev_dataframe(current_solution_dict, nfl_schedule_df, favored_qualifier):
+            def create_simple_ev_dataframe(current_solution_dict, df, favored_qualifier):
                 """
                 Creates a new DataFrame with Survival Rate, Pick Percentage, and EV for a single pick combination.
             
                 Args:
                     current_solution_dict: A dictionary mapping week to a list of picks for the current solution.
-                    nfl_schedule_df: The main DataFrame with all game and team data.
+                    df: The main DataFrame with all game and team data.
                     favored_qualifier: 'Internal Rankings' or 'Sportsbook'.
             
                 Returns:
@@ -6715,9 +6708,9 @@ def get_survivor_picks_based_on_internal_rankings():
                 for week, picks_in_week in current_solution_dict.items():
                     for team in picks_in_week:
                         # Find the row for this team in the main schedule DataFrame
-                        game_row = nfl_schedule_df[
-                            ((nfl_schedule_df['Week_Num'] == week) & (nfl_schedule_df['Home Team'] == team)) |
-                            ((nfl_schedule_df['Week_Num'] == week) & (nfl_schedule_df['Away Team'] == team))
+                        game_row = df[
+                            ((df['Week_Num'] == week) & (df['Home Team'] == team)) |
+                            ((df['Week_Num'] == week) & (df['Away Team'] == team))
                         ]
                         
                         if not game_row.empty:
@@ -7007,7 +7000,7 @@ def get_survivor_picks_based_on_internal_rankings():
             # Group the picks from the current iteration to create the solution dictionary
             current_solution_dict = picks_df.groupby('Week')['Pick'].apply(list).to_dict()
             # Call the function to create the simple EV dataframe for the current solution
-            simple_ev_df = create_simple_ev_dataframe(current_solution_dict, nfl_schedule_df, favored_qualifier)
+            simple_ev_df = create_simple_ev_dataframe(current_solution_dict, df, favored_qualifier)
             # Now, you can use simple_ev_df for your analysis or display
             st.write(simple_ev_df)
             

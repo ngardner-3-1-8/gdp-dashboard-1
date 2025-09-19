@@ -3768,9 +3768,9 @@ def get_survivor_picks_based_on_ev():
                                 'Location': location,
                                 'Home or Away': home_team,
                                 'EV': ev,
+                                'Expected Pick Percent': pick_percent,	
                                 'Fair Odds Based on Sportsbook Odds': win_odds,
                                 'Fair Odds Based on Internal Rankings': internal_ranking_fair_odds,
-                                'Expected Pick Percent': pick_percent,	
                                 'Expected Availability': expected_availability,
                                 'Future Value': future_value,
                                 'Moneyline Based on Sportsbook Odds': sportbook_moneyline,
@@ -3861,7 +3861,7 @@ def get_survivor_picks_based_on_ev():
                 forbidden_solutions_1.append(picks_df['Adjusted Current Winner'].tolist())
             else:
                 forbidden_solutions_1.append(picks_df['Favorite'].tolist())            
-			#print(forbidden_solutions)
+            st.write(forbidden_solutions_1)
 
     else:
         for iteration in range(number_solutions):

@@ -2219,6 +2219,15 @@ def calculate_ev(nfl_schedule_pick_percentages_df, starting_week, ending_week, s
 
         weighted_avg_ev = (ev_df * scenario_weights[:, np.newaxis]).sum(axis=0) / scenario_weights.sum()
         return weighted_avg_ev, all_outcomes_matrix, scenario_weights  # Return weighted_avg_ev directly
+    def get_pick_percentage(week_df, team_name):
+        # Check if the team is a home team in any game this week
+        if team_name in week_df['Home Team'].values:
+            return week_df[week_df['Home Team'] == team_name]['Home Pick %'].iloc[0]
+        # Check if the team is an away team
+        elif team_name in week_df['Away Team'].values:
+            return week_df[week_df['Away Team'] == team_name]['Away Pick %'].iloc[0]
+        # Return 0 if the team is not found (this shouldn't happen with correct data)
+        return 0.0
     def calculate_all_scenarios_two_picks(week_df):
         num_games = len(week_df)
         teams = week_df['Home Team'].tolist() + week_df['Away Team'].tolist()

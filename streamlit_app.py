@@ -3694,7 +3694,8 @@ def get_survivor_picks_based_on_ev():
                 for team in df['Favorite'].unique():
 	                # Can't pick a team more than once
                     solver.Add(solver.Sum([picks[i] for i in range(len(df)) if df.loc[i, 'Favorite'] == team]) <= 1)
-    
+                
+				nfl_schedule_df = df
     
                 def create_simple_ev_dataframe(current_solution_dict, nfl_schedule_df, favored_qualifier):
                     """

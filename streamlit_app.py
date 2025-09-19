@@ -2184,7 +2184,7 @@ def get_predicted_pick_percentages_with_availability(pd):
     return nfl_schedule_df
 
 
-def calculate_ev(nfl_schedule_pick_percentages_df, starting_week, ending_week, selected_contest, use_cached_expected_value):
+def calculate_ev(nfl_schedule_pick_percentages_df, starting_week, ending_week, selected_contest, use_cached_expected_value, week_requiring_two_selections):
     
     def calculate_all_scenarios(week_df):
         num_games = len(week_df)
@@ -2219,6 +2219,52 @@ def calculate_ev(nfl_schedule_pick_percentages_df, starting_week, ending_week, s
 
         weighted_avg_ev = (ev_df * scenario_weights[:, np.newaxis]).sum(axis=0) / scenario_weights.sum()
         return weighted_avg_ev, all_outcomes_matrix, scenario_weights  # Return weighted_avg_ev directly
+    def calculate_all_scenarios_two_picks(week_df):
+        num_games = len(week_df)
+        teams = week_df['Home Team'].tolist() + week_df['Away Team'].tolist()
+        
+        all_outcomes_matrix = np.array(list(itertools.product(['Home Win', 'Away Win'], repeat=num_games)))
+        num_scenarios = all_outcomes_matrix.shape[0]
+        
+        # ... (logic to generate team pairs) ...
+        team_pairs = list(itertools.combinations(teams, 2))
+        
+        # DataFrame to hold EV for each team pair in each scenario
+        pair_ev_df = pd.DataFrame(0.0, index=range(num_scenarios), columns=team_pairs)
+        scenario_weights = np.zeros(num_scenarios)
+        
+        for i in range(num_scenarios):
+            outcome = all_outcomes_matrix[i]
+            winning_teams = np.where(outcome == 'Home Win', week_df['Home Team'].values, week_df['Away Team'].values)
+            
+            # Calculate scenario weight based on fair odds
+            winning_probs = np.where(outcome == 'Home Win', week_df['Home Team Fair Odds'].values, week_df['Away Team Fair Odds'].values)
+            scenario_weights[i] = np.prod(winning_probs)
+            
+            # Calculate EV for each pair
+            for pair in team_pairs:
+                team1, team2 = pair
+                if team1 in winning_teams and team2 in winning_teams:
+                    # Estimate combined pick percentage by multiplying
+                    pick_perc1 = get_pick_percentage(week_df, team1)
+                    pick_perc2 = get_pick_percentage(week_df, team2)
+                    
+                    surviving_entries = pick_perc1 * pick_perc2
+                    
+                    if surviving_entries > 0:
+                        pair_ev_df.loc[i, pair] = 1 / surviving_entries
+        
+        # Now, calculate the weighted average EV for each pair
+        weighted_avg_pair_ev = (pair_ev_df.mul(scenario_weights, axis=0)).sum(axis=0) / scenario_weights.sum()
+        
+        # Consolidate pair EVs into single-team EVs
+        weighted_avg_ev = pd.Series(0.0, index=teams)
+        for pair, ev in weighted_avg_pair_ev.items():
+            team1, team2 = pair
+            weighted_avg_ev[team1] += ev
+            weighted_avg_ev[team2] += ev
+        
+        return weighted_avg_ev, all_outcomes_matrix, scenario_weights
 
 
     st.write("Current Week Progress")  # Streamlit progress bar
@@ -2228,7 +2274,13 @@ def calculate_ev(nfl_schedule_pick_percentages_df, starting_week, ending_week, s
 
     for week in tqdm(range(starting_week, ending_week), desc="Processing Weeks", leave=False):
         week_df = nfl_schedule_pick_percentages_df[nfl_schedule_pick_percentages_df['Week_Num'] == week].copy() # Create a copy to avoid SettingWithCopyWarning
-        weighted_avg_ev, all_outcomes, scenario_weights = calculate_all_scenarios(week_df)
+        # Check if the current week requires two picks
+        if week in week_requiring_two_selections:
+            # Call a new function to handle two-pick calculations
+            weighted_avg_ev, all_outcomes, scenario_weights = calculate_all_scenarios_two_picks(week_df)
+        else:
+            # Use the existing function for single-pick weeks
+            weighted_avg_ev, all_outcomes, scenario_weights = calculate_all_scenarios(week_df)
 
         #Store the EV values for the current week
         all_weeks_ev[week] = weighted_avg_ev

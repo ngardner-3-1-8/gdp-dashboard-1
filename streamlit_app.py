@@ -4053,7 +4053,13 @@ def get_survivor_picks_based_on_ev():
                 forbidden_solutions_1.append(picks_df['Adjusted Current Winner'].tolist())
             else:
                 forbidden_solutions_1.append(picks_df['Favorite'].tolist())            
-            st.write(forbidden_solutions_1)
+            #st.write(forbidden_solutions_1)
+            # Group the picks from the current iteration to create the solution dictionary
+            current_solution_dict = current_picks_df.groupby('Week')['Pick'].apply(list).to_dict()
+            # Call the function to create the simple EV dataframe for the current solution
+            simple_ev_df = create_simple_ev_dataframe(current_solution_dict, nfl_schedule_df, favored_qualifier)
+            # Now, you can use simple_ev_df for your analysis or display
+            st.write(simple_ev_df)
 
     else:
         for iteration in range(number_solutions):
@@ -4758,6 +4764,7 @@ def get_survivor_picks_based_on_ev():
             # Call the function to create the simple EV dataframe for the current solution
             simple_ev_df = create_simple_ev_dataframe(current_solution_dict, nfl_schedule_df, favored_qualifier)
             # Now, you can use simple_ev_df for your analysis or display
+			st.write('SIMPLE EV DF')
             st.write(simple_ev_df)
             
             # Append the new forbidden solution to the list

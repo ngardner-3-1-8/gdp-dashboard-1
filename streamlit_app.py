@@ -2160,8 +2160,8 @@ def get_predicted_pick_percentages_with_availability(pd):
                         # Apply override ONLY if the user-provided value is NOT -1
                         if user_override_value >= 0:
                             home_pick_percent = user_override_value
-						else:
-							home_pick_percent = 1
+                        else:
+                            home_pick_percent = 1
         
                 # Check for Away Team overrides
                 if away_team in circa_pick_percentages:
@@ -2171,8 +2171,8 @@ def get_predicted_pick_percentages_with_availability(pd):
                         # Apply override ONLY if the user-provided value is NOT -1
                         if user_override_value >= 0:
                             away_pick_percent = user_override_value
-						else:
-							away_pick_percent = 1
+                        else:
+                            away_pick_percent = 1
         
                 return pd.Series({'Home Pick %': home_pick_percent, 'Away Pick %': away_pick_percent})
                                                                          

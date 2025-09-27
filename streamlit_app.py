@@ -1835,23 +1835,23 @@ def get_predicted_pick_percentages_with_availability(pd):
     
         # Adjust pick percentages for Thanksgiving Favorites
         pick_predictions_df["Pick %"] = pick_predictions_df.apply(
-            lambda row: row["Pick %"] / 4 if (row["Date"] != 13 and row["Home Team Thanksgiving Favorite"]) else row["Pick %"],
+            lambda row: row["Pick %"] / 4 * row["Availability"] if (row["Date"] != 13 and row["Home Team Thanksgiving Favorite"]) else row["Pick %"] * row["Availability"],
             axis=1
         )
     
         pick_predictions_df["Pick %"] = pick_predictions_df.apply(
-            lambda row: row["Pick %"] / 4 if (row["Date"] != 13 and row["Away Team Thanksgiving Favorite"]) else row["Pick %"],
+            lambda row: row["Pick %"] / 4 * row["Availability"] if (row["Date"] != 13 and row["Away Team Thanksgiving Favorite"]) else row["Pick %"] * row["Availability"],
             axis=1
         )
     
         # Adjust pick percentages for Thanksgiving Favorites
         pick_predictions_df["Pick %"] = pick_predictions_df.apply(
-            lambda row: row["Pick %"] / 4 if row["Home Team Christmas Favorite"] else row["Pick %"],
+            lambda row: row["Pick %"] / 4  * row["Availability"] if row["Home Team Christmas Favorite"] else row["Pick %"] * row["Availability"],
             axis=1
         )
     
         pick_predictions_df["Pick %"] = pick_predictions_df.apply(
-            lambda row: row["Pick %"] / 4 if row["Away Team Christmas Favorite"] else row["Pick %"],
+            lambda row: row["Pick %"] / 4  * row["Availability"] if row["Away Team Christmas Favorite"] else row["Pick %"] * row["Availability"],
             axis=1
         )
     

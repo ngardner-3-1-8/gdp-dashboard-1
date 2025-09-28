@@ -1483,7 +1483,7 @@ def get_predicted_pick_percentages(pd):
     def get_expected_availability(team_name, availability_dict):
         availability = availability_dict.get(team_name) 
     # 2. Check if the value is -1 (from the Streamlit slider) OR None (if team is missing)
-        if availability == -1 or availability is None:
+        if availability == -.01 or availability is None:
             return 1.0
         else:
             return availability
@@ -1991,7 +1991,7 @@ def get_predicted_pick_percentages_with_availability(pd):
     # Function to get availability
         def get_expected_availability(team_name, availability_dict):
             availability = availability_dict.get(team_name) # Get availability, default to -1 if team not in dict
-            if availability != -1:
+            if availability != -.01:
                 return availability
             else:
                 return 1.0

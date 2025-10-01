@@ -1354,7 +1354,7 @@ def get_predicted_pick_percentages(pd):
             original_pick_percent = original_pick_percent / 4
         
         # Final adjustment: multiply by Availability (applied once)
-        return original_pick_percent * row["Availability"]
+        return original_pick_percent
     
     # Apply the consolidated function
     pick_predictions_df["Pick %"] = pick_predictions_df.apply(

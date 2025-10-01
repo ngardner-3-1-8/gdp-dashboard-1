@@ -1614,11 +1614,13 @@ def get_predicted_pick_percentages(pd):
             home_team = row_data['Home Team']
             away_team = row_data['Away Team']
             
-            home_survivors = row_data.get('Expected Home Team Survivors', 0.0) * .65
+            home_survivors = row_data.get('Expected Home Team Survivors', 0.0)
             if pd.isna(home_survivors): home_survivors = 0.0
-            away_survivors = row_data.get('Expected Away Team Survivors', 0.0) * .65
+            away_survivors = row_data.get('Expected Away Team Survivors', 0.0)
             if pd.isna(away_survivors): away_survivors = 0.0
-            
+            if (selected_contest == 'Splash Sports') & (row_data['Week'] in week_requiring_two_selections):
+                home_survivors = home_survivors * .65
+                away_survivors = away_survivors * .65  
             if pd.notna(home_team):
                 survivors_who_picked_team_this_week[home_team] = survivors_who_picked_team_this_week.get(home_team, 0.0) + home_survivors
             if pd.notna(away_team):

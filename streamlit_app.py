@@ -1357,10 +1357,11 @@ def get_predicted_pick_percentages(pd):
         return original_pick_percent
     
     # Apply the consolidated function
-    pick_predictions_df["Pick %"] = pick_predictions_df.apply(
-        adjust_pick_percentage,
-        axis=1
-    )
+	if selected_contest == 'Circa':
+        pick_predictions_df["Pick %"] = pick_predictions_df.apply(
+            adjust_pick_percentage,
+            axis=1
+        )
 
     pick_predictions_df.drop(columns=['Away Team Thanksgiving Favorite', 'Away Team Christmas Favorite', 'Home Team Thanksgiving Favorite', 'Home Team Christmas Favorite'], inplace=True)
 
@@ -1441,7 +1442,7 @@ def get_predicted_pick_percentages(pd):
     else:
         # Handle an unexpected selected_contest value, e.g., raise an error or set a default
         print("Warning: Unknown contest type provided.")
-        nfl_schedule_df.loc[nfl_schedule_df['Week'] == starting_week, 'Total Remaining Entries at Start of Week'] = 20000 # Or some default value
+        nfl_schedule_df.loc[nfl_schedule_df['Week'] == starting_week, 'Total Remaining Entries at Start of Week'] = 18000 # Or some default value
 
     nfl_schedule_df['Home Expected Survival Rate'] = nfl_schedule_df['Home Team Fair Odds'] * nfl_schedule_df['Home Pick %']
     nfl_schedule_df['Home Expected Elimination Percent'] = nfl_schedule_df['Home Pick %'] - nfl_schedule_df['Home Expected Survival Rate']
@@ -1477,6 +1478,15 @@ def get_predicted_pick_percentages(pd):
     nfl_schedule_df['Expected Home Team Survivors'] = nfl_schedule_df['Expected Home Team Picks'] * nfl_schedule_df['Home Team Fair Odds']
     nfl_schedule_df['Expected Away Team Eliminations'] = nfl_schedule_df['Expected Away Team Picks'] * (1 - nfl_schedule_df['Away Team Fair Odds'])
     nfl_schedule_df['Expected Away Team Survivors'] = nfl_schedule_df['Expected Away Team Picks'] * nfl_schedule_df['Away Team Fair Odds']
+    # 1. Define the condition/mask
+    condition = (selected_contest == 'Splash Sports') & \
+                (nfl_schedule_df['Week'].isin(week_requiring_two_selections))
+
+    # 2. Use .loc to apply the multiplier ONLY to rows where the condition is True
+    nfl_schedule_df.loc[condition, 'Expected Home Team Survivors'] *= .65
+    nfl_schedule_df.loc[condition, 'Expected Home Team Eliminations'] *= 1.35
+    nfl_schedule_df.loc[condition, 'Expected Away Team Survivors'] *= .65
+    nfl_schedule_df.loc[condition, 'Expected Away Team Eliminations'] *= 1.35
 
 #CALCULATE ESTIMATED REMAINING AVAILABILITY
     
@@ -2108,6 +2118,7 @@ def get_predicted_pick_percentages_with_availability(pd):
                     survivors_who_picked_team_this_week[away_team] = survivors_who_picked_team_this_week.get(away_team, 0.0) + away_survivors
                     
                 total_survivors_this_week += home_survivors + away_survivors
+
                 
             overall_survival_rate_this_week = 0.0
             if S_w > 0:

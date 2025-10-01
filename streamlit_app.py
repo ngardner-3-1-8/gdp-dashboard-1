@@ -1478,15 +1478,8 @@ def get_predicted_pick_percentages(pd):
     nfl_schedule_df['Expected Home Team Survivors'] = nfl_schedule_df['Expected Home Team Picks'] * nfl_schedule_df['Home Team Fair Odds']
     nfl_schedule_df['Expected Away Team Eliminations'] = nfl_schedule_df['Expected Away Team Picks'] * (1 - nfl_schedule_df['Away Team Fair Odds'])
     nfl_schedule_df['Expected Away Team Survivors'] = nfl_schedule_df['Expected Away Team Picks'] * nfl_schedule_df['Away Team Fair Odds']
-    # 1. Define the condition/mask
-    condition = (selected_contest == 'Splash Sports') & \
-                (nfl_schedule_df['Week'].isin(week_requiring_two_selections))
 
-    # 2. Use .loc to apply the multiplier ONLY to rows where the condition is True
-    nfl_schedule_df.loc[condition, 'Expected Home Team Survivors'] *= .65
-    nfl_schedule_df.loc[condition, 'Expected Home Team Eliminations'] *= 1.35
-    nfl_schedule_df.loc[condition, 'Expected Away Team Survivors'] *= .65
-    nfl_schedule_df.loc[condition, 'Expected Away Team Eliminations'] *= 1.35
+
 
 #CALCULATE ESTIMATED REMAINING AVAILABILITY
     
@@ -1619,6 +1612,8 @@ def get_predicted_pick_percentages(pd):
             away_survivors = row_data.get('Expected Away Team Survivors', 0.0)
             if pd.isna(away_survivors): away_survivors = 0.0
             if (selected_contest == 'Splash Sports') & (row_data['Week'] in week_requiring_two_selections):
+                st.write(row_data['Week'])
+                st.write(week_requiring_two_selections)
                 home_survivors = home_survivors * .65
                 away_survivors = away_survivors * .65  
             if pd.notna(home_team):

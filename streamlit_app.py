@@ -1479,14 +1479,14 @@ def get_predicted_pick_percentages(pd):
     nfl_schedule_df['Expected Away Team Eliminations'] = nfl_schedule_df['Expected Away Team Picks'] * (1 - nfl_schedule_df['Away Team Fair Odds'])
     nfl_schedule_df['Expected Away Team Survivors'] = nfl_schedule_df['Expected Away Team Picks'] * nfl_schedule_df['Away Team Fair Odds']
     # 1. Define the condition/mask
-    condition = (selected_contest == 'Splash Sports') & \
-                (nfl_schedule_df['Week'].isin(week_requiring_two_selections))
-
-    # 2. Use .loc to apply the multiplier ONLY to rows where the condition is True
-    nfl_schedule_df.loc[condition, 'Expected Home Team Survivors'] *= .65
-    nfl_schedule_df.loc[condition, 'Expected Home Team Eliminations'] *= 1.35
-    nfl_schedule_df.loc[condition, 'Expected Away Team Survivors'] *= .65
-    nfl_schedule_df.loc[condition, 'Expected Away Team Eliminations'] *= 1.35
+#    condition = (selected_contest == 'Splash Sports') & \
+#                (nfl_schedule_df['Week'].isin(week_requiring_two_selections))
+#
+#    # 2. Use .loc to apply the multiplier ONLY to rows where the condition is True
+#    nfl_schedule_df.loc[condition, 'Expected Home Team Survivors'] *= .65
+#    nfl_schedule_df.loc[condition, 'Expected Home Team Eliminations'] *= 1.35
+#    nfl_schedule_df.loc[condition, 'Expected Away Team Survivors'] *= .65
+#    nfl_schedule_df.loc[condition, 'Expected Away Team Eliminations'] *= 1.35
 
 #CALCULATE ESTIMATED REMAINING AVAILABILITY
     

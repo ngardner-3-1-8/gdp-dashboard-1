@@ -1444,9 +1444,15 @@ def get_predicted_pick_percentages(pd):
         print("Warning: Unknown contest type provided.")
         nfl_schedule_df.loc[nfl_schedule_df['Week'] == starting_week, 'Total Remaining Entries at Start of Week'] = 18000 # Or some default value
 
+    # Create the boolean mask once, as it's used twice
+    multiplier_mask = (selected_contest == 'Splash Sports') & \
+                  (nfl_schedule_df['Week'].isin(week_requiring_two_selections))
+	
     nfl_schedule_df['Home Expected Survival Rate'] = nfl_schedule_df['Home Team Fair Odds'] * nfl_schedule_df['Home Pick %']
+    nfl_schedule_df.loc[multiplier_mask, 'Home Expected Survival Rate'] *= 0.65
     nfl_schedule_df['Home Expected Elimination Percent'] = nfl_schedule_df['Home Pick %'] - nfl_schedule_df['Home Expected Survival Rate']
     nfl_schedule_df['Away Expected Survival Rate'] = nfl_schedule_df['Away Team Fair Odds'] * nfl_schedule_df['Away Pick %']
+    nfl_schedule_df.loc[multiplier_mask, 'Away Expected Survival Rate'] *= 0.65
     nfl_schedule_df['Away Expected Elimination Percent'] = nfl_schedule_df['Away Pick %'] - nfl_schedule_df['Away Expected Survival Rate']
     nfl_schedule_df['Expected Eliminated Entry Percent From Game'] = nfl_schedule_df['Home Expected Elimination Percent'] + nfl_schedule_df['Away Expected Elimination Percent']
 
@@ -1611,18 +1617,13 @@ def get_predicted_pick_percentages(pd):
             if pd.isna(home_survivors): home_survivors = 0.0
             away_survivors = row_data.get('Expected Away Team Survivors', 0.0)
             if pd.isna(away_survivors): away_survivors = 0.0
-            if (selected_contest == 'Splash Sports') & (row_data['Week'] in week_requiring_two_selections):
-                home_survivors = home_survivors * .65
-                away_survivors = away_survivors * .65  
             if pd.notna(home_team):
                 survivors_who_picked_team_this_week[home_team] = survivors_who_picked_team_this_week.get(home_team, 0.0) + home_survivors
             if pd.notna(away_team):
                 survivors_who_picked_team_this_week[away_team] = survivors_who_picked_team_this_week.get(away_team, 0.0) + away_survivors
                 
             total_survivors_this_week += home_survivors + away_survivors
-            if (selected_contest == 'Splash Sports') & (row_data['Week'] in week_requiring_two_selections):
-                total_survivors_this_week = total_survivors_this_week * .65
-                st.write('YESSSS')
+
                 
             
         overall_survival_rate_this_week = 0.0

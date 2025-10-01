@@ -1612,8 +1612,6 @@ def get_predicted_pick_percentages(pd):
             away_survivors = row_data.get('Expected Away Team Survivors', 0.0)
             if pd.isna(away_survivors): away_survivors = 0.0
             if (selected_contest == 'Splash Sports') & (row_data['Week'] in week_requiring_two_selections):
-                st.write(row_data['Week'])
-                st.write(week_requiring_two_selections)
                 home_survivors = home_survivors * .65
                 away_survivors = away_survivors * .65  
             if pd.notna(home_team):
@@ -1622,6 +1620,9 @@ def get_predicted_pick_percentages(pd):
                 survivors_who_picked_team_this_week[away_team] = survivors_who_picked_team_this_week.get(away_team, 0.0) + away_survivors
                 
             total_survivors_this_week += home_survivors + away_survivors
+            if (selected_contest == 'Splash Sports') & (row_data['Week'] in week_requiring_two_selections):
+                total_survivors_this_week = total_survivors_this_week * .65
+                st.write('YESSSS')
                 
             
         overall_survival_rate_this_week = 0.0
@@ -1735,7 +1736,7 @@ def get_predicted_pick_percentages(pd):
         nfl_schedule_df.to_csv("Splash_Predicted_pick_percent.csv", index=False)
     else:
         nfl_schedule_df.to_csv("DK_Predicted_pick_percent.csv", index=False)
-    st.subheader('Estimated Pick Percenteages Without Availability')
+    st.subheader('Estimated Pick Percentages Without Availability')
     st.write(nfl_schedule_df)
     return nfl_schedule_df
 

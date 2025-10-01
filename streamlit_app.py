@@ -1855,13 +1855,12 @@ def get_predicted_pick_percentages_with_availability(pd):
     
         # Calculate the sum of "Pick %" for each date
         sum_by_date = pick_predictions_df.groupby('Date')['Pick %'].sum()
-		st.write('Sum By Date')		
-		st.write(sum_by_date)
+        st.write('Sum By Date')		
+        st.write(sum_by_date)
 
 		
         # Update the "Pick %" column by dividing each value by the corresponding sum
         pick_predictions_df['Pick %'] = pick_predictions_df.apply(lambda row: row['Pick %'] / sum_by_date[row['Date']], axis=1)
-		st.write()
     
         pick_predictions_df.to_csv('pick_predictions_df.csv', index = False)
     

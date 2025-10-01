@@ -1326,27 +1326,39 @@ def get_predicted_pick_percentages(pd):
     home_df['Pick %'] = predictions
     #home_df.to_csv('predicted_home_data_circa.csv', index=False)
 
+    # Concatenate your DataFrames
     pick_predictions_df = pd.concat([away_df, home_df], ignore_index=True)
-
-    # Adjust pick percentages for Thanksgiving Favorites
+    
+    # Function to calculate the adjusted "Pick %"
+    def adjust_pick_percentage(row):
+        """
+        Calculates the adjusted 'Pick %' based on holiday favorite status 
+        and then multiplies by 'Availability'.
+        """
+        original_pick_percent = row["Pick %"]
+        is_thanksgiving = row["Date"] == 13 # Assuming 'Date' 13 signifies Thanksgiving
+    
+        # Thanksgiving Adjustment
+        # The original logic has two separate checks that compound if both teams
+        # are checked, but the goal seems to be: if a team is a Thanksgiving favorite
+        # AND it's NOT Thanksgiving (Date != 13), then apply the / 4 modification.
+        if not is_thanksgiving:
+            if row["Home Team Thanksgiving Favorite"] or row["Away Team Thanksgiving Favorite"]:
+                # Apply the Thanksgiving favorite modification: / 4
+                original_pick_percent = original_pick_percent / 4
+    
+        # Christmas Adjustment
+        # Christmas Favorite adjustments were applied regardless of the 'Date'.
+        if row["Home Team Christmas Favorite"] or row["Away Team Christmas Favorite"]:
+            # Apply the Christmas favorite modification: / 4
+            original_pick_percent = original_pick_percent / 4
+        
+        # Final adjustment: multiply by Availability (applied once)
+        return original_pick_percent * row["Availability"]
+    
+    # Apply the consolidated function
     pick_predictions_df["Pick %"] = pick_predictions_df.apply(
-        lambda row: row["Pick %"] / 4 if (row["Date"] != 13 and row["Home Team Thanksgiving Favorite"]) else row["Pick %"],
-        axis=1
-    )
-
-    pick_predictions_df["Pick %"] = pick_predictions_df.apply(
-        lambda row: row["Pick %"] / 4 if (row["Date"] != 13 and row["Away Team Thanksgiving Favorite"]) else row["Pick %"],
-        axis=1
-    )
-
-    # Adjust pick percentages for Thanksgiving Favorites
-    pick_predictions_df["Pick %"] = pick_predictions_df.apply(
-        lambda row: row["Pick %"] / 4 if row["Home Team Christmas Favorite"] else row["Pick %"],
-        axis=1
-    )
-
-    pick_predictions_df["Pick %"] = pick_predictions_df.apply(
-        lambda row: row["Pick %"] / 4 if row["Away Team Christmas Favorite"] else row["Pick %"],
+        adjust_pick_percentage,
         axis=1
     )
 
@@ -1834,25 +1846,8 @@ def get_predicted_pick_percentages_with_availability(pd):
     
         pick_predictions_df = pd.concat([away_df, home_df], ignore_index=True)
     
-        # Adjust pick percentages for Thanksgiving Favorites
         pick_predictions_df["Pick %"] = pick_predictions_df.apply(
-            lambda row: row["Pick %"] / 4 * row["Availability"] if (row["Date"] != 13 and row["Home Team Thanksgiving Favorite"]) else row["Pick %"] * row["Availability"],
-            axis=1
-        )
-    
-        pick_predictions_df["Pick %"] = pick_predictions_df.apply(
-            lambda row: row["Pick %"] / 4 * row["Availability"] if (row["Date"] != 13 and row["Away Team Thanksgiving Favorite"]) else row["Pick %"] * row["Availability"],
-            axis=1
-        )
-    
-        # Adjust pick percentages for Thanksgiving Favorites
-        pick_predictions_df["Pick %"] = pick_predictions_df.apply(
-            lambda row: row["Pick %"] / 4  * row["Availability"] if row["Home Team Christmas Favorite"] else row["Pick %"] * row["Availability"],
-            axis=1
-        )
-    
-        pick_predictions_df["Pick %"] = pick_predictions_df.apply(
-            lambda row: row["Pick %"] / 4  * row["Availability"] if row["Away Team Christmas Favorite"] else row["Pick %"] * row["Availability"],
+            lambda row: row["Pick %"] * row["Availability"],
             axis=1
         )
     

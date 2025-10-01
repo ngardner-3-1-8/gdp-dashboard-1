@@ -1357,7 +1357,7 @@ def get_predicted_pick_percentages(pd):
         return original_pick_percent
     
     # Apply the consolidated function
-	if selected_contest == 'Circa':
+    if selected_contest == 'Circa':
         pick_predictions_df["Pick %"] = pick_predictions_df.apply(
             adjust_pick_percentage,
             axis=1

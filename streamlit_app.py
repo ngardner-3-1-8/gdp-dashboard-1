@@ -1614,9 +1614,9 @@ def get_predicted_pick_percentages(pd):
             home_team = row_data['Home Team']
             away_team = row_data['Away Team']
             
-            home_survivors = row_data.get('Expected Home Team Survivors', 0.0)
+            home_survivors = row_data.get('Expected Home Team Survivors', 0.0) * .65
             if pd.isna(home_survivors): home_survivors = 0.0
-            away_survivors = row_data.get('Expected Away Team Survivors', 0.0)
+            away_survivors = row_data.get('Expected Away Team Survivors', 0.0) * .65
             if pd.isna(away_survivors): away_survivors = 0.0
             
             if pd.notna(home_team):
@@ -1625,7 +1625,7 @@ def get_predicted_pick_percentages(pd):
                 survivors_who_picked_team_this_week[away_team] = survivors_who_picked_team_this_week.get(away_team, 0.0) + away_survivors
                 
             total_survivors_this_week += home_survivors + away_survivors
-            total_survivors_this_week = total_survivors_this_week * .65
+                
             
         overall_survival_rate_this_week = 0.0
         if S_w > 0:

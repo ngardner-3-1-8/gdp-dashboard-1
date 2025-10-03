@@ -7936,6 +7936,7 @@ else:
     selected_contest = st.selectbox('Choose Platform:', options = contest_options, help = 'Choose the contest you are using this algorithm for: Circa (Advanced), Draftkings (Traditional and Pathetic), or Splash Sports (Somewhere between the other two)' + help_text_seletced_contest)
     if selected_contest == "DraftKings":
     	ending_week = 19
+        week_requiring_two_selections = []
     elif selected_contest == "Splash Sports":
         ending_week = 19
         st.write('')
@@ -7960,6 +7961,7 @@ else:
 		
     else:
     	ending_week = 21
+        week_requiring_two_selections = []
     st.write('')
     st.write('')
     st.write('')

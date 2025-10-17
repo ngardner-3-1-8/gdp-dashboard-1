@@ -3390,6 +3390,7 @@ def get_survivor_picks_based_on_internal_rankings():
         for i in range(len(df)):
             picks[i] = solver.IntVar(0, 1, 'pick_%i' % i)
 
+        required_pick_indices = set()
         # List of teams and their required week variables
         required_teams = [
             ('Arizona Cardinals', az_req_week),

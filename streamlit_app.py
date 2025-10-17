@@ -2709,11 +2709,14 @@ def get_survivor_picks_based_on_ev():
             # If 'Divisional Matchup?' is "Divisional", can only pick if 'Adjusted Current Difference' > 10
             if avoid_close_divisional_matchups == 1:
                 if favored_qualifier == 'Internal Rankings':
-                    if df.loc[i, 'Divisional Matchup?'] == 'Divisional' and df.loc[i, 'Adjusted Current Difference'] < 6 and df.loc[i, 'Hypothetical Current Winner Adjusted Current Rank'] > df.loc[i, 'Hypothetical Current Loser Adjusted Current Rank']:
+                    if df.loc[i, 'Divisional Matchup?'] == 'Divisional' and df.loc[i, 'Adjusted Current Difference'] < 7 and df.loc[i, 'Hypothetical Current Winner Adjusted Current Rank'] > df.loc[i, 'Hypothetical Current Loser Adjusted Current Rank']:
                         solver.Add(picks[i] == 0)
                 else:
-                    if df.loc[i, 'Divisional Matchup?'] == 'Divisional' and df.loc[i, 'Adjusted Spread'] < 6 and df.loc[i, 'Hypothetical Current Winner Sportsbook Spread'] < df.loc[i, 'Hypothetical Current Loser Sportsbook Spread']:
+                    if df.loc[i, 'Divisional Matchup?'] == 'Divisional' and df.loc[i, 'Adjusted Spread'] < 7 and df.loc[i, 'Hypothetical Current Winner Sportsbook Spread'] < df.loc[i, 'Hypothetical Current Loser Sportsbook Spread']:
                         solver.Add(picks[i] == 0) 
+            if avoid_away_divisional_matchups == 1:
+                if df.loc[i, 'Divisional Matchup?'] == 'Divisional' and df.loc[i, 'Away Team 1'] == df.loc[i, 'Hypothetical Current Winner']:
+                    solver.Add(picks[i] == 0)
             # Constraints for short rest and 4 games in 17 days (only if team is the Adjusted Current Winner)
             if avoid_away_teams_on_short_rest == 1:
                 if df.loc[i, 'Away Team Short Rest'] == 'Yes' and df.loc[i, 'Away Team 1'] == df.loc[i, 'Hypothetical Current Winner']:
@@ -3460,8 +3463,16 @@ def get_survivor_picks_based_on_internal_rankings():
 
             # If 'Divisional Matchup?' is "Divisional", can only pick if 'Adjusted Current Difference' > 10
             if avoid_close_divisional_matchups == 1:
-                if df.loc[i, 'Divisional Matchup?'] == 'Divisional' and df.loc[i, 'Adjusted Current Difference'] <= 7 and df.loc[i, 'Hypothetical Current Winner Adjusted Current Rank'] > df.loc[i, 'Hypothetical Current Loser Adjusted Current Rank']:
-                    solver.Add(picks[i] == 0)
+                if favored_qualifier == 'Internal Rankings':
+                    if df.loc[i, 'Divisional Matchup?'] == 'Divisional' and df.loc[i, 'Adjusted Current Difference'] < 7 and df.loc[i, 'Hypothetical Current Winner Adjusted Current Rank'] > df.loc[i, 'Hypothetical Current Loser Adjusted Current Rank']:
+                        solver.Add(picks[i] == 0)
+                else:
+                    if df.loc[i, 'Divisional Matchup?'] == 'Divisional' and df.loc[i, 'Adjusted Spread'] < 7 and df.loc[i, 'Hypothetical Current Winner Sportsbook Spread'] < df.loc[i, 'Hypothetical Current Loser Sportsbook Spread']:
+                        solver.Add(picks[i] == 0) 
+            # If 'Divisional Matchup?' is "Divisional", can only pick if 'Adjusted Current Difference' > 10
+            if avoid_away_divisional_matchups == 1:
+                if df.loc[i, 'Divisional Matchup?'] == 'Divisional' and df.loc[i, 'Away Team 1'] == df.loc[i, 'Hypothetical Current Winner']:
+                    solver.Add(picks[i] == 0)			
             # Constraints for short rest and 4 games in 17 days (only if team is the Adjusted Current Winner)
             if avoid_away_teams_on_short_rest == 1:
                 if df.loc[i, 'Away Team Short Rest'] == 'Yes' and df.loc[i, 'Away Team 1'] == df.loc[i, 'Hypothetical Current Winner']:
@@ -5266,7 +5277,9 @@ else:
         st.write('')
         st.subheader('Current Week Team Availability')
         st.write('')
-	    
+        if selected_contest == 'Circa' or selected_contest == 'Splash Sports':
+            use_live_contest_data = st.checkbox('Would you like to use live contest data for individual entries to estimate availability?')
+        st.write('')
         az_current_week_availability = st.slider("Arizona Cardinals Current Week Availability:", -1, 100) / 100
         az_current_week_availability_percent = az_current_week_availability*100
         if az_current_week_availability < 0:
@@ -5916,6 +5929,7 @@ else:
             \n- Most of the time, sprotsbooks' odds take into account these kinds of concerns, however, if you are adamanetly against picking away teams or teams in a divisional matchup, we give you the option to limit them as much as possible.""")
         avoid_away_teams_on_short_rest = 1 if st.checkbox('Avoid Away Teams on Short Rest') else 0
         avoid_close_divisional_matchups = 1 if st.checkbox('Avoid Close Divisional Matchups') else 0
+        avoid_away_divisional_matchups = 1 if st.checkbox('Avoid :red[AWAY] Divisional Matchups') else 0
         avoid_3_games_in_10_days = 1 if st.checkbox('Avoid 3 games in 10 days') else 0
         avoid_4_games_in_17_days = 1 if st.checkbox('Avoid 4 games in 17 days') else 0
         avoid_away_teams_in_close_matchups = 1 if st.checkbox('Avoid Away Teams in Close Games') else 0

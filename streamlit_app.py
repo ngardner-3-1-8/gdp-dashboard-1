@@ -1863,23 +1863,23 @@ def get_predicted_pick_percentages_with_availability(pd):
             """
             original_pick_percent = row["Pick %"]
             pre_thanksgiving = row["Date"] < 13
-			pre_christmas = row["Date"] < 18
-        
+            pre_christmas = row["Date"] < 18
+            
             # Thanksgiving Adjustment
             # The original logic has two separate checks that compound if both teams
             # are checked, but the goal seems to be: if a team is a Thanksgiving favorite
             # AND it's NOT Thanksgiving (Date != 13), then apply the / 4 modification.
             if pre_thanksgiving:
                 if (row["Home Team Thanksgiving Favorite"] or row["Away Team Thanksgiving Favorite"]) and (row["Home Team Christmas Favorite"] or row["Away Team Christmas Favorite"]):
-                	original_pick_percent = original_pick_percent / 6
+                    original_pick_percent = original_pick_percent / 6
                 elif (not row["Home Team Thanksgiving Favorite"] and not row["Away Team Thanksgiving Favorite"]) and (row["Home Team Christmas Favorite"] or row["Away Team Christmas Favorite"]):
                     original_pick_percent = original_pick_percent / 3
                 elif (row["Home Team Thanksgiving Favorite"] or row["Away Team Thanksgiving Favorite"]) and (not row["Home Team Christmas Favorite"] and not row["Away Team Christmas Favorite"]):
                     original_pick_percent = original_pick_percent / 2
             elif pre_christmas:
                 if row["Home Team Christmas Favorite"] == row["Team"] or row["Away Team Christmas Favorite"] == row["Team"]:
-					original_pick_percent = original_pick_percent / 4
-   
+                    original_pick_percent = original_pick_percent / 4
+        
             # Final adjustment: multiply by Availability (applied once)
             return original_pick_percent
         

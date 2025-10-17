@@ -3357,10 +3357,10 @@ def get_survivor_picks_based_on_ev():
                             if df.loc[i, 'Favorite'] == 'San Francisco 49ers':
                                 solver.Add(picks[i] == 1)
                             elif df.loc[i, 'Home Team'] == 'San Francisco 49ers':
-                                df.loc[i, 'Favorite'] = df.loc[i, 'Home Team']
+                                df.loc[i, 'Underdog'] = df.loc[i, 'Home Team']
                                 solver.Add(picks[i] == 1)
                             elif df.loc[i, 'Away Team'] == 'San Francisco 49ers':
-                                df.loc[i, 'Favorite'] = df.loc[i, 'Away Team']
+                                df.loc[i, 'Underdog'] = df.loc[i, 'Away Team']
                                 solver.Add(picks[i] == 1)
                 if az_req_week > 0:        
                     for i in range(len(df)):
@@ -3368,10 +3368,10 @@ def get_survivor_picks_based_on_ev():
                             if df.loc[i, 'Favorite'] == 'Arizona Cardinals':
                                 solver.Add(picks[i] == 1)
                             elif df.loc[i, 'Home Team'] == 'Arizona Cardinals':
-                                df.loc[i, 'Favorite'] = df.loc[i, 'Home Team']
+                                df.loc[i, 'Underdog'] = df.loc[i, 'Home Team']
                                 solver.Add(picks[i] == 1)
                             elif df.loc[i, 'Away Team'] == 'Arizona Cardinals':
-                                df.loc[i, 'Favorite'] = df.loc[i, 'Away Team']
+                                df.loc[i, 'Underdog'] = df.loc[i, 'Away Team']
                                 solver.Add(picks[i] == 1)
                 if atl_req_week > 0:        
                     for i in range(len(df)):
@@ -3379,10 +3379,10 @@ def get_survivor_picks_based_on_ev():
                             if df.loc[i, 'Favorite'] == 'Atlanta Falcons':
                                 solver.Add(picks[i] == 1)
                             elif df.loc[i, 'Home Team'] == 'Atlanta Falcons':
-                                df.loc[i, 'Favorite'] = df.loc[i, 'Home Team']
+                                df.loc[i, 'Underdog'] = df.loc[i, 'Home Team']
                                 solver.Add(picks[i] == 1)
                             elif df.loc[i, 'Away Team'] == 'Atlanta Falcons':
-                                df.loc[i, 'Favorite'] = df.loc[i, 'Away Team']
+                                df.loc[i, 'Underdog'] = df.loc[i, 'Away Team']
                                 solver.Add(picks[i] == 1)
                 if bal_req_week > 0:        
                     for i in range(len(df)):
@@ -3390,10 +3390,10 @@ def get_survivor_picks_based_on_ev():
                             if df.loc[i, 'Favorite'] == 'Baltimore Ravens':
                                 solver.Add(picks[i] == 1)
                             elif df.loc[i, 'Home Team'] == 'Baltimore Ravens':
-                                df.loc[i, 'Favorite'] = df.loc[i, 'Home Team']
+                                df.loc[i, 'Underdog'] = df.loc[i, 'Home Team']
                                 solver.Add(picks[i] == 1)
                             elif df.loc[i, 'Away Team'] == 'Baltimore Ravens':
-                                df.loc[i, 'Favorite'] = df.loc[i, 'Away Team']
+                                df.loc[i, 'Underdog'] = df.loc[i, 'Away Team']
                                 solver.Add(picks[i] == 1)
                 if buf_req_week > 0:        
                     for i in range(len(df)):
@@ -3401,10 +3401,10 @@ def get_survivor_picks_based_on_ev():
                             if df.loc[i, 'Favorite'] == 'Buffalo Bills':
                                 solver.Add(picks[i] == 1)
                             elif df.loc[i, 'Home Team'] == 'Buffalo Bills':
-                                df.loc[i, 'Favorite'] = df.loc[i, 'Home Team']
+                                df.loc[i, 'Underdog'] = df.loc[i, 'Home Team']
                                 solver.Add(picks[i] == 1)
                             elif df.loc[i, 'Away Team'] == 'Buffalo Bills':
-                                df.loc[i, 'Favorite'] = df.loc[i, 'Away Team']
+                                df.loc[i, 'Underdog'] = df.loc[i, 'Away Team']
                                 solver.Add(picks[i] == 1)
                 if car_req_week > 0:        
                     for i in range(len(df)):
@@ -3412,10 +3412,10 @@ def get_survivor_picks_based_on_ev():
                             if df.loc[i, 'Favorite'] == 'Carolina Panthers':
                                 solver.Add(picks[i] == 1)
                             elif df.loc[i, 'Home Team'] == 'Carolina Panthers':
-                                df.loc[i, 'Favorite'] = df.loc[i, 'Home Team']
+                                df.loc[i, 'Underdog'] = df.loc[i, 'Home Team']
                                 solver.Add(picks[i] == 1)
                             elif df.loc[i, 'Away Team'] == 'Carolina Panthers':
-                                df.loc[i, 'Favorite'] = df.loc[i, 'Away Team']
+                                df.loc[i, 'Underdog'] = df.loc[i, 'Away Team']
                                 solver.Add(picks[i] == 1)
                 if chi_req_week > 0:        
                     for i in range(len(df)):
@@ -3423,10 +3423,10 @@ def get_survivor_picks_based_on_ev():
                             if df.loc[i, 'Favorite'] == 'Chicago Bears':
                                 solver.Add(picks[i] == 1)
                             elif df.loc[i, 'Home Team'] == 'Chicago Bears':
-                                df.loc[i, 'Favorite'] = df.loc[i, 'Home Team']
+                                df.loc[i, 'Underdog'] = df.loc[i, 'Home Team']
                                 solver.Add(picks[i] == 1)
                             elif df.loc[i, 'Away Team'] == 'Chicago Bears':
-                                df.loc[i, 'Favorite'] = df.loc[i, 'Away Team']
+                                df.loc[i, 'Underdog'] = df.loc[i, 'Away Team']
                                 solver.Add(picks[i] == 1)
                 if cin_req_week > 0:
                     for i in range(len(df)):
@@ -3434,10 +3434,10 @@ def get_survivor_picks_based_on_ev():
                             if df.loc[i, 'Favorite'] == 'Cincinnati Bengals':
                                 solver.Add(picks[i] == 1)
                             elif df.loc[i, 'Home Team'] == 'Cincinnati Bengals':
-                                df.loc[i, 'Favorite'] = df.loc[i, 'Home Team']
+                                df.loc[i, 'Underdog'] = df.loc[i, 'Home Team']
                                 solver.Add(picks[i] == 1)
                             elif df.loc[i, 'Away Team'] == 'Cincinnati Bengals':
-                                df.loc[i, 'Favorite'] = df.loc[i, 'Away Team']
+                                df.loc[i, 'Underdog'] = df.loc[i, 'Away Team']
                                 solver.Add(picks[i] == 1)
                 if cle_req_week > 0:        
                     for i in range(len(df)):
@@ -3445,10 +3445,10 @@ def get_survivor_picks_based_on_ev():
                             if df.loc[i, 'Favorite'] == 'Cleveland Browns':
                                 solver.Add(picks[i] == 1)
                             elif df.loc[i, 'Home Team'] == 'Cleveland Browns':
-                                df.loc[i, 'Favorite'] = df.loc[i, 'Home Team']
+                                df.loc[i, 'Underdog'] = df.loc[i, 'Home Team']
                                 solver.Add(picks[i] == 1)
                             elif df.loc[i, 'Away Team'] == 'Cleveland Browns':
-                                df.loc[i, 'Favorite'] = df.loc[i, 'Away Team']
+                                df.loc[i, 'Underdog'] = df.loc[i, 'Away Team']
                                 solver.Add(picks[i] == 1)
                 if dal_req_week > 0:        
                     for i in range(len(df)):
@@ -3456,10 +3456,10 @@ def get_survivor_picks_based_on_ev():
                             if df.loc[i, 'Favorite'] == 'Dallas Cowboys':
                                 solver.Add(picks[i] == 1)
                             elif df.loc[i, 'Home Team'] == 'Dallas Cowboys':
-                                df.loc[i, 'Favorite'] = df.loc[i, 'Home Team']
+                                df.loc[i, 'Underdog'] = df.loc[i, 'Home Team']
                                 solver.Add(picks[i] == 1)
                             elif df.loc[i, 'Away Team'] == 'Dallas Cowboys':
-                                df.loc[i, 'Favorite'] = df.loc[i, 'Away Team']
+                                df.loc[i, 'Underdog'] = df.loc[i, 'Away Team']
                                 solver.Add(picks[i] == 1)
                 if den_req_week > 0:        
                     for i in range(len(df)):
@@ -3467,10 +3467,10 @@ def get_survivor_picks_based_on_ev():
                             if df.loc[i, 'Favorite'] == 'Denver Broncos':
                                 solver.Add(picks[i] == 1)
                             elif df.loc[i, 'Home Team'] == 'Denver Broncos':
-                                df.loc[i, 'Favorite'] = df.loc[i, 'Home Team']
+                                df.loc[i, 'Underdog'] = df.loc[i, 'Home Team']
                                 solver.Add(picks[i] == 1)
                             elif df.loc[i, 'Away Team'] == 'Denver Broncos':
-                                df.loc[i, 'Favorite'] = df.loc[i, 'Away Team']
+                                df.loc[i, 'Underdog'] = df.loc[i, 'Away Team']
                                 solver.Add(picks[i] == 1)
                 if det_req_week > 0:        
                     for i in range(len(df)):
@@ -3478,10 +3478,10 @@ def get_survivor_picks_based_on_ev():
                             if df.loc[i, 'Favorite'] == 'Detroit Lions':
                                 solver.Add(picks[i] == 1)
                             elif df.loc[i, 'Home Team'] == 'Detroit Lions':
-                                df.loc[i, 'Favorite'] = df.loc[i, 'Home Team']
+                                df.loc[i, 'Underdog'] = df.loc[i, 'Home Team']
                                 solver.Add(picks[i] == 1)
                             elif df.loc[i, 'Away Team'] == 'Detroit Lions':
-                                df.loc[i, 'Favorite'] = df.loc[i, 'Away Team']
+                                df.loc[i, 'Underdog'] = df.loc[i, 'Away Team']
                                 solver.Add(picks[i] == 1)
                 if gb_req_week > 0:        
                     for i in range(len(df)):
@@ -3489,10 +3489,10 @@ def get_survivor_picks_based_on_ev():
                             if df.loc[i, 'Favorite'] == 'Green Bay Packers':
                                 solver.Add(picks[i] == 1)
                             elif df.loc[i, 'Home Team'] == 'Green Bay Packers':
-                                df.loc[i, 'Favorite'] = df.loc[i, 'Home Team']
+                                df.loc[i, 'Underdog'] = df.loc[i, 'Home Team']
                                 solver.Add(picks[i] == 1)
                             elif df.loc[i, 'Away Team'] == 'Green Bay Packers':
-                                df.loc[i, 'Favorite'] = df.loc[i, 'Away Team']
+                                df.loc[i, 'Underdog'] = df.loc[i, 'Away Team']
                                 solver.Add(picks[i] == 1)
                 if hou_req_week > 0:        
                     for i in range(len(df)):
@@ -3500,10 +3500,10 @@ def get_survivor_picks_based_on_ev():
                             if df.loc[i, 'Favorite'] == 'Houston Texans':
                                 solver.Add(picks[i] == 1)
                             elif df.loc[i, 'Home Team'] == 'Houston Texans':
-                                df.loc[i, 'Favorite'] = df.loc[i, 'Home Team']
+                                df.loc[i, 'Underdog'] = df.loc[i, 'Home Team']
                                 solver.Add(picks[i] == 1)
                             elif df.loc[i, 'Away Team'] == 'Houston Texans':
-                                df.loc[i, 'Favorite'] = df.loc[i, 'Away Team']
+                                df.loc[i, 'Underdog'] = df.loc[i, 'Away Team']
                                 solver.Add(picks[i] == 1)
                 if ind_req_week > 0:        
                     for i in range(len(df)):
@@ -3511,10 +3511,10 @@ def get_survivor_picks_based_on_ev():
                             if df.loc[i, 'Favorite'] == 'Indianapolis Colts':
                                 solver.Add(picks[i] == 1)
                             elif df.loc[i, 'Home Team'] == 'Indianapolis Colts':
-                                df.loc[i, 'Favorite'] = df.loc[i, 'Home Team']
+                                df.loc[i, 'Underdog'] = df.loc[i, 'Home Team']
                                 solver.Add(picks[i] == 1)
                             elif df.loc[i, 'Away Team'] == 'Indianapolis Colts':
-                                df.loc[i, 'Favorite'] = df.loc[i, 'Away Team']
+                                df.loc[i, 'Underdog'] = df.loc[i, 'Away Team']
                                 solver.Add(picks[i] == 1)
                 if jax_req_week > 0:        
                     for i in range(len(df)):
@@ -3522,10 +3522,10 @@ def get_survivor_picks_based_on_ev():
                             if df.loc[i, 'Favorite'] == 'Jacksonville Jaguars':
                                 solver.Add(picks[i] == 1)
                             elif df.loc[i, 'Home Team'] == 'Jacksonville Jaguars':
-                                df.loc[i, 'Favorite'] = df.loc[i, 'Home Team']
+                                df.loc[i, 'Underdog'] = df.loc[i, 'Home Team']
                                 solver.Add(picks[i] == 1)
                             elif df.loc[i, 'Away Team'] == 'Jacksonville Jaguars':
-                                df.loc[i, 'Favorite'] = df.loc[i, 'Away Team']
+                                df.loc[i, 'Underdog'] = df.loc[i, 'Away Team']
                                 solver.Add(picks[i] == 1)
                 if kc_req_week > 0:        
                     for i in range(len(df)):
@@ -3533,10 +3533,10 @@ def get_survivor_picks_based_on_ev():
                             if df.loc[i, 'Favorite'] == 'Kansas City Chiefs':
                                 solver.Add(picks[i] == 1)
                             elif df.loc[i, 'Home Team'] == 'Kansas City Chiefs':
-                                df.loc[i, 'Favorite'] = df.loc[i, 'Home Team']
+                                df.loc[i, 'Underdog'] = df.loc[i, 'Home Team']
                                 solver.Add(picks[i] == 1)
                             elif df.loc[i, 'Away Team'] == 'Kansas City Chiefs':
-                                df.loc[i, 'Favorite'] = df.loc[i, 'Away Team']
+                                df.loc[i, 'Underdog'] = df.loc[i, 'Away Team']
                                 solver.Add(picks[i] == 1)
                 if lv_req_week > 0:        
                     for i in range(len(df)):
@@ -3544,10 +3544,10 @@ def get_survivor_picks_based_on_ev():
                             if df.loc[i, 'Favorite'] == 'Las Vegas Raiders':
                                 solver.Add(picks[i] == 1)
                             elif df.loc[i, 'Home Team'] == 'Las Vegas Raiders':
-                                df.loc[i, 'Favorite'] = df.loc[i, 'Home Team']
+                                df.loc[i, 'Underdog'] = df.loc[i, 'Home Team']
                                 solver.Add(picks[i] == 1)
                             elif df.loc[i, 'Away Team'] == 'Las Vegas Raiders':
-                                df.loc[i, 'Favorite'] = df.loc[i, 'Away Team']
+                                df.loc[i, 'Underdog'] = df.loc[i, 'Away Team']
                                 solver.Add(picks[i] == 1)
                 if lac_req_week > 0:        
                     for i in range(len(df)):
@@ -3555,10 +3555,10 @@ def get_survivor_picks_based_on_ev():
                             if df.loc[i, 'Favorite'] == 'Los Angeles Chargers':
                                 solver.Add(picks[i] == 1)
                             elif df.loc[i, 'Home Team'] == 'Los Angeles Chargers':
-                                df.loc[i, 'Favorite'] = df.loc[i, 'Home Team']
+                                df.loc[i, 'Underdog'] = df.loc[i, 'Home Team']
                                 solver.Add(picks[i] == 1)
                             elif df.loc[i, 'Away Team'] == 'Los Angeles Chargers':
-                                df.loc[i, 'Favorite'] = df.loc[i, 'Away Team']
+                                df.loc[i, 'Underdog'] = df.loc[i, 'Away Team']
                                 solver.Add(picks[i] == 1)
                 if lar_req_week > 0:        
                     for i in range(len(df)):
@@ -3566,10 +3566,10 @@ def get_survivor_picks_based_on_ev():
                             if df.loc[i, 'Favorite'] == 'Los Angeles Rams':
                                 solver.Add(picks[i] == 1)
                             elif df.loc[i, 'Home Team'] == 'Los Angeles Rams':
-                                df.loc[i, 'Favorite'] = df.loc[i, 'Home Team']
+                                df.loc[i, 'Underdog'] = df.loc[i, 'Home Team']
                                 solver.Add(picks[i] == 1)
                             elif df.loc[i, 'Away Team'] == 'Los Angeles Rams':
-                                df.loc[i, 'Favorite'] = df.loc[i, 'Away Team']
+                                df.loc[i, 'Underdog'] = df.loc[i, 'Away Team']
                                 solver.Add(picks[i] == 1)
                 if mia_req_week > 0:        
                     for i in range(len(df)):
@@ -3577,10 +3577,10 @@ def get_survivor_picks_based_on_ev():
                             if df.loc[i, 'Favorite'] == 'Miami Dolphins':
                                 solver.Add(picks[i] == 1)
                             elif df.loc[i, 'Home Team'] == 'Miami Dolphins':
-                                df.loc[i, 'Favorite'] = df.loc[i, 'Home Team']
+                                df.loc[i, 'Underdog'] = df.loc[i, 'Home Team']
                                 solver.Add(picks[i] == 1)
                             elif df.loc[i, 'Away Team'] == 'Miami Dolphins':
-                                df.loc[i, 'Favorite'] = df.loc[i, 'Away Team']
+                                df.loc[i, 'Underdog'] = df.loc[i, 'Away Team']
                                 solver.Add(picks[i] == 1)
                 if min_req_week > 0:        
                     for i in range(len(df)):
@@ -3588,10 +3588,10 @@ def get_survivor_picks_based_on_ev():
                             if df.loc[i, 'Favorite'] == 'Minnesota Vikings':
                                 solver.Add(picks[i] == 1)
                             elif df.loc[i, 'Home Team'] == 'Minnesota Vikings':
-                                df.loc[i, 'Favorite'] = df.loc[i, 'Home Team']
+                                df.loc[i, 'Underdog'] = df.loc[i, 'Home Team']
                                 solver.Add(picks[i] == 1)
                             elif df.loc[i, 'Away Team'] == 'Minnesota Vikings':
-                                df.loc[i, 'Favorite'] = df.loc[i, 'Away Team']
+                                df.loc[i, 'Underdog'] = df.loc[i, 'Away Team']
                                 solver.Add(picks[i] == 1)
                 if ne_req_week > 0:        
                     for i in range(len(df)):
@@ -3599,10 +3599,10 @@ def get_survivor_picks_based_on_ev():
                             if df.loc[i, 'Favorite'] == 'New England Patriots':
                                 solver.Add(picks[i] == 1)
                             elif df.loc[i, 'Home Team'] == 'New England Patriots':
-                                df.loc[i, 'Favorite'] = df.loc[i, 'Home Team']
+                                df.loc[i, 'Underdog'] = df.loc[i, 'Home Team']
                                 solver.Add(picks[i] == 1)
                             elif df.loc[i, 'Away Team'] == 'New England Patriots':
-                                df.loc[i, 'Favorite'] = df.loc[i, 'Away Team']
+                                df.loc[i, 'Underdog'] = df.loc[i, 'Away Team']
                                 solver.Add(picks[i] == 1)
                 if no_req_week > 0:        
                     for i in range(len(df)):
@@ -3610,10 +3610,10 @@ def get_survivor_picks_based_on_ev():
                             if df.loc[i, 'Favorite'] == 'New Orleans Saints':
                                 solver.Add(picks[i] == 1)
                             elif df.loc[i, 'Home Team'] == 'New Orleans Saints':
-                                df.loc[i, 'Favorite'] = df.loc[i, 'Home Team']
+                                df.loc[i, 'Underdog'] = df.loc[i, 'Home Team']
                                 solver.Add(picks[i] == 1)
                             elif df.loc[i, 'Away Team'] == 'New Orleans Saints':
-                                df.loc[i, 'Favorite'] = df.loc[i, 'Away Team']
+                                df.loc[i, 'Underdog'] = df.loc[i, 'Away Team']
                                 solver.Add(picks[i] == 1)
                 if nyg_req_week > 0:        
                     for i in range(len(df)):
@@ -3621,10 +3621,10 @@ def get_survivor_picks_based_on_ev():
                             if df.loc[i, 'Favorite'] == 'New York Giants':
                                 solver.Add(picks[i] == 1)
                             elif df.loc[i, 'Home Team'] == 'New York Giants':
-                                df.loc[i, 'Favorite'] = df.loc[i, 'Home Team']
+                                df.loc[i, 'Underdog'] = df.loc[i, 'Home Team']
                                 solver.Add(picks[i] == 1)
                             elif df.loc[i, 'Away Team'] == 'New York Giants':
-                                df.loc[i, 'Favorite'] = df.loc[i, 'Away Team']
+                                df.loc[i, 'Underdog'] = df.loc[i, 'Away Team']
                                 solver.Add(picks[i] == 1)
                 if nyj_req_week > 0:        
                     for i in range(len(df)):
@@ -3632,31 +3632,31 @@ def get_survivor_picks_based_on_ev():
                             if df.loc[i, 'Favorite'] == 'New York Jets':
                                 solver.Add(picks[i] == 1)
                             elif df.loc[i, 'Home Team'] == 'New York Jets':
-                                df.loc[i, 'Favorite'] = df.loc[i, 'Home Team']
+                                df.loc[i, 'Underdog'] = df.loc[i, 'Home Team']
                                 solver.Add(picks[i] == 1)
                             elif df.loc[i, 'Away Team'] == 'New York Jets':
-                                df.loc[i, 'Favorite'] = df.loc[i, 'Away Team']
+                                df.loc[i, 'Underdog'] = df.loc[i, 'Away Team']
                                 solver.Add(picks[i] == 1)
                 if phi_req_week > 0:        
                     for i in range(len(df)):
                         if (df.loc[i, 'Home Team'] == 'Philadelphia Eagles' or df.loc[i, 'Away Team'] == 'Philadelphia Eagles') and df.loc[i, 'Week_Num'] == phi_req_week:
                             if df.loc[i, 'Favorite'] == 'Philadelphia Eagles':
                                 solver.Add(picks[i] == 1)
-                            elif df.loc[i, 'Home Team'] == 'Philadelphia Eagles':
+                            elif df.loc[i, 'Underdog'] == 'Philadelphia Eagles':
                                 df.loc[i, 'Favorite'] = df.loc[i, 'Home Team']
                                 solver.Add(picks[i] == 1)
                             elif df.loc[i, 'Away Team'] == 'Philadelphia Eagles':
-                                df.loc[i, 'Favorite'] = df.loc[i, 'Away Team']
+                                df.loc[i, 'Underdog'] = df.loc[i, 'Away Team']
                                 solver.Add(picks[i] == 1)
                 if pit_req_week > 0:        
                         if (df.loc[i, 'Home Team'] == 'Pittsburgh Steelers' or df.loc[i, 'Away Team'] == 'Pittsburgh Steelers') and df.loc[i, 'Week_Num'] == pit_req_week:
                             if df.loc[i, 'Favorite'] == 'Pittsburgh Steelers':
                                 solver.Add(picks[i] == 1)
                             elif df.loc[i, 'Home Team'] == 'Pittsburgh Steelers':
-                                df.loc[i, 'Favorite'] = df.loc[i, 'Home Team']
+                                df.loc[i, 'Underdog'] = df.loc[i, 'Home Team']
                                 solver.Add(picks[i] == 1)
                             elif df.loc[i, 'Away Team'] == 'Pittsburgh Steelers':
-                                df.loc[i, 'Favorite'] = df.loc[i, 'Away Team']
+                                df.loc[i, 'Underdog'] = df.loc[i, 'Away Team']
                                 solver.Add(picks[i] == 1)
                 if sea_req_week > 0:        
                     for i in range(len(df)):
@@ -3664,10 +3664,10 @@ def get_survivor_picks_based_on_ev():
                             if df.loc[i, 'Favorite'] == 'Seattle Seahawks':
                                 solver.Add(picks[i] == 1)
                             elif df.loc[i, 'Home Team'] == 'Seattle Seahawks':
-                                df.loc[i, 'Favorite'] = df.loc[i, 'Home Team']
+                                df.loc[i, 'Underdog'] = df.loc[i, 'Home Team']
                                 solver.Add(picks[i] == 1)
                             elif df.loc[i, 'Away Team'] == 'Seattle Seahawks':
-                                df.loc[i, 'Favorite'] = df.loc[i, 'Away Team']
+                                df.loc[i, 'Underdog'] = df.loc[i, 'Away Team']
                                 solver.Add(picks[i] == 1)
                 if tb_req_week > 0:        
                     for i in range(len(df)):
@@ -3675,10 +3675,10 @@ def get_survivor_picks_based_on_ev():
                             if df.loc[i, 'Favorite'] == 'Tampa Bay Buccaneers':
                                 solver.Add(picks[i] == 1)
                             elif df.loc[i, 'Home Team'] == 'Tampa Bay Buccaneers':
-                                df.loc[i, 'Favorite'] = df.loc[i, 'Home Team']
+                                df.loc[i, 'Underdog'] = df.loc[i, 'Home Team']
                                 solver.Add(picks[i] == 1)
                             elif df.loc[i, 'Away Team'] == 'Tampa Bay Buccaneers':
-                                df.loc[i, 'Favorite'] = df.loc[i, 'Away Team']
+                                df.loc[i, 'Underdog'] = df.loc[i, 'Away Team']
                                 solver.Add(picks[i] == 1)
                 if ten_req_week > 0:        
                     for i in range(len(df)):
@@ -3686,10 +3686,10 @@ def get_survivor_picks_based_on_ev():
                             if df.loc[i, 'Favorite'] == 'Tennessee Titans':
                                 solver.Add(picks[i] == 1)
                             elif df.loc[i, 'Home Team'] == 'Tennessee Titans':
-                                df.loc[i, 'Favorite'] = df.loc[i, 'Home Team']
+                                df.loc[i, 'Underdog'] = df.loc[i, 'Home Team']
                                 solver.Add(picks[i] == 1)
                             elif df.loc[i, 'Away Team'] == 'Tennessee Titans':
-                                df.loc[i, 'Favorite'] = df.loc[i, 'Away Team']
+                                df.loc[i, 'Underdog'] = df.loc[i, 'Away Team']
                                 solver.Add(picks[i] == 1)
                 if was_req_week > 0:        
                     for i in range(len(df)):
@@ -3697,10 +3697,10 @@ def get_survivor_picks_based_on_ev():
                             if df.loc[i, 'Favorite'] == 'Washington Commanders':
                                 solver.Add(picks[i] == 1)
                             elif df.loc[i, 'Home Team'] == 'Washington Commanders':
-                                df.loc[i, 'Favorite'] = df.loc[i, 'Home Team']
+                                df.loc[i, 'Underdog'] = df.loc[i, 'Home Team']
                                 solver.Add(picks[i] == 1)
                             elif df.loc[i, 'Away Team'] == 'Washington Commanders':
-                                df.loc[i, 'Favorite'] = df.loc[i, 'Away Team']
+                                df.loc[i, 'Underdog'] = df.loc[i, 'Away Team']
                                 solver.Add(picks[i] == 1)
                 if df.loc[i, 'Favorite'] in picked_teams:
                     solver.Add(picks[i] == 0)  

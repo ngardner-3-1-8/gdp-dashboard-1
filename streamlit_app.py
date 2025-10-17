@@ -2675,7 +2675,7 @@ def get_survivor_picks_based_on_ev():
                 # Find the index of the game where 'team' plays in 'req_week'
                 # The '&' operator here applies the condition for matching both team and week
                 required_game_indices = df[
-                    ((df['Home Team'] == team) | (df['Away Team'] == team)) & 
+                    ((df['Hypothetical Current Winner'] == team) & 
                     (df['Week_Num'] == req_week)
                 ].index.tolist()
                 

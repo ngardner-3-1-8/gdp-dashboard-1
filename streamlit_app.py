@@ -5967,13 +5967,13 @@ else:
         avoid_away_teams_on_short_rest = 1 if st.checkbox('Avoid Away Teams on Short Rest') else 0
         avoid_close_divisional_matchups = 1 if st.checkbox('Avoid Close Divisional Matchups') else 0
         if avoid_close_divisional_matchups == 1:
-            min_div_spread = st.selectbox('What point spread do you consider "close"?', spread_options)          
+            min_div_spread = st.selectbox('What point spread do you consider "close" for divisional matchups?', spread_options)          
         avoid_away_divisional_matchups = 1 if st.checkbox('Avoid :red[AWAY] Divisional Matchups') else 0
         avoid_3_games_in_10_days = 1 if st.checkbox('Avoid 3 games in 10 days') else 0
         avoid_4_games_in_17_days = 1 if st.checkbox('Avoid 4 games in 17 days') else 0
         avoid_away_teams_in_close_matchups = 1 if st.checkbox('Avoid Away Teams in Close Games') else 0
         if avoid_away_teams_in_close_matchups == 1:
-            min_away_spread = st.selectbox('What point spread do you consider "close"?', spread_options) 
+            min_away_spread = st.selectbox('What point spread do you consider "close" for away games?', spread_options) 
         avoid_cumulative_rest_disadvantage = 1 if st.checkbox('Avoid Cumulative Rest Disadvantage') else 0
         avoid_thursday_night = 1 if st.checkbox('Avoid :red[ALL TEAMS] in Thursday Night Games') else 0
         avoid_away_thursday_night = 1 if st.checkbox('Avoid :red[ONLY AWAY TEAMS] in Thursday Night Games') else 0

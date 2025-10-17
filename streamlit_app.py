@@ -1855,7 +1855,8 @@ def get_predicted_pick_percentages_with_availability(pd):
         #home_df.to_csv('predicted_home_data_circa.csv', index=False)
     
         pick_predictions_df = pd.concat([away_df, home_df], ignore_index=True)
-    
+        st.write("TEST PICK PERCENTAGES LINE 1858")
+        st.write(pick_predictions_df[["Team", "Pick %", "Availability"]])		
         pick_predictions_df["Pick %"] = pick_predictions_df.apply(
             lambda row: row["Pick %"] * row["Availability"],
             axis=1
@@ -2000,12 +2001,8 @@ def get_predicted_pick_percentages_with_availability(pd):
         def get_expected_availability(team_name, availability_dict):
             availability = availability_dict.get(team_name) # Get availability, default to -1 if team not in dict
             if availability != -.01:
-                st.write(team_name)
-                st.write(availability)
                 return availability
             else:
-                st.write(team_name)
-                st.write("1.0")
                 return 1.0
     
     # Apply the function to update 'Home Team Expected Availability'

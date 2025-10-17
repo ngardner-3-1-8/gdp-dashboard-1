@@ -1345,13 +1345,13 @@ def get_predicted_pick_percentages(pd):
         if not is_thanksgiving:
             if row["Home Team Thanksgiving Favorite"] or row["Away Team Thanksgiving Favorite"]:
                 # Apply the Thanksgiving favorite modification: / 4
-                original_pick_percent = original_pick_percent / 4
+                original_pick_percent = original_pick_percent / 2
     
         # Christmas Adjustment
         # Christmas Favorite adjustments were applied regardless of the 'Date'.
         if row["Home Team Christmas Favorite"] or row["Away Team Christmas Favorite"]:
             # Apply the Christmas favorite modification: / 4
-            original_pick_percent = original_pick_percent / 4
+            original_pick_percent = original_pick_percent / 2
         
         # Final adjustment: multiply by Availability (applied once)
         return original_pick_percent

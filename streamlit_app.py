@@ -1336,23 +1336,24 @@ def get_predicted_pick_percentages(pd):
         and then multiplies by 'Availability'.
         """
         original_pick_percent = row["Pick %"]
-        is_thanksgiving = row["Date"] == 13 # Assuming 'Date' 13 signifies Thanksgiving
-    
+        pre_thanksgiving = row["Date"] < 13
+        pre_christmas = row["Date"] < 18
+        
         # Thanksgiving Adjustment
         # The original logic has two separate checks that compound if both teams
         # are checked, but the goal seems to be: if a team is a Thanksgiving favorite
         # AND it's NOT Thanksgiving (Date != 13), then apply the / 4 modification.
-        if not is_thanksgiving:
-            if row["Home Team Thanksgiving Favorite"] or row["Away Team Thanksgiving Favorite"]:
-                # Apply the Thanksgiving favorite modification: / 4
+        if pre_thanksgiving:
+            if (row["Home Team Thanksgiving Favorite"] or row["Away Team Thanksgiving Favorite"]) and (row["Home Team Christmas Favorite"] or row["Away Team Christmas Favorite"]):
+                original_pick_percent = original_pick_percent / 6
+            elif (not row["Home Team Thanksgiving Favorite"] and not row["Away Team Thanksgiving Favorite"]) and (row["Home Team Christmas Favorite"] or row["Away Team Christmas Favorite"]):
+                original_pick_percent = original_pick_percent / 3
+            elif (row["Home Team Thanksgiving Favorite"] or row["Away Team Thanksgiving Favorite"]) and (not row["Home Team Christmas Favorite"] and not row["Away Team Christmas Favorite"]):
+                original_pick_percent = original_pick_percent / 2
+        elif pre_christmas:
+            if row["Home Team Christmas Favorite"] == row["Team"] or row["Away Team Christmas Favorite"] == row["Team"]:
                 original_pick_percent = original_pick_percent / 4
     
-        # Christmas Adjustment
-        # Christmas Favorite adjustments were applied regardless of the 'Date'.
-        if row["Home Team Christmas Favorite"] or row["Away Team Christmas Favorite"]:
-            # Apply the Christmas favorite modification: / 4
-            original_pick_percent = original_pick_percent / 4
-        
         # Final adjustment: multiply by Availability (applied once)
         return original_pick_percent
     

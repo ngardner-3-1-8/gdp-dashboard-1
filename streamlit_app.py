@@ -2000,8 +2000,12 @@ def get_predicted_pick_percentages_with_availability(pd):
         def get_expected_availability(team_name, availability_dict):
             availability = availability_dict.get(team_name) # Get availability, default to -1 if team not in dict
             if availability != -.01:
+				st.write(team_name)
+				st.write(availability)
                 return availability
             else:
+				st.write(team_name)
+				st.write("1.0")
                 return 1.0
     
     # Apply the function to update 'Home Team Expected Availability'

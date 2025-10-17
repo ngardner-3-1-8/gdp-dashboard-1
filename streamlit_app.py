@@ -2732,10 +2732,10 @@ def get_survivor_picks_based_on_ev():
                         solver.Add(picks[i] == 0)    		
             if avoid_away_teams_in_close_matchups == 1:
                 if favored_qualifier == 'Internal Rankings':
-                    if df.loc[i, 'Away Team 1'] == df.loc[i, 'Hypothetical Current Winner'] and df.loc[i, 'Adjusted Current Difference'] < 7 and df.loc[i, 'Hypothetical Current Winner Adjusted Current Rank'] > df.loc[i, 'Hypothetical Current Loser Adjusted Current Rank']:
+                    if df.loc[i, 'Away Team 1'] == df.loc[i, 'Hypothetical Current Winner'] and df.loc[i, 'Adjusted Current Difference'] <= min_away_spread and df.loc[i, 'Hypothetical Current Winner Adjusted Current Rank'] > df.loc[i, 'Hypothetical Current Loser Adjusted Current Rank']:
                         solver.Add(picks[i] == 0)
                 else:
-                    if df.loc[i, 'Away Team 1'] == df.loc[i, 'Hypothetical Current Winner'] and df.loc[i, 'Adjusted Spread'] < 7 and df.loc[i, 'Hypothetical Current Winner Sportsbook Spread'] < df.loc[i, 'Hypothetical Current Loser Sportsbook Spread']:
+                    if df.loc[i, 'Away Team 1'] == df.loc[i, 'Hypothetical Current Winner'] and df.loc[i, 'Adjusted Spread'] <= min_away_spread and df.loc[i, 'Hypothetical Current Winner Sportsbook Spread'] < df.loc[i, 'Hypothetical Current Loser Sportsbook Spread']:
                         solver.Add(picks[i] == 0) 
             #if df.loc[i, 'Away Team'] == df.loc[i, 'Adjusted Current Winner'] and df.loc[i, 'Divisional Matchup?'] == 'Divisional':
                 #solver.Add(picks[i] == 0)
@@ -2746,10 +2746,10 @@ def get_survivor_picks_based_on_ev():
             # If 'Divisional Matchup?' is "Divisional", can only pick if 'Adjusted Current Difference' > 10
             if avoid_close_divisional_matchups == 1:
                 if favored_qualifier == 'Internal Rankings':
-                    if df.loc[i, 'Divisional Matchup?'] == 1 and df.loc[i, 'Adjusted Current Difference'] < 7 and df.loc[i, 'Hypothetical Current Winner Adjusted Current Rank'] > df.loc[i, 'Hypothetical Current Loser Adjusted Current Rank']:
+                    if df.loc[i, 'Divisional Matchup?'] == 1 and df.loc[i, 'Adjusted Current Difference'] <= min_div_spread and df.loc[i, 'Hypothetical Current Winner Adjusted Current Rank'] > df.loc[i, 'Hypothetical Current Loser Adjusted Current Rank']:
                         solver.Add(picks[i] == 0)
                 else:
-                    if df.loc[i, 'Divisional Matchup?'] == 1 and df.loc[i, 'Adjusted Spread'] < 7 and df.loc[i, 'Hypothetical Current Winner Sportsbook Spread'] < df.loc[i, 'Hypothetical Current Loser Sportsbook Spread']:
+                    if df.loc[i, 'Divisional Matchup?'] == 1 and df.loc[i, 'Adjusted Spread'] <= min_div_spread and df.loc[i, 'Hypothetical Current Winner Sportsbook Spread'] < df.loc[i, 'Hypothetical Current Loser Sportsbook Spread']:
                         solver.Add(picks[i] == 0) 
             if avoid_away_divisional_matchups == 1:
                 if df.loc[i, 'Divisional Matchup?'] == 1 and df.loc[i, 'Away Team 1'] == df.loc[i, 'Hypothetical Current Winner']:
@@ -3492,19 +3492,19 @@ def get_survivor_picks_based_on_internal_rankings():
                         solver.Add(picks[i] == 0)
             if avoid_away_teams_in_close_matchups == 1:
                 if favored_qualifier == 'Internal Rankings':
-                    if df.loc[i, 'Away Team 1'] == df.loc[i, 'Hypothetical Current Winner'] and df.loc[i, 'Adjusted Current Difference'] < 7 and df.loc[i, 'Hypothetical Current Winner Adjusted Current Rank'] > df.loc[i, 'Hypothetical Current Loser Adjusted Current Rank']:
+                    if df.loc[i, 'Away Team 1'] == df.loc[i, 'Hypothetical Current Winner'] and df.loc[i, 'Adjusted Current Difference'] <= min_away_spread and df.loc[i, 'Hypothetical Current Winner Adjusted Current Rank'] > df.loc[i, 'Hypothetical Current Loser Adjusted Current Rank']:
                         solver.Add(picks[i] == 0)
                 else:
-                    if df.loc[i, 'Away Team 1'] == df.loc[i, 'Hypothetical Current Winner'] and df.loc[i, 'Adjusted Spread'] < 7 and df.loc[i, 'Hypothetical Current Winner Sportsbook Spread'] < df.loc[i, 'Hypothetical Current Loser Sportsbook Spread']:
+                    if df.loc[i, 'Away Team 1'] == df.loc[i, 'Hypothetical Current Winner'] and df.loc[i, 'Adjusted Spread'] <= min_away_spread and df.loc[i, 'Hypothetical Current Winner Sportsbook Spread'] < df.loc[i, 'Hypothetical Current Loser Sportsbook Spread']:
                         solver.Add(picks[i] == 0) 
 
             # If 'Divisional Matchup?' is "Divisional", can only pick if 'Adjusted Current Difference' > 10
             if avoid_close_divisional_matchups == 1:
                 if favored_qualifier == 'Internal Rankings':
-                    if df.loc[i, 'Divisional Matchup?'] == 1 and df.loc[i, 'Adjusted Current Difference'] < 7 and df.loc[i, 'Hypothetical Current Winner Adjusted Current Rank'] > df.loc[i, 'Hypothetical Current Loser Adjusted Current Rank']:
+                    if df.loc[i, 'Divisional Matchup?'] == 1 and df.loc[i, 'Adjusted Current Difference'] <= min_div_spread and df.loc[i, 'Hypothetical Current Winner Adjusted Current Rank'] > df.loc[i, 'Hypothetical Current Loser Adjusted Current Rank']:
                         solver.Add(picks[i] == 0)
                 else:
-                    if df.loc[i, 'Divisional Matchup?'] == 1 and df.loc[i, 'Adjusted Spread'] < 7 and df.loc[i, 'Hypothetical Current Winner Sportsbook Spread'] < df.loc[i, 'Hypothetical Current Loser Sportsbook Spread']:
+                    if df.loc[i, 'Divisional Matchup?'] == 1 and df.loc[i, 'Adjusted Spread'] <= min_div_spread and df.loc[i, 'Hypothetical Current Winner Sportsbook Spread'] < df.loc[i, 'Hypothetical Current Loser Sportsbook Spread']:
                         solver.Add(picks[i] == 0) 
             # If 'Divisional Matchup?' is "Divisional", can only pick if 'Adjusted Current Difference' > 10
             if avoid_away_divisional_matchups == 1:
@@ -5958,7 +5958,7 @@ else:
     st.write('')
     st.subheader('Select Constraints')
     yes_i_have_constraints = st.checkbox('Would you like to add constraints? For example, "Avoid Teams on Short Rest"')
-    
+    spread_options = [10, 9.5, 9, 8.5, 8, 7.5, 7, 6.5, 6, 5.5, 5, 4.5, 4, 3.5, 3, 2.5, 2, 1.5, 1, .5]
     if yes_i_have_constraints:
         with st.expander("More Information"):
             st.write("""These constraints will not work 100% of the time (For example in week 18, all Games are divisional matchups). However, it will require a team to be so heavily favored that the impact of the constrained factor should be minimal.'
@@ -5966,10 +5966,14 @@ else:
             \n- Most of the time, sprotsbooks' odds take into account these kinds of concerns, however, if you are adamanetly against picking away teams or teams in a divisional matchup, we give you the option to limit them as much as possible.""")
         avoid_away_teams_on_short_rest = 1 if st.checkbox('Avoid Away Teams on Short Rest') else 0
         avoid_close_divisional_matchups = 1 if st.checkbox('Avoid Close Divisional Matchups') else 0
+        if avoid_close_divisional_matchups == 1:
+            min_div_spread = st.selectbox('What point spread do you consider "close"?', spread_options)          
         avoid_away_divisional_matchups = 1 if st.checkbox('Avoid :red[AWAY] Divisional Matchups') else 0
         avoid_3_games_in_10_days = 1 if st.checkbox('Avoid 3 games in 10 days') else 0
         avoid_4_games_in_17_days = 1 if st.checkbox('Avoid 4 games in 17 days') else 0
         avoid_away_teams_in_close_matchups = 1 if st.checkbox('Avoid Away Teams in Close Games') else 0
+        if avoid_away_teams_in_close_matchups == 1:
+            min_away_spread = st.selectbox('What point spread do you consider "close"?', spread_options) 
         avoid_cumulative_rest_disadvantage = 1 if st.checkbox('Avoid Cumulative Rest Disadvantage') else 0
         avoid_thursday_night = 1 if st.checkbox('Avoid :red[ALL TEAMS] in Thursday Night Games') else 0
         avoid_away_thursday_night = 1 if st.checkbox('Avoid :red[ONLY AWAY TEAMS] in Thursday Night Games') else 0

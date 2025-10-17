@@ -3160,11 +3160,62 @@ def get_survivor_picks_based_on_ev():
                 picks = {}
                 for i in range(len(df)):
                     picks[i] = solver.IntVar(0, 1, 'pick_%i' % i)
+
+                # --- STEP 1: Identify games that are "Required Picks" ---
+                
+                required_pick_indices = set()
+                
+                # List of teams and their required week variables
+                required_teams = [
+                    ('Arizona Cardinals', az_req_week),
+                    ('Atlanta Falcons', atl_req_week),
+                    ('Baltimore Ravens', bal_req_week),
+                    ('Buffalo Bills', buf_req_week),
+                    ('Carolina Panthers', car_req_week),
+                    ('Chicago Bears', chi_req_week),
+                    ('Cincinnati Bengals', cin_req_week),
+                    ('Cleveland Browns', cle_req_week),
+                    ('Dallas Cowboys', dal_req_week),
+                    ('Denver Broncos', den_req_week),
+                    ('Detroit Lions', det_req_week),
+                    ('Green Bay Packers', gb_req_week),
+                    ('Houston Texans', hou_req_week),
+                    ('Indianapolis Colts', ind_req_week),
+                    ('Jacksonville Jaguars', jax_req_week),
+                    ('Kansas City Chiefs', kc_req_week),
+                    ('Las Vegas Raiders', lv_req_week),
+                    ('Los Angeles Chargers', lac_req_week),
+                    ('Los Angeles Rams', lar_req_week),
+                    ('Miami Dolphins', mia_req_week),
+                    ('Minnesota Vikings', min_req_week),
+                    ('New England Patriots', ne_req_week),
+                    ('New Orleans Saints', no_req_week),
+                    ('New York Giants', nyg_req_week),
+                    ('New York Jets', nyj_req_week),
+                    ('Philadelphia Eagles', phi_req_week),
+                    ('Pittsburgh Steelers', pit_req_week),
+                    ('San Francisco 49ers', sf_req_week),
+                    ('Seattle Seahawks', sea_req_week),
+                    ('Tampa Bay Buccaneers', tb_req_week),
+                    ('Tennessee Titans', ten_req_week),
+                    ('Washington Commanders', was_req_week)
+                ]
+                
+                for team, req_week in required_teams:
+                    if req_week > 0:
+                        # Find the index of the game where 'team' plays in 'req_week'
+                        # The '&' operator here applies the condition for matching both team and week
+                        required_game_indices = df[
+                            ((df['Home Team'] == team) | (df['Away Team'] == team)) & 
+                            (df['Week_Num'] == req_week)
+                        ].index.tolist()
+                        
+                        # Add the DataFrame index numbers (i) to the set
+                        required_pick_indices.update(required_game_indices)
                 # Add the constraints
                 for i in range(len(df)):
-                    # Must pick from 'Favorite'
-                    #if df.loc[i, 'Favorite'] != df.loc[i, 'Home Team']:
-                        #solver.Add(picks[i] == 0)
+                    if i in required_pick_indices:
+                        continue # Skip all general constraints below for this game
                     # Must pick from 'Same Winner?'
                     if bayesian_rest_travel_constraint == "Selected team must have been projected to win based on preseason rankings, current rankings, and with and without travel/rest adjustments":
                         if df.loc[i, 'Same Winner?'] != 'Same':

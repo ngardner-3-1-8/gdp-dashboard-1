@@ -1855,6 +1855,40 @@ def get_predicted_pick_percentages_with_availability(pd):
         #home_df.to_csv('predicted_home_data_circa.csv', index=False)
     
         pick_predictions_df = pd.concat([away_df, home_df], ignore_index=True)
+        # Function to calculate the adjusted "Pick %"
+        def adjust_pick_percentage(row):
+            """
+            Calculates the adjusted 'Pick %' based on holiday favorite status 
+            and then multiplies by 'Availability'.
+            """
+            original_pick_percent = row["Pick %"]
+            is_thanksgiving = row["Date"] == 13 # Assuming 'Date' 13 signifies Thanksgiving
+        
+            # Thanksgiving Adjustment
+            # The original logic has two separate checks that compound if both teams
+            # are checked, but the goal seems to be: if a team is a Thanksgiving favorite
+            # AND it's NOT Thanksgiving (Date != 13), then apply the / 4 modification.
+            if not is_thanksgiving:
+                if row["Home Team Thanksgiving Favorite"] or row["Away Team Thanksgiving Favorite"]:
+                    # Apply the Thanksgiving favorite modification: / 4
+                    original_pick_percent = original_pick_percent / 4
+        
+            # Christmas Adjustment
+            # Christmas Favorite adjustments were applied regardless of the 'Date'.
+            if row["Home Team Christmas Favorite"] or row["Away Team Christmas Favorite"]:
+                # Apply the Christmas favorite modification: / 4
+                original_pick_percent = original_pick_percent / 4
+            
+            # Final adjustment: multiply by Availability (applied once)
+            return original_pick_percent
+        
+        # Apply the consolidated function
+        if selected_contest == 'Circa':
+            pick_predictions_df["Pick %"] = pick_predictions_df.apply(
+                adjust_pick_percentage,
+                axis=1
+            )
+		
         st.write("TEST PICK PERCENTAGES LINE 1858")
         st.write(pick_predictions_df[["Team", "Pick %", "Availability"]])		
         pick_predictions_df["Pick %"] = pick_predictions_df.apply(

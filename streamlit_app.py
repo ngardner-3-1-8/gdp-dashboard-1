@@ -12105,9 +12105,9 @@ else:
             st.write("Step 3 Completed: Public Pick Percentages Predicted")
             #nfl_schedule_circa_df_2 = manually_adjust_pick_predictions()
         if use_cached_expected_value == 0:
-            if selected_contest == 'Circa':
-                st.write("Step 3a: Predicting Pick Percentages based on Team Availability...")
-                nfl_schedule_pick_percentages_df = get_predicted_pick_percentages_with_availability(pd)
+ #           if selected_contest == 'Circa':
+ #               st.write("Step 3a: Predicting Pick Percentages based on Team Availability...")
+ #               nfl_schedule_pick_percentages_df = get_predicted_pick_percentages_with_availability(pd)
         if use_cached_expected_value == 1:
             nfl_schedule_pick_percentages_df = get_predicted_pick_percentages(pd)
             if selected_contest == 'Circa':

@@ -1209,17 +1209,17 @@ def collect_schedule_travel_ranking_data(pd):
     return collect_schedule_travel_ranking_data_nfl_schedule_df
 collect_schedule_travel_ranking_data_nfl_schedule_df = collect_schedule_travel_ranking_data
 
-def get_live_contest_data():
-	if selected_contest = 'Circa':
-	elif selected_contest = 'Splash Sports':
-		if subcontest = '':
-		elif subcontest = '':
-		elif subcontest = '':
-		elif subcontest = '':
-		elif subcontest = '':
-		elif subcontest = '':
-		elif subcontest = '':
-	else:
+#def get_live_contest_data():
+#	if selected_contest = 'Circa':
+#	elif selected_contest = 'Splash Sports':
+#		if subcontest = '':
+#		elif subcontest = '':
+#		elif subcontest = '':
+#		elif subcontest = '':
+#		elif subcontest = '':
+#		elif subcontest = '':
+#		elif subcontest = '':
+#	else:
 		
 def get_predicted_pick_percentages(pd):
     # Load your historical data (replace 'historical_pick_data_FV_circa.csv' with your actual file path)

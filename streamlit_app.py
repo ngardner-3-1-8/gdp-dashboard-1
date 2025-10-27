@@ -3930,45 +3930,41 @@ def get_db_connection():
 # Updated save_config function
 # Note: You need to pass the config JSON string here, not input_1, input_2
 def save_config(user_id, config_name, config_json_string):
-    conn = get_db_connection()  # <-- ADD THIS
+    conn = get_db_connection()
     try:
-        # Prevent users from overwriting an existing config name
         cursor = conn.cursor()
         cursor.execute(
             "SELECT id FROM user_configs WHERE user_id = ? AND config_name = ?",
             (user_id, config_name)
         )
         if cursor.fetchone():
-            conn.close()  # <-- ADD THIS
+            conn.close()
             return f"Configuration '{config_name}' already exists. Please choose a new name."
 
-        # Insert new configuration
         conn.execute(
             "INSERT INTO user_configs (user_id, config_name, config_data) VALUES (?, ?, ?)",
-            (user_id, config_name, config_json_string) # <<< INSERT config_data
+            (user_id, config_name, config_json_string)
         )
         conn.commit()
-        conn.close()  # <-- ADD THIS
+        conn.close()
         return f"Configuration '{config_name}' saved successfully!"
     except Exception as e:
-        conn.close()  # <-- ADD THIS
+        conn.close()
         return f"An error occurred during save: {e}"
 
-# Updated load_config function
+
 def load_config(user_id, config_name):
     """Retrieves the JSON string for a selected configuration."""
-    conn = get_db_connection()  # <-- ADD THIS
-    
-    # SELECT only the config_data column
+    conn = get_db_connection()
+
     data = conn.execute(
         "SELECT config_data FROM user_configs WHERE user_id = ? AND config_name = ?",
         (user_id, config_name)
     ).fetchone()
     
-    conn.close()  # <-- ADD THIS
+    conn.close()
 
     if data:
-        # Returns the JSON string
         return data[0]
     return None
 
@@ -3982,24 +3978,23 @@ def get_all_configs(user_id: str):
     conn.close()
     return [c[0] for c in configs]
 
-# --- 3. Helper Functions for Updating Session State ---
+
 
 def update_config_value(key):
     """Generic callback to update a top-level key in current_config from a widget's session state key."""
-    widget_key = key + "_widget" # Assumes widget key is like 'selected_contest_widget'
+    widget_key = key + "_widget"
     if widget_key in st.session_state:
         st.session_state.current_config[key] = st.session_state[widget_key]
 
 def update_nested_value(outer_key, inner_key):
     """Generic callback for nested dictionaries (e.g., rankings, availabilities)."""
-    widget_key = f"{outer_key}_{inner_key}_widget".replace(" ", "_").replace("(", "").replace(")", "").replace("$","") # Create a unique widget key
+    widget_key = f"{outer_key}_{inner_key}_widget".replace(" ", "_").replace("(", "").replace(")", "").replace("$","")
     if widget_key in st.session_state:
-        # Special handling for sliders/numbers needing conversion
         value = st.session_state[widget_key]
         if outer_key == 'team_availabilities' or outer_key == 'pick_percentages':
-             value = value / 100.0 # Convert percentage back to float
+             value = value / 100.0
         elif outer_key == 'team_rankings' and value == "Default":
-             value = DEFAULT_RANKS.get(inner_key, 0) # Use default rank
+             value = DEFAULT_RANKS.get(inner_key, 0)
 
         if outer_key not in st.session_state.current_config:
              st.session_state.current_config[outer_key] = {}
@@ -4012,8 +4007,7 @@ def update_pick_percentage(week, team_name):
         percentage_int = st.session_state[widget_key]
         percentage_float = percentage_int / 100.0
         week_key = f"week_{week}"
-        
-        # Ensure week dictionary exists
+
         if week_key not in st.session_state.current_config['pick_percentages']:
             st.session_state.current_config['pick_percentages'][week_key] = {}
             

@@ -3090,7 +3090,6 @@ def get_survivor_picks_based_on_ev(df, config: dict, num_solutions: int):
 
                     week = df.loc[i, 'Week']
                     date = df.loc[i, 'Date']
-                    date = pd.to_datetime(date, format='%b %d, %Y')
                     time = df.loc[i, 'Time']
                     location = df.loc[i, 'Actual Stadium']
                     pick = df.loc[i,'Hypothetical Current Winner']

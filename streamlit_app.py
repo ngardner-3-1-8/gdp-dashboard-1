@@ -2112,6 +2112,19 @@ def get_predicted_pick_percentages_with_availability(pd, config: dict, schedule_
         #print(away_df)
     
         nfl_schedule_df = schedule_df.copy()
+# Drop the preliminary pick percentages from the previous step
+        # to avoid column conflicts during the merge.
+        if 'Home Pick %' in nfl_schedule_df.columns:
+            nfl_schedule_df = nfl_schedule_df.drop(columns=['Home Pick %'])
+        if 'Away Pick %' in nfl_schedule_df.columns:
+            nfl_schedule_df = nfl_schedule_df.drop(columns=['Away Pick %'])
+            
+        # Also drop any leftover week columns from the previous merge
+        # to prevent conflicts.
+        cols_to_drop = ['Week_x', 'Week_y', 'Week']
+        existing_cols_to_drop = [col for col in cols_to_drop if col in nfl_schedule_df.columns]
+        if existing_cols_to_drop:
+            nfl_schedule_df = nfl_schedule_df.drop(columns=existing_cols_to_drop)
         # Assumes format "Week X" - adjust if the format is different
         if nfl_schedule_df['Week'].dtype == 'object':
             nfl_schedule_df['Week_Number'] = nfl_schedule_df['Week'].str.split(' ').str[1].astype(int)

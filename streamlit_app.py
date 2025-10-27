@@ -253,26 +253,26 @@ def collect_schedule_travel_ranking_data(pd, config: dict, schedule_rows):
     custom_rankings = config.get('team_rankings', {})
 
     stadiums = {}
-    for team, info in STADIUM_INFO.items(): [cite: 18]
-        # info = [Stadium Name, Lat, Lon, Timezone, Division] [cite: 18]
+    for team, info in STADIUM_INFO.items():
+        # info = [Stadium Name, Lat, Lon, Timezone, Division]
         
         # 1. Get Preseason Rank (from global static dict)
-        preseason_rank = PRESEASON_RANKS.get(team, 0) [cite: 6-8]
+        preseason_rank = PRESEASON_RANKS.get(team, 0)
         
         # 2. Get Current/Custom Rank (from config or default)
         user_rank = custom_rankings.get(team, 'Default')
         if user_rank == 'Default':
-            current_rank = DEFAULT_RANKS.get(team, 0) [cite: 3-5]
+            current_rank = DEFAULT_RANKS.get(team, 0)
         else:
             current_rank = float(user_rank) # Ensure it's a number
         
         # 3. Get Home Advantage (from global static dict)
         #    (Your config doesn't store this, so we use default)
-        home_adv = DEFAULT_HOME_ADVANTAGE.get(team, 0) [cite: 10-12]
+        home_adv = DEFAULT_HOME_ADVANTAGE.get(team, 0)
         
         # 4. Get Away Adjustment (from global static dict)
         #    (Your config doesn't store this, so we use default)
-        away_adj = DEFAULT_AWAY_ADJ.get(team, 0) [cite: 14-16]
+        away_adj = DEFAULT_AWAY_ADJ.get(team, 0)
         
         # Build the list in the format your code expects [cite: 25-28, 116]
         stadiums[team] = [
@@ -1406,7 +1406,7 @@ def get_predicted_pick_percentages(pd, config: dict, schedule_df: pd.DataFrame):
     team_availability = config.get('team_availabilities', {})
     custom_pick_percentages = config.get('pick_percentages', {})
     # Load your historical data (replace 'historical_pick_data_FV_circa.csv' with your actual file path)
-    if selected_contest == 'Circa': [cite: 196]
+    if selected_contest == 'Circa':
         df = pd.read_csv('Circa_historical_data.csv')
     elif selected_contest == 'Splash Sports':
         df = pd.read_csv('DK_historical_data.csv')
@@ -1859,7 +1859,7 @@ def get_predicted_pick_percentages(pd, config: dict, schedule_df: pd.DataFrame):
         away_team = row['Away Team']
         week = row['Week'] # Assumes week is like "Week 1", "Week 2"
         week_num_str = str(week).replace('Week ', '')
-        week_key = f"week_{week_num_str}" [cite: 637]
+        week_key = f"week_{week_num_str}"
 
         home_pick_percent = row.get('Home Pick %') # Default
         away_pick_percent = row.get('Away Pick %') # Default
@@ -1870,7 +1870,7 @@ def get_predicted_pick_percentages(pd, config: dict, schedule_df: pd.DataFrame):
             # Check for Home Team override [cite: 638]
             if home_team in week_overrides:
                 user_override_value = week_overrides[home_team]
-                if user_override_value >= 0: # Keep -1 logic [cite: 638]
+                if user_override_value >= 0:
                     home_pick_percent = user_override_value
                     
             # Check for Away Team override [cite: 639]
@@ -2754,30 +2754,30 @@ def get_survivor_picks_based_on_ev(df, config: dict, num_solutions: int):
     # Get settings from config
     starting_week = config['starting_week']
     ending_week = config['ending_week']
-    picked_teams = config['prohibited_picks'] [cite: 732, 772]
-    required_weeks_dict = config['required_weeks'] [cite: 733, 788-793]
-    prohibited_weeks_dict = config['prohibited_weeks'] [cite: 733, 794-800]
+    picked_teams = config['prohibited_picks']
+    required_weeks_dict = config['required_weeks']
+    prohibited_weeks_dict = config['prohibited_weeks']
     selected_contest = config['selected_contest']
     week_requiring_two_selections = config.get('weeks_two_picks', [])
-    favored_qualifier = config.get('favored_qualifier', 'Live Sportsbook Odds (If Available)') [cite: 734]
+    favored_qualifier = config.get('favored_qualifier', 'Live Sportsbook Odds (If Available)')
     
     # Get all constraints
-    pick_must_be_favored = config.get('must_be_favored', False) [cite: 734]
-    avoid_away_teams_in_close_matchups = config.get('avoid_away_close', False) [cite: 735]
-    min_away_spread = config.get('min_away_spread', 3.0) [cite: 735]
-    avoid_close_divisional_matchups = config.get('avoid_close_divisional', False) [cite: 734]
-    min_div_spread = config.get('min_div_spread', 7.0) [cite: 735]
-    avoid_away_divisional_matchups = config.get('avoid_away_divisional', False) [cite: 735]
-    avoid_away_teams_on_short_rest = config.get('avoid_away_short_rest', False) [cite: 734]
-    avoid_4_games_in_17_days = config.get('avoid_4_in_17', False) [cite: 735]
-    avoid_3_games_in_10_days = config.get('avoid_3_in_10', False) [cite: 735]
-    avoid_international_game = config.get('avoid_international', False) [cite: 736]
-    avoid_thursday_night = config.get('avoid_thursday', False) [cite: 735]
-    avoid_away_thursday_night = config.get('avoid_away_thursday', False) [cite: 736]
-    avoid_back_to_back_away = config.get('avoid_b2b_away', False) [cite: 736]
-    avoid_teams_with_weekly_rest_disadvantage = config.get('avoid_weekly_rest_disadvantage', False) [cite: 736]
-    avoid_cumulative_rest_disadvantage = config.get('avoid_cumulative_rest', False) [cite: 735]
-    avoid_away_teams_with_travel_disadvantage = config.get('avoid_travel_disadvantage', False) [cite: 736]
+    pick_must_be_favored = config.get('must_be_favored', False)
+    avoid_away_teams_in_close_matchups = config.get('avoid_away_close', False)
+    min_away_spread = config.get('min_away_spread', 3.0)
+    avoid_close_divisional_matchups = config.get('avoid_close_divisional', False)
+    min_div_spread = config.get('min_div_spread', 7.0)
+    avoid_away_divisional_matchups = config.get('avoid_away_divisional', False)
+    avoid_away_teams_on_short_rest = config.get('avoid_away_short_rest', False)
+    avoid_4_games_in_17_days = config.get('avoid_4_in_17', False)
+    avoid_3_games_in_10_days = config.get('avoid_3_in_10', False)
+    avoid_international_game = config.get('avoid_international', False)
+    avoid_thursday_night = config.get('avoid_thursday', False)
+    avoid_away_thursday_night = config.get('avoid_away_thursday', False)
+    avoid_back_to_back_away = config.get('avoid_b2b_away', False)
+    avoid_teams_with_weekly_rest_disadvantage = config.get('avoid_weekly_rest_disadvantage', False)
+    avoid_cumulative_rest_disadvantage = config.get('avoid_cumulative_rest', False)
+    avoid_away_teams_with_travel_disadvantage = config.get('avoid_travel_disadvantage', False)
     # --- END BLOCK ---
     for iteration in range(num_solutions):
 
@@ -3312,30 +3312,30 @@ def get_survivor_picks_based_on_internal_rankings(df, config: dict, num_solution
     # Get settings from config
     starting_week = config['starting_week']
     ending_week = config['ending_week']
-    picked_teams = config['prohibited_picks'] [cite: 732, 772]
-    required_weeks_dict = config['required_weeks'] [cite: 733, 788-793]
-    prohibited_weeks_dict = config['prohibited_weeks'] [cite: 733, 794-800]
+    picked_teams = config['prohibited_picks']
+    required_weeks_dict = config['required_weeks']
+    prohibited_weeks_dict = config['prohibited_weeks']
     selected_contest = config['selected_contest']
     week_requiring_two_selections = config.get('weeks_two_picks', [])
-    favored_qualifier = config.get('favored_qualifier', 'Live Sportsbook Odds (If Available)') [cite: 734]
+    favored_qualifier = config.get('favored_qualifier', 'Live Sportsbook Odds (If Available)')
     
     # Get all constraints
-    pick_must_be_favored = config.get('must_be_favored', False) [cite: 734]
-    avoid_away_teams_in_close_matchups = config.get('avoid_away_close', False) [cite: 735]
-    min_away_spread = config.get('min_away_spread', 3.0) [cite: 735]
-    avoid_close_divisional_matchups = config.get('avoid_close_divisional', False) [cite: 734]
-    min_div_spread = config.get('min_div_spread', 7.0) [cite: 735]
-    avoid_away_divisional_matchups = config.get('avoid_away_divisional', False) [cite: 735]
-    avoid_away_teams_on_short_rest = config.get('avoid_away_short_rest', False) [cite: 734]
-    avoid_4_games_in_17_days = config.get('avoid_4_in_17', False) [cite: 735]
-    avoid_3_games_in_10_days = config.get('avoid_3_in_10', False) [cite: 735]
-    avoid_international_game = config.get('avoid_international', False) [cite: 736]
-    avoid_thursday_night = config.get('avoid_thursday', False) [cite: 735]
-    avoid_away_thursday_night = config.get('avoid_away_thursday', False) [cite: 736]
-    avoid_back_to_back_away = config.get('avoid_b2b_away', False) [cite: 736]
-    avoid_teams_with_weekly_rest_disadvantage = config.get('avoid_weekly_rest_disadvantage', False) [cite: 736]
-    avoid_cumulative_rest_disadvantage = config.get('avoid_cumulative_rest', False) [cite: 735]
-    avoid_away_teams_with_travel_disadvantage = config.get('avoid_travel_disadvantage', False) [cite: 736]
+    pick_must_be_favored = config.get('must_be_favored', False)
+    avoid_away_teams_in_close_matchups = config.get('avoid_away_close', False)
+    min_away_spread = config.get('min_away_spread', 3.0)
+    avoid_close_divisional_matchups = config.get('avoid_close_divisional', False)
+    min_div_spread = config.get('min_div_spread', 7.0)
+    avoid_away_divisional_matchups = config.get('avoid_away_divisional', False)
+    avoid_away_teams_on_short_rest = config.get('avoid_away_short_rest', False)
+    avoid_4_games_in_17_days = config.get('avoid_4_in_17', False)
+    avoid_3_games_in_10_days = config.get('avoid_3_in_10', False)
+    avoid_international_game = config.get('avoid_international', False)
+    avoid_thursday_night = config.get('avoid_thursday', False)
+    avoid_away_thursday_night = config.get('avoid_away_thursday', False)
+    avoid_back_to_back_away = config.get('avoid_b2b_away', False)
+    avoid_teams_with_weekly_rest_disadvantage = config.get('avoid_weekly_rest_disadvantage', False)
+    avoid_cumulative_rest_disadvantage = config.get('avoid_cumulative_rest', False)
+    avoid_away_teams_with_travel_disadvantage = config.get('avoid_travel_disadvantage', False)
     # --- END BLOCK ---
     for iteration in range(num_solutions):
 
@@ -3935,12 +3935,12 @@ def save_config(user_id, config_name, config_json_string):
         # Prevent users from overwriting an existing config name
         cursor = conn.cursor()
         cursor.execute(
-            "SELECT id FROM user_configs WHERE user_id = ? AND config_name = ?", [cite: 724, 725]
+            "SELECT id FROM user_configs WHERE user_id = ? AND config_name = ?",
             (user_id, config_name)
         )
         if cursor.fetchone():
             conn.close()  # <-- ADD THIS
-            return f"Configuration '{config_name}' already exists. Please choose a new name." [cite: 725, 726]
+            return f"Configuration '{config_name}' already exists. Please choose a new name."
 
         # Insert new configuration
         conn.execute(
@@ -3952,7 +3952,7 @@ def save_config(user_id, config_name, config_json_string):
         return f"Configuration '{config_name}' saved successfully!"
     except Exception as e:
         conn.close()  # <-- ADD THIS
-        return f"An error occurred during save: {e}" [cite: 727]
+        return f"An error occurred during save: {e}"
 
 # Updated load_config function
 def load_config(user_id, config_name):
@@ -3969,7 +3969,7 @@ def load_config(user_id, config_name):
 
     if data:
         # Returns the JSON string
-        return data[0] [cite: 728]
+        return data[0]
     return None
 
 def get_all_configs(user_id: str):
@@ -4132,18 +4132,13 @@ else:
                     # --- END CHANGE ---
                         
                 else:
-                    st.session_state.config_status = "Please select a configuration to load." [cite: 746]
+                    st.session_state.config_status = "Please select a configuration to load."
 
         # Save
         with st.form("save_form_sidebar", clear_on_submit=True):
             save_name = st.text_input("Save Current Config As:", key='save_name_input')
             if st.form_submit_button("๐ ’พ Save", use_container_width=True):
-                if save_name: [cite: 747]
-                    # --- THIS IS THE PART TO CHANGE ---
-                    # OLD:
-                    # message = save_config(CURRENT_USER_ID, save_name, st.session_state.current_config) [cite: 747]
-                    
-                    # NEW:
+                if save_name:
                     config_json_string = json.dumps(st.session_state.current_config)
                     message = save_config(CURRENT_USER_ID, save_name, config_json_string)
                     # --- END CHANGE ---
@@ -4151,7 +4146,7 @@ else:
                     st.session_state.config_status = message
                     # No rerun needed, just update status
                 else:
-                    st.session_state.config_status = "Please enter a name to save." [cite: 748]
+                    st.session_state.config_status = "Please enter a name to save."
 
         # Display Status in Sidebar
         if st.session_state.config_status:

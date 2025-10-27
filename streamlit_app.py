@@ -2148,7 +2148,7 @@ def get_predicted_pick_percentages_with_availability(pd, config: dict, schedule_
     
         # Use the 'current_week_entries' variable from the config
         if current_week_entries >= 0:
-            nfl_schedule_df.loc[nfl_schedule_df['Week'] == starting_week, 'Total Remaining Entries at Start of Week'] = current_week_entries
+            nfl_schedule_df.loc[nfl_schedule_df['Week_Num'] == starting_week, 'Total Remaining Entries at Start of Week'] = current_week_entries
         else:
             # Handle the -1 (auto-estimate) case based on contest
             if selected_contest == 'Circa':

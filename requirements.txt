@@ -12,3 +12,4 @@ Authlib
 datetime
 selenium
 undetected-chromedriver
+sqlite3

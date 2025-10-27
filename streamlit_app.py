@@ -2168,8 +2168,8 @@ def get_predicted_pick_percentages_with_availability(pd, config: dict, schedule_
     
     
         #Iterate through weeks starting from week 2
-        for week in range(starting_week, nfl_schedule_df['Week'].max() + 1):
-            previous_week_df = nfl_schedule_df[nfl_schedule_df['Week'] == week - 1]
+        for week in range(starting_week, nfl_schedule_df['Week_Num'].max() + 1):
+            previous_week_df = nfl_schedule_df[nfl_schedule_df['Week_Num'] == week - 1]
             
             #Handle potential empty previous week (e.g., if week 1 is missing data for some reason)
             if previous_week_df.empty:
@@ -2182,7 +2182,7 @@ def get_predicted_pick_percentages_with_availability(pd, config: dict, schedule_
             #Calculate total remaining entries for current week. Handle potential NaN from previous calculations.
             current_week_total = previous_week_median * sum_eliminated if not np.isnan(previous_week_median * sum_eliminated) else 0 
     
-            nfl_schedule_df.loc[nfl_schedule_df['Week'] == week, 'Total Remaining Entries at Start of Week'] = round(previous_week_median - current_week_total)
+            nfl_schedule_df.loc[nfl_schedule_df['Week_Num'] == week, 'Total Remaining Entries at Start of Week'] = round(previous_week_median - current_week_total)
             
         nfl_schedule_df['Expected Eliminated Entries From Game'] = nfl_schedule_df['Total Remaining Entries at Start of Week'] * nfl_schedule_df['Expected Eliminated Entry Percent From Game']
         nfl_schedule_df['Expected Home Team Picks'] = nfl_schedule_df['Home Pick %'] * nfl_schedule_df['Total Remaining Entries at Start of Week']
@@ -2223,8 +2223,8 @@ def get_predicted_pick_percentages_with_availability(pd, config: dict, schedule_
         )
         
         max_week_num = 0
-        if not nfl_schedule_df['Week'].empty:
-            max_week_num = nfl_schedule_df['Week'].max()
+        if not nfl_schedule_df['Week_Num'].empty:
+            max_week_num = nfl_schedule_df['Week_Num'].max()
             if pd.isna(max_week_num): # Handle case where all Week_Num might be NaN after conversion
                 max_week_num = 0
         
@@ -2237,7 +2237,7 @@ def get_predicted_pick_percentages_with_availability(pd, config: dict, schedule_
         
                 # Determine S_at_sw (Total Remaining Entries at Start of starting_week)
                 S_at_sw = 0.0
-                starting_week_df_rows = nfl_schedule_df[nfl_schedule_df['Week'] == starting_week]
+                starting_week_df_rows = nfl_schedule_df[nfl_schedule_df['Week_Num'] == starting_week]
                 if not starting_week_df_rows.empty:
                     S_at_sw_series = starting_week_df_rows['Total Remaining Entries at Start of Week']
                     # Ensure the series is not empty and the first value is not NaN
@@ -2265,7 +2265,7 @@ def get_predicted_pick_percentages_with_availability(pd, config: dict, schedule_
                 else:
                     print(f"  Warning: S_at_sw for starting_week {starting_week} is {S_at_sw}. Cannot use team_availability to set U_prev_week. U_prev_week will be based on prior week ({week_iter_num-1}) calculations (if any).")
             # --- END: Recalibrate U_prev_week at starting_week ---
-            current_week_mask = nfl_schedule_df['Week'] == week_iter_num
+            current_week_mask = nfl_schedule_df['Week_Num'] == week_iter_num
             
             if not current_week_mask.any():
                 print(f"  No games found for Week {week_iter_num}.")

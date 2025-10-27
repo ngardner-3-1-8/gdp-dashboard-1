@@ -2916,14 +2916,10 @@ def get_survivor_picks_based_on_ev(df, config: dict, num_solutions: int):
                 if df.loc[i, 'Away Team Short Rest'] == 'Yes' and df.loc[i, 'Away Team 1'] == df.loc[i, 'Hypothetical Current Winner']:
                     solver.Add(picks[i] == 0)
             if avoid_4_games_in_17_days == 1:
-                if df.loc[i, 'Home Team 4 games in 17 days'] == 'Yes' and df.loc[i, 'Home Team 1'] == df.loc[i, 'Hypothetical Current Winner'] and df.loc[i, 'Away Team 4 games in 17 days'] == 'No':
-                    solver.Add(picks[i] == 0)
-                if df.loc[i, 'Away Team 4 games in 17 days'] == 'Yes' and df.loc[i, 'Away Team 1'] == df.loc[i, 'Hypothetical Current Winner'] and df.loc[i, 'Home Team 4 games in 17 days'] == 'No':
+                if df.loc[i, '4 Games in 17 Days'] == 'Yes':
                     solver.Add(picks[i] == 0)
             if avoid_3_games_in_10_days == 1:
-                if df.loc[i, 'Home Team 3 games in 10 days'] == 'Yes' and df.loc[i, 'Home Team 1'] == df.loc[i, 'Hypothetical Current Winner'] and df.loc[i, 'Away Team 3 games in 10 days'] == 'No':
-                    solver.Add(picks[i] == 0)
-                if df.loc[i, 'Away Team 3 games in 10 days'] == 'Yes' and df.loc[i, 'Away Team 1'] == df.loc[i, 'Hypothetical Current Winner'] and df.loc[i, 'Home Team 3 games in 10 days'] == 'No':
+                if df.loc[i, '3 Games in 10 Days'] == 'Yes':
                     solver.Add(picks[i] == 0)
             if avoid_international_game == 1:    
                 if df.loc[i, 'Actual Stadium'] == 'London, UK' and df.loc[i, 'Home Team 1'] == df.loc[i, 'Hypothetical Current Winner']:

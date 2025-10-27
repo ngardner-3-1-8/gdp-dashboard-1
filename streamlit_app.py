@@ -2363,7 +2363,7 @@ def get_predicted_pick_percentages_with_availability(pd, config: dict, schedule_
         def assign_pick_percentages_from_config(row, custom_picks_config):
             home_team = row['Home Team']
             away_team = row['Away Team']
-            week = row['Week'] # Assumes week is like "Week 1", "Week 2"
+            week = row['Week_Num'] # Assumes week is like "Week 1", "Week 2"
             week_num_str = str(week).replace('Week ', '')
             week_key = f"week_{week_num_str}"
     

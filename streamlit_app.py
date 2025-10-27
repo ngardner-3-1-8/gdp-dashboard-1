@@ -2913,7 +2913,7 @@ def get_survivor_picks_based_on_ev(df, config: dict, num_solutions: int):
                     solver.Add(picks[i] == 0)
             # Constraints for short rest and 4 games in 17 days (only if team is the Adjusted Current Winner)
             if avoid_away_teams_on_short_rest == 1:
-                if df.loc[i, 'Away Team Short Rest'] == 'Yes' and df.loc[i, 'Away Team 1'] == df.loc[i, 'Hypothetical Current Winner']:
+                if df.loc[i, 'Away Team Short Rest'] == 'Yes':
                     solver.Add(picks[i] == 0)
             if avoid_4_games_in_17_days == 1:
                 if df.loc[i, '4 Games in 17 Days'] == 'Yes':
@@ -2922,28 +2922,26 @@ def get_survivor_picks_based_on_ev(df, config: dict, num_solutions: int):
                 if df.loc[i, '3 Games in 10 Days'] == 'Yes':
                     solver.Add(picks[i] == 0)
             if avoid_international_game == 1:    
-                if df.loc[i, 'Actual Stadium'] == 'London, UK' and df.loc[i, 'Home Team 1'] == df.loc[i, 'Hypothetical Current Winner']:
-                    solver.Add(picks[i] == 0)
-                if df.loc[i, 'Actual Stadium'] == 'London, UK' and df.loc[i, 'Away Team 1'] == df.loc[i, 'Hypothetical Current Winner']:
+                if df.loc[i, 'Location'] == 'London, UK':
                     solver.Add(picks[i] == 0)
             if avoid_thursday_night == 1:
                 if df.loc[i, 'Thursday Night Game'] == 'True':
                     solver.Add(picks[i] == 0)
             if avoid_away_thursday_night == 1:
-                if df.loc[i, 'Thursday Night Game'] == 'True' and df.loc[i, 'Away Team 1'] == df.loc[i, 'Hypothetical Current Winner']:
+                if df.loc[i, 'Thursday Night Game'] == 'True' and df.loc[i, 'Team Is Away'] == 'True':
                     solver.Add(picks[i] == 0)
             if avoid_teams_with_weekly_rest_disadvantage == 1:
-                if df.loc[i, 'Home Team Weekly Rest'] < df.loc [i, 'Away Team Weekly Rest'] and df.loc[i, 'Home Team 1'] == df.loc[i, 'Hypothetical Current Winner']:
-                    solver.Add(picks[i] == 0)
-                if df.loc[i, 'Away Team Weekly Rest'] < df.loc [i, 'Home Team Weekly Rest'] and df.loc[i, 'Away Team 1'] == df.loc[i, 'Hypothetical Current Winner']:
+                if df.loc[i, 'Weekly Rest Advantage'] < 0:
                     solver.Add(picks[i] == 0)
             if avoid_cumulative_rest_disadvantage == 1:
-                if df.loc[i, 'Away Team Current Week Cumulative Rest Advantage'] < -10 and df.loc[i, 'Away Team 1'] == df.loc[i, 'Hypothetical Current Winner']:
+                is_away = df.loc[i, 'Team Is Away'] == 'True'
+                rest_adv = df.loc[i, 'Season Long Rest Including This Week']
+                if is_away and rest_adv < -10:
                     solver.Add(picks[i] == 0)
-                if df.loc[i, 'Home Team Current Week Cumulative Rest Advantage'] < -5 and df.loc[i, 'Home Team 1'] == df.loc[i, 'Hypothetical Current Winner']:
-                    solver.Add(picks[i] == 0)
+                elif (not is_away) and rest_adv < -5: # Team is Home
+                    solver.Add(picks[i] == 0)    
             if avoid_away_teams_with_travel_disadvantage == 1:
-                if df.loc[i, 'Away Travel Advantage'] < -850 and df.loc[i, 'Away Team 1'] == df.loc[i, 'Hypothetical Current Winner']:
+                if df.loc[i, 'Team Is Away'] == 'True' and df.loc[i, 'Travel Advantage'] < -850:
                     solver.Add(picks[i] == 0)
 
 

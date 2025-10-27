@@ -2810,7 +2810,8 @@ def get_survivor_picks_based_on_ev(df, config: dict, num_solutions: int):
             "Adjusted Current Rank": "Hypothetical Current Winner Adjusted Current Rank",
             "Opp Adjusted Current Rank": "Hypothetical Current Loser Adjusted Current Rank",
             "Spread Based on Sportsbook Odds": "Hypothetical Current Winner Sportsbook Spread",
-            "Spread Based on Internal Rankings": "Internal Hypothetical Current Winner Spread"
+            "Spread Based on Internal Rankings": "Internal Hypothetical Current Winner Spread",
+			"Adjusted Current Difference": "Adjusted Current Difference"
         }, inplace=True)
         # Filter out already picked teams
         # --- Create home_ev_df ---
@@ -2891,11 +2892,14 @@ def get_survivor_picks_based_on_ev(df, config: dict, num_solutions: int):
                         solver.Add(picks[i] == 0)    		
             if avoid_away_teams_in_close_matchups == 1:
                 if favored_qualifier == 'Internal Rankings':
-                    if df.loc[i, 'Team Is Away'] == 'True' and df.loc[i, 'Adjusted Current Difference'] <= min_away_spread and df.loc[i, 'Hypothetical Current Winner Adjusted Current Rank'] > df.loc[i, 'Hypothetical Current Loser Adjusted Current Rank']:
+                    # Check if team is away AND the absolute spread (based on internal ranks) is <= min
+                    if (df.loc[i, 'Team Is Away'] == 'True' and
+                        df.loc[i, 'Adjusted Current Difference'] <= min_away_spread):
                         solver.Add(picks[i] == 0)
-                else:
-                    if df.loc[i, 'Team Is Away'] == 'True' and df.loc[i, 'Adjusted Spread'] <= min_away_spread and df.loc[i, 'Hypothetical Current Winner Sportsbook Spread'] < df.loc[i, 'Hypothetical Current Loser Sportsbook Spread']:
-                        solver.Add(picks[i] == 0) 
+                else: 
+                    if (df.loc[i, 'Team Is Away'] == 'True' and
+                        df.loc[i, 'Hypothetical Current Winner Sportsbook Spread'] > -min_away_spread): # Uses sportsbook spread
+                        solver.Add(picks[i] == 0)
             #if df.loc[i, 'Away Team'] == df.loc[i, 'Adjusted Current Winner'] and df.loc[i, 'Divisional Matchup?'] == 'Divisional':
                 #solver.Add(picks[i] == 0)
             if avoid_back_to_back_away == 1:
@@ -2905,11 +2909,13 @@ def get_survivor_picks_based_on_ev(df, config: dict, num_solutions: int):
             # If 'Divisional Matchup?' is "Divisional", can only pick if 'Adjusted Current Difference' > 10
             if avoid_close_divisional_matchups == 1:
                 if favored_qualifier == 'Internal Rankings':
-                    if df.loc[i, 'Divisional Matchup?'] == 1 and df.loc[i, 'Adjusted Current Difference'] <= min_div_spread and df.loc[i, 'Hypothetical Current Winner Adjusted Current Rank'] > df.loc[i, 'Hypothetical Current Loser Adjusted Current Rank']:
+                    if df.loc[i, 'Divisional Matchup?'] == 1 and
+                        df.loc[i, 'Adjusted Current Difference'] <= min_away_spread):
                         solver.Add(picks[i] == 0)
-                else:
-                    if df.loc[i, 'Divisional Matchup?'] == 1 and df.loc[i, 'Adjusted Spread'] <= min_div_spread and df.loc[i, 'Hypothetical Current Winner Sportsbook Spread'] < df.loc[i, 'Hypothetical Current Loser Sportsbook Spread']:
-                        solver.Add(picks[i] == 0) 
+                else: 
+                    if (df.loc[i, 'Divisional Matchup?'] == 1 and
+                        df.loc[i, 'Hypothetical Current Winner Sportsbook Spread'] > -min_away_spread): # Uses sportsbook spread
+                        solver.Add(picks[i] == 0)
             if avoid_away_divisional_matchups == 1:
                 if df.loc[i, 'Divisional Matchup?'] == 1 and df.loc[i, 'Away Team 1'] == df.loc[i, 'Hypothetical Current Winner']:
                     solver.Add(picks[i] == 0)

@@ -2126,14 +2126,8 @@ def get_predicted_pick_percentages_with_availability(pd, config: dict, schedule_
         if existing_cols_to_drop:
             nfl_schedule_df = nfl_schedule_df.drop(columns=existing_cols_to_drop)
         # Assumes format "Week X" - adjust if the format is different
-        if nfl_schedule_df['Week'].dtype == 'object':
-            nfl_schedule_df['Week_Number'] = nfl_schedule_df['Week'].str.split(' ').str[1].astype(int)
-        # Filter the DataFrame
-        else:
-            nfl_schedule_df['Week_Number'] = nfl_schedule_df['Week']
-        nfl_schedule_df = nfl_schedule_df[nfl_schedule_df['Week_Number'] >= starting_week]
-        # You can drop the auxiliary 'Week_Number' column if you no longer need it
-        nfl_schedule_df = nfl_schedule_df.drop(columns=['Week_Number'])
+# Filter the DataFrame using the 'Week_Num' column which already exists
+        nfl_schedule_df = nfl_schedule_df[nfl_schedule_df['Week_Num'] >= starting_week]
 
         #nfl_schedule_df['Week'] = nfl_schedule_df['Week'].str.extract(r'(\d+)').astype(int)
         # Merge the DataFrames based on matching columns

@@ -1,4 +1,3 @@
-import sqlite3
 import streamlit as st
 import requests
 from bs4 import BeautifulSoup
@@ -27,6 +26,7 @@ from selenium.webdriver.support import expected_conditions as EC
 import undetected_chromedriver as uc
 import os
 import json
+import sqlite3
 
 # --------------------------------------------------------------------------
 # --- 1. DEFAULT TEAM RANKS (Baseline) ---

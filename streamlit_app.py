@@ -1,3 +1,4 @@
+import sqLite3
 import streamlit as st
 import requests
 from bs4 import BeautifulSoup
@@ -24,9 +25,66 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 import undetected_chromedriver as uc
+import os
 
+def get_db_connection():
+    db_file = 'user_configs.db'
+    conn = sqlite3.connect(db_file)
+    conn.execute("""
+        CREATE TABLE IF NOT EXISTS user_configs (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id TEXT NOT NULL,
+            config_name TEXT NOT NULL,
+            config_data TEXT NOT NULL,  -- <<< This is the JSON column
+            timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+            UNIQUE (user_id, config_name)
+        )
+    """)
+    conn.commit()
+    return conn
 
-def get_schedule():
+def save_config(user_id, config_name, input_1, input_2):
+    try:
+        # Prevent users from overwriting an existing config name
+        cursor = conn.cursor()
+        cursor.execute(
+            "SELECT id FROM user_configs WHERE user_id = ? AND config_name = ?",
+            (user_id, config_name)
+        )
+        if cursor.fetchone():
+            return f"Configuration '{config_name}' already exists. Please choose a new name."
+
+        # Insert new configuration
+        conn.execute(
+            "INSERT INTO user_configs (user_id, config_name, input_1_value, input_2_value) VALUES (?, ?, ?, ?)",
+            (user_id, config_name, input_1, input_2)
+        )
+        conn.commit()
+        return f"Configuration '{config_name}' saved successfully!"
+    except Exception as e:
+        return f"An error occurred during save: {e}"
+
+def get_all_configs(user_id):
+    """Returns a list of saved config names for the user."""
+    configs = conn.execute(
+        "SELECT config_name FROM user_configs WHERE user_id = ? ORDER BY timestamp DESC",
+        (user_id,)
+    ).fetchall()
+    return [c[0] for c in configs]
+
+def load_config(user_id, config_name):
+    """Retrieves all data for a selected configuration."""
+    data = conn.execute(
+        "SELECT input_1_value, input_2_value FROM user_configs WHERE user_id = ? AND config_name = ?",
+        (user_id, config_name)
+    ).fetchone()
+    
+    if data:
+        # Returns a tuple: (input_1_value, input_2_value)
+        return data
+    return None
+
+def def get_schedule(config: dict):
     print("Gathering Schedule Data...")
     # Make a request to the website
     r = requests.get('https://www.fftoday.com/nfl/schedule.php')
@@ -44,7 +102,7 @@ def get_schedule():
     print("Schedule Data Retrieved")
     return table, rows
 
-def collect_schedule_travel_ranking_data(pd):
+def def collect_schedule_travel_ranking_data(pd, config: dict):
     data = []
     # Initialize a variable to hold the last valid date and week
     last_date = None
@@ -1221,7 +1279,7 @@ collect_schedule_travel_ranking_data_nfl_schedule_df = collect_schedule_travel_r
 #		elif subcontest = '':
 #	else:
 		
-def get_predicted_pick_percentages(pd):
+def get_predicted_pick_percentages(pd, config: dict)::
     # Load your historical data (replace 'historical_pick_data_FV_circa.csv' with your actual file path)
     if selected_contest == 'Circa':
         df = pd.read_csv('Circa_historical_data.csv')
@@ -2243,7 +2301,7 @@ def get_predicted_pick_percentages_with_availability(pd):
     return nfl_schedule_df
 
 
-def calculate_ev(nfl_schedule_pick_percentages_df, starting_week, ending_week, selected_contest, use_cached_expected_value):
+def calculate_ev(df, config: dict, use_cache=False):
     
     def calculate_all_scenarios(week_df):
         num_games = len(week_df)
@@ -2602,7 +2660,7 @@ def reformat_df():
 	return combined_df
 
 
-def get_survivor_picks_based_on_ev():
+def get_survivor_picks_based_on_ev(df, config: dict, num_solutions: int):
     for iteration in range(number_solutions):
         df = full_df_with_ev
 
@@ -3344,7 +3402,7 @@ def get_survivor_picks_based_on_ev():
         # Append the new forbidden solution to the list
         forbidden_solutions_1.append(picks_df['Hypothetical Current Winner'].tolist())
 
-def get_survivor_picks_based_on_internal_rankings():
+def get_survivor_picks_based_on_internal_rankings(df, config: dict, num_solutions: int):
     for iteration in range(number_solutions):
         df = full_df_with_ev
 
@@ -5173,6 +5231,19 @@ if not st.user.is_logged_in:
     login_screen()
 else:
         # --- Add Logo in Sidebar when logged in ---
+    CURRENT_USER_ID = st.user.email
+    if 'selected_contest' not in st.session_state:
+        st.session_state.selected_contest = "Circa"
+    if 'subcontest' not in st.session_state:
+        st.session_state.subcontest = "The Big Splash ($150 Entry)"
+    if 'weeks_two_picks' not in st.session_state:
+        st.session_state.weeks_two_picks = [] # Use a generic name for the multiselect
+    if 'has_picked_teams' not in st.session_state:
+        st.session_state.has_picked_teams = False
+    if 'config_status' not in st.session_state:
+        st.session_state.config_status = ""
+    if 'config_name_input' not in st.session_state:
+        st.session_state.config_name_input = ""
     with st.sidebar:
         st.image(LOGO_PATH, use_container_width=True) # Fills the sidebar width
         if st.button("Logout"):

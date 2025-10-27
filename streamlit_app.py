@@ -3919,7 +3919,7 @@ def get_db_connection():
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             user_id TEXT NOT NULL,
             config_name TEXT NOT NULL,
-            config_data TEXT NOT NULL,  # <<< CHANGED TO STORE JSON STRING
+            config_data TEXT NOT NULL,
             timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
             UNIQUE (user_id, config_name)
         )

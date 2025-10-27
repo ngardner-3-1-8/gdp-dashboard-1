@@ -2519,7 +2519,7 @@ def calculate_ev(df, config: dict, use_cache=False):
         for team in week_df['Away Team'].unique():
             df.loc[(df['Week_Num'] == week) & (df['Away Team'] == team), 'Away Team EV'] = weighted_avg_ev[team]
 
-        progress_percent = int((week / ending_week) * 100)
+        progress_percent = int((week / end_w) * 100)
         progress_bar.progress(progress_percent)
 
     if selected_contest == 'Circa':

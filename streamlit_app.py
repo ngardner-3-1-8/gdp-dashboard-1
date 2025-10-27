@@ -1,4 +1,4 @@
-import sqLite3
+import sqlite3
 import streamlit as st
 import requests
 from bs4 import BeautifulSoup

@@ -2795,7 +2795,7 @@ def get_survivor_picks_based_on_ev(df, config: dict, num_solutions: int):
 
         # Filter out weeks that have already been played and reset index
 
-        df = df[(df['Week_Num'] >= starting_week) & (df['Week_Num'] < ending_week)].reset_index(drop=True)
+        df = df[(df['Week'] >= starting_week) & (df['Week'] < ending_week)].reset_index(drop=True)
         # Filter out already picked teams
         # --- Create home_ev_df ---
         home_ev_df = df.copy() # Start with a copy to keep all original columns

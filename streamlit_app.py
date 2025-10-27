@@ -2877,21 +2877,8 @@ def get_survivor_picks_based_on_ev(df, config: dict, num_solutions: int):
         for i in range(len(df)):
             picks[i] = solver.IntVar(0, 1, 'pick_%i' % i)
         
-        for team, req_week in required_teams:
-            if req_week > 0:
-                # Find the index of the game where 'team' plays in 'req_week'
-                # The '&' operator here applies the condition for matching both team and week
-                required_game_indices = df[
-                    (df['Hypothetical Current Winner'] == team) & 
-                    (df['Week_Num'] == req_week)
-                ].index.tolist()
-                
-                # Add the DataFrame index numbers (i) to the set
-                required_pick_indices.update(required_game_indices)
         # Add the constraints
         for i in range(len(df)):
-            if i in required_pick_indices:
-                continue # Skip all general constraints below for this game
             # Can only pick an away team if 'Adjusted Current Difference' > 10
             if pick_must_be_favored:
                 if favored_qualifier == 'Internal Rankings':

@@ -2907,7 +2907,7 @@ def get_survivor_picks_based_on_ev(df, config: dict, num_solutions: int):
             # If 'Divisional Matchup?' is "Divisional", can only pick if 'Adjusted Current Difference' > 10
             if avoid_close_divisional_matchups == 1:
                 if favored_qualifier == 'Internal Rankings':
-                    if df.loc[i, 'Divisional Matchup?'] == 1 and df.loc[i, 'Adjusted Current Difference'] <= min_away_sprea):
+                    if df.loc[i, 'Divisional Matchup?'] == 1 and df.loc[i, 'Adjusted Current Difference'] <= min_away_spread:
                         solver.Add(picks[i] == 0)
                 else: 
                     if df.loc[i, 'Divisional Matchup?'] == 1 and df.loc[i, 'Hypothetical Current Winner Sportsbook Spread'] > -min_away_spread: # Uses sportsbook spread

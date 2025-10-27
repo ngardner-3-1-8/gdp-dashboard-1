@@ -26,65 +26,211 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 import undetected_chromedriver as uc
 import os
+import json
 
-def get_db_connection():
-    db_file = 'user_configs.db'
-    conn = sqlite3.connect(db_file)
-    conn.execute("""
-        CREATE TABLE IF NOT EXISTS user_configs (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            user_id TEXT NOT NULL,
-            config_name TEXT NOT NULL,
-            config_data TEXT NOT NULL,  -- <<< This is the JSON column
-            timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
-            UNIQUE (user_id, config_name)
-        )
-    """)
-    conn.commit()
-    return conn
+# --------------------------------------------------------------------------
+# --- 1. DEFAULT TEAM RANKS (Baseline) ---
+# Used if the user selects 'Default' in the UI for their current rank setting.
+# --------------------------------------------------------------------------
+DEFAULT_RANKS = {
+    'Arizona Cardinals': -1.2,
+    'Atlanta Falcons': -0.59,
+    'Baltimore Ravens': -2.5,
+    'Buffalo Bills': 3.54,
+    'Carolina Panthers': -3.37,
+    'Chicago Bears': -1.91,
+    'Cincinnati Bengals': -3.73,
+    'Cleveland Browns': -7.53,
+    'Dallas Cowboys': 0.13,
+    'Denver Broncos': 2.34,
+    'Detroit Lions': 6.34,
+    'Green Bay Packers': 5.71,
+    'Houston Texans': 1.92,
+    'Indianapolis Colts': 2.83,
+    'Jacksonville Jaguars': -1.29,
+    'Kansas City Chiefs': 4.75,
+    'Las Vegas Raiders': -3.93,
+    'Los Angeles Chargers': 0.29,
+    'Los Angeles Rams': 5.1,
+    'Miami Dolphins': -3.77,
+    'Minnesota Vikings': 0.03,
+    'New England Patriots': -0.31,
+    'New Orleans Saints': -6.45,
+    'New York Giants': -5.4,
+    'New York Jets': -3.17,
+    'Philadelphia Eagles': 4.7,
+    'Pittsburgh Steelers': 1.48,
+    'San Francisco 49ers': 3.32,
+    'Seattle Seahawks': 5.25,
+    'Tampa Bay Buccaneers': 1.79,
+    'Tennessee Titans': -6.88,
+    'Washington Commanders': 3.0
+}
 
-def save_config(user_id, config_name, input_1, input_2):
-    try:
-        # Prevent users from overwriting an existing config name
-        cursor = conn.cursor()
-        cursor.execute(
-            "SELECT id FROM user_configs WHERE user_id = ? AND config_name = ?",
-            (user_id, config_name)
-        )
-        if cursor.fetchone():
-            return f"Configuration '{config_name}' already exists. Please choose a new name."
+# --------------------------------------------------------------------------
+# --- 2. PRE-SEASON RANKINGS (STATIC) ---
+# This is a static reference for pre-season ranking data.
+# --------------------------------------------------------------------------
+PRESEASON_RANKS = {
+    'Arizona Cardinals': 0.075,
+    'Atlanta Falcons': -0.71,
+    'Baltimore Ravens': 6.69,
+    'Buffalo Bills': 4.795,
+    'Carolina Panthers': -5.25,
+    'Chicago Bears': -1.575,
+    'Cincinnati Bengals': 1.31,
+    'Cleveland Browns': -4.705,
+    'Dallas Cowboys': -0.615,
+    'Denver Broncos': 2.05,
+    'Detroit Lions': 4.305,
+    'Green Bay Packers': 3.535,
+    'Houston Texans': 0.035,
+    'Indianapolis Colts': -2.265,
+    'Jacksonville Jaguars': -1.825,
+    'Kansas City Chiefs': 4.395,
+    'Las Vegas Raiders': -2.35,
+    'Los Angeles Chargers': 0.935,
+    'Los Angeles Rams': 1.29,
+    'Miami Dolphins': 0.66,
+    'Minnesota Vikings': 0.27,
+    'New England Patriots': -1.995,
+    'New Orleans Saints': -6.145,
+    'New York Giants': -2.84,
+    'New York Jets': -3.725,
+    'Philadelphia Eagles': 4.905,
+    'Pittsburgh Steelers': -0.565,
+    'San Francisco 49ers': 3.325,
+    'Seattle Seahawks': -0.13,
+    'Tampa Bay Buccaneers': 1.025,
+    'Tennessee Titans': -4.36,
+    'Washington Commanders': 1.45
+}
 
-        # Insert new configuration
-        conn.execute(
-            "INSERT INTO user_configs (user_id, config_name, input_1_value, input_2_value) VALUES (?, ?, ?, ?)",
-            (user_id, config_name, input_1, input_2)
-        )
-        conn.commit()
-        return f"Configuration '{config_name}' saved successfully!"
-    except Exception as e:
-        return f"An error occurred during save: {e}"
+# --------------------------------------------------------------------------
+# --- 3. HOME FIELD ADVANTAGE (STATIC DEFAULTS) ---
+# Used if the user selects 'Default' in the UI for home field advantage.
+# These values are divided by 2 from the input as they appear to be half-points.
+# --------------------------------------------------------------------------
+DEFAULT_HOME_ADVANTAGE = {
+    'Arizona Cardinals': 1.5/2,
+    'Atlanta Falcons': 2.3/2,
+    'Baltimore Ravens': 3.8/2,
+    'Buffalo Bills': 3.6/2,
+    'Carolina Panthers': 1.9/2,
+    'Chicago Bears': 1.5/2,
+    'Cincinnati Bengals': 2.1/2,
+    'Cleveland Browns': 1.3/2,
+    'Dallas Cowboys': 3.7/2,
+    'Denver Broncos': 2.6/2,
+    'Detroit Lions': 2.1/2,
+    'Green Bay Packers': 3.8/2,
+    'Houston Texans': 1.9/2,
+    'Indianapolis Colts': 2.6/2,
+    'Jacksonville Jaguars': 1.4/2,
+    'Kansas City Chiefs': 3.8/2,
+    'Las Vegas Raiders': 1.4/2,
+    'Los Angeles Chargers': 2.6/2,
+    'Los Angeles Rams': 2.6/2,
+    'Miami Dolphins': 2.3/2,
+    'Minnesota Vikings': 3.1/2,
+    'New England Patriots': 3.9/2,
+    'New Orleans Saints': 3.1/2,
+    'New York Giants': 1.1/2,
+    'New York Jets': 1.2/2,
+    'Philadelphia Eagles': 3.3/2,
+    'Pittsburgh Steelers': 3.5/2,
+    'San Francisco 49ers': 3.6/2,
+    'Seattle Seahawks': 2.6/2,
+    'Tampa Bay Buccaneers': 2.0/2,
+    'Tennessee Titans': 2.1/2,
+    'Washington Commanders': 1.3/2
+}
 
-def get_all_configs(user_id):
-    """Returns a list of saved config names for the user."""
-    configs = conn.execute(
-        "SELECT config_name FROM user_configs WHERE user_id = ? ORDER BY timestamp DESC",
-        (user_id,)
-    ).fetchall()
-    return [c[0] for c in configs]
+# --------------------------------------------------------------------------
+# --- 4. AWAY ADJUSTMENT (STATIC DEFAULTS) ---
+# Used if the user selects 'Default' in the UI for away adjustment.
+# These values are divided by 2 from the input as they appear to be half-points.
+# --------------------------------------------------------------------------
+DEFAULT_AWAY_ADJ = {
+    'Arizona Cardinals': -0.3/2,
+    'Atlanta Falcons': 0.2/2,
+    'Baltimore Ravens': -1.5/2,
+    'Buffalo Bills': -1.1/2,
+    'Carolina Panthers': 0.5/2,
+    'Chicago Bears': 1.0/2,
+    'Cincinnati Bengals': -0.2/2,
+    'Cleveland Browns': 1.5/2,
+    'Dallas Cowboys': -1.2/2,
+    'Denver Broncos': 0.6/2,
+    'Detroit Lions': 0.7/2,
+    'Green Bay Packers': -0.1/2,
+    'Houston Texans': 0.7/2,
+    'Indianapolis Colts': -0.2/2,
+    'Jacksonville Jaguars': 1.6/2,
+    'Kansas City Chiefs': -1.6/2,
+    'Las Vegas Raiders': -0.3/2,
+    'Los Angeles Chargers': -0.8/2,
+    'Los Angeles Rams': 1.3/2,
+    'Miami Dolphins': 1.4/2,
+    'Minnesota Vikings': -0.5/2,
+    'New England Patriots': -1.8/2,
+    'New Orleans Saints': -1.6/2,
+    'New York Giants': 0.9/2,
+    'New York Jets': 1.9/2,
+    'Philadelphia Eagles': -0.2/2,
+    'Pittsburgh Steelers': -0.2/2,
+    'San Francisco 49ers': -1.1/2,
+    'Seattle Seahawks': -0.4/2,
+    'Tampa Bay Buccaneers': -0.1/2,
+    'Tennessee Titans': 0.4/2,
+    'Washington Commanders': 0.6/2
+}
 
-def load_config(user_id, config_name):
-    """Retrieves all data for a selected configuration."""
-    data = conn.execute(
-        "SELECT input_1_value, input_2_value FROM user_configs WHERE user_id = ? AND config_name = ?",
-        (user_id, config_name)
-    ).fetchone()
-    
-    if data:
-        # Returns a tuple: (input_1_value, input_2_value)
-        return data
-    return None
+# --------------------------------------------------------------------------
+# --- 5. STADIUM INFO (STATIC) ---
+# Static stadium and location data. This list is *merged* with the dynamic
+# rank/advantage values inside the collect_schedule_travel_ranking_data function.
+# The structure is: [Stadium Name, Lat, Lon, Timezone, Division]
+# --------------------------------------------------------------------------
+STADIUM_INFO = {
+    'Arizona Cardinals': ['State Farm Stadium', 33.5277, -112.262608, 'America/Denver', 'NFC West'],
+    'Atlanta Falcons': ['Mercedes-Benz Stadium', 33.7489, -84.3880, 'America/New_York', 'NFC South'],
+    'Baltimore Ravens': ['M&T Bank Stadium', 39.2789, -76.6228, 'America/New_York', 'AFC North'],
+    'Buffalo Bills': ['Highmark Stadium', 42.7725, -78.7877, 'America/New_York', 'AFC East'],
+    'Carolina Panthers': ['Bank of America Stadium', 35.2258, -80.8528, 'America/New_York', 'NFC South'],
+    'Chicago Bears': ['Soldier Field', 41.8623, -87.6167, 'America/Chicago', 'NFC North'],
+    'Cincinnati Bengals': ['Paycor Stadium', 39.0955, -84.5165, 'America/New_York', 'AFC North'],
+    'Cleveland Browns': ['FirstEnergy Stadium', 41.5061, -81.6994, 'America/New_York', 'AFC North'],
+    'Dallas Cowboys': ['AT&T Stadium', 32.7369, -97.0826, 'America/Chicago', 'NFC East'],
+    'Denver Broncos': ['Empower Field at Mile High', 39.7648, -105.0076, 'America/Denver', 'AFC West'],
+    'Detroit Lions': ['Ford Field', 42.3395, -83.0450, 'America/Detroit', 'NFC North'],
+    'Green Bay Packers': ['Lambeau Field', 44.5013, -88.0622, 'America/Chicago', 'NFC North'],
+    'Houston Texans': ['NRG Stadium', 29.6847, -95.4093, 'America/Chicago', 'AFC South'],
+    'Indianapolis Colts': ['Lucas Oil Stadium', 39.7601, -86.1638, 'America/Indiana/Indianapolis', 'AFC South'],
+    'Jacksonville Jaguars': ['TIAA Bank Field', 30.3239, -81.6554, 'America/New_York', 'AFC South'],
+    'Kansas City Chiefs': ['GEHA Field at Arrowhead Stadium', 39.0489, -94.4839, 'America/Chicago', 'AFC West'],
+    'Las Vegas Raiders': ['Allegiant Stadium', 36.1080, -115.1578, 'America/Los_Angeles', 'AFC West'],
+    'Los Angeles Chargers': ['SoFi Stadium', 33.9535, -118.3395, 'America/Los_Angeles', 'AFC West'],
+    'Los Angeles Rams': ['SoFi Stadium', 33.9535, -118.3395, 'America/Los_Angeles', 'NFC West'],
+    'Miami Dolphins': ['Hard Rock Stadium', 25.9602, -80.2384, 'America/New_York', 'AFC East'],
+    'Minnesota Vikings': ['U.S. Bank Stadium', 44.9738, -93.2575, 'America/Chicago', 'NFC North'],
+    'New England Patriots': ['Gillette Stadium', 42.0628, -71.2687, 'America/New_York', 'AFC East'],
+    'New Orleans Saints': ['Caesars Superdome', 29.9507, -90.0813, 'America/Chicago', 'NFC South'],
+    'New York Giants': ['MetLife Stadium', 40.8136, -74.0744, 'America/New_York', 'NFC East'],
+    'New York Jets': ['MetLife Stadium', 40.8136, -74.0744, 'America/New_York', 'AFC East'],
+    'Philadelphia Eagles': ['Lincoln Financial Field', 39.9008, -75.1675, 'America/New_York', 'NFC East'],
+    'Pittsburgh Steelers': ['Acrisure Stadium', 40.4468, -80.0158, 'America/New_York', 'AFC North'],
+    'San Francisco 49ers': ['Levi\'s Stadium', 37.4031, -121.9702, 'America/Los_Angeles', 'NFC West'],
+    'Seattle Seahawks': ['Lumen Field', 47.5952, -122.3316, 'America/Los_Angeles', 'NFC West'],
+    'Tampa Bay Buccaneers': ['Raymond James Stadium', 27.9759, -82.5033, 'America/New_York', 'NFC South'],
+    'Tennessee Titans': ['Nissan Stadium', 36.1664, -86.7716, 'America/Chicago', 'AFC South'],
+    'Washington Commanders': ['FedExField', 38.9077, -76.8645, 'America/New_York', 'NFC East']
+}
 
-def def get_schedule(config: dict):
+ALL_TEAMS = list(STADIUM_INFO.keys())
+
+
+def get_schedule(config: dict):
     print("Gathering Schedule Data...")
     # Make a request to the website
     r = requests.get('https://www.fftoday.com/nfl/schedule.php')
@@ -102,7 +248,44 @@ def def get_schedule(config: dict):
     print("Schedule Data Retrieved")
     return table, rows
 
-def def collect_schedule_travel_ranking_data(pd, config: dict):
+def collect_schedule_travel_ranking_data(pd, config: dict, schedule_rows):
+# Get the user's custom rankings from the config
+    custom_rankings = config.get('team_rankings', {})
+
+    stadiums = {}
+    for team, info in STADIUM_INFO.items(): [cite: 18]
+        # info = [Stadium Name, Lat, Lon, Timezone, Division] [cite: 18]
+        
+        # 1. Get Preseason Rank (from global static dict)
+        preseason_rank = PRESEASON_RANKS.get(team, 0) [cite: 6-8]
+        
+        # 2. Get Current/Custom Rank (from config or default)
+        user_rank = custom_rankings.get(team, 'Default')
+        if user_rank == 'Default':
+            current_rank = DEFAULT_RANKS.get(team, 0) [cite: 3-5]
+        else:
+            current_rank = float(user_rank) # Ensure it's a number
+        
+        # 3. Get Home Advantage (from global static dict)
+        #    (Your config doesn't store this, so we use default)
+        home_adv = DEFAULT_HOME_ADVANTAGE.get(team, 0) [cite: 10-12]
+        
+        # 4. Get Away Adjustment (from global static dict)
+        #    (Your config doesn't store this, so we use default)
+        away_adj = DEFAULT_AWAY_ADJ.get(team, 0) [cite: 14-16]
+        
+        # Build the list in the format your code expects [cite: 25-28, 116]
+        stadiums[team] = [
+            info[0], # Stadium Name
+            info[1], # Lat
+            info[2], # Lon
+            info[3], # Timezone
+            info[4], # Division
+            preseason_rank,  # 5: Preseason Rank
+            current_rank,    # 6: Current Rank
+            home_adv,        # 7: Home Advantage
+            away_adj         # 8: Away Adjustment
+        ]
     data = []
     # Initialize a variable to hold the last valid date and week
     last_date = None
@@ -115,40 +298,9 @@ def def collect_schedule_travel_ranking_data(pd, config: dict):
     # Initialize dictionaries to store cumulative rest advantage for each team
     cumulative_advantage = {}
     # 0: Stadium | 1: Lattitude | 2: Longitude | 3: Timezone | 4: Division | 5: Preseason Average points better than Average Team (Used for Spread and Odds Calculation) | 6: Current Average points better than Average Team (Used for Spread and Odds Calculation) | 7: Home Advantage | 8: Reduction of Home Advantage when Away Team #Calculated here: https://nfllines.com/nfl-2023-home-field-advantage-values/
-    stadiums = {
-        'Arizona Cardinals': ['State Farm Stadium', 33.5277, -112.262608, 'America/Denver', 'NFC West', preseason_az_rank, az_rank, az_home_adv, az_away_adj],
-        'Atlanta Falcons': ['Mercedez-Benz Stadium', 33.757614, -84.400972, 'America/New_York', 'NFC South', preseason_atl_rank, atl_rank, atl_home_adv, atl_away_adj],
-        'Baltimore Ravens': ['M&T Stadium', 39.277969, -76.622767, 'America/New_York', 'AFC North', preseason_bal_rank, bal_rank, bal_home_adv, bal_away_adj],
-        'Buffalo Bills': ['Highmark Stadium', 42.773739, -78.786978, 'America/New_York', 'AFC East', preseason_buf_rank, buf_rank, buf_home_adv, buf_away_adj],
-        'Carolina Panthers': ['Bank of America Stadium', 35.225808, -80.852861, 'America/New_York', 'NFC South', preseason_car_rank, car_rank, car_home_adv, car_away_adj],
-        'Chicago Bears': ['Soldier Field', 41.862306, -87.616672, 'America/Chicago', 'NFC North', preseason_chi_rank, chi_rank, chi_home_adv, chi_away_adj],
-        'Cincinnati Bengals': ['Paycor Stadium', 39.095442, -84.516039, 'America/New_York', 'AFC North', preseason_cin_rank, cin_rank, cin_home_adv, cin_away_adj],
-        'Cleveland Browns': ['Cleveland Browns Stadium', 41.506022, -81.699564, 'America/New_York', 'AFC North', preseason_cle_rank, cle_rank, cle_home_adv, cle_away_adj],
-        'Dallas Cowboys': ['AT&T Stadium', 32.747778, -97.092778, 'America/Chicago', 'NFC East', preseason_dal_rank, dal_rank, dal_home_adv, dal_away_adj],
-        'Denver Broncos': ['Empower Field at Mile High', 39.743936, -105.020097, 'America/Denver', 'AFC West', preseason_den_rank, den_rank, den_home_adv, den_away_adj],
-        'Detroit Lions': ['Ford Field', 42.340156, -83.045808, 'America/New_York', 'NFC North', preseason_det_rank, det_rank, det_home_adv, det_away_adj],
-        'Green Bay Packers': ['Lambeau Field', 44.501306, -88.062167, 'America/Chicago', 'NFC North', preseason_gb_rank, gb_rank, gb_home_adv, gb_away_adj],
-        'Houston Texans': ['NRG Stadium', 29.684781, -95.410956, 'America/Chicago', 'AFC South', preseason_hou_rank, hou_rank, hou_home_adv, hou_away_adj],
-        'Indianapolis Colts': ['Lucas Oil Stadium', 39.760056, -86.163806, 'America/New_York', 'AFC South', preseason_ind_rank, ind_rank, ind_home_adv, ind_away_adj],
-        'Jacksonville Jaguars': ['Everbank Stadium', 30.323925, -81.637356, 'America/New_York', 'AFC South', preseason_jax_rank, jax_rank, jax_home_adv, jax_away_adj],
-        'Kansas City Chiefs': ['Arrowhead Stadium', 39.048786, -94.484566, 'America/Chicago', 'AFC West', preseason_kc_rank, kc_rank, kc_home_adv, kc_away_adj],
-        'Las Vegas Raiders': ['Allegiant Stadium', 36.090794, -115.183952, 'America/Los_Angeles', 'AFC West', preseason_lv_rank, lv_rank, lv_home_adv, lv_away_adj],
-        'Los Angeles Chargers': ['SoFi Stadium', 33.953587, -118.33963, 'America/Los_Angeles', 'AFC West', preseason_lac_rank, lac_rank, lac_home_adv, lac_away_adj],
-        'Los Angeles Rams': ['SoFi Stadium', 33.953587, -118.33963, 'America/Los_Angeles', 'NFC West', preseason_lar_rank, lar_rank, lar_home_adv, lar_away_adj],
-        'Miami Dolphins': ['Hard Rock Stadium', 25.957919, -80.238842, 'America/New_York', 'AFC East', preseason_mia_rank, mia_rank, mia_home_adv, mia_away_adj],
-        'Minnesota Vikings': ['U.S Bank Stadium', 44.973881, -93.258094, 'America/Chicago', 'NFC North', preseason_min_rank, min_rank, min_home_adv, min_away_adj],
-        'New England Patriots': ['Gillette Stadium', 42.090925, -71.26435, 'America/New_York', 'AFC East', preseason_ne_rank, ne_rank, ne_home_adv, ne_away_adj],
-        'New Orleans Saints': ['Caesars Superdome', 29.950931, -90.081364, 'America/Chicago', 'NFC South', preseason_no_rank, no_rank, no_home_adv, no_away_adj],
-        'New York Giants': ['MetLife Stadium', 40.812194, -74.076983, 'America/New_York', 'NFC East', preseason_nyg_rank, nyg_rank, nyg_home_adv, nyg_away_adj],
-        'New York Jets': ['MetLife Stadium', 40.812194, -74.076983, 'America/New_York', 'AFC East', preseason_nyj_rank, nyj_rank, nyj_home_adv, nyj_away_adj],
-        'Philadelphia Eagles': ['Lincoln Financial Field', 39.900775, -75.167453, 'America/New_York', 'NFC East', preseason_phi_rank, phi_rank, phi_home_adv, phi_away_adj],
-        'Pittsburgh Steelers': ['Acrisure Stadium', 40.446786, -80.015761, 'America/New_York', 'AFC North', preseason_pit_rank, pit_rank, pit_home_adv, pit_away_adj],
-        'San Francisco 49ers': ['Levi\'s Stadium', 37.713486, -122.386256, 'America/Los_Angeles', 'NFC West', preseason_sf_rank, sf_rank, sf_home_adv, sf_away_adj],
-        'Seattle Seahawks': ['Lumen Field', 47.595153, -122.331625, 'America/Los_Angeles', 'NFC West', preseason_sea_rank, sea_rank, sea_home_adv, sea_away_adj],
-        'Tampa Bay Buccaneers': ['Raymomd James Stadium', 27.975967, -82.50335, 'America/New_York', 'NFC South', preseason_tb_rank, tb_rank, tb_home_adv, tb_away_adj],
-        'Tennessee Titans': ['Nissan Stadium', 36.166461, -86.771289, 'America/Chicago', 'AFC South', preseason_ten_rank, ten_rank, ten_home_adv, ten_away_adj],
-        'Washington Commanders': ['FedExField', 38.907697, -76.864517, 'America/New_York', 'NFC East', preseason_was_rank, was_rank, was_home_adv, was_away_adj]
-    }
+# default_data.py
+# Contains static, non-user-configurable data for NFL teams and stadiums.
+
 
     #Get the distances traveled
     def haversine(lat1, lon1, lat2, lon2):
@@ -286,7 +438,7 @@ def def collect_schedule_travel_ranking_data(pd, config: dict):
     df['Week_Num'] = df['Week'].str.replace('Week ', '').astype(int)
     df['Week'] = df['Week'].str.replace('Week ', '', regex=False).astype(int)
 
-
+    selected_contest = config['selected_contest']
     if selected_contest == 'Circa':
         df.loc[df['Date'] >= pd.to_datetime('2025-11-29'), 'Week'] += 1
         df.loc[df['Date'] >= pd.to_datetime('2025-12-26'), 'Week'] += 1
@@ -750,42 +902,6 @@ def def collect_schedule_travel_ranking_data(pd, config: dict):
         Returns:
             pd.DataFrame: The updated DataFrame with odds.
         """
-    
-        # 0: Stadium | 1: Lattitude | 2: Longitude | 3: Timezone | 4: Division | 5: Start of 2023 Season Rank | 6: Current Rank | 7: Average points better than Average Team (Used for Spread and Odds Calculation)
-        stadiums = {
-            'Arizona Cardinals': ['State Farm Stadium', 33.5277, -112.262608, 'America/Denver', 'NFC West', preseason_az_rank, az_rank, az_home_adv, az_away_adj],
-            'Atlanta Falcons': ['Mercedez-Benz Stadium', 33.757614, -84.400972, 'America/New_York', 'NFC South', preseason_atl_rank, atl_rank, atl_home_adv, atl_away_adj],
-            'Baltimore Ravens': ['M&T Stadium', 39.277969, -76.622767, 'America/New_York', 'AFC North', preseason_bal_rank, bal_rank, bal_home_adv, bal_away_adj],
-            'Buffalo Bills': ['Highmark Stadium', 42.773739, -78.786978, 'America/New_York', 'AFC East', preseason_buf_rank, buf_rank, buf_home_adv, buf_away_adj],
-            'Carolina Panthers': ['Bank of America Stadium', 35.225808, -80.852861, 'America/New_York', 'NFC South', preseason_car_rank, car_rank, car_home_adv, car_away_adj],
-            'Chicago Bears': ['Soldier Field', 41.862306, -87.616672, 'America/Chicago', 'NFC North', preseason_chi_rank, chi_rank, chi_home_adv, chi_away_adj],
-            'Cincinnati Bengals': ['Paycor Stadium', 39.095442, -84.516039, 'America/New_York', 'AFC North', preseason_cin_rank, cin_rank, cin_home_adv, cin_away_adj],
-            'Cleveland Browns': ['Cleveland Browns Stadium', 41.506022, -81.699564, 'America/New_York', 'AFC North', preseason_cle_rank, cle_rank, cle_home_adv, cle_away_adj],
-            'Dallas Cowboys': ['AT&T Stadium', 32.747778, -97.092778, 'America/Chicago', 'NFC East', preseason_dal_rank, dal_rank, dal_home_adv, dal_away_adj],
-            'Denver Broncos': ['Empower Field at Mile High', 39.743936, -105.020097, 'America/Denver', 'AFC West', preseason_den_rank, den_rank, den_home_adv, den_away_adj],
-            'Detroit Lions': ['Ford Field', 42.340156, -83.045808, 'America/New_York', 'NFC North', preseason_det_rank, det_rank, det_home_adv, det_away_adj],
-            'Green Bay Packers': ['Lambeau Field', 44.501306, -88.062167, 'America/Chicago', 'NFC North', preseason_gb_rank, gb_rank, gb_home_adv, gb_away_adj],
-            'Houston Texans': ['NRG Stadium', 29.684781, -95.410956, 'America/Chicago', 'AFC South', preseason_hou_rank, hou_rank, hou_home_adv, hou_away_adj],
-            'Indianapolis Colts': ['Lucas Oil Stadium', 39.760056, -86.163806, 'America/New_York', 'AFC South', preseason_ind_rank, ind_rank, ind_home_adv, ind_away_adj],
-            'Jacksonville Jaguars': ['Everbank Stadium', 30.323925, -81.637356, 'America/New_York', 'AFC South', preseason_jax_rank, jax_rank, jax_home_adv, jax_away_adj],
-            'Kansas City Chiefs': ['Arrowhead Stadium', 39.048786, -94.484566, 'America/Chicago', 'AFC West', preseason_kc_rank, kc_rank, kc_home_adv, kc_away_adj],
-            'Las Vegas Raiders': ['Allegiant Stadium', 36.090794, -115.183952, 'America/Los_Angeles', 'AFC West', preseason_lv_rank, lv_rank, lv_home_adv, lv_away_adj],
-            'Los Angeles Chargers': ['SoFi Stadium', 33.953587, -118.33963, 'America/Los_Angeles', 'AFC West', preseason_lac_rank, lac_rank, lac_home_adv, lac_away_adj],
-            'Los Angeles Rams': ['SoFi Stadium', 33.953587, -118.33963, 'America/Los_Angeles', 'NFC West', preseason_lar_rank, lar_rank, lar_home_adv, lar_away_adj],
-            'Miami Dolphins': ['Hard Rock Stadium', 25.957919, -80.238842, 'America/New_York', 'AFC East', preseason_mia_rank, mia_rank, mia_home_adv, mia_away_adj],
-            'Minnesota Vikings': ['U.S Bank Stadium', 44.973881, -93.258094, 'America/Chicago', 'NFC North', preseason_min_rank, min_rank, min_home_adv, min_away_adj],
-            'New England Patriots': ['Gillette Stadium', 42.090925, -71.26435, 'America/New_York', 'AFC East', preseason_ne_rank, ne_rank, ne_home_adv, ne_away_adj],
-            'New Orleans Saints': ['Caesars Superdome', 29.950931, -90.081364, 'America/Chicago', 'NFC South', preseason_no_rank, no_rank, no_home_adv, no_away_adj],
-            'New York Giants': ['MetLife Stadium', 40.812194, -74.076983, 'America/New_York', 'NFC East', preseason_nyg_rank, nyg_rank, nyg_home_adv, nyg_away_adj],
-            'New York Jets': ['MetLife Stadium', 40.812194, -74.076983, 'America/New_York', 'AFC East', preseason_nyj_rank, nyj_rank, nyj_home_adv, nyj_away_adj],
-            'Philadelphia Eagles': ['Lincoln Financial Field', 39.900775, -75.167453, 'America/New_York', 'NFC East', preseason_phi_rank, phi_rank, phi_home_adv, phi_away_adj],
-            'Pittsburgh Steelers': ['Acrisure Stadium', 40.446786, -80.015761, 'America/New_York', 'AFC North', preseason_pit_rank, pit_rank, pit_home_adv, pit_away_adj],
-            'San Francisco 49ers': ['Levi\'s Stadium', 37.713486, -122.386256, 'America/Los_Angeles', 'NFC West', preseason_sf_rank, sf_rank, sf_home_adv, sf_away_adj],
-            'Seattle Seahawks': ['Lumen Field', 47.595153, -122.331625, 'America/Los_Angeles', 'NFC West', preseason_sea_rank, sea_rank, sea_home_adv, sea_away_adj],
-            'Tampa Bay Buccaneers': ['Raymomd James Stadium', 27.975967, -82.50335, 'America/New_York', 'NFC South', preseason_tb_rank, tb_rank, tb_home_adv, tb_away_adj],
-            'Tennessee Titans': ['Nissan Stadium', 36.166461, -86.771289, 'America/Chicago', 'AFC South', preseason_ten_rank, ten_rank, ten_home_adv, ten_away_adj],
-            'Washington Commanders': ['FedExField', 38.907697, -76.864517, 'America/New_York', 'NFC East', preseason_was_rank, was_rank, was_home_adv, was_away_adj]
-        }
     
         # 0: Spread | 1: Favorite Odds| 2: Underdog Odds
         odds = {
@@ -1265,7 +1381,6 @@ def def collect_schedule_travel_ranking_data(pd, config: dict):
     collect_schedule_travel_ranking_data_nfl_schedule_df = consolidated_df
     
     return collect_schedule_travel_ranking_data_nfl_schedule_df
-collect_schedule_travel_ranking_data_nfl_schedule_df = collect_schedule_travel_ranking_data
 
 #def get_live_contest_data():
 #	if selected_contest = 'Circa':
@@ -1279,9 +1394,19 @@ collect_schedule_travel_ranking_data_nfl_schedule_df = collect_schedule_travel_r
 #		elif subcontest = '':
 #	else:
 		
-def get_predicted_pick_percentages(pd, config: dict)::
+def get_predicted_pick_percentages(pd, config: dict, schedule_df: pd.DataFrame):
+    # Add these definitions near the top of the function
+    circa_total_entries = 20000 # Or your default
+    splash_total_entries = 5000 # Or your default
+    dk_total_entries = 25000 # Or your default
+    selected_contest = config['selected_contest']
+    starting_week = config['starting_week']
+    current_week_entries = config['current_week_entries']
+    week_requiring_two_selections = config.get('weeks_two_picks', [])
+    team_availability = config.get('team_availabilities', {})
+    custom_pick_percentages = config.get('pick_percentages', {})
     # Load your historical data (replace 'historical_pick_data_FV_circa.csv' with your actual file path)
-    if selected_contest == 'Circa':
+    if selected_contest == 'Circa': [cite: 196]
         df = pd.read_csv('Circa_historical_data.csv')
     elif selected_contest == 'Splash Sports':
         df = pd.read_csv('DK_historical_data.csv')
@@ -1317,7 +1442,7 @@ def get_predicted_pick_percentages(pd, config: dict)::
 
     # Read the CSV file into a DataFrame
     
-    new_df = collect_schedule_travel_ranking_data_df
+    new_df = schedule_df.copy()
 
     # Create a new DataFrame with selected columns
     selected_columns = ['Week', 'Away Team', 'Home Team', 'Away Team Fair Odds',
@@ -1479,7 +1604,7 @@ def get_predicted_pick_percentages(pd, config: dict)::
     #print(home_df)
     #print(away_df)
 
-    nfl_schedule_df = collect_schedule_travel_ranking_data_df
+    nfl_schedule_df = schedule_df.copy()
     nfl_schedule_df['Week_Number'] = nfl_schedule_df['Week'].str.split(' ').str[1].astype(int)
     # Filter the DataFrame
     nfl_schedule_df = nfl_schedule_df[nfl_schedule_df['Week_Number'] >= starting_week]
@@ -1503,17 +1628,18 @@ def get_predicted_pick_percentages(pd, config: dict)::
     nfl_schedule_df['Home Team EV'] = 0.0  # Initialize with 0.0
     nfl_schedule_df['Away Team EV'] = 0.0  # Initialize with 0.0
 
-    #Handle Week 1 as before
-    if selected_contest == 'Circa':
-        nfl_schedule_df.loc[nfl_schedule_df['Week'] == starting_week, 'Total Remaining Entries at Start of Week'] = current_week_entries_circa
-    elif selected_contest == 'DraftKings': # Assuming 'DK' was a shorthand for 'DraftKings' or similar
-        nfl_schedule_df.loc[nfl_schedule_df['Week'] == starting_week, 'Total Remaining Entries at Start of Week'] = current_week_entries_dk
-    elif selected_contest == 'Splash Sports':
-        nfl_schedule_df.loc[nfl_schedule_df['Week'] == starting_week, 'Total Remaining Entries at Start of Week'] = current_week_entries_splash_sports # Assuming you'll have a variable for Splash Sports entries
+# Use the 'current_week_entries' variable from the config
+    if current_week_entries >= 0:
+        nfl_schedule_df.loc[nfl_schedule_df['Week'] == starting_week, 'Total Remaining Entries at Start of Week'] = current_week_entries
     else:
-        # Handle an unexpected selected_contest value, e.g., raise an error or set a default
-        print("Warning: Unknown contest type provided.")
-        nfl_schedule_df.loc[nfl_schedule_df['Week'] == starting_week, 'Total Remaining Entries at Start of Week'] = 18000 # Or some default value
+        # Handle the -1 (auto-estimate) case based on contest
+        if selected_contest == 'Circa':
+             default_entries = 18000 # Example
+        elif selected_contest == 'Splash Sports':
+             default_entries = 5000 # Example
+        else: # DraftKings
+             default_entries = 20000 # Example
+        nfl_schedule_df.loc[nfl_schedule_df['Week'] == starting_week, 'Total Remaining Entries at Start of Week'] = default_entries
 
     # Create the boolean mask once, as it's used twice
     multiplier_mask = (selected_contest == 'Splash Sports') & \
@@ -1728,78 +1854,40 @@ def get_predicted_pick_percentages(pd, config: dict)::
     print("Expected Availability calculation complete.")
     
 
-    def assign_pick_percentages(row, selected_contest, circa_pick_percentages, dk_pick_percentages, splash_pick_percentages):
-    #"""Assigns home and away pick percentages to a row, conditionally overwriting."""
-
+    def assign_pick_percentages_from_config(row, custom_picks_config):
         home_team = row['Home Team']
         away_team = row['Away Team']
-        week = row['Week']
-        week_index = week - 1
+        week = row['Week'] # Assumes week is like "Week 1", "Week 2"
+        week_num_str = str(week).replace('Week ', '')
+        week_key = f"week_{week_num_str}" [cite: 637]
 
-        home_pick_percent = row.get('Home Pick %')  # Get existing value, defaults to None
-        away_pick_percent = row.get('Away Pick %')  # Get existing value, defaults to None
+        home_pick_percent = row.get('Home Pick %') # Default
+        away_pick_percent = row.get('Away Pick %') # Default
 
-        if selected_contest == 'Circa':
-            # Check for Home Team overrides
-            if home_team in circa_pick_percentages:
-                team_pick_percent_list = circa_pick_percentages[home_team]
-                if week_index < len(team_pick_percent_list):
-                    user_override_value = team_pick_percent_list[week_index]
-                    # Apply override ONLY if the user-provided value is NOT -1
-                    if user_override_value >= 0:
-                        home_pick_percent = user_override_value
-
-            # Check for Away Team overrides
-            if away_team in circa_pick_percentages:
-                team_pick_percent_list = circa_pick_percentages[away_team]
-                if week_index < len(team_pick_percent_list):
-                    user_override_value = team_pick_percent_list[week_index]
-                    # Apply override ONLY if the user-provided value is NOT -1
-                    if user_override_value >= 0:
-                        away_pick_percent = user_override_value
-        elif selected_contest == 'Splash Sports': 
-            if home_team in splash_pick_percentages:
-                team_pick_percent_list = splash_pick_percentages[home_team]
-                if week_index < len(team_pick_percent_list):
-                    user_override_value = team_pick_percent_list[week_index]
-                    # Apply override ONLY if the user-provided value is NOT -1
-                    if user_override_value >= 0:
-                        home_pick_percent = user_override_value
-
-            # Check for Away Team overrides
-            if away_team in splash_pick_percentages:
-                team_pick_percent_list = splash_pick_percentages[away_team]
-                if week_index < len(team_pick_percent_list):
-                    user_override_value = team_pick_percent_list[week_index]
-                    # Apply override ONLY if the user-provided value is NOT -1
-                    if user_override_value >= 0:
-                        away_pick_percent = user_override_value
-	    
-        else: # assuming it's DraftKings
-            if home_team in dk_pick_percentages:
-                team_pick_percent_list = dk_pick_percentages[home_team]
-                if week_index < len(team_pick_percent_list):
-                    user_override_value = team_pick_percent_list[week_index]
-                    # Apply override ONLY if the user-provided value is NOT -1
-                    if user_override_value >= 0:
-                        home_pick_percent = user_override_value
-
-            # Check for Away Team overrides
-            if away_team in dk_pick_percentages:
-                team_pick_percent_list = dk_pick_percentages[away_team]
-                if week_index < len(team_pick_percent_list):
-                    user_override_value = team_pick_percent_list[week_index]
-                    # Apply override ONLY if the user-provided value is NOT -1
-                    if user_override_value >= 0:
-                        away_pick_percent = user_override_value
+        if week_key in custom_picks_config:
+            week_overrides = custom_picks_config[week_key]
+            
+            # Check for Home Team override [cite: 638]
+            if home_team in week_overrides:
+                user_override_value = week_overrides[home_team]
+                if user_override_value >= 0: # Keep -1 logic [cite: 638]
+                    home_pick_percent = user_override_value
+                    
+            # Check for Away Team override [cite: 639]
+            if away_team in week_overrides:
+                user_override_value = week_overrides[away_team]
+                if user_override_value >= 0: # Keep -1 logic [cite: 639]
+                    away_pick_percent = user_override_value
 
         return pd.Series({'Home Pick %': home_pick_percent, 'Away Pick %': away_pick_percent})
-                                                                 
-
+                                                  
+    # Get the single source of truth...
+    custom_pick_percentages = config.get('pick_percentages', {})
+    
     nfl_schedule_df[['Home Pick %', 'Away Pick %']] = nfl_schedule_df.apply(
-        assign_pick_percentages, 
+        assign_pick_percentages_from_config,  # <-- CORRECT NAME
         axis=1, 
-        args=(selected_contest, circa_pick_percentages, dk_pick_percentages, splash_pick_percentages)
+        args=(custom_pick_percentages,) # Pass the config dict
     )
     
     if selected_contest == 'Circa':
@@ -1812,8 +1900,13 @@ def get_predicted_pick_percentages(pd, config: dict)::
     st.write(nfl_schedule_df)
     return nfl_schedule_df
 
-def get_predicted_pick_percentages_with_availability(pd):
+def get_predicted_pick_percentages_with_availability(pd, config: dict, schedule_df: pd.DataFrame):
     # Load your historical data (replace 'historical_pick_data_FV_circa.csv' with your actual file path)
+    selected_contest = config['selected_contest']
+    starting_week = config['starting_week']
+    current_week_entries = config['current_week_entries']
+    week_requiring_two_selections = config.get('weeks_two_picks', [])
+    team_availability = config.get('team_availabilities', {})
     if selected_contest == 'Circa':
         df = pd.read_csv('Circa_historical_data.csv')
 
@@ -1847,7 +1940,7 @@ def get_predicted_pick_percentages_with_availability(pd):
     
         # Read the CSV file into a DataFrame
         
-        new_df = nfl_schedule_pick_percentages_df
+        new_df = schedule_df.copy()
 
     
         # Create a new DataFrame with selected columns
@@ -2018,7 +2111,7 @@ def get_predicted_pick_percentages_with_availability(pd):
         #print(home_df)
         #print(away_df)
     
-        nfl_schedule_df = collect_schedule_travel_ranking_data_df
+        nfl_schedule_df = schedule_df.copy()
         # Assumes format "Week X" - adjust if the format is different
         if nfl_schedule_df['Week'].dtype == 'object':
             nfl_schedule_df['Week_Number'] = nfl_schedule_df['Week'].str.split(' ').str[1].astype(int)
@@ -2046,17 +2139,18 @@ def get_predicted_pick_percentages_with_availability(pd):
         nfl_schedule_df['Home Team EV'] = 0.0  # Initialize with 0.0
         nfl_schedule_df['Away Team EV'] = 0.0  # Initialize with 0.0
     
-        #Handle Week 1 as before
-        if selected_contest == 'Circa':
-            nfl_schedule_df.loc[nfl_schedule_df['Week'] == starting_week, 'Total Remaining Entries at Start of Week'] = current_week_entries_circa
-        elif selected_contest == 'DraftKings': # Assuming 'DK' was a shorthand for 'DraftKings' or similar
-            nfl_schedule_df.loc[nfl_schedule_df['Week'] == starting_week, 'Total Remaining Entries at Start of Week'] = current_week_entries_dk
-        elif selected_contest == 'Splash Sports':
-            nfl_schedule_df.loc[nfl_schedule_df['Week'] == starting_week, 'Total Remaining Entries at Start of Week'] = current_week_entries_splash_sports # Assuming you'll have a variable for Splash Sports entries
+        # Use the 'current_week_entries' variable from the config
+        if current_week_entries >= 0:
+            nfl_schedule_df.loc[nfl_schedule_df['Week'] == starting_week, 'Total Remaining Entries at Start of Week'] = current_week_entries
         else:
-            # Handle an unexpected selected_contest value, e.g., raise an error or set a default
-            print("Warning: Unknown contest type provided.")
-            nfl_schedule_df.loc[nfl_schedule_df['Week'] == starting_week, 'Total Remaining Entries at Start of Week'] = 20000 # Or some default value
+            # Handle the -1 (auto-estimate) case based on contest
+            if selected_contest == 'Circa':
+                 default_entries = 18000 # Example
+            elif selected_contest == 'Splash Sports':
+                 default_entries = 5000 # Example
+            else: # DraftKings
+                 default_entries = 20000 # Example
+            nfl_schedule_df.loc[nfl_schedule_df['Week'] == starting_week, 'Total Remaining Entries at Start of Week'] = default_entries
     
         nfl_schedule_df['Home Expected Survival Rate'] = nfl_schedule_df['Home Team Fair Odds'] * nfl_schedule_df['Home Pick %']
         nfl_schedule_df['Home Expected Elimination Percent'] = nfl_schedule_df['Home Pick %'] - nfl_schedule_df['Home Expected Survival Rate']
@@ -2258,42 +2352,39 @@ def get_predicted_pick_percentages_with_availability(pd):
         print("Expected Availability calculation complete.")
     
 
-        def assign_pick_percentages_with_availability(row, selected_contest, circa_pick_percentages, dk_pick_percentages, splash_pick_percentages):
-        #"""Assigns home and away pick percentages to a row, conditionally overwriting."""
-            if selected_contest == 'Circa':
-                home_team = row['Home Team']
-                away_team = row['Away Team']
-                week = row['Week']
-                week_index = week - 1
-        
-                home_pick_percent = row.get('Home Pick %')  # Get existing value, defaults to None
-                away_pick_percent = row.get('Away Pick %')  # Get existing value, defaults to None
-        
-                # Check for Home Team overrides
-                if home_team in circa_pick_percentages:
-                    team_pick_percent_list = circa_pick_percentages[home_team]
-                    if week_index < len(team_pick_percent_list):
-                        user_override_value = team_pick_percent_list[week_index]
-                        # Apply override ONLY if the user-provided value is NOT -1
-                        if user_override_value >= 0:
-                            home_pick_percent = user_override_value
-        
-                # Check for Away Team overrides
-                if away_team in circa_pick_percentages:
-                    team_pick_percent_list = circa_pick_percentages[away_team]
-                    if week_index < len(team_pick_percent_list):
-                        user_override_value = team_pick_percent_list[week_index]
-                        # Apply override ONLY if the user-provided value is NOT -1
-                        if user_override_value >= 0:
-                            away_pick_percent = user_override_value
-        
-                return pd.Series({'Home Pick %': home_pick_percent, 'Away Pick %': away_pick_percent})
-                                                                         
+    # This function should be identical to the one in get_predicted_pick_percentages
+        def assign_pick_percentages_from_config(row, custom_picks_config):
+            home_team = row['Home Team']
+            away_team = row['Away Team']
+            week = row['Week'] # Assumes week is like "Week 1", "Week 2"
+            week_num_str = str(week).replace('Week ', '')
+            week_key = f"week_{week_num_str}"
+    
+            home_pick_percent = row.get('Home Pick %') # Default
+            away_pick_percent = row.get('Away Pick %') # Default
+    
+            if week_key in custom_picks_config:
+                week_overrides = custom_picks_config[week_key]
+                
+                if home_team in week_overrides:
+                    user_override_value = week_overrides[home_team]
+                    if user_override_value >= 0:
+                        home_pick_percent = user_override_value
+                        
+                if away_team in week_overrides:
+                    user_override_value = week_overrides[away_team]
+                    if user_override_value >= 0:
+                        away_pick_percent = user_override_value
+    
+            return pd.Series({'Home Pick %': home_pick_percent, 'Away Pick %': away_pick_percent})
+                                                      
+        # Get the single source of truth for custom picks from the config
+        custom_pick_percentages = config.get('pick_percentages', {})
         
         nfl_schedule_df[['Home Pick %', 'Away Pick %']] = nfl_schedule_df.apply(
-            assign_pick_percentages_with_availability, 
+            assign_pick_percentages_from_config, 
             axis=1, 
-            args=(selected_contest, circa_pick_percentages, dk_pick_percentages, splash_pick_percentages)
+            args=(custom_pick_percentages,) # Pass the config dict
         )
         
         if selected_contest == 'Circa':
@@ -2302,7 +2393,11 @@ def get_predicted_pick_percentages_with_availability(pd):
 
 
 def calculate_ev(df, config: dict, use_cache=False):
-    
+    fav_qualifier = config.get('favored_qualifier', 'Live Sportsbook Odds (If Available)')
+    use_live_sportsbook_odds = 1 if 'Live Sportsbook' in fav_qualifier else 0
+    start_w = config['starting_week']
+    end_w = config['ending_week']
+    selected_c = config['selected_contest']
     def calculate_all_scenarios(week_df):
         num_games = len(week_df)
         teams = week_df['Home Team'].tolist() + week_df['Away Team'].tolist()
@@ -2398,8 +2493,8 @@ def calculate_ev(df, config: dict, use_cache=False):
 
     all_weeks_ev = {} #Store the EV values for each week
 
-    for week in tqdm(range(starting_week, ending_week), desc="Processing Weeks", leave=False):
-        week_df = nfl_schedule_pick_percentages_df[nfl_schedule_pick_percentages_df['Week_Num'] == week].copy() # Create a copy to avoid SettingWithCopyWarning
+    for week in tqdm(range(start_w, end_w), desc="Processing Weeks", leave=False):
+        week_df = df[df['Week_Num'] == week].copy() # Use the 'df' argument
         # Check if the current week requires two picks
 #        if week in week_requiring_two_selections:
             # Call a new function to handle two-pick calculations
@@ -2413,27 +2508,41 @@ def calculate_ev(df, config: dict, use_cache=False):
 
         #More efficient way to set the EV values for the current week
         for team in week_df['Home Team'].unique():
-            nfl_schedule_pick_percentages_df.loc[(nfl_schedule_pick_percentages_df['Week_Num'] == week) & (nfl_schedule_pick_percentages_df['Home Team'] == team), 'Home Team EV'] = weighted_avg_ev[team]
+            df.loc[(df['Week_Num'] == week) & (df['Home Team'] == team), 'Home Team EV'] = weighted_avg_ev[team]
         for team in week_df['Away Team'].unique():
-            nfl_schedule_pick_percentages_df.loc[(nfl_schedule_pick_percentages_df['Week_Num'] == week) & (nfl_schedule_pick_percentages_df['Away Team'] == team), 'Away Team EV'] = weighted_avg_ev[team]
+            df.loc[(df['Week_Num'] == week) & (df['Away Team'] == team), 'Away Team EV'] = weighted_avg_ev[team]
 
         progress_percent = int((week / ending_week) * 100)
         progress_bar.progress(progress_percent)
 
     if selected_contest == 'Circa':
-        nfl_schedule_pick_percentages_df.to_csv("NFL Schedule with full ev_circa.csv", index=False)
+        df.to_csv("NFL Schedule with full ev_circa.csv", index=False)
     elif selected_contest == 'Splash Sports':
-        nfl_schedule_pick_percentages_df.to_csv("NFL Schedule with full ev_splash.csv", index=False)
+        df.to_csv("NFL Schedule with full ev_splash.csv", index=False)
     else:
-        nfl_schedule_pick_percentages_df.to_csv("NFL Schedule with full ev_dk.csv", index=False)
-    return nfl_schedule_pick_percentages_df
+        df.to_csv("NFL Schedule with full ev_dk.csv", index=False)
+    return df
 
 
 
-def reformat_df():
-	full_df_with_ev['ID'] = full_df_with_ev.index + 1
-	away_reformatted_df = full_df_with_ev[['Week_x', 'Date', 'Time', 'Away Team', 'Home Team', 'Away Team Weekly Rest', 'Weekly Away Rest Advantage', 'Away Cumulative Rest Advantage', 'Away Team Current Week Cumulative Rest Advantage', 'Actual Stadium', 'Back to Back Away Games', 'Away Team Previous Opponent', 'Away Team Previous Location', 'Away Previous Game Actual Stadium TimeZone','Away Weekly Timezone Difference', 'Away Team Next Opponent', 'Away Team Next Location', 'Away Travel Advantage', 'Away Timezone Change', 'Away Team Preseason Rank','Away Team Adjusted Preseason Rank', 'Away Team Current Rank', 'Away Team Adjusted Current Rank', 'Thursday Night Game', 'Divisional Matchup?', 'Away Team 3 games in 10 days', 'Away Team 4 games in 17 days', 'Away Team Short Rest', 'Away Team Moneyline', 'Favorite', 'Underdog', 'Adjusted Away Points', 'Adjusted Home Points', 'Internal Away Team Moneyline', 'Away Team Implied Odds to Win', 'Internal Away Team Implied Odds to Win', 'Away Team Fair Odds', 'Internal Away Team Fair Odds', 'Away Team Star Rating', 'Away Team Thanksgiving Favorite', 'Away Team Christmas Favorite', 'Away Team Thanksgiving Underdog', 'Away Team Christmas Underdog', 'Away Team Expected Availability','Away Pick %', 'Away Team EV', 'Total Remaining Entries at Start of Week', 'Away Expected Survival Rate', 'Away Expected Elimination Percent', 'Expected Away Team Picks', 'Expected Away Team Eliminations', 'Expected Away Team Survivors', 'Same Winner?', 'Same Current and Adjusted Current Winner?', 'Same Adjusted Preseason Winner?', 'Adjusted Current Winner', 'Adjusted Current Difference', 'Home Team Preseason Rank', 'Home Team Adjusted Preseason Rank', 'Home Team Current Rank', 'Home Team Adjusted Current Rank', 'ID']]
-	new_column_names = {
+def reformat_df(df: pd.DataFrame, config: dict):
+    """
+    Reformats the combined dataframe with EV into a team-centric,
+    one-row-per-team-per-game format.
+    """
+    # --- Fix 1: Get selected_contest from the config dict ---
+    selected_contest = config['selected_contest']
+    
+    # --- Fix 2: Use the passed 'df' argument instead of global 'full_df_with_ev' ---
+    # Make a copy to avoid SettingWithCopyWarning on the original df
+    df = df.copy() 
+    
+    df['ID'] = df.index + 1
+    
+    # --- Away Team Dataframe ---
+    away_reformatted_df = df[['Week_x', 'Date', 'Time', 'Away Team', 'Home Team', 'Away Team Weekly Rest', 'Weekly Away Rest Advantage', 'Away Cumulative Rest Advantage', 'Away Team Current Week Cumulative Rest Advantage', 'Actual Stadium', 'Back to Back Away Games', 'Away Team Previous Opponent', 'Away Team Previous Location', 'Away Previous Game Actual Stadium TimeZone','Away Weekly Timezone Difference', 'Away Team Next Opponent', 'Away Team Next Location', 'Away Travel Advantage', 'Away Timezone Change', 'Away Team Preseason Rank','Away Team Adjusted Preseason Rank', 'Away Team Current Rank', 'Away Team Adjusted Current Rank', 'Thursday Night Game', 'Divisional Matchup?', 'Away Team 3 games in 10 days', 'Away Team 4 games in 17 days', 'Away Team Short Rest', 'Away Team Moneyline', 'Favorite', 'Underdog', 'Adjusted Away Points', 'Adjusted Home Points', 'Internal Away Team Moneyline', 'Away Team Implied Odds to Win', 'Internal Away Team Implied Odds to Win', 'Away Team Fair Odds', 'Internal Away Team Fair Odds', 'Away Team Star Rating', 'Away Team Thanksgiving Favorite', 'Away Team Christmas Favorite', 'Away Team Thanksgiving Underdog', 'Away Team Christmas Underdog', 'Away Team Expected Availability','Away Pick %', 'Away Team EV', 'Total Remaining Entries at Start of Week', 'Away Expected Survival Rate', 'Away Expected Elimination Percent', 'Expected Away Team Picks', 'Expected Away Team Eliminations', 'Expected Away Team Survivors', 'Same Winner?', 'Same Current and Adjusted Current Winner?', 'Same Adjusted Preseason Winner?', 'Adjusted Current Winner', 'Adjusted Current Difference', 'Home Team Preseason Rank', 'Home Team Adjusted Preseason Rank', 'Home Team Current Rank', 'Home Team Adjusted Current Rank', 'ID']]
+    
+    new_column_names_away = {
         'Week_x': 'Week',
         'Date': 'Date',
         'Time': 'Time',
@@ -2495,49 +2604,43 @@ def reformat_df():
         'Home Team Current Rank': 'Opp Current Rank',
         'Home Team Adjusted Current Rank': 'Opp Adjusted Current Rank'
     }
-	away_reformatted_df.rename(columns=new_column_names, inplace=True)
+    away_reformatted_df = away_reformatted_df.rename(columns=new_column_names_away)
 
-	away_reformatted_df['Date'] = pd.to_datetime(away_reformatted_df['Date'])
-	away_reformatted_df['Date'] = away_reformatted_df['Date'].dt.strftime('%m-%d-%Y')
-
-
-	away_reformatted_df['Expected EV'] = round(away_reformatted_df['Expected EV'], 4)
-	away_reformatted_df['Fair Odds Based on Sportsbook Odds'] = round(away_reformatted_df['Fair Odds Based on Sportsbook Odds'], 2)
-	away_reformatted_df['Fair Odds Based on Internal Rankings'] = round(away_reformatted_df['Fair Odds Based on Internal Rankings'], 2)
-	away_reformatted_df['Expected Pick Percent'] = round(away_reformatted_df['Expected Pick Percent'], 2)
-	away_reformatted_df['Expected Availability'] = round(away_reformatted_df['Expected Availability'], 2)
-	away_reformatted_df['Expected Survival Rate'] = round(away_reformatted_df['Expected Survival Rate'], 2)
-	away_reformatted_df['Expected Contest Elimination Percent'] = round(away_reformatted_df['Expected Contest Elimination Percent'], 2)
-	away_reformatted_df['Expected Picks'] = round(away_reformatted_df['Expected Picks'])
-	away_reformatted_df['Expected Eliminations'] = round(away_reformatted_df['Expected Eliminations'])
-	away_reformatted_df['Expected Survivors'] = round(away_reformatted_df['Expected Survivors'])
+    away_reformatted_df['Date'] = pd.to_datetime(away_reformatted_df['Date']).dt.strftime('%m-%d-%Y')
+    
+    # ... (Rounding) ...
+    away_reformatted_df['Expected EV'] = round(away_reformatted_df['Expected EV'], 4)
+    away_reformatted_df['Fair Odds Based on Sportsbook Odds'] = round(away_reformatted_df['Fair Odds Based on Sportsbook Odds'], 2)
+    away_reformatted_df['Fair Odds Based on Internal Rankings'] = round(away_reformatted_df['Fair Odds Based on Internal Rankings'], 2)
+    away_reformatted_df['Expected Pick Percent'] = round(away_reformatted_df['Expected Pick Percent'], 2)
+    away_reformatted_df['Expected Availability'] = round(away_reformatted_df['Expected Availability'], 2)
+    away_reformatted_df['Expected Survival Rate'] = round(away_reformatted_df['Expected Survival Rate'], 2)
+    away_reformatted_df['Expected Contest Elimination Percent'] = round(away_reformatted_df['Expected Contest Elimination Percent'], 2)
+    away_reformatted_df['Expected Picks'] = round(away_reformatted_df['Expected Picks'])
+    away_reformatted_df['Expected Eliminations'] = round(away_reformatted_df['Expected Eliminations'])
+    away_reformatted_df['Expected Survivors'] = round(away_reformatted_df['Expected Survivors'])
 
     
-	away_reformatted_df['Preseason Difference'] = round(away_reformatted_df['Preseason Rank'] - away_reformatted_df['Opp Preseason Rank'], 1)
-	away_reformatted_df['Adjusted Preseason Difference'] = round(away_reformatted_df['Adjusted Preseason Rank'] - away_reformatted_df['Opp Adjusted Preseason Rank'], 1)
-	away_reformatted_df['Current Difference'] = round(away_reformatted_df['Current Rank'] - away_reformatted_df['Opp Current Rank'], 1)
-	away_reformatted_df['Adjusted Current Difference'] = round(away_reformatted_df['Adjusted Current Rank'] - away_reformatted_df['Opp Adjusted Current Rank'], 1)
+    away_reformatted_df['Preseason Difference'] = round(away_reformatted_df['Preseason Rank'] - away_reformatted_df['Opp Preseason Rank'], 1)
+    away_reformatted_df['Adjusted Preseason Difference'] = round(away_reformatted_df['Adjusted Preseason Rank'] - away_reformatted_df['Opp Adjusted Preseason Rank'], 1)
+    away_reformatted_df['Current Difference'] = round(away_reformatted_df['Current Rank'] - away_reformatted_df['Opp Current Rank'], 1)
+    away_reformatted_df['Adjusted Current Difference'] = round(away_reformatted_df['Adjusted Current Rank'] - away_reformatted_df['Opp Adjusted Current Rank'], 1)
 
-	away_reformatted_df['Same Winner?'] = away_reformatted_df.apply(lambda row: 'Yes' if (row['Preseason Difference'] > 0 and row['Adjusted Preseason Difference'] > 0 and row['Current Difference'] > 0 and row['Adjusted Current Difference'] > 0) else 'No', axis=1)
-	away_reformatted_df['Week'] = away_reformatted_df['Week'].str.extract(r'(\d+)').astype(int)
+    away_reformatted_df['Same Winner?'] = away_reformatted_df.apply(lambda row: 'Yes' if (row['Preseason Difference'] > 0 and row['Adjusted Preseason Difference'] > 0 and row['Current Difference'] > 0 and row['Adjusted Current Difference'] > 0) else 'No', axis=1)
+    away_reformatted_df['Week'] = away_reformatted_df['Week'].str.extract(r'(\d+)').astype(int)
 
-	away_reformatted_df['Same Adjusted Preseason Winner?'] = away_reformatted_df.apply(lambda row: 'Yes' if (row['Adjusted Preseason Difference'] > 0 and row['Adjusted Current Difference'] > 0) else 'No', axis=1)
-	away_reformatted_df['Same Current and Adjusted Current Winner?'] = away_reformatted_df.apply(lambda row: 'Yes' if (row['Current Difference'] > 0 and row['Adjusted Current Difference'] > 0) else 'No', axis=1)
-	away_reformatted_df['Team Is Away'] = 'True'
-	away_reformatted_df['Same Internal Ranking + Sportsbook Winner'] = away_reformatted_df.apply(lambda row: 'Yes' if (row['Fair Odds Based on Sportsbook Odds'] > 0.5 and row['Fair Odds Based on Internal Rankings'] > 0.5) else 'No', axis=1)
+    away_reformatted_df['Same Adjusted Preseason Winner?'] = away_reformatted_df.apply(lambda row: 'Yes' if (row['Adjusted Preseason Difference'] > 0 and row['Adjusted Current Difference'] > 0) else 'No', axis=1)
+    away_reformatted_df['Same Current and Adjusted Current Winner?'] = away_reformatted_df.apply(lambda row: 'Yes' if (row['Current Difference'] > 0 and row['Adjusted Current Difference'] > 0) else 'No', axis=1)
+    away_reformatted_df['Team Is Away'] = 'True'
+    away_reformatted_df['Same Internal Ranking + Sportsbook Winner'] = away_reformatted_df.apply(lambda row: 'Yes' if (row['Fair Odds Based on Sportsbook Odds'] > 0.5 and row['Fair Odds Based on Internal Rankings'] > 0.5) else 'No', axis=1)
     
-    
-    # Use the .rename() method to rename the columns
-    # The inplace=True argument modifies the DataFrame directly
-	new_order = ['Week', 'Date', 'Time', 'Team', 'Opponent', 'Team Is Away', 'Location', 'Expected EV', 'Moneyline Based on Sportsbook Odds', 'Moneyline Based on Internal Rankings', 'Fair Odds Based on Sportsbook Odds', 'Fair Odds Based on Internal Rankings', 'Preseason Rank', 'Adjusted Preseason Rank', 'Current Rank', 'Adjusted Current Rank', 'Preseason Difference', 'Adjusted Preseason Difference', 'Current Difference', 'Adjusted Current Difference','Expected Pick Percent', 'Expected Availability', 'Future Value', 'Weekly Rest', 'Weekly Rest Advantage', 'Season-Long Rest Advantage', 'Season-Long Rest Advantage Including This Week', 'Travel Advantage', 'Weekly Timezone Difference', 'Previous Opponent', 'Previous Game Location', 'Previous Game Timezone', 'Next Opponent', 'Next Game Location', 'Back to Back Away Games', 'Thursday Night Game', 'Divisional Matchup?', '3 Games in 10 Days', '4 Games in 17 Days', 'Away Team Short Rest', 'Thanksgiving Favorite', 'Christmas Favorite', 'Thanksgiving Underdog', 'Christmas Underdog', 'Total Remaining Entries at Start of Week', 'Expected Picks', 'Expected Survival Rate', 'Expected Contest Elimination Percent', 'Expected Eliminations', 'Expected Survivors', 'Adjusted Current Winner', 'Favorite', 'Underdog', 'Opp Preseason Rank', 'Opp Adjusted Preseason Rank', 'Opp Current Rank', 'Opp Adjusted Current Rank', 'Same Internal Ranking + Sportsbook Winner', 'Same Current and Adjusted Current Winner?', 'Same Adjusted Preseason Winner?', 'ID']
+    new_order_away = ['Week', 'Date', 'Time', 'Team', 'Opponent', 'Team Is Away', 'Location', 'Expected EV', 'Moneyline Based on Sportsbook Odds', 'Moneyline Based on Internal Rankings', 'Fair Odds Based on Sportsbook Odds', 'Fair Odds Based on Internal Rankings', 'Preseason Rank', 'Adjusted Preseason Rank', 'Current Rank', 'Adjusted Current Rank', 'Preseason Difference', 'Adjusted Preseason Difference', 'Current Difference', 'Adjusted Current Difference','Expected Pick Percent', 'Expected Availability', 'Future Value', 'Weekly Rest', 'Weekly Rest Advantage', 'Season-Long Rest Advantage', 'Season-Long Rest Advantage Including This Week', 'Travel Advantage', 'Weekly Timezone Difference', 'Previous Opponent', 'Previous Game Location', 'Previous Game Timezone', 'Next Opponent', 'Next Game Location', 'Back to Back Away Games', 'Thursday Night Game', 'Divisional Matchup?', '3 Games in 10 Days', '4 Games in 17 Days', 'Away Team Short Rest', 'Thanksgiving Favorite', 'Christmas Favorite', 'Thanksgiving Underdog', 'Christmas Underdog', 'Total Remaining Entries at Start of Week', 'Expected Picks', 'Expected Survival Rate', 'Expected Contest Elimination Percent', 'Expected Eliminations', 'Expected Survivors', 'Adjusted Current Winner', 'Favorite', 'Underdog', 'Opp Preseason Rank', 'Opp Adjusted Preseason Rank', 'Opp Current Rank', 'Opp Adjusted Current Rank', 'Same Internal Ranking + Sportsbook Winner', 'Same Current and Adjusted Current Winner?', 'Same Adjusted Preseason Winner?', 'ID']
+    away_reformatted_df = away_reformatted_df.reindex(columns=new_order_away) # Use reindex to handle missing columns gracefully
 
-    # Reorder the DataFrame using the new list of column names
-	away_reformatted_df = away_reformatted_df[new_order]
+    # --- Home Team Dataframe ---
+    home_reformatted_df = df[['Week_x', 'Date', 'Time', 'Home Team', 'Away Team', 'Home Team Weekly Rest', 'Weekly Home Rest Advantage', 'Home Cumulative Rest Advantage', 'Home Team Current Week Cumulative Rest Advantage', 'Actual Stadium', 'Back to Back Away Games', 'Home Team Previous Opponent', 'Home Team Previous Location', 'Home Previous Game Actual Stadium TimeZone','Home Weekly Timezone Difference', 'Home Team Next Opponent', 'Home Team Next Location', 'Home Travel Advantage', 'Home Timezone Change', 'Home Team Preseason Rank', 'Home Team Adjusted Preseason Rank', 'Home Team Current Rank', 'Home Team Adjusted Current Rank', 'Thursday Night Game', 'Divisional Matchup?', 'Home Team 3 games in 10 days', 'Home Team 4 games in 17 days', 'Away Team Short Rest', 'Home Team Moneyline', 'Favorite', 'Underdog', 'Adjusted Home Points', 'Adjusted Away Points', 'Internal Home Team Moneyline', 'Home team Implied Odds to Win', 'Internal Home team Implied Odds to Win', 'Home Team Fair Odds', 'Internal Home Team Fair Odds', 'Home Team Star Rating', 'Home Team Thanksgiving Favorite', 'Home Team Christmas Favorite', 'Home Team Thanksgiving Underdog', 'Home Team Christmas Underdog', 'Home Team Expected Availability','Home Pick %', 'Home Team EV', 'Total Remaining Entries at Start of Week', 'Home Expected Survival Rate', 'Home Expected Elimination Percent', 'Expected Home Team Picks', 'Expected Home Team Eliminations', 'Expected Home Team Survivors', 'Same Winner?', 'Same Current and Adjusted Current Winner?', 'Same Adjusted Preseason Winner?', 'Adjusted Current Winner', 'Adjusted Current Difference', 'Away Team Preseason Rank', 'Away Team Adjusted Preseason Rank', 'Away Team Current Rank', 'Away Team Adjusted Current Rank', 'ID']]
 
-        # Correctly selects columns using a list of strings
-	home_reformatted_df = full_df_with_ev[['Week_x', 'Date', 'Time', 'Home Team', 'Away Team', 'Home Team Weekly Rest', 'Weekly Home Rest Advantage', 'Home Cumulative Rest Advantage', 'Home Team Current Week Cumulative Rest Advantage', 'Actual Stadium', 'Back to Back Away Games', 'Home Team Previous Opponent', 'Home Team Previous Location', 'Home Previous Game Actual Stadium TimeZone','Home Weekly Timezone Difference', 'Home Team Next Opponent', 'Home Team Next Location', 'Home Travel Advantage', 'Home Timezone Change', 'Home Team Preseason Rank', 'Home Team Adjusted Preseason Rank', 'Home Team Current Rank', 'Home Team Adjusted Current Rank', 'Thursday Night Game', 'Divisional Matchup?', 'Home Team 3 games in 10 days', 'Home Team 4 games in 17 days', 'Away Team Short Rest', 'Home Team Moneyline', 'Favorite', 'Underdog', 'Adjusted Home Points', 'Adjusted Away Points', 'Internal Home Team Moneyline', 'Home team Implied Odds to Win', 'Internal Home team Implied Odds to Win', 'Home Team Fair Odds', 'Internal Home Team Fair Odds', 'Home Team Star Rating', 'Home Team Thanksgiving Favorite', 'Home Team Christmas Favorite', 'Home Team Thanksgiving Underdog', 'Home Team Christmas Underdog', 'Home Team Expected Availability','Home Pick %', 'Home Team EV', 'Total Remaining Entries at Start of Week', 'Home Expected Survival Rate', 'Home Expected Elimination Percent', 'Expected Home Team Picks', 'Expected Home Team Eliminations', 'Expected Home Team Survivors', 'Same Winner?', 'Same Current and Adjusted Current Winner?', 'Same Adjusted Preseason Winner?', 'Adjusted Current Winner', 'Adjusted Current Difference', 'Away Team Preseason Rank', 'Away Team Adjusted Preseason Rank', 'Away Team Current Rank', 'Away Team Adjusted Current Rank', 'ID']]
-
-	new_column_names = {
+    new_column_names_home = {
         'Week_x': 'Week',
         'Date': 'Date',
         'Time': 'Time',
@@ -2571,8 +2674,8 @@ def reformat_df():
         'Adjusted Home Points': 'Adjusted Home Points',
         'Adjusted Away Points': 'Adjusted Away Points',
         'Internal Home Team Moneyline': 'Moneyline Based on Internal Rankings',
-        'Home Team Implied Odds to Win': 'Implied Odds Based on Sportsbook Odds',
-        'Internal Home Team Implied Odds to Win': 'Implied Odds Based on Internal Rankings',
+        'Home team Implied Odds to Win': 'Implied Odds Based on Sportsbook Odds',
+        'Internal Home team Implied Odds to Win': 'Implied Odds Based on Internal Rankings',
         'Home Team Fair Odds': 'Fair Odds Based on Sportsbook Odds',
         'Internal Home Team Fair Odds': 'Fair Odds Based on Internal Rankings',
         'Home Team Star Rating': 'Future Value',
@@ -2599,70 +2702,84 @@ def reformat_df():
         'Away Team Current Rank': 'Opp Current Rank',
         'Away Team Adjusted Current Rank': 'Opp Adjusted Current Rank'
     }
+    home_reformatted_df = home_reformatted_df.rename(columns=new_column_names_home)
 
-	home_reformatted_df.rename(columns=new_column_names, inplace=True)
+    home_reformatted_df['Date'] = pd.to_datetime(home_reformatted_df['Date']).dt.strftime('%m-%d-%Y')
+    home_reformatted_df['Away Team Short Rest'] = 'No'
+    home_reformatted_df['Back to Back Away Games'] = 'False'
 
-	home_reformatted_df['Date'] = pd.to_datetime(home_reformatted_df['Date'])
-	home_reformatted_df['Date'] = home_reformatted_df['Date'].dt.strftime('%m-%d-%Y')
-	home_reformatted_df['Away Team Short Rest'] = 'No'
-	home_reformatted_df['Back to Back Away Games'] = 'False'
-
-	home_reformatted_df['Expected EV'] = round(home_reformatted_df['Expected EV'], 4)
-	home_reformatted_df['Fair Odds Based on Sportsbook Odds'] = round(home_reformatted_df['Fair Odds Based on Sportsbook Odds'], 2)
-	home_reformatted_df['Fair Odds Based on Internal Rankings'] = round(home_reformatted_df['Fair Odds Based on Internal Rankings'], 2)
-	home_reformatted_df['Expected Pick Percent'] = round(home_reformatted_df['Expected Pick Percent'], 2)
-	home_reformatted_df['Expected Availability'] = round(home_reformatted_df['Expected Availability'], 2)
-	home_reformatted_df['Expected Survival Rate'] = round(home_reformatted_df['Expected Survival Rate'], 2)
-	home_reformatted_df['Expected Contest Elimination Percent'] = round(home_reformatted_df['Expected Contest Elimination Percent'], 2)
-	home_reformatted_df['Expected Picks'] = round(home_reformatted_df['Expected Picks'])
-	home_reformatted_df['Expected Eliminations'] = round(home_reformatted_df['Expected Eliminations'])
-	home_reformatted_df['Expected Survivors'] = round(home_reformatted_df['Expected Survivors'])
+    # ... (Rounding) ...
+    home_reformatted_df['Expected EV'] = round(home_reformatted_df['Expected EV'], 4)
+    home_reformatted_df['Fair Odds Based on Sportsbook Odds'] = round(home_reformatted_df['Fair Odds Based on Sportsbook Odds'], 2)
+    home_reformatted_df['Fair Odds Based on Internal Rankings'] = round(home_reformatted_df['Fair Odds Based on Internal Rankings'], 2)
+    home_reformatted_df['Expected Pick Percent'] = round(home_reformatted_df['Expected Pick Percent'], 2)
+    home_reformatted_df['Expected Availability'] = round(home_reformatted_df['Expected Availability'], 2)
+    home_reformatted_df['Expected Survival Rate'] = round(home_reformatted_df['Expected Survival Rate'], 2)
+    home_reformatted_df['Expected Contest Elimination Percent'] = round(home_reformatted_df['Expected Contest Elimination Percent'], 2)
+    home_reformatted_df['Expected Picks'] = round(home_reformatted_df['Expected Picks'])
+    home_reformatted_df['Expected Eliminations'] = round(home_reformatted_df['Expected Eliminations'])
+    home_reformatted_df['Expected Survivors'] = round(home_reformatted_df['Expected Survivors'])
 
     
-	home_reformatted_df['Preseason Difference'] = round(home_reformatted_df['Preseason Rank'] - home_reformatted_df['Opp Preseason Rank'], 1)
-	home_reformatted_df['Adjusted Preseason Difference'] = round(home_reformatted_df['Adjusted Preseason Rank'] - home_reformatted_df['Opp Adjusted Preseason Rank'], 1)
-	home_reformatted_df['Current Difference'] = round(home_reformatted_df['Current Rank'] - home_reformatted_df['Opp Current Rank'], 1)
-	home_reformatted_df['Adjusted Current Difference'] = round(home_reformatted_df['Adjusted Current Rank'] - home_reformatted_df['Opp Adjusted Current Rank'], 1)
+    home_reformatted_df['Preseason Difference'] = round(home_reformatted_df['Preseason Rank'] - home_reformatted_df['Opp Preseason Rank'], 1)
+    home_reformatted_df['Adjusted Preseason Difference'] = round(home_reformatted_df['Adjusted Preseason Rank'] - home_reformatted_df['Opp Adjusted Preseason Rank'], 1)
+    home_reformatted_df['Current Difference'] = round(home_reformatted_df['Current Rank'] - home_reformatted_df['Opp Current Rank'], 1)
+    home_reformatted_df['Adjusted Current Difference'] = round(home_reformatted_df['Adjusted Current Rank'] - home_reformatted_df['Opp Adjusted Current Rank'], 1)
 
-	home_reformatted_df['Same Winner?'] = home_reformatted_df.apply(lambda row: 'Yes' if (row['Preseason Difference'] > 0 and row['Adjusted Preseason Difference'] > 0 and row['Current Difference'] > 0 and row['Adjusted Current Difference'] > 0) else 'No', axis=1)
-	home_reformatted_df['Week'] = home_reformatted_df['Week'].str.extract(r'(\d+)').astype(int)
+    home_reformatted_df['Same Winner?'] = home_reformatted_df.apply(lambda row: 'Yes' if (row['Preseason Difference'] > 0 and row['Adjusted Preseason Difference'] > 0 and row['Current Difference'] > 0 and row['Adjusted Current Difference'] > 0) else 'No', axis=1)
+    home_reformatted_df['Week'] = home_reformatted_df['Week'].str.extract(r'(\d+)').astype(int)
 
-	home_reformatted_df['Same Adjusted Preseason Winner?'] = home_reformatted_df.apply(lambda row: 'Yes' if (row['Adjusted Preseason Difference'] > 0 and row['Adjusted Current Difference'] > 0) else 'No', axis=1)
-	home_reformatted_df['Same Current and Adjusted Current Winner?'] = home_reformatted_df.apply(lambda row: 'Yes' if (row['Current Difference'] > 0 and row['Adjusted Current Difference'] > 0) else 'No', axis=1)
-	home_reformatted_df['Team Is Away'] = 'False'
-	home_reformatted_df['Same Internal Ranking + Sportsbook Winner'] = home_reformatted_df.apply(lambda row: 'Yes' if (row['Fair Odds Based on Sportsbook Odds'] > 0.5 and row['Fair Odds Based on Internal Rankings'] > 0.5) else 'No', axis=1)
+    home_reformatted_df['Same Adjusted Preseason Winner?'] = home_reformatted_df.apply(lambda row: 'Yes' if (row['Adjusted Preseason Difference'] > 0 and row['Adjusted Current Difference'] > 0) else 'No', axis=1)
+    home_reformatted_df['Same Current and Adjusted Current Winner?'] = home_reformatted_df.apply(lambda row: 'Yes' if (row['Current Difference'] > 0 and row['Adjusted Current Difference'] > 0) else 'No', axis=1)
+    home_reformatted_df['Team Is Away'] = 'False'
+    home_reformatted_df['Same Internal Ranking + Sportsbook Winner'] = home_reformatted_df.apply(lambda row: 'Yes' if (row['Fair Odds Based on Sportsbook Odds'] > 0.5 and row['Fair Odds Based on Internal Rankings'] > 0.5) else 'No', axis=1)
     
     
-    # Use the .rename() method to rename the columns
-    # The inplace=True argument modifies the DataFrame directly
-	new_order = ['Week', 'Date', 'Time', 'Team', 'Opponent', 'Team Is Away', 'Location', 'Expected EV', 'Moneyline Based on Sportsbook Odds', 
-                 'Moneyline Based on Internal Rankings', 'Fair Odds Based on Sportsbook Odds', 'Fair Odds Based on Internal Rankings', 'Preseason Rank', 
-                 'Adjusted Preseason Rank', 'Current Rank', 'Adjusted Current Rank', 'Preseason Difference', 'Adjusted Preseason Difference', 'Current Difference', 
-                 'Adjusted Current Difference','Expected Pick Percent', 'Expected Availability', 'Future Value', 'Weekly Rest', 'Weekly Rest Advantage', 
-                 'Season-Long Rest Advantage', 'Season-Long Rest Advantage Including This Week', 'Travel Advantage', 'Weekly Timezone Difference', 
-                 'Previous Opponent', 'Previous Game Location', 'Previous Game Timezone', 'Next Opponent', 'Next Game Location', 'Back to Back Away Games', 
-                 'Thursday Night Game', 'Divisional Matchup?', '3 Games in 10 Days', '4 Games in 17 Days', 'Away Team Short Rest', 'Thanksgiving Favorite', 
-                 'Christmas Favorite', 'Thanksgiving Underdog', 'Christmas Underdog','Total Remaining Entries at Start of Week', 'Expected Picks', 'Expected Survival Rate', 'Expected Contest Elimination Percent', 
-                 'Expected Eliminations', 'Expected Survivors', 'Adjusted Current Winner', 'Favorite', 'Underdog', 'Opp Preseason Rank', 'Opp Adjusted Preseason Rank', 
-                 'Opp Current Rank', 'Opp Adjusted Current Rank', 'Same Internal Ranking + Sportsbook Winner', 'Same Current and Adjusted Current Winner?', 
-                 'Same Adjusted Preseason Winner?', 'ID']
+    new_order_home = ['Week', 'Date', 'Time', 'Team', 'Opponent', 'Team Is Away', 'Location', 'Expected EV', 'Moneyline Based on Sportsbook Odds', 'Moneyline Based on Internal Rankings', 'Fair Odds Based on Sportsbook Odds', 'Fair Odds Based on Internal Rankings', 'Preseason Rank', 'Adjusted Preseason Rank', 'Current Rank', 'Adjusted Current Rank', 'Preseason Difference', 'Adjusted Preseason Difference', 'Current Difference', 'Adjusted Current Difference','Expected Pick Percent', 'Expected Availability', 'Future Value', 'Weekly Rest', 'Weekly Rest Advantage', 'Season-Long Rest Advantage', 'Season-Long Rest Advantage Including This Week', 'Travel Advantage', 'Weekly Timezone Difference', 'Previous Opponent', 'Previous Game Location', 'Previous Game Timezone', 'Next Opponent', 'Next Game Location', 'Back to Back Away Games', 'Thursday Night Game', 'Divisional Matchup?', '3 Games in 10 Days', '4 Games in 17 Days', 'Away Team Short Rest', 'Thanksgiving Favorite', 'Christmas Favorite', 'Thanksgiving Underdog', 'Christmas Underdog','Total Remaining Entries at Start of Week', 'Expected Picks', 'Expected Survival Rate', 'Expected Contest Elimination Percent', 'Expected Eliminations', 'Expected Survivors', 'Adjusted Current Winner', 'Favorite', 'Underdog', 'Opp Preseason Rank', 'Opp Adjusted Preseason Rank', 'Opp Current Rank', 'Opp Adjusted Current Rank', 'Same Internal Ranking + Sportsbook Winner', 'Same Current and Adjusted Current Winner?', 'Same Adjusted Preseason Winner?', 'ID']
+    home_reformatted_df = home_reformatted_df.reindex(columns=new_order_home) # Use reindex to handle missing columns gracefully
 
-    # Reorder the DataFrame using the new list of column names
-	home_reformatted_df = home_reformatted_df[new_order]
+    # --- Combine and Sort ---
+    combined_df = pd.concat([home_reformatted_df, away_reformatted_df], ignore_index=True)
+    combined_df = combined_df.sort_values(by=['ID', 'Team Is Away'], ascending=True)
 
-	combined_df = pd.concat([home_reformatted_df, away_reformatted_df], ignore_index=True)
-
-	combined_df = combined_df.sort_values(by=['ID', 'Team Is Away'], ascending=True)
-
-	if selected_contest != 'Circa':
-		combined_df = combined_df.drop(columns=['Thanksgiving Favorite', 'Christmas Favorite', 'Thanksgiving Underdog', 'Christmas Underdog'])
+    # --- Final Step: Use the 'selected_contest' variable ---
+    if selected_contest != 'Circa':
+        combined_df = combined_df.drop(columns=['Thanksgiving Favorite', 'Christmas Favorite', 'Thanksgiving Underdog', 'Christmas Underdog'])
     
-	return combined_df
+    return combined_df
 
 
 def get_survivor_picks_based_on_ev(df, config: dict, num_solutions: int):
-    for iteration in range(number_solutions):
-        df = full_df_with_ev
+    # --- ADD THIS BLOCK ---
+    # Get settings from config
+    starting_week = config['starting_week']
+    ending_week = config['ending_week']
+    picked_teams = config['prohibited_picks'] [cite: 732, 772]
+    required_weeks_dict = config['required_weeks'] [cite: 733, 788-793]
+    prohibited_weeks_dict = config['prohibited_weeks'] [cite: 733, 794-800]
+    selected_contest = config['selected_contest']
+    week_requiring_two_selections = config.get('weeks_two_picks', [])
+    favored_qualifier = config.get('favored_qualifier', 'Live Sportsbook Odds (If Available)') [cite: 734]
+    
+    # Get all constraints
+    pick_must_be_favored = config.get('must_be_favored', False) [cite: 734]
+    avoid_away_teams_in_close_matchups = config.get('avoid_away_close', False) [cite: 735]
+    min_away_spread = config.get('min_away_spread', 3.0) [cite: 735]
+    avoid_close_divisional_matchups = config.get('avoid_close_divisional', False) [cite: 734]
+    min_div_spread = config.get('min_div_spread', 7.0) [cite: 735]
+    avoid_away_divisional_matchups = config.get('avoid_away_divisional', False) [cite: 735]
+    avoid_away_teams_on_short_rest = config.get('avoid_away_short_rest', False) [cite: 734]
+    avoid_4_games_in_17_days = config.get('avoid_4_in_17', False) [cite: 735]
+    avoid_3_games_in_10_days = config.get('avoid_3_in_10', False) [cite: 735]
+    avoid_international_game = config.get('avoid_international', False) [cite: 736]
+    avoid_thursday_night = config.get('avoid_thursday', False) [cite: 735]
+    avoid_away_thursday_night = config.get('avoid_away_thursday', False) [cite: 736]
+    avoid_back_to_back_away = config.get('avoid_b2b_away', False) [cite: 736]
+    avoid_teams_with_weekly_rest_disadvantage = config.get('avoid_weekly_rest_disadvantage', False) [cite: 736]
+    avoid_cumulative_rest_disadvantage = config.get('avoid_cumulative_rest', False) [cite: 735]
+    avoid_away_teams_with_travel_disadvantage = config.get('avoid_travel_disadvantage', False) [cite: 736]
+    # --- END BLOCK ---
+    for iteration in range(num_solutions):
 
         #Number of weeks that have already been played
         #weeks_completed = starting_week -1
@@ -2738,44 +2855,6 @@ def get_survivor_picks_based_on_ev(df, config: dict, num_solutions: int):
         picks = {}
         for i in range(len(df)):
             picks[i] = solver.IntVar(0, 1, 'pick_%i' % i)
-
-        required_pick_indices = set()
-        
-        # List of teams and their required week variables
-        required_teams = [
-            ('Arizona Cardinals', az_req_week),
-            ('Atlanta Falcons', atl_req_week),
-            ('Baltimore Ravens', bal_req_week),
-            ('Buffalo Bills', buf_req_week),
-            ('Carolina Panthers', car_req_week),
-            ('Chicago Bears', chi_req_week),
-            ('Cincinnati Bengals', cin_req_week),
-            ('Cleveland Browns', cle_req_week),
-            ('Dallas Cowboys', dal_req_week),
-            ('Denver Broncos', den_req_week),
-            ('Detroit Lions', det_req_week),
-            ('Green Bay Packers', gb_req_week),
-            ('Houston Texans', hou_req_week),
-            ('Indianapolis Colts', ind_req_week),
-            ('Jacksonville Jaguars', jax_req_week),
-            ('Kansas City Chiefs', kc_req_week),
-            ('Las Vegas Raiders', lv_req_week),
-            ('Los Angeles Chargers', lac_req_week),
-            ('Los Angeles Rams', lar_req_week),
-            ('Miami Dolphins', mia_req_week),
-            ('Minnesota Vikings', min_req_week),
-            ('New England Patriots', ne_req_week),
-            ('New Orleans Saints', no_req_week),
-            ('New York Giants', nyg_req_week),
-            ('New York Jets', nyj_req_week),
-            ('Philadelphia Eagles', phi_req_week),
-            ('Pittsburgh Steelers', pit_req_week),
-            ('San Francisco 49ers', sf_req_week),
-            ('Seattle Seahawks', sea_req_week),
-            ('Tampa Bay Buccaneers', tb_req_week),
-            ('Tennessee Titans', ten_req_week),
-            ('Washington Commanders', was_req_week)
-        ]
         
         for team, req_week in required_teams:
             if req_week > 0:
@@ -2865,69 +2944,10 @@ def get_survivor_picks_based_on_ev(df, config: dict, num_solutions: int):
 
 
             
-            if df.loc[i, 'Hypothetical Current Winner'] == 'Arizona Cardinals' and df.loc[i, 'Week_Num'] in az_excluded_weeks:
-                    solver.Add(picks[i] == 0)
-            if df.loc[i, 'Hypothetical Current Winner'] == 'Atlanta Falcons' and df.loc[i, 'Week_Num'] in atl_excluded_weeks:
-                    solver.Add(picks[i] == 0)
-            if df.loc[i, 'Hypothetical Current Winner'] == 'Baltimore Ravens' and df.loc[i, 'Week_Num'] in bal_excluded_weeks:
-                    solver.Add(picks[i] == 0)
-            if df.loc[i, 'Hypothetical Current Winner'] == 'Buffalo Bills' and df.loc[i, 'Week_Num'] in buf_excluded_weeks:
-                    solver.Add(picks[i] == 0)
-            if df.loc[i, 'Hypothetical Current Winner'] == 'Carolina Panthers' and df.loc[i, 'Week_Num'] in car_excluded_weeks:
-                    solver.Add(picks[i] == 0)
-            if df.loc[i, 'Hypothetical Current Winner'] == 'Chicago Bears' and df.loc[i, 'Week_Num'] in chi_excluded_weeks:
-                    solver.Add(picks[i] == 0)
-            if df.loc[i, 'Hypothetical Current Winner'] == 'Cincinnati Bengals' and df.loc[i, 'Week_Num'] in cin_excluded_weeks:
-                    solver.Add(picks[i] == 0)
-            if df.loc[i, 'Hypothetical Current Winner'] == 'Cleveland Browns' and df.loc[i, 'Week_Num'] in cle_excluded_weeks:
-                    solver.Add(picks[i] == 0)
-            if df.loc[i, 'Hypothetical Current Winner'] == 'Dallas Cowboys' and df.loc[i, 'Week_Num'] in dal_excluded_weeks:
-                    solver.Add(picks[i] == 0)
-            if df.loc[i, 'Hypothetical Current Winner'] == 'Denver Broncos' and df.loc[i, 'Week_Num'] in den_excluded_weeks:
-                    solver.Add(picks[i] == 0)
-            if df.loc[i, 'Hypothetical Current Winner'] == 'Detroit Lions' and df.loc[i, 'Week_Num'] in det_excluded_weeks:
-                    solver.Add(picks[i] == 0)
-            if df.loc[i, 'Hypothetical Current Winner'] == 'Green Bay Packers' and df.loc[i, 'Week_Num'] in gb_excluded_weeks:
-                    solver.Add(picks[i] == 0)
-            if df.loc[i, 'Hypothetical Current Winner'] == 'Houston Texans' and df.loc[i, 'Week_Num'] in hou_excluded_weeks:
-                    solver.Add(picks[i] == 0)
-            if df.loc[i, 'Hypothetical Current Winner'] == 'Indianapolis Colts' and df.loc[i, 'Week_Num'] in ind_excluded_weeks:
-                    solver.Add(picks[i] == 0)
-            if df.loc[i, 'Hypothetical Current Winner'] == 'Jacksonville Jaguars' and df.loc[i, 'Week_Num'] in jax_excluded_weeks:
-                    solver.Add(picks[i] == 0)
-            if df.loc[i, 'Hypothetical Current Winner'] == 'Kansas City Chiefs' and df.loc[i, 'Week_Num'] in kc_excluded_weeks:
-                    solver.Add(picks[i] == 0)
-            if df.loc[i, 'Hypothetical Current Winner'] == 'Las Vegas Raiders' and df.loc[i, 'Week_Num'] in lv_excluded_weeks:
-                    solver.Add(picks[i] == 0)
-            if df.loc[i, 'Hypothetical Current Winner'] == 'Los Angeles Chargers' and df.loc[i, 'Week_Num'] in lac_excluded_weeks:
-                    solver.Add(picks[i] == 0)
-            if df.loc[i, 'Hypothetical Current Winner'] == 'Los Angeles Rams' and df.loc[i, 'Week_Num'] in lar_excluded_weeks:
-                    solver.Add(picks[i] == 0)
-            if df.loc[i, 'Hypothetical Current Winner'] == 'Miami Dolphins' and df.loc[i, 'Week_Num'] in mia_excluded_weeks:
-                    solver.Add(picks[i] == 0)
-            if df.loc[i, 'Hypothetical Current Winner'] == 'Minnesota Vikings' and df.loc[i, 'Week_Num'] in min_excluded_weeks:
-                    solver.Add(picks[i] == 0)
-            if df.loc[i, 'Hypothetical Current Winner'] == 'New England Patriots' and df.loc[i, 'Week_Num'] in ne_excluded_weeks:
-                    solver.Add(picks[i] == 0)
-            if df.loc[i, 'Hypothetical Current Winner'] == 'New Orleans Saints' and df.loc[i, 'Week_Num'] in no_excluded_weeks:
-                    solver.Add(picks[i] == 0)
-            if df.loc[i, 'Hypothetical Current Winner'] == 'New York Giants' and df.loc[i, 'Week_Num'] in nyg_excluded_weeks:
-                    solver.Add(picks[i] == 0)
-            if df.loc[i, 'Hypothetical Current Winner'] == 'New York Jets' and df.loc[i, 'Week_Num'] in nyj_excluded_weeks:
-                    solver.Add(picks[i] == 0)
-            if df.loc[i, 'Hypothetical Current Winner'] == 'Philadelphia Eagles' and df.loc[i, 'Week_Num'] in phi_excluded_weeks:
-                    solver.Add(picks[i] == 0)
-            if df.loc[i, 'Hypothetical Current Winner'] == 'Pittsburgh Steelers' and df.loc[i, 'Week_Num'] in pit_excluded_weeks:
-                    solver.Add(picks[i] == 0)
-            if df.loc[i, 'Hypothetical Current Winner'] == 'Seattle Seahawks' and df.loc[i, 'Week_Num'] in sea_excluded_weeks:
-                    solver.Add(picks[i] == 0)
-            if df.loc[i, 'Hypothetical Current Winner'] == 'Tampa Bay Buccaneers' and df.loc[i, 'Week_Num'] in tb_excluded_weeks:
-                    solver.Add(picks[i] == 0)
-            if df.loc[i, 'Hypothetical Current Winner'] == 'Tennessee Titans' and df.loc[i, 'Week_Num'] in ten_excluded_weeks:
-                    solver.Add(picks[i] == 0)
-            if df.loc[i, 'Hypothetical Current Winner'] == 'Washington Commanders' and df.loc[i, 'Week_Num'] in was_excluded_weeks:
-                    solver.Add(picks[i] == 0)
-            if df.loc[i, 'Hypothetical Current Winner'] == 'San Francisco 49ers' and df.loc[i, 'Week_Num'] in sf_excluded_weeks:
+            prohibited_weeks_dict = config['prohibited_weeks']
+            team_name = df.loc[i, 'Hypothetical Current Winner']
+            if team_name in prohibited_weeks_dict:
+                if df.loc[i, 'Week_Num'] in prohibited_weeks_dict[team_name]:
                     solver.Add(picks[i] == 0)
 
 
@@ -2935,133 +2955,18 @@ def get_survivor_picks_based_on_ev(df, config: dict, num_solutions: int):
                 solver.Add(picks[i] == 0)
 
 
-        if sf_req_week > 0:        
-            for i in range(len(df)):
-                if (df.loc[i, 'Hypothetical Current Winner'] == 'San Francisco 49ers') and df.loc[i, 'Week_Num'] == sf_req_week:
-                    solver.Add(picks[i] == 1)
-        if az_req_week > 0:        
-            for i in range(len(df)):
-                if (df.loc[i, 'Hypothetical Current Winner'] == 'Arizona Cardinals') and df.loc[i, 'Week_Num'] == az_req_week:
-                    solver.Add(picks[i] == 1)
-        if atl_req_week > 0:        
-            for i in range(len(df)):
-                if (df.loc[i, 'Hypothetical Current Winner'] == 'Atlanta Falcons') and df.loc[i, 'Week_Num'] == atl_req_week:
-                    solver.Add(picks[i] == 1)
-        if bal_req_week > 0:        
-            for i in range(len(df)):
-                if (df.loc[i, 'Hypothetical Current Winner'] == 'Baltimore Ravens') and df.loc[i, 'Week_Num'] == bal_req_week:
-                    solver.Add(picks[i] == 1)
-        if buf_req_week > 0:        
-            for i in range(len(df)):
-                if (df.loc[i, 'Hypothetical Current Winner'] == 'Buffalo Bills') and df.loc[i, 'Week_Num'] == buf_req_week:
-                    solver.Add(picks[i] == 1)
-        if car_req_week > 0:        
-            for i in range(len(df)):
-                if (df.loc[i, 'Hypothetical Current Winner'] == 'Carolina Panthers') and df.loc[i, 'Week_Num'] == car_req_week:
-                    solver.Add(picks[i] == 1)
-        if chi_req_week > 0:        
-            for i in range(len(df)):
-                if (df.loc[i, 'Hypothetical Current Winner'] == 'Chicago Bears') and df.loc[i, 'Week_Num'] == chi_req_week:
-                    solver.Add(picks[i] == 1)
-        if cin_req_week > 0:
-            for i in range(len(df)):
-                if (df.loc[i, 'Hypothetical Current Winner'] == 'Cincinnati Bengals') and df.loc[i, 'Week_Num'] == cin_req_week:
-                    solver.Add(picks[i] == 1)
-        if cle_req_week > 0:        
-            for i in range(len(df)):
-                if (df.loc[i, 'Hypothetical Current Winner'] == 'Cleveland Browns') and df.loc[i, 'Week_Num'] == cle_req_week:
-                    solver.Add(picks[i] == 1)
-        if dal_req_week > 0:        
-            for i in range(len(df)):
-                if (df.loc[i, 'Hypothetical Current Winner'] == 'Dallas Cowboys') and df.loc[i, 'Week_Num'] == dal_req_week:
-                    solver.Add(picks[i] == 1)
-        if den_req_week > 0:        
-            for i in range(len(df)):
-                if (df.loc[i, 'Hypothetical Current Winner'] == 'Denver Broncos') and df.loc[i, 'Week_Num'] == den_req_week:
-                    solver.Add(picks[i] == 1)
-        if det_req_week > 0:        
-            for i in range(len(df)):
-                if (df.loc[i, 'Hypothetical Current Winner'] == 'Detroit Lions') and df.loc[i, 'Week_Num'] == det_req_week:
-                    solver.Add(picks[i] == 1)
-        if gb_req_week > 0:        
-            for i in range(len(df)):
-                if (df.loc[i, 'Hypothetical Current Winner'] == 'Green Bay Packers') and df.loc[i, 'Week_Num'] == gb_req_week:
-                    solver.Add(picks[i] == 1)
-        if hou_req_week > 0:        
-            for i in range(len(df)):
-                if (df.loc[i, 'Hypothetical Current Winner'] == 'Houston Texans') and df.loc[i, 'Week_Num'] == hou_req_week:
-                    solver.Add(picks[i] == 1)
-        if ind_req_week > 0:        
-            for i in range(len(df)):
-                if (df.loc[i, 'Hypothetical Current Winner'] == 'Indianapolis Colts') and df.loc[i, 'Week_Num'] == ind_req_week:
-                    solver.Add(picks[i] == 1)
-        if jax_req_week > 0:        
-            for i in range(len(df)):
-                if (df.loc[i, 'Hypothetical Current Winner'] == 'Jacksonville Jaguars') and df.loc[i, 'Week_Num'] == jax_req_week:
-                    solver.Add(picks[i] == 1)
-        if kc_req_week > 0:        
-            for i in range(len(df)):
-                if (df.loc[i, 'Hypothetical Current Winner'] == 'Kansas City Chiefs') and df.loc[i, 'Week_Num'] == kc_req_week:
-                    solver.Add(picks[i] == 1)
-        if lv_req_week > 0:        
-            for i in range(len(df)):
-                if (df.loc[i, 'Hypothetical Current Winner'] == 'Las Vegas Raiders') and df.loc[i, 'Week_Num'] == lv_req_week:
-                    solver.Add(picks[i] == 1)
-        if lac_req_week > 0:        
-            for i in range(len(df)):
-                if (df.loc[i, 'Hypothetical Current Winner'] == 'Los Angeles Chargers') and df.loc[i, 'Week_Num'] == lac_req_week:
-                    solver.Add(picks[i] == 1)
-        if lar_req_week > 0:        
-            for i in range(len(df)):
-                if (df.loc[i, 'Hypothetical Current Winner'] == 'Los Angeles Rams') and df.loc[i, 'Week_Num'] == lar_req_week:
-                    solver.Add(picks[i] == 1)
-        if mia_req_week > 0:        
-            for i in range(len(df)):
-                if (df.loc[i, 'Hypothetical Current Winner'] == 'Miami Dolphins') and df.loc[i, 'Week_Num'] == mia_req_week:
-                    solver.Add(picks[i] == 1)
-        if min_req_week > 0:        
-            for i in range(len(df)):
-                if (df.loc[i, 'Hypothetical Current Winner'] == 'Minnesota Vikings') and df.loc[i, 'Week_Num'] == min_req_week:
-                    solver.Add(picks[i] == 1)
-        if ne_req_week > 0:        
-            for i in range(len(df)):
-                if (df.loc[i, 'Hypothetical Current Winner'] == 'New England Patriots') and df.loc[i, 'Week_Num'] == ne_req_week:
-                    solver.Add(picks[i] == 1)
-        if no_req_week > 0:        
-            for i in range(len(df)):
-                if (df.loc[i, 'Hypothetical Current Winner'] == 'New Orleans Saints') and df.loc[i, 'Week_Num'] == no_req_week:
-                    solver.Add(picks[i] == 1)
-        if nyg_req_week > 0:        
-            for i in range(len(df)):
-                if (df.loc[i, 'Hypothetical Current Winner'] == 'New York Giants') and df.loc[i, 'Week_Num'] == nyg_req_week:
-                    solver.Add(picks[i] == 1)
-        if nyj_req_week > 0:        
-            for i in range(len(df)):
-                if (df.loc[i, 'Hypothetical Current Winner'] == 'New York Jets') and df.loc[i, 'Week_Num'] == nyj_req_week:
-                    solver.Add(picks[i] == 1)
-        if phi_req_week > 0:        
-            for i in range(len(df)):
-                if (df.loc[i, 'Hypothetical Current Winner'] == 'Philadelphia Eagles') and df.loc[i, 'Week_Num'] == phi_req_week:
-                    solver.Add(picks[i] == 1)
-        if pit_req_week > 0:        
-                if (df.loc[i, 'Hypothetical Current Winner'] == 'Pittsburgh Steelers') and df.loc[i, 'Week_Num'] == pit_req_week:
-                    solver.Add(picks[i] == 1)
-        if sea_req_week > 0:        
-            for i in range(len(df)):
-                if (df.loc[i, 'Hypothetical Current Winner'] == 'Seattle Seahawks') and df.loc[i, 'Week_Num'] == sea_req_week:
-                    solver.Add(picks[i] == 1)
-        if tb_req_week > 0:        
-            for i in range(len(df)):
-                if (df.loc[i, 'Hypothetical Current Winner'] == 'Tampa Bay Buccaneers') and df.loc[i, 'Week_Num'] == tb_req_week:
-                    solver.Add(picks[i] == 1)
-        if ten_req_week > 0:        
-            for i in range(len(df)):
-                if (df.loc[i, 'Hypothetical Current Winner'] == 'Tennessee Titans') and df.loc[i, 'Week_Num'] == ten_req_week:
-                    solver.Add(picks[i] == 1)
-        if was_req_week > 0:        
-            for i in range(len(df)):
-                if (df.loc[i, 'Hypothetical Current Winner'] == 'Washington Commanders') and df.loc[i, 'Week_Num'] == was_req_week:
-                    solver.Add(picks[i] == 1)
+        required_weeks_dict = config['required_weeks']
+        for team, req_week in required_weeks_dict.items():
+            if req_week > 0: # If a required week is set
+                # Find all matching game indices for this team/week
+                required_game_indices = df[
+                    (df['Hypothetical Current Winner'] == team) & 
+                    (df['Week_Num'] == req_week)
+                ].index.tolist()
+        
+                if required_game_indices:
+                    # Force the pick for the first match found (should only be one)
+                    solver.Add(picks[required_game_indices[0]] == 1)
 
         
         for week in df['Week_Num'].unique():
@@ -3403,8 +3308,36 @@ def get_survivor_picks_based_on_ev(df, config: dict, num_solutions: int):
         forbidden_solutions_1.append(picks_df['Hypothetical Current Winner'].tolist())
 
 def get_survivor_picks_based_on_internal_rankings(df, config: dict, num_solutions: int):
-    for iteration in range(number_solutions):
-        df = full_df_with_ev
+    # --- ADD THIS BLOCK ---
+    # Get settings from config
+    starting_week = config['starting_week']
+    ending_week = config['ending_week']
+    picked_teams = config['prohibited_picks'] [cite: 732, 772]
+    required_weeks_dict = config['required_weeks'] [cite: 733, 788-793]
+    prohibited_weeks_dict = config['prohibited_weeks'] [cite: 733, 794-800]
+    selected_contest = config['selected_contest']
+    week_requiring_two_selections = config.get('weeks_two_picks', [])
+    favored_qualifier = config.get('favored_qualifier', 'Live Sportsbook Odds (If Available)') [cite: 734]
+    
+    # Get all constraints
+    pick_must_be_favored = config.get('must_be_favored', False) [cite: 734]
+    avoid_away_teams_in_close_matchups = config.get('avoid_away_close', False) [cite: 735]
+    min_away_spread = config.get('min_away_spread', 3.0) [cite: 735]
+    avoid_close_divisional_matchups = config.get('avoid_close_divisional', False) [cite: 734]
+    min_div_spread = config.get('min_div_spread', 7.0) [cite: 735]
+    avoid_away_divisional_matchups = config.get('avoid_away_divisional', False) [cite: 735]
+    avoid_away_teams_on_short_rest = config.get('avoid_away_short_rest', False) [cite: 734]
+    avoid_4_games_in_17_days = config.get('avoid_4_in_17', False) [cite: 735]
+    avoid_3_games_in_10_days = config.get('avoid_3_in_10', False) [cite: 735]
+    avoid_international_game = config.get('avoid_international', False) [cite: 736]
+    avoid_thursday_night = config.get('avoid_thursday', False) [cite: 735]
+    avoid_away_thursday_night = config.get('avoid_away_thursday', False) [cite: 736]
+    avoid_back_to_back_away = config.get('avoid_b2b_away', False) [cite: 736]
+    avoid_teams_with_weekly_rest_disadvantage = config.get('avoid_weekly_rest_disadvantage', False) [cite: 736]
+    avoid_cumulative_rest_disadvantage = config.get('avoid_cumulative_rest', False) [cite: 735]
+    avoid_away_teams_with_travel_disadvantage = config.get('avoid_travel_disadvantage', False) [cite: 736]
+    # --- END BLOCK ---
+    for iteration in range(num_solutions):
 
         #Number of weeks that have already been played
         #weeks_completed = starting_week -1
@@ -3500,42 +3433,6 @@ def get_survivor_picks_based_on_internal_rankings(df, config: dict, num_solution
         for i in range(len(df)):
             picks[i] = solver.IntVar(0, 1, 'pick_%i' % i)
 
-        required_pick_indices = set()
-        # List of teams and their required week variables
-        required_teams = [
-            ('Arizona Cardinals', az_req_week),
-            ('Atlanta Falcons', atl_req_week),
-            ('Baltimore Ravens', bal_req_week),
-            ('Buffalo Bills', buf_req_week),
-            ('Carolina Panthers', car_req_week),
-            ('Chicago Bears', chi_req_week),
-            ('Cincinnati Bengals', cin_req_week),
-            ('Cleveland Browns', cle_req_week),
-            ('Dallas Cowboys', dal_req_week),
-            ('Denver Broncos', den_req_week),
-            ('Detroit Lions', det_req_week),
-            ('Green Bay Packers', gb_req_week),
-            ('Houston Texans', hou_req_week),
-            ('Indianapolis Colts', ind_req_week),
-            ('Jacksonville Jaguars', jax_req_week),
-            ('Kansas City Chiefs', kc_req_week),
-            ('Las Vegas Raiders', lv_req_week),
-            ('Los Angeles Chargers', lac_req_week),
-            ('Los Angeles Rams', lar_req_week),
-            ('Miami Dolphins', mia_req_week),
-            ('Minnesota Vikings', min_req_week),
-            ('New England Patriots', ne_req_week),
-            ('New Orleans Saints', no_req_week),
-            ('New York Giants', nyg_req_week),
-            ('New York Jets', nyj_req_week),
-            ('Philadelphia Eagles', phi_req_week),
-            ('Pittsburgh Steelers', pit_req_week),
-            ('San Francisco 49ers', sf_req_week),
-            ('Seattle Seahawks', sea_req_week),
-            ('Tampa Bay Buccaneers', tb_req_week),
-            ('Tennessee Titans', ten_req_week),
-            ('Washington Commanders', was_req_week)
-        ]
         
         for team, req_week in required_teams:
             if req_week > 0:
@@ -3621,203 +3518,29 @@ def get_survivor_picks_based_on_internal_rankings(df, config: dict, num_solution
 
 
             
-            if df.loc[i, 'Hypothetical Current Winner'] == 'Arizona Cardinals' and df.loc[i, 'Week_Num'] in az_excluded_weeks:
-                    solver.Add(picks[i] == 0)
-            if df.loc[i, 'Hypothetical Current Winner'] == 'Atlanta Falcons' and df.loc[i, 'Week_Num'] in atl_excluded_weeks:
-                    solver.Add(picks[i] == 0)
-            if df.loc[i, 'Hypothetical Current Winner'] == 'Baltimore Ravens' and df.loc[i, 'Week_Num'] in bal_excluded_weeks:
-                    solver.Add(picks[i] == 0)
-            if df.loc[i, 'Hypothetical Current Winner'] == 'Buffalo Bills' and df.loc[i, 'Week_Num'] in buf_excluded_weeks:
-                    solver.Add(picks[i] == 0)
-            if df.loc[i, 'Hypothetical Current Winner'] == 'Carolina Panthers' and df.loc[i, 'Week_Num'] in car_excluded_weeks:
-                    solver.Add(picks[i] == 0)
-            if df.loc[i, 'Hypothetical Current Winner'] == 'Chicago Bears' and df.loc[i, 'Week_Num'] in chi_excluded_weeks:
-                    solver.Add(picks[i] == 0)
-            if df.loc[i, 'Hypothetical Current Winner'] == 'Cincinnati Bengals' and df.loc[i, 'Week_Num'] in cin_excluded_weeks:
-                    solver.Add(picks[i] == 0)
-            if df.loc[i, 'Hypothetical Current Winner'] == 'Cleveland Browns' and df.loc[i, 'Week_Num'] in cle_excluded_weeks:
-                    solver.Add(picks[i] == 0)
-            if df.loc[i, 'Hypothetical Current Winner'] == 'Dallas Cowboys' and df.loc[i, 'Week_Num'] in dal_excluded_weeks:
-                    solver.Add(picks[i] == 0)
-            if df.loc[i, 'Hypothetical Current Winner'] == 'Denver Broncos' and df.loc[i, 'Week_Num'] in den_excluded_weeks:
-                    solver.Add(picks[i] == 0)
-            if df.loc[i, 'Hypothetical Current Winner'] == 'Detroit Lions' and df.loc[i, 'Week_Num'] in det_excluded_weeks:
-                    solver.Add(picks[i] == 0)
-            if df.loc[i, 'Hypothetical Current Winner'] == 'Green Bay Packers' and df.loc[i, 'Week_Num'] in gb_excluded_weeks:
-                    solver.Add(picks[i] == 0)
-            if df.loc[i, 'Hypothetical Current Winner'] == 'Houston Texans' and df.loc[i, 'Week_Num'] in hou_excluded_weeks:
-                    solver.Add(picks[i] == 0)
-            if df.loc[i, 'Hypothetical Current Winner'] == 'Indianapolis Colts' and df.loc[i, 'Week_Num'] in ind_excluded_weeks:
-                    solver.Add(picks[i] == 0)
-            if df.loc[i, 'Hypothetical Current Winner'] == 'Jacksonville Jaguars' and df.loc[i, 'Week_Num'] in jax_excluded_weeks:
-                    solver.Add(picks[i] == 0)
-            if df.loc[i, 'Hypothetical Current Winner'] == 'Kansas City Chiefs' and df.loc[i, 'Week_Num'] in kc_excluded_weeks:
-                    solver.Add(picks[i] == 0)
-            if df.loc[i, 'Hypothetical Current Winner'] == 'Las vegas Raiders' and df.loc[i, 'Week_Num'] in lv_excluded_weeks:
-                    solver.Add(picks[i] == 0)
-            if df.loc[i, 'Hypothetical Current Winner'] == 'Los Angeles Chargers' and df.loc[i, 'Week_Num'] in lac_excluded_weeks:
-                    solver.Add(picks[i] == 0)
-            if df.loc[i, 'Hypothetical Current Winner'] == 'Los Angeles Rams' and df.loc[i, 'Week_Num'] in lar_excluded_weeks:
-                    solver.Add(picks[i] == 0)
-            if df.loc[i, 'Hypothetical Current Winner'] == 'Miami Dolphins' and df.loc[i, 'Week_Num'] in mia_excluded_weeks:
-                    solver.Add(picks[i] == 0)
-            if df.loc[i, 'Hypothetical Current Winner'] == 'Minnesota Vikings' and df.loc[i, 'Week_Num'] in min_excluded_weeks:
-                    solver.Add(picks[i] == 0)
-            if df.loc[i, 'Hypothetical Current Winner'] == 'New England Patriots' and df.loc[i, 'Week_Num'] in ne_excluded_weeks:
-                    solver.Add(picks[i] == 0)
-            if df.loc[i, 'Hypothetical Current Winner'] == 'New Orleans Saints' and df.loc[i, 'Week_Num'] in no_excluded_weeks:
-                    solver.Add(picks[i] == 0)
-            if df.loc[i, 'Hypothetical Current Winner'] == 'New York Giants' and df.loc[i, 'Week_Num'] in nyg_excluded_weeks:
-                    solver.Add(picks[i] == 0)
-            if df.loc[i, 'Hypothetical Current Winner'] == 'New York Jets' and df.loc[i, 'Week_Num'] in nyj_excluded_weeks:
-                    solver.Add(picks[i] == 0)
-            if df.loc[i, 'Hypothetical Current Winner'] == 'Philadelphia Eagles' and df.loc[i, 'Week_Num'] in phi_excluded_weeks:
-                    solver.Add(picks[i] == 0)
-            if df.loc[i, 'Hypothetical Current Winner'] == 'Pittsburgh Steelers' and df.loc[i, 'Week_Num'] in pit_excluded_weeks:
-                    solver.Add(picks[i] == 0)
-            if df.loc[i, 'Hypothetical Current Winner'] == 'Seattle Seahawks' and df.loc[i, 'Week_Num'] in sea_excluded_weeks:
-                    solver.Add(picks[i] == 0)
-            if df.loc[i, 'Hypothetical Current Winner'] == 'Tampa Bay Buccaneers' and df.loc[i, 'Week_Num'] in tb_excluded_weeks:
-                    solver.Add(picks[i] == 0)
-            if df.loc[i, 'Hypothetical Current Winner'] == 'Tennessee Titans' and df.loc[i, 'Week_Num'] in ten_excluded_weeks:
-                    solver.Add(picks[i] == 0)
-            if df.loc[i, 'Hypothetical Current Winner'] == 'Washington Commanders' and df.loc[i, 'Week_Num'] in was_excluded_weeks:
-                    solver.Add(picks[i] == 0)
-            if df.loc[i, 'Hypothetical Current Winner'] == 'San Francisco 49ers' and df.loc[i, 'Week_Num'] in sf_excluded_weeks:
+            prohibited_weeks_dict = config['prohibited_weeks']
+            team_name = df.loc[i, 'Hypothetical Current Winner']
+            if team_name in prohibited_weeks_dict:
+                if df.loc[i, 'Week_Num'] in prohibited_weeks_dict[team_name]:
                     solver.Add(picks[i] == 0)
 
 
             if df.loc[i, 'Hypothetical Current Winner'] in picked_teams:
                 solver.Add(picks[i] == 0)
 
-# Add the constraint for San Francisco 49ers in week 11
-        if sf_req_week > 0:        
-            for i in range(len(df)):
-                if (df.loc[i, 'Hypothetical Current Winner'] == 'San Francisco 49ers') and df.loc[i, 'Week_Num'] == sf_req_week:
-                    solver.Add(picks[i] == 1)
-        if az_req_week > 0:        
-            for i in range(len(df)):
-                if (df.loc[i, 'Hypothetical Current Winner'] == 'Arizona Cardinals') and df.loc[i, 'Week_Num'] == az_req_week:
-                    solver.Add(picks[i] == 1)
-        if atl_req_week > 0:        
-            for i in range(len(df)):
-                if (df.loc[i, 'Hypothetical Current Winner'] == 'Atlanta Falcons') and df.loc[i, 'Week_Num'] == atl_req_week:
-                    solver.Add(picks[i] == 1)
-        if bal_req_week > 0:        
-            for i in range(len(df)):
-                if (df.loc[i, 'Hypothetical Current Winner'] == 'Baltimore Ravens') and df.loc[i, 'Week_Num'] == bal_req_week:
-                    solver.Add(picks[i] == 1)
-        if buf_req_week > 0:        
-            for i in range(len(df)):
-                if (df.loc[i, 'Hypothetical Current Winner'] == 'Buffalo Bills') and df.loc[i, 'Week_Num'] == buf_req_week:
-                    solver.Add(picks[i] == 1)
-        if car_req_week > 0:        
-            for i in range(len(df)):
-                if (df.loc[i, 'Hypothetical Current Winner'] == 'Carolina Panthers') and df.loc[i, 'Week_Num'] == car_req_week:
-                    solver.Add(picks[i] == 1)
-        if chi_req_week > 0:        
-            for i in range(len(df)):
-                if (df.loc[i, 'Hypothetical Current Winner'] == 'Chicago Bears') and df.loc[i, 'Week_Num'] == chi_req_week:
-                    solver.Add(picks[i] == 1)
-        if cin_req_week > 0:
-            for i in range(len(df)):
-                if (df.loc[i, 'Hypothetical Current Winner'] == 'Cincinnati Bengals') and df.loc[i, 'Week_Num'] == cin_req_week:
-                    solver.Add(picks[i] == 1)
-        if cle_req_week > 0:        
-            for i in range(len(df)):
-                if (df.loc[i, 'Hypothetical Current Winner'] == 'Cleveland Browns') and df.loc[i, 'Week_Num'] == cle_req_week:
-                    solver.Add(picks[i] == 1)
-        if dal_req_week > 0:        
-            for i in range(len(df)):
-                if (df.loc[i, 'Hypothetical Current Winner'] == 'Dallas Cowboys') and df.loc[i, 'Week_Num'] == dal_req_week:
-                    solver.Add(picks[i] == 1)
-        if den_req_week > 0:        
-            for i in range(len(df)):
-                if (df.loc[i, 'Hypothetical Current Winner'] == 'Denver Broncos') and df.loc[i, 'Week_Num'] == den_req_week:
-                    solver.Add(picks[i] == 1)
-        if det_req_week > 0:        
-            for i in range(len(df)):
-                if (df.loc[i, 'Hypothetical Current Winner'] == 'Detroit Lions') and df.loc[i, 'Week_Num'] == det_req_week:
-                    solver.Add(picks[i] == 1)
-        if gb_req_week > 0:        
-            for i in range(len(df)):
-                if (df.loc[i, 'Hypothetical Current Winner'] == 'Green Bay Packers') and df.loc[i, 'Week_Num'] == gb_req_week:
-                    solver.Add(picks[i] == 1)
-        if hou_req_week > 0:        
-            for i in range(len(df)):
-                if (df.loc[i, 'Hypothetical Current Winner'] == 'Houston Texans') and df.loc[i, 'Week_Num'] == hou_req_week:
-                    solver.Add(picks[i] == 1)
-        if ind_req_week > 0:        
-            for i in range(len(df)):
-                if (df.loc[i, 'Hypothetical Current Winner'] == 'Indianapolis Colts') and df.loc[i, 'Week_Num'] == ind_req_week:
-                    solver.Add(picks[i] == 1)
-        if jax_req_week > 0:        
-            for i in range(len(df)):
-                if (df.loc[i, 'Hypothetical Current Winner'] == 'Jacksonville Jaguars') and df.loc[i, 'Week_Num'] == jax_req_week:
-                    solver.Add(picks[i] == 1)
-        if kc_req_week > 0:        
-            for i in range(len(df)):
-                if (df.loc[i, 'Hypothetical Current Winner'] == 'Kansas City Chiefs') and df.loc[i, 'Week_Num'] == kc_req_week:
-                    solver.Add(picks[i] == 1)
-        if lv_req_week > 0:        
-            for i in range(len(df)):
-                if (df.loc[i, 'Hypothetical Current Winner'] == 'Las Vegas Raiders') and df.loc[i, 'Week_Num'] == lv_req_week:
-                    solver.Add(picks[i] == 1)
-        if lac_req_week > 0:        
-            for i in range(len(df)):
-                if (df.loc[i, 'Hypothetical Current Winner'] == 'Los Angeles Chargers') and df.loc[i, 'Week_Num'] == lac_req_week:
-                    solver.Add(picks[i] == 1)
-        if lar_req_week > 0:        
-            for i in range(len(df)):
-                if (df.loc[i, 'Hypothetical Current Winner'] == 'Los Angeles Rams') and df.loc[i, 'Week_Num'] == lar_req_week:
-                    solver.Add(picks[i] == 1)
-        if mia_req_week > 0:        
-            for i in range(len(df)):
-                if (df.loc[i, 'Hypothetical Current Winner'] == 'Miami Dolphins') and df.loc[i, 'Week_Num'] == mia_req_week:
-                    solver.Add(picks[i] == 1)
-        if min_req_week > 0:        
-            for i in range(len(df)):
-                if (df.loc[i, 'Hypothetical Current Winner'] == 'Minnesota Vikings') and df.loc[i, 'Week_Num'] == min_req_week:
-                    solver.Add(picks[i] == 1)
-        if ne_req_week > 0:        
-            for i in range(len(df)):
-                if (df.loc[i, 'Hypothetical Current Winner'] == 'New England Patriots') and df.loc[i, 'Week_Num'] == ne_req_week:
-                    solver.Add(picks[i] == 1)
-        if no_req_week > 0:        
-            for i in range(len(df)):
-                if (df.loc[i, 'Hypothetical Current Winner'] == 'New Orleans Saints') and df.loc[i, 'Week_Num'] == no_req_week:
-                    solver.Add(picks[i] == 1)
-        if nyg_req_week > 0:        
-            for i in range(len(df)):
-                if (df.loc[i, 'Hypothetical Current Winner'] == 'New York Giants') and df.loc[i, 'Week_Num'] == nyg_req_week:
-                    solver.Add(picks[i] == 1)
-        if nyj_req_week > 0:        
-            for i in range(len(df)):
-                if (df.loc[i, 'Hypothetical Current Winner'] == 'New York Jets') and df.loc[i, 'Week_Num'] == nyj_req_week:
-                    solver.Add(picks[i] == 1)
-        if phi_req_week > 0:        
-            for i in range(len(df)):
-                if (df.loc[i, 'Hypothetical Current Winner'] == 'Philadelphia Eagles') and df.loc[i, 'Week_Num'] == phi_req_week:
-                    solver.Add(picks[i] == 1)
-        if pit_req_week > 0:        
-                if (df.loc[i, 'Hypothetical Current Winner'] == 'Pittsburgh Steelers') and df.loc[i, 'Week_Num'] == pit_req_week:
-                    solver.Add(picks[i] == 1)
-        if sea_req_week > 0:        
-            for i in range(len(df)):
-                if (df.loc[i, 'Hypothetical Current Winner'] == 'Seattle Seahawks') and df.loc[i, 'Week_Num'] == sea_req_week:
-                    solver.Add(picks[i] == 1)
-        if tb_req_week > 0:        
-            for i in range(len(df)):
-                if (df.loc[i, 'Hypothetical Current Winner'] == 'Tampa Bay Buccaneers') and df.loc[i, 'Week_Num'] == tb_req_week:
-                    solver.Add(picks[i] == 1)
-        if ten_req_week > 0:        
-            for i in range(len(df)):
-                if (df.loc[i, 'Hypothetical Current Winner'] == 'Tennessee Titans') and df.loc[i, 'Week_Num'] == ten_req_week:
-                    solver.Add(picks[i] == 1)
-        if was_req_week > 0:        
-            for i in range(len(df)):
-                if (df.loc[i, 'Hypothetical Current Winner'] == 'Washington Commanders') and df.loc[i, 'Week_Num'] == was_req_week:
-                    solver.Add(picks[i] == 1)
+
+        required_weeks_dict = config['required_weeks']
+        for team, req_week in required_weeks_dict.items():
+            if req_week > 0: # If a required week is set
+                # Find all matching game indices for this team/week
+                required_game_indices = df[
+                    (df['Hypothetical Current Winner'] == team) & 
+                    (df['Week_Num'] == req_week)
+                ].index.tolist()
+        
+                if required_game_indices:
+                    # Force the pick for the first match found (should only be one)
+                    solver.Add(picks[required_game_indices[0]] == 1)
 
         
         # Add the constraints
@@ -4162,1109 +3885,291 @@ def get_survivor_picks_based_on_internal_rankings(df, config: dict, num_solution
 
 picked_teams = []
 
-default_az_rank = -1.2
-default_atl_rank = -0.59
-default_bal_rank = -2.5
-default_buf_rank = 3.54
-default_car_rank = -3.37
-default_chi_rank = -1.91
-default_cin_rank = -3.73
-default_cle_rank = -7.53
-default_dal_rank = 0.13
-default_den_rank = 2.34
-default_det_rank = 6.34
-default_gb_rank = 5.71
-default_hou_rank = 1.92
-default_ind_rank = 2.83
-default_jax_rank = -1.29
-default_kc_rank = 4.75
-default_lv_rank = -3.93
-default_lac_rank = 0.29
-default_lar_rank = 5.1
-default_mia_rank = -3.77
-default_min_rank = 0.03
-default_ne_rank = -0.31
-default_no_rank = -6.45
-default_nyg_rank = -5.4
-default_nyj_rank = -3.17
-default_phi_rank = 4.7
-default_pit_rank = 1.48
-default_sf_rank = 3.32
-default_sea_rank = 5.25
-default_tb_rank = 1.79
-default_ten_rank = -6.88
-default_was_rank = 3.08
-
-preseason_az_rank = 0.075
-preseason_atl_rank = -0.71
-preseason_bal_rank = 6.69
-preseason_buf_rank = 4.795
-preseason_car_rank = -5.25
-preseason_chi_rank = -1.575
-preseason_cin_rank = 1.31
-preseason_cle_rank = -4.705
-preseason_dal_rank = -0.615
-preseason_den_rank = 2.05
-preseason_det_rank = 4.305
-preseason_gb_rank = 3.535
-preseason_hou_rank = 0.035
-preseason_ind_rank = -2.265
-preseason_jax_rank = -1.825
-preseason_kc_rank = 4.395
-preseason_lv_rank = -2.35
-preseason_lac_rank = 0.935
-preseason_lar_rank = 1.29
-preseason_mia_rank = 0.66
-preseason_min_rank = 0.27
-preseason_ne_rank = -1.995
-preseason_no_rank = -6.145
-preseason_nyg_rank = -2.84
-preseason_nyj_rank = -3.725
-preseason_phi_rank = 4.905
-preseason_pit_rank = -0.565
-preseason_sf_rank = 3.325
-preseason_sea_rank = -0.13
-preseason_tb_rank = 1.025
-preseason_ten_rank = -4.36
-preseason_was_rank = 1.45
-
-
-az_home_adv = 1.5/2
-atl_home_adv = 2.3/2
-bal_home_adv = 3.8/2
-buf_home_adv = 3.6/2
-car_home_adv = 1.9/2
-chi_home_adv = 1.5/2
-cin_home_adv = 2.1/2
-cle_home_adv = 1.3/2
-dal_home_adv = 3.7/2
-den_home_adv = 2.6/2
-det_home_adv = 2.1/2
-gb_home_adv = 3.8/2
-hou_home_adv = 1.9/2
-ind_home_adv = 2.6/2
-jax_home_adv = 1.4/2
-kc_home_adv = 3.8/2
-lv_home_adv = 1.4/2
-lac_home_adv = 2.6/2
-lar_home_adv = 2.6/2
-mia_home_adv = 2.3/2
-min_home_adv = 3.1/2
-ne_home_adv = 3.9/2
-no_home_adv = 3.1/2
-nyg_home_adv = 1.1/2
-nyj_home_adv = 1.2/2
-phi_home_adv = 3.3/2
-pit_home_adv = 3.5/2
-sf_home_adv = 3.6/2
-sea_home_adv = 2.6/2
-tb_home_adv = 2.0/2
-ten_home_adv = 2.1/2
-was_home_adv = 1.3/2
-
-
-az_away_adj = -.3/2
-atl_away_adj = .2/2
-bal_away_adj = -1.5/2
-buf_away_adj = -1.1/2
-car_away_adj = .5/2
-chi_away_adj = 1/2
-cin_away_adj = -.2/2
-cle_away_adj = 1.5/2
-dal_away_adj = -1.2/2
-den_away_adj = .6/2
-det_away_adj = .7/2
-gb_away_adj = -.1/2
-hou_away_adj = .7/2
-ind_away_adj = -.2/2
-jax_away_adj = 1.6/2
-kc_away_adj = -1.6/2
-lv_away_adj = -.3/2
-lac_away_adj = -.8/2
-lar_away_adj = 1.3/2
-mia_away_adj = 1.4/2
-min_away_adj = -.5/2
-ne_away_adj = -1.8/2
-no_away_adj = -1.6/2
-nyg_away_adj = .9/2
-nyj_away_adj = 1.9/2
-phi_away_adj = -.2/2
-pit_away_adj = -.2/2
-sf_away_adj = -1.1/2
-sea_away_adj = -.4/2
-tb_away_adj = -.1/2
-ten_away_adj = .4/2
-was_away_adj = .6/2
-
-az_excluded_weeks = []
-atl_excluded_weeks = []
-bal_excluded_weeks = []
-buf_excluded_weeks = []
-car_excluded_weeks = []
-chi_excluded_weeks = []
-cin_excluded_weeks = []
-cle_excluded_weeks = []
-dal_excluded_weeks = []
-den_excluded_weeks = []
-det_excluded_weeks = []
-gb_excluded_weeks = []
-hou_excluded_weeks = []
-ind_excluded_weeks = []
-jax_excluded_weeks = []
-kc_excluded_weeks = []
-lv_excluded_weeks = []
-lac_excluded_weeks = []
-lar_excluded_weeks = []
-mia_excluded_weeks = []
-min_excluded_weeks = []
-ne_excluded_weeks = []
-no_excluded_weeks = []
-nyg_excluded_weeks = []
-nyj_excluded_weeks = []
-phi_excluded_weeks = []
-pit_excluded_weeks = []
-sf_excluded_weeks = []
-sea_excluded_weeks = []
-tb_excluded_weeks = []
-ten_excluded_weeks = []
-was_excluded_weeks = []
-az_req_week = 0
-atl_req_week = 0
-bal_req_week = 0
-buf_req_week = 0
-car_req_week = 0
-chi_req_week = 0
-cin_req_week = 0
-cle_req_week = 0
-dal_req_week = 0
-den_req_week = 0
-det_req_week = 0
-gb_req_week = 0
-hou_req_week = 0
-ind_req_week = 0
-jax_req_week = 0
-kc_req_week = 0
-lv_req_week = 0
-lac_req_week = 0
-lar_req_week = 0
-mia_req_week = 0
-min_req_week = 0
-ne_req_week = 0
-no_req_week = 0
-nyg_req_week = 0
-nyj_req_week = 0
-phi_req_week = 0
-pit_req_week = 0
-sf_req_week = 0
-sea_req_week = 0
-tb_req_week = 0
-ten_req_week = 0
-was_req_week = 0
-starting_week = 1
-az_week_1_pick_percent = -1
-atl_week_1_pick_percent = -1
-bal_week_1_pick_percent = -1
-buf_week_1_pick_percent = -1
-car_week_1_pick_percent = -1
-chi_week_1_pick_percent = -1
-cin_week_1_pick_percent = -1
-cle_week_1_pick_percent = -1
-dal_week_1_pick_percent = -1
-den_week_1_pick_percent = -1
-det_week_1_pick_percent = -1
-gb_week_1_pick_percent = -1
-hou_week_1_pick_percent = -1
-ind_week_1_pick_percent = -1
-jax_week_1_pick_percent = -1
-kc_week_1_pick_percent = -1
-lv_week_1_pick_percent = -1
-lac_week_1_pick_percent = -1
-lar_week_1_pick_percent = -1
-mia_week_1_pick_percent = -1
-min_week_1_pick_percent = -1
-ne_week_1_pick_percent = -1
-no_week_1_pick_percent = -1
-nyg_week_1_pick_percent = -1
-nyj_week_1_pick_percent = -1
-phi_week_1_pick_percent = -1
-pit_week_1_pick_percent = -1
-sf_week_1_pick_percent = -1
-sea_week_1_pick_percent = -1
-tb_week_1_pick_percent = -1
-ten_week_1_pick_percent = -1
-was_week_1_pick_percent = -1
-az_week_2_pick_percent = -1
-atl_week_2_pick_percent = -1
-bal_week_2_pick_percent = -1
-buf_week_2_pick_percent = -1
-car_week_2_pick_percent = -1
-chi_week_2_pick_percent = -1
-cin_week_2_pick_percent = -1
-cle_week_2_pick_percent = -1
-dal_week_2_pick_percent = -1
-den_week_2_pick_percent = -1
-det_week_2_pick_percent = -1
-gb_week_2_pick_percent = -1
-hou_week_2_pick_percent = -1
-ind_week_2_pick_percent = -1
-jax_week_2_pick_percent = -1
-kc_week_2_pick_percent = -1
-lv_week_2_pick_percent = -1
-lac_week_2_pick_percent = -1
-lar_week_2_pick_percent = -1
-mia_week_2_pick_percent = -1
-min_week_2_pick_percent = -1
-ne_week_2_pick_percent = -1
-no_week_2_pick_percent = -1
-nyg_week_2_pick_percent = -1
-nyj_week_2_pick_percent = -1
-phi_week_2_pick_percent = -1
-pit_week_2_pick_percent = -1
-sf_week_2_pick_percent = -1
-sea_week_2_pick_percent = -1
-tb_week_2_pick_percent = -1
-ten_week_2_pick_percent = -1
-was_week_2_pick_percent = -1
-az_week_3_pick_percent = -1
-atl_week_3_pick_percent = -1
-bal_week_3_pick_percent = -1
-buf_week_3_pick_percent = -1
-car_week_3_pick_percent = -1
-chi_week_3_pick_percent = -1
-cin_week_3_pick_percent = -1
-cle_week_3_pick_percent = -1
-dal_week_3_pick_percent = -1
-den_week_3_pick_percent = -1
-det_week_3_pick_percent = -1
-gb_week_3_pick_percent = -1
-hou_week_3_pick_percent = -1
-ind_week_3_pick_percent = -1
-jax_week_3_pick_percent = -1
-kc_week_3_pick_percent = -1
-lv_week_3_pick_percent = -1
-lac_week_3_pick_percent = -1
-lar_week_3_pick_percent = -1
-mia_week_3_pick_percent = -1
-min_week_3_pick_percent = -1
-ne_week_3_pick_percent = -1
-no_week_3_pick_percent = -1
-nyg_week_3_pick_percent = -1
-nyj_week_3_pick_percent = -1
-phi_week_3_pick_percent = -1
-pit_week_3_pick_percent = -1
-sf_week_3_pick_percent = -1
-sea_week_3_pick_percent = -1
-tb_week_3_pick_percent = -1
-ten_week_3_pick_percent = -1
-was_week_3_pick_percent = -1
-az_week_4_pick_percent = -1
-atl_week_4_pick_percent = -1
-bal_week_4_pick_percent = -1
-buf_week_4_pick_percent = -1
-car_week_4_pick_percent = -1
-chi_week_4_pick_percent = -1
-cin_week_4_pick_percent = -1
-cle_week_4_pick_percent = -1
-dal_week_4_pick_percent = -1
-den_week_4_pick_percent = -1
-det_week_4_pick_percent = -1
-gb_week_4_pick_percent = -1
-hou_week_4_pick_percent = -1
-ind_week_4_pick_percent = -1
-jax_week_4_pick_percent = -1
-kc_week_4_pick_percent = -1
-lv_week_4_pick_percent = -1
-lac_week_4_pick_percent = -1
-lar_week_4_pick_percent = -1
-mia_week_4_pick_percent = -1
-min_week_4_pick_percent = -1
-ne_week_4_pick_percent = -1
-no_week_4_pick_percent = -1
-nyg_week_4_pick_percent = -1
-nyj_week_4_pick_percent = -1
-phi_week_4_pick_percent = -1
-pit_week_4_pick_percent = -1
-sf_week_4_pick_percent = -1
-sea_week_4_pick_percent = -1
-tb_week_4_pick_percent = -1
-ten_week_4_pick_percent = -1
-was_week_4_pick_percent = -1
-az_week_5_pick_percent = -1
-atl_week_5_pick_percent = -1
-bal_week_5_pick_percent = -1
-buf_week_5_pick_percent = -1
-car_week_5_pick_percent = -1
-chi_week_5_pick_percent = -1
-cin_week_5_pick_percent = -1
-cle_week_5_pick_percent = -1
-dal_week_5_pick_percent = -1
-den_week_5_pick_percent = -1
-det_week_5_pick_percent = -1
-gb_week_5_pick_percent = -1
-hou_week_5_pick_percent = -1
-ind_week_5_pick_percent = -1
-jax_week_5_pick_percent = -1
-kc_week_5_pick_percent = -1
-lv_week_5_pick_percent = -1
-lac_week_5_pick_percent = -1
-lar_week_5_pick_percent = -1
-mia_week_5_pick_percent = -1
-min_week_5_pick_percent = -1
-ne_week_5_pick_percent = -1
-no_week_5_pick_percent = -1
-nyg_week_5_pick_percent = -1
-nyj_week_5_pick_percent = -1
-phi_week_5_pick_percent = -1
-pit_week_5_pick_percent = -1
-sf_week_5_pick_percent = -1
-sea_week_5_pick_percent = -1
-tb_week_5_pick_percent = -1
-ten_week_5_pick_percent = -1
-was_week_5_pick_percent = -1
-az_week_6_pick_percent = -1
-atl_week_6_pick_percent = -1
-bal_week_6_pick_percent = -1
-buf_week_6_pick_percent = -1
-car_week_6_pick_percent = -1
-chi_week_6_pick_percent = -1
-cin_week_6_pick_percent = -1
-cle_week_6_pick_percent = -1
-dal_week_6_pick_percent = -1
-den_week_6_pick_percent = -1
-det_week_6_pick_percent = -1
-gb_week_6_pick_percent = -1
-hou_week_6_pick_percent = -1
-ind_week_6_pick_percent = -1
-jax_week_6_pick_percent = -1
-kc_week_6_pick_percent = -1
-lv_week_6_pick_percent = -1
-lac_week_6_pick_percent = -1
-lar_week_6_pick_percent = -1
-mia_week_6_pick_percent = -1
-min_week_6_pick_percent = -1
-ne_week_6_pick_percent = -1
-no_week_6_pick_percent = -1
-nyg_week_6_pick_percent = -1
-nyj_week_6_pick_percent = -1
-phi_week_6_pick_percent = -1
-pit_week_6_pick_percent = -1
-sf_week_6_pick_percent = -1
-sea_week_6_pick_percent = -1
-tb_week_6_pick_percent = -1
-ten_week_6_pick_percent = -1
-was_week_6_pick_percent = -1
-az_week_7_pick_percent = -1
-atl_week_7_pick_percent = -1
-bal_week_7_pick_percent = -1
-buf_week_7_pick_percent = -1
-car_week_7_pick_percent = -1
-chi_week_7_pick_percent = -1
-cin_week_7_pick_percent = -1
-cle_week_7_pick_percent = -1
-dal_week_7_pick_percent = -1
-den_week_7_pick_percent = -1
-det_week_7_pick_percent = -1
-gb_week_7_pick_percent = -1
-hou_week_7_pick_percent = -1
-ind_week_7_pick_percent = -1
-jax_week_7_pick_percent = -1
-kc_week_7_pick_percent = -1
-lv_week_7_pick_percent = -1
-lac_week_7_pick_percent = -1
-lar_week_7_pick_percent = -1
-mia_week_7_pick_percent = -1
-min_week_7_pick_percent = -1
-ne_week_7_pick_percent = -1
-no_week_7_pick_percent = -1
-nyg_week_7_pick_percent = -1
-nyj_week_7_pick_percent = -1
-phi_week_7_pick_percent = -1
-pit_week_7_pick_percent = -1
-sf_week_7_pick_percent = -1
-sea_week_7_pick_percent = -1
-tb_week_7_pick_percent = -1
-ten_week_7_pick_percent = -1
-was_week_7_pick_percent = -1
-az_week_8_pick_percent = -1
-atl_week_8_pick_percent = -1
-bal_week_8_pick_percent = -1
-buf_week_8_pick_percent = -1
-car_week_8_pick_percent = -1
-chi_week_8_pick_percent = -1
-cin_week_8_pick_percent = -1
-cle_week_8_pick_percent = -1
-dal_week_8_pick_percent = -1
-den_week_8_pick_percent = -1
-det_week_8_pick_percent = -1
-gb_week_8_pick_percent = -1
-hou_week_8_pick_percent = -1
-ind_week_8_pick_percent = -1
-jax_week_8_pick_percent = -1
-kc_week_8_pick_percent = -1
-lv_week_8_pick_percent = -1
-lac_week_8_pick_percent = -1
-lar_week_8_pick_percent = -1
-mia_week_8_pick_percent = -1
-min_week_8_pick_percent = -1
-ne_week_8_pick_percent = -1
-no_week_8_pick_percent = -1
-nyg_week_8_pick_percent = -1
-nyj_week_8_pick_percent = -1
-phi_week_8_pick_percent = -1
-pit_week_8_pick_percent = -1
-sf_week_8_pick_percent = -1
-sea_week_8_pick_percent = -1
-tb_week_8_pick_percent = -1
-ten_week_8_pick_percent = -1
-was_week_8_pick_percent = -1
-az_week_9_pick_percent = -1
-atl_week_9_pick_percent = -1
-bal_week_9_pick_percent = -1
-buf_week_9_pick_percent = -1
-car_week_9_pick_percent = -1
-chi_week_9_pick_percent = -1
-cin_week_9_pick_percent = -1
-cle_week_9_pick_percent = -1
-dal_week_9_pick_percent = -1
-den_week_9_pick_percent = -1
-det_week_9_pick_percent = -1
-gb_week_9_pick_percent = -1
-hou_week_9_pick_percent = -1
-ind_week_9_pick_percent = -1
-jax_week_9_pick_percent = -1
-kc_week_9_pick_percent = -1
-lv_week_9_pick_percent = -1
-lac_week_9_pick_percent = -1
-lar_week_9_pick_percent = -1
-mia_week_9_pick_percent = -1
-min_week_9_pick_percent = -1
-ne_week_9_pick_percent = -1
-no_week_9_pick_percent = -1
-nyg_week_9_pick_percent = -1
-nyj_week_9_pick_percent = -1
-phi_week_9_pick_percent = -1
-pit_week_9_pick_percent = -1
-sf_week_9_pick_percent = -1
-sea_week_9_pick_percent = -1
-tb_week_9_pick_percent = -1
-ten_week_9_pick_percent = -1
-was_week_9_pick_percent = -1
-az_week_10_pick_percent = -1
-atl_week_10_pick_percent = -1
-bal_week_10_pick_percent = -1
-buf_week_10_pick_percent = -1
-car_week_10_pick_percent = -1
-chi_week_10_pick_percent = -1
-cin_week_10_pick_percent = -1
-cle_week_10_pick_percent = -1
-dal_week_10_pick_percent = -1
-den_week_10_pick_percent = -1
-det_week_10_pick_percent = -1
-gb_week_10_pick_percent = -1
-hou_week_10_pick_percent = -1
-ind_week_10_pick_percent = -1
-jax_week_10_pick_percent = -1
-kc_week_10_pick_percent = -1
-lv_week_10_pick_percent = -1
-lac_week_10_pick_percent = -1
-lar_week_10_pick_percent = -1
-mia_week_10_pick_percent = -1
-min_week_10_pick_percent = -1
-ne_week_10_pick_percent = -1
-no_week_10_pick_percent = -1
-nyg_week_10_pick_percent = -1
-nyj_week_10_pick_percent = -1
-phi_week_10_pick_percent = -1
-pit_week_10_pick_percent = -1
-sf_week_10_pick_percent = -1
-sea_week_10_pick_percent = -1
-tb_week_10_pick_percent = -1
-ten_week_10_pick_percent = -1
-was_week_10_pick_percent = -1
-az_week_11_pick_percent = -1
-atl_week_11_pick_percent = -1
-bal_week_11_pick_percent = -1
-buf_week_11_pick_percent = -1
-car_week_11_pick_percent = -1
-chi_week_11_pick_percent = -1
-cin_week_11_pick_percent = -1
-cle_week_11_pick_percent = -1
-dal_week_11_pick_percent = -1
-den_week_11_pick_percent = -1
-det_week_11_pick_percent = -1
-gb_week_11_pick_percent = -1
-hou_week_11_pick_percent = -1
-ind_week_11_pick_percent = -1
-jax_week_11_pick_percent = -1
-kc_week_11_pick_percent = -1
-lv_week_11_pick_percent = -1
-lac_week_11_pick_percent = -1
-lar_week_11_pick_percent = -1
-mia_week_11_pick_percent = -1
-min_week_11_pick_percent = -1
-ne_week_11_pick_percent = -1
-no_week_11_pick_percent = -1
-nyg_week_11_pick_percent = -1
-nyj_week_11_pick_percent = -1
-phi_week_11_pick_percent = -1
-pit_week_11_pick_percent = -1
-sf_week_11_pick_percent = -1
-sea_week_11_pick_percent = -1
-tb_week_11_pick_percent = -1
-ten_week_11_pick_percent = -1
-was_week_11_pick_percent = -1
-az_week_12_pick_percent = -1
-atl_week_12_pick_percent = -1
-bal_week_12_pick_percent = -1
-buf_week_12_pick_percent = -1
-car_week_12_pick_percent = -1
-chi_week_12_pick_percent = -1
-cin_week_12_pick_percent = -1
-cle_week_12_pick_percent = -1
-dal_week_12_pick_percent = -1
-den_week_12_pick_percent = -1
-det_week_12_pick_percent = -1
-gb_week_12_pick_percent = -1
-hou_week_12_pick_percent = -1
-ind_week_12_pick_percent = -1
-jax_week_12_pick_percent = -1
-kc_week_12_pick_percent = -1
-lv_week_12_pick_percent = -1
-lac_week_12_pick_percent = -1
-lar_week_12_pick_percent = -1
-mia_week_12_pick_percent = -1
-min_week_12_pick_percent = -1
-ne_week_12_pick_percent = -1
-no_week_12_pick_percent = -1
-nyg_week_12_pick_percent = -1
-nyj_week_12_pick_percent = -1
-phi_week_12_pick_percent = -1
-pit_week_12_pick_percent = -1
-sf_week_12_pick_percent = -1
-sea_week_12_pick_percent = -1
-tb_week_12_pick_percent = -1
-ten_week_12_pick_percent = -1
-was_week_12_pick_percent = -1
-az_week_13_pick_percent = -1
-atl_week_13_pick_percent = -1
-bal_week_13_pick_percent = -1
-buf_week_13_pick_percent = -1
-car_week_13_pick_percent = -1
-chi_week_13_pick_percent = -1
-cin_week_13_pick_percent = -1
-cle_week_13_pick_percent = -1
-dal_week_13_pick_percent = -1
-den_week_13_pick_percent = -1
-det_week_13_pick_percent = -1
-gb_week_13_pick_percent = -1
-hou_week_13_pick_percent = -1
-ind_week_13_pick_percent = -1
-jax_week_13_pick_percent = -1
-kc_week_13_pick_percent = -1
-lv_week_13_pick_percent = -1
-lac_week_13_pick_percent = -1
-lar_week_13_pick_percent = -1
-mia_week_13_pick_percent = -1
-min_week_13_pick_percent = -1
-ne_week_13_pick_percent = -1
-no_week_13_pick_percent = -1
-nyg_week_13_pick_percent = -1
-nyj_week_13_pick_percent = -1
-phi_week_13_pick_percent = -1
-pit_week_13_pick_percent = -1
-sf_week_13_pick_percent = -1
-sea_week_13_pick_percent = -1
-tb_week_13_pick_percent = -1
-ten_week_13_pick_percent = -1
-was_week_13_pick_percent = -1
-az_week_14_pick_percent = -1
-atl_week_14_pick_percent = -1
-bal_week_14_pick_percent = -1
-buf_week_14_pick_percent = -1
-car_week_14_pick_percent = -1
-chi_week_14_pick_percent = -1
-cin_week_14_pick_percent = -1
-cle_week_14_pick_percent = -1
-dal_week_14_pick_percent = -1
-den_week_14_pick_percent = -1
-det_week_14_pick_percent = -1
-gb_week_14_pick_percent = -1
-hou_week_14_pick_percent = -1
-ind_week_14_pick_percent = -1
-jax_week_14_pick_percent = -1
-kc_week_14_pick_percent = -1
-lv_week_14_pick_percent = -1
-lac_week_14_pick_percent = -1
-lar_week_14_pick_percent = -1
-mia_week_14_pick_percent = -1
-min_week_14_pick_percent = -1
-ne_week_14_pick_percent = -1
-no_week_14_pick_percent = -1
-nyg_week_14_pick_percent = -1
-nyj_week_14_pick_percent = -1
-phi_week_14_pick_percent = -1
-pit_week_14_pick_percent = -1
-sf_week_14_pick_percent = -1
-sea_week_14_pick_percent = -1
-tb_week_14_pick_percent = -1
-ten_week_14_pick_percent = -1
-was_week_14_pick_percent = -1
-az_week_15_pick_percent = -1
-atl_week_15_pick_percent = -1
-bal_week_15_pick_percent = -1
-buf_week_15_pick_percent = -1
-car_week_15_pick_percent = -1
-chi_week_15_pick_percent = -1
-cin_week_15_pick_percent = -1
-cle_week_15_pick_percent = -1
-dal_week_15_pick_percent = -1
-den_week_15_pick_percent = -1
-det_week_15_pick_percent = -1
-gb_week_15_pick_percent = -1
-hou_week_15_pick_percent = -1
-ind_week_15_pick_percent = -1
-jax_week_15_pick_percent = -1
-kc_week_15_pick_percent = -1
-lv_week_15_pick_percent = -1
-lac_week_15_pick_percent = -1
-lar_week_15_pick_percent = -1
-mia_week_15_pick_percent = -1
-min_week_15_pick_percent = -1
-ne_week_15_pick_percent = -1
-no_week_15_pick_percent = -1
-nyg_week_15_pick_percent = -1
-nyj_week_15_pick_percent = -1
-phi_week_15_pick_percent = -1
-pit_week_15_pick_percent = -1
-sf_week_15_pick_percent = -1
-sea_week_15_pick_percent = -1
-tb_week_15_pick_percent = -1
-ten_week_15_pick_percent = -1
-was_week_15_pick_percent = -1
-az_week_16_pick_percent = -1
-atl_week_16_pick_percent = -1
-bal_week_16_pick_percent = -1
-buf_week_16_pick_percent = -1
-car_week_16_pick_percent = -1
-chi_week_16_pick_percent = -1
-cin_week_16_pick_percent = -1
-cle_week_16_pick_percent = -1
-dal_week_16_pick_percent = -1
-den_week_16_pick_percent = -1
-det_week_16_pick_percent = -1
-gb_week_16_pick_percent = -1
-hou_week_16_pick_percent = -1
-ind_week_16_pick_percent = -1
-jax_week_16_pick_percent = -1
-kc_week_16_pick_percent = -1
-lv_week_16_pick_percent = -1
-lac_week_16_pick_percent = -1
-lar_week_16_pick_percent = -1
-mia_week_16_pick_percent = -1
-min_week_16_pick_percent = -1
-ne_week_16_pick_percent = -1
-no_week_16_pick_percent = -1
-nyg_week_16_pick_percent = -1
-nyj_week_16_pick_percent = -1
-phi_week_16_pick_percent = -1
-pit_week_16_pick_percent = -1
-sf_week_16_pick_percent = -1
-sea_week_16_pick_percent = -1
-tb_week_16_pick_percent = -1
-ten_week_16_pick_percent = -1
-was_week_16_pick_percent = -1
-az_week_17_pick_percent = -1
-atl_week_17_pick_percent = -1
-bal_week_17_pick_percent = -1
-buf_week_17_pick_percent = -1
-car_week_17_pick_percent = -1
-chi_week_17_pick_percent = -1
-cin_week_17_pick_percent = -1
-cle_week_17_pick_percent = -1
-dal_week_17_pick_percent = -1
-den_week_17_pick_percent = -1
-det_week_17_pick_percent = -1
-gb_week_17_pick_percent = -1
-hou_week_17_pick_percent = -1
-ind_week_17_pick_percent = -1
-jax_week_17_pick_percent = -1
-kc_week_17_pick_percent = -1
-lv_week_17_pick_percent = -1
-lac_week_17_pick_percent = -1
-lar_week_17_pick_percent = -1
-mia_week_17_pick_percent = -1
-min_week_17_pick_percent = -1
-ne_week_17_pick_percent = -1
-no_week_17_pick_percent = -1
-nyg_week_17_pick_percent = -1
-nyj_week_17_pick_percent = -1
-phi_week_17_pick_percent = -1
-pit_week_17_pick_percent = -1
-sf_week_17_pick_percent = -1
-sea_week_17_pick_percent = -1
-tb_week_17_pick_percent = -1
-ten_week_17_pick_percent = -1
-was_week_17_pick_percent = -1
-az_week_18_pick_percent = -1
-atl_week_18_pick_percent = -1
-bal_week_18_pick_percent = -1
-buf_week_18_pick_percent = -1
-car_week_18_pick_percent = -1
-chi_week_18_pick_percent = -1
-cin_week_18_pick_percent = -1
-cle_week_18_pick_percent = -1
-dal_week_18_pick_percent = -1
-den_week_18_pick_percent = -1
-det_week_18_pick_percent = -1
-gb_week_18_pick_percent = -1
-hou_week_18_pick_percent = -1
-ind_week_18_pick_percent = -1
-jax_week_18_pick_percent = -1
-kc_week_18_pick_percent = -1
-lv_week_18_pick_percent = -1
-lac_week_18_pick_percent = -1
-lar_week_18_pick_percent = -1
-mia_week_18_pick_percent = -1
-min_week_18_pick_percent = -1
-ne_week_18_pick_percent = -1
-no_week_18_pick_percent = -1
-nyg_week_18_pick_percent = -1
-nyj_week_18_pick_percent = -1
-phi_week_18_pick_percent = -1
-pit_week_18_pick_percent = -1
-sf_week_18_pick_percent = -1
-sea_week_18_pick_percent = -1
-tb_week_18_pick_percent = -1
-ten_week_18_pick_percent = -1
-was_week_18_pick_percent = -1
-az_week_19_pick_percent = -1
-atl_week_19_pick_percent = -1
-bal_week_19_pick_percent = -1
-buf_week_19_pick_percent = -1
-car_week_19_pick_percent = -1
-chi_week_19_pick_percent = -1
-cin_week_19_pick_percent = -1
-cle_week_19_pick_percent = -1
-dal_week_19_pick_percent = -1
-den_week_19_pick_percent = -1
-det_week_19_pick_percent = -1
-gb_week_19_pick_percent = -1
-hou_week_19_pick_percent = -1
-ind_week_19_pick_percent = -1
-jax_week_19_pick_percent = -1
-kc_week_19_pick_percent = -1
-lv_week_19_pick_percent = -1
-lac_week_19_pick_percent = -1
-lar_week_19_pick_percent = -1
-mia_week_19_pick_percent = -1
-min_week_19_pick_percent = -1
-ne_week_19_pick_percent = -1
-no_week_19_pick_percent = -1
-nyg_week_19_pick_percent = -1
-nyj_week_19_pick_percent = -1
-phi_week_19_pick_percent = -1
-pit_week_19_pick_percent = -1
-sf_week_19_pick_percent = -1
-sea_week_19_pick_percent = -1
-tb_week_19_pick_percent = -1
-ten_week_19_pick_percent = -1
-was_week_19_pick_percent = -1
-az_week_20_pick_percent = -1
-atl_week_20_pick_percent = -1
-bal_week_20_pick_percent = -1
-buf_week_20_pick_percent = -1
-car_week_20_pick_percent = -1
-chi_week_20_pick_percent = -1
-cin_week_20_pick_percent = -1
-cle_week_20_pick_percent = -1
-dal_week_20_pick_percent = -1
-den_week_20_pick_percent = -1
-det_week_20_pick_percent = -1
-gb_week_20_pick_percent = -1
-hou_week_20_pick_percent = -1
-ind_week_20_pick_percent = -1
-jax_week_20_pick_percent = -1
-kc_week_20_pick_percent = -1
-lv_week_20_pick_percent = -1
-lac_week_20_pick_percent = -1
-lar_week_20_pick_percent = -1
-mia_week_20_pick_percent = -1
-min_week_20_pick_percent = -1
-ne_week_20_pick_percent = -1
-no_week_20_pick_percent = -1
-nyg_week_20_pick_percent = -1
-nyj_week_20_pick_percent = -1
-phi_week_20_pick_percent = -1
-pit_week_20_pick_percent = -1
-sf_week_20_pick_percent = -1
-sea_week_20_pick_percent = -1
-tb_week_20_pick_percent = -1
-ten_week_20_pick_percent = -1
-was_week_20_pick_percent = -1
-az_rank = default_az_rank
-atl_rank = default_atl_rank
-bal_rank = default_bal_rank
-buf_rank = default_buf_rank
-car_rank = default_car_rank
-chi_rank = default_chi_rank
-cin_rank = default_cin_rank
-cle_rank = default_cle_rank
-dal_rank = default_dal_rank
-den_rank = default_den_rank
-det_rank = default_det_rank
-gb_rank = default_gb_rank
-hou_rank = default_hou_rank
-ind_rank = default_ind_rank
-jax_rank = default_jax_rank
-kc_rank = default_kc_rank
-lv_rank = default_lv_rank
-lac_rank = default_lac_rank
-lar_rank = default_lar_rank
-mia_rank = default_mia_rank
-min_rank = default_min_rank
-ne_rank = default_ne_rank
-no_rank = default_no_rank
-nyg_rank = default_nyg_rank
-nyj_rank = default_nyj_rank
-phi_rank = default_phi_rank
-pit_rank = default_pit_rank
-sf_rank = default_sf_rank
-sea_rank = default_sea_rank
-tb_rank = default_tb_rank
-ten_rank = default_ten_rank
-was_rank = default_was_rank
-avoid_away_teams_on_short_rest = 0
-avoid_close_divisional_matchups = 0
-avoid_3_games_in_10_days = 0
-avoid_4_games_in_17_days = 0
-avoid_away_teams_in_close_matchups = 0
-avoid_cumulative_rest_disadvantage = 0
-avoid_thursday_night = 0
-avoid_away_thursday_night = 0
-avoid_back_to_back_away = 0
-avoid_international_game = 0
-avoid_teams_with_weekly_rest_disadvantage = 0
-avoid_away_teams_with_travel_disadvantage = 0
-bayesian_rest_travel_constraint = "No Rest, Bayesian, and Travel Constraints"
-circa_total_entries = 18718
-dk_total_entries = 1111
-splash_total_entries = 18519
-splash_high_roller_total_entries = 1000
-splash_4_for_4_total_entries = 9753
-splash_25_to_win_million_total_entries = 33846
-splash_for_the_fans = 10000
-splash_free_entry = 8383
-
-
-number_solutions = 5
-selected_contest = 'Circa'
-starting_week = 1
-if selected_contest == 'Circa':
-    ending_week = 21
-else:
-    ending_week = 19
-
-dk_pick_percentages = {
-    'Arizona Cardinals': [az_week_1_pick_percent, az_week_2_pick_percent, az_week_3_pick_percent, az_week_4_pick_percent, az_week_5_pick_percent, az_week_6_pick_percent, az_week_7_pick_percent, az_week_8_pick_percent, az_week_9_pick_percent, az_week_10_pick_percent, az_week_11_pick_percent, az_week_12_pick_percent, az_week_13_pick_percent, az_week_14_pick_percent, az_week_15_pick_percent, az_week_16_pick_percent, az_week_17_pick_percent, az_week_18_pick_percent],
-    'Atlanta Falcons': [atl_week_1_pick_percent, atl_week_2_pick_percent, atl_week_3_pick_percent, atl_week_4_pick_percent, atl_week_5_pick_percent, atl_week_6_pick_percent, atl_week_7_pick_percent, atl_week_8_pick_percent, atl_week_9_pick_percent, atl_week_10_pick_percent, atl_week_11_pick_percent, atl_week_12_pick_percent, atl_week_13_pick_percent, atl_week_14_pick_percent, atl_week_15_pick_percent, atl_week_16_pick_percent, atl_week_17_pick_percent, atl_week_18_pick_percent],
-    'Baltimore Ravens': [bal_week_1_pick_percent, bal_week_2_pick_percent, bal_week_3_pick_percent, bal_week_4_pick_percent, bal_week_5_pick_percent, bal_week_6_pick_percent, bal_week_7_pick_percent, bal_week_8_pick_percent, bal_week_9_pick_percent, bal_week_10_pick_percent, bal_week_11_pick_percent, bal_week_12_pick_percent, bal_week_13_pick_percent, bal_week_14_pick_percent, bal_week_15_pick_percent, bal_week_16_pick_percent, bal_week_17_pick_percent, bal_week_18_pick_percent],
-    'Buffalo Bills': [buf_week_1_pick_percent, buf_week_2_pick_percent, buf_week_3_pick_percent, buf_week_4_pick_percent, buf_week_5_pick_percent, buf_week_6_pick_percent, buf_week_7_pick_percent, buf_week_8_pick_percent, buf_week_9_pick_percent, buf_week_10_pick_percent, buf_week_11_pick_percent, buf_week_12_pick_percent, buf_week_13_pick_percent, buf_week_14_pick_percent, buf_week_15_pick_percent, buf_week_16_pick_percent, buf_week_17_pick_percent, buf_week_18_pick_percent],
-    'Carolina Panthers': [car_week_1_pick_percent, car_week_2_pick_percent, car_week_3_pick_percent, car_week_4_pick_percent, car_week_5_pick_percent, car_week_6_pick_percent, car_week_7_pick_percent, car_week_8_pick_percent, car_week_9_pick_percent, car_week_10_pick_percent, car_week_11_pick_percent, car_week_12_pick_percent, car_week_13_pick_percent, car_week_14_pick_percent, car_week_15_pick_percent, car_week_16_pick_percent, car_week_17_pick_percent, car_week_18_pick_percent],
-    'Chicago Bears': [chi_week_1_pick_percent, chi_week_2_pick_percent, chi_week_3_pick_percent, chi_week_4_pick_percent, chi_week_5_pick_percent, chi_week_6_pick_percent, chi_week_7_pick_percent, chi_week_8_pick_percent, chi_week_9_pick_percent, chi_week_10_pick_percent, chi_week_11_pick_percent, chi_week_12_pick_percent, chi_week_13_pick_percent, chi_week_14_pick_percent, chi_week_15_pick_percent, chi_week_16_pick_percent, chi_week_17_pick_percent, chi_week_18_pick_percent],
-    'Cincinnati Bengals': [cin_week_1_pick_percent, cin_week_2_pick_percent, cin_week_3_pick_percent, cin_week_4_pick_percent, cin_week_5_pick_percent, cin_week_6_pick_percent, cin_week_7_pick_percent, cin_week_8_pick_percent, cin_week_9_pick_percent, cin_week_10_pick_percent, cin_week_11_pick_percent, cin_week_12_pick_percent, cin_week_13_pick_percent, cin_week_14_pick_percent, cin_week_15_pick_percent, cin_week_16_pick_percent, cin_week_17_pick_percent, cin_week_18_pick_percent],
-    'Cleveland Browns': [cle_week_1_pick_percent, cle_week_2_pick_percent, cle_week_3_pick_percent, cle_week_4_pick_percent, cle_week_5_pick_percent, cle_week_6_pick_percent, cle_week_7_pick_percent, cle_week_8_pick_percent, cle_week_9_pick_percent, cle_week_10_pick_percent, cle_week_11_pick_percent, cle_week_12_pick_percent, cle_week_13_pick_percent, cle_week_14_pick_percent, cle_week_15_pick_percent, cle_week_16_pick_percent, cle_week_17_pick_percent, cle_week_18_pick_percent],
-    'Dallas Cowboys': [dal_week_1_pick_percent, dal_week_2_pick_percent, dal_week_3_pick_percent, dal_week_4_pick_percent, dal_week_5_pick_percent, dal_week_6_pick_percent, dal_week_7_pick_percent, dal_week_8_pick_percent, dal_week_9_pick_percent, dal_week_10_pick_percent, dal_week_11_pick_percent, dal_week_12_pick_percent, dal_week_13_pick_percent, dal_week_14_pick_percent, dal_week_15_pick_percent, dal_week_16_pick_percent, dal_week_17_pick_percent, dal_week_18_pick_percent],
-    'Denver Broncos': [den_week_1_pick_percent, den_week_2_pick_percent, den_week_3_pick_percent, den_week_4_pick_percent, den_week_5_pick_percent, den_week_6_pick_percent, den_week_7_pick_percent, den_week_8_pick_percent, den_week_9_pick_percent, den_week_10_pick_percent, den_week_11_pick_percent, den_week_12_pick_percent, den_week_13_pick_percent, den_week_14_pick_percent, den_week_15_pick_percent, den_week_16_pick_percent, den_week_17_pick_percent, den_week_18_pick_percent],
-    'Detroit Lions': [det_week_1_pick_percent, det_week_2_pick_percent, det_week_3_pick_percent, det_week_4_pick_percent, det_week_5_pick_percent, det_week_6_pick_percent, det_week_7_pick_percent, det_week_8_pick_percent, det_week_9_pick_percent, det_week_10_pick_percent, det_week_11_pick_percent, det_week_12_pick_percent, det_week_13_pick_percent, det_week_14_pick_percent, det_week_15_pick_percent, det_week_16_pick_percent, det_week_17_pick_percent, det_week_18_pick_percent],
-    'Green Bay Packers': [gb_week_1_pick_percent, gb_week_2_pick_percent, gb_week_3_pick_percent, gb_week_4_pick_percent, gb_week_5_pick_percent, gb_week_6_pick_percent, gb_week_7_pick_percent, gb_week_8_pick_percent, gb_week_9_pick_percent, gb_week_10_pick_percent, gb_week_11_pick_percent, gb_week_12_pick_percent, gb_week_13_pick_percent, gb_week_14_pick_percent, gb_week_15_pick_percent, gb_week_16_pick_percent, gb_week_17_pick_percent, gb_week_18_pick_percent],
-    'Houston Texans': [hou_week_1_pick_percent, hou_week_2_pick_percent, hou_week_3_pick_percent, hou_week_4_pick_percent, hou_week_5_pick_percent, hou_week_6_pick_percent, hou_week_7_pick_percent, hou_week_8_pick_percent, hou_week_9_pick_percent, hou_week_10_pick_percent, hou_week_11_pick_percent, hou_week_12_pick_percent, hou_week_13_pick_percent, hou_week_14_pick_percent, hou_week_15_pick_percent, hou_week_16_pick_percent, hou_week_17_pick_percent, hou_week_18_pick_percent],
-    'Indianapolis Colts': [ind_week_1_pick_percent, ind_week_2_pick_percent, ind_week_3_pick_percent, ind_week_4_pick_percent, ind_week_5_pick_percent, ind_week_6_pick_percent, ind_week_7_pick_percent, ind_week_8_pick_percent, ind_week_9_pick_percent, ind_week_10_pick_percent, ind_week_11_pick_percent, ind_week_12_pick_percent, ind_week_13_pick_percent, ind_week_14_pick_percent, ind_week_15_pick_percent, ind_week_16_pick_percent, ind_week_17_pick_percent, ind_week_18_pick_percent],
-    'Jacksonville Jaguars': [jax_week_1_pick_percent, jax_week_2_pick_percent, jax_week_3_pick_percent, jax_week_4_pick_percent, jax_week_5_pick_percent, jax_week_6_pick_percent, jax_week_7_pick_percent, jax_week_8_pick_percent, jax_week_9_pick_percent, jax_week_10_pick_percent, jax_week_11_pick_percent, jax_week_12_pick_percent, jax_week_13_pick_percent, jax_week_14_pick_percent, jax_week_15_pick_percent, jax_week_16_pick_percent, jax_week_17_pick_percent, jax_week_18_pick_percent],
-    'Kansas City Chiefs': [kc_week_1_pick_percent, kc_week_2_pick_percent, kc_week_3_pick_percent, kc_week_4_pick_percent, kc_week_5_pick_percent, kc_week_6_pick_percent, kc_week_7_pick_percent, kc_week_8_pick_percent, kc_week_9_pick_percent, kc_week_10_pick_percent, kc_week_11_pick_percent, kc_week_12_pick_percent, kc_week_13_pick_percent, kc_week_14_pick_percent, kc_week_15_pick_percent, kc_week_16_pick_percent, kc_week_17_pick_percent, kc_week_18_pick_percent],
-    'Las Vegas Raiders': [lv_week_1_pick_percent, lv_week_2_pick_percent, lv_week_3_pick_percent, lv_week_4_pick_percent, lv_week_5_pick_percent, lv_week_6_pick_percent, lv_week_7_pick_percent, lv_week_8_pick_percent, lv_week_9_pick_percent, lv_week_10_pick_percent, lv_week_11_pick_percent, lv_week_12_pick_percent, lv_week_13_pick_percent, lv_week_14_pick_percent, lv_week_15_pick_percent, lv_week_16_pick_percent, lv_week_17_pick_percent, lv_week_18_pick_percent],
-    'Los Angeles Chargers': [lac_week_1_pick_percent, lac_week_2_pick_percent, lac_week_3_pick_percent, lac_week_4_pick_percent, lac_week_5_pick_percent, lac_week_6_pick_percent, lac_week_7_pick_percent, lac_week_8_pick_percent, lac_week_9_pick_percent, lac_week_10_pick_percent, lac_week_11_pick_percent, lac_week_12_pick_percent, lac_week_13_pick_percent, lac_week_14_pick_percent, lac_week_15_pick_percent, lac_week_16_pick_percent, lac_week_17_pick_percent, lac_week_18_pick_percent],
-    'Los Angeles Rams': [lar_week_1_pick_percent, lar_week_2_pick_percent, lar_week_3_pick_percent, lar_week_4_pick_percent, lar_week_5_pick_percent, lar_week_6_pick_percent, lar_week_7_pick_percent, lar_week_8_pick_percent, lar_week_9_pick_percent, lar_week_10_pick_percent, lar_week_11_pick_percent, lar_week_12_pick_percent, lar_week_13_pick_percent, lar_week_14_pick_percent, lar_week_15_pick_percent, lar_week_16_pick_percent, lar_week_17_pick_percent, lar_week_18_pick_percent],
-    'Miami Dolphins': [mia_week_1_pick_percent, mia_week_2_pick_percent, mia_week_3_pick_percent, mia_week_4_pick_percent, mia_week_5_pick_percent, mia_week_6_pick_percent, mia_week_7_pick_percent, mia_week_8_pick_percent, mia_week_9_pick_percent, mia_week_10_pick_percent, mia_week_11_pick_percent, mia_week_12_pick_percent, mia_week_13_pick_percent, mia_week_14_pick_percent, mia_week_15_pick_percent, mia_week_16_pick_percent, mia_week_17_pick_percent, mia_week_18_pick_percent],
-    'Minnesota Vikings': [min_week_1_pick_percent, min_week_2_pick_percent, min_week_3_pick_percent, min_week_4_pick_percent, min_week_5_pick_percent, min_week_6_pick_percent, min_week_7_pick_percent, min_week_8_pick_percent, min_week_9_pick_percent, min_week_10_pick_percent, min_week_11_pick_percent, min_week_12_pick_percent, min_week_13_pick_percent, min_week_14_pick_percent, min_week_15_pick_percent, min_week_16_pick_percent, min_week_17_pick_percent, min_week_18_pick_percent],
-    'New England Patriots': [ne_week_1_pick_percent, ne_week_2_pick_percent, ne_week_3_pick_percent, ne_week_4_pick_percent, ne_week_5_pick_percent, ne_week_6_pick_percent, ne_week_7_pick_percent, ne_week_8_pick_percent, ne_week_9_pick_percent, ne_week_10_pick_percent, ne_week_11_pick_percent, ne_week_12_pick_percent, ne_week_13_pick_percent, ne_week_14_pick_percent, ne_week_15_pick_percent, ne_week_16_pick_percent, ne_week_17_pick_percent, ne_week_18_pick_percent],
-    'New Orleans Saints': [no_week_1_pick_percent, no_week_2_pick_percent, no_week_3_pick_percent, no_week_4_pick_percent, no_week_5_pick_percent, no_week_6_pick_percent, no_week_7_pick_percent, no_week_8_pick_percent, no_week_9_pick_percent, no_week_10_pick_percent, no_week_11_pick_percent, no_week_12_pick_percent, no_week_13_pick_percent, no_week_14_pick_percent, no_week_15_pick_percent, no_week_16_pick_percent, no_week_17_pick_percent, no_week_18_pick_percent],
-    'New York Giants': [nyg_week_1_pick_percent, nyg_week_2_pick_percent, nyg_week_3_pick_percent, nyg_week_4_pick_percent, nyg_week_5_pick_percent, nyg_week_6_pick_percent, nyg_week_7_pick_percent, nyg_week_8_pick_percent, nyg_week_9_pick_percent, nyg_week_10_pick_percent, nyg_week_11_pick_percent, nyg_week_12_pick_percent, nyg_week_13_pick_percent, nyg_week_14_pick_percent, nyg_week_15_pick_percent, nyg_week_16_pick_percent, nyg_week_17_pick_percent, nyg_week_18_pick_percent],
-    'New York Jets': [nyj_week_1_pick_percent, nyj_week_2_pick_percent, nyj_week_3_pick_percent, nyj_week_4_pick_percent, nyj_week_5_pick_percent, nyj_week_6_pick_percent, nyj_week_7_pick_percent, nyj_week_8_pick_percent, nyj_week_9_pick_percent, nyj_week_10_pick_percent, nyj_week_11_pick_percent, nyj_week_12_pick_percent, nyj_week_13_pick_percent, nyj_week_14_pick_percent, nyj_week_15_pick_percent, nyj_week_16_pick_percent, nyj_week_17_pick_percent, nyj_week_18_pick_percent],
-    'Philadelphia Eagles': [phi_week_1_pick_percent, phi_week_2_pick_percent, phi_week_3_pick_percent, phi_week_4_pick_percent, phi_week_5_pick_percent, phi_week_6_pick_percent, phi_week_7_pick_percent, phi_week_8_pick_percent, phi_week_9_pick_percent, phi_week_10_pick_percent, phi_week_11_pick_percent, phi_week_12_pick_percent, phi_week_13_pick_percent, phi_week_14_pick_percent, phi_week_15_pick_percent, phi_week_16_pick_percent, phi_week_17_pick_percent, phi_week_18_pick_percent],
-    'Pittsburgh Steelers': [pit_week_1_pick_percent, pit_week_2_pick_percent, pit_week_3_pick_percent, pit_week_4_pick_percent, pit_week_5_pick_percent, pit_week_6_pick_percent, pit_week_7_pick_percent, pit_week_8_pick_percent, pit_week_9_pick_percent, pit_week_10_pick_percent, pit_week_11_pick_percent, pit_week_12_pick_percent, pit_week_13_pick_percent, pit_week_14_pick_percent, pit_week_15_pick_percent, pit_week_16_pick_percent, pit_week_17_pick_percent, pit_week_18_pick_percent],
-    'San Francisco 49ers': [sf_week_1_pick_percent, sf_week_2_pick_percent, sf_week_3_pick_percent, sf_week_4_pick_percent, sf_week_5_pick_percent, sf_week_6_pick_percent, sf_week_7_pick_percent, sf_week_8_pick_percent, sf_week_9_pick_percent, sf_week_10_pick_percent, sf_week_11_pick_percent, sf_week_12_pick_percent, sf_week_13_pick_percent, sf_week_14_pick_percent, sf_week_15_pick_percent, sf_week_16_pick_percent, sf_week_17_pick_percent, sf_week_18_pick_percent],
-    'Seattle Seahawks': [sea_week_1_pick_percent, sea_week_2_pick_percent, sea_week_3_pick_percent, sea_week_4_pick_percent, sea_week_5_pick_percent, sea_week_6_pick_percent, sea_week_7_pick_percent, sea_week_8_pick_percent, sea_week_9_pick_percent, sea_week_10_pick_percent, sea_week_11_pick_percent, sea_week_12_pick_percent, sea_week_13_pick_percent, sea_week_14_pick_percent, sea_week_15_pick_percent, sea_week_16_pick_percent, sea_week_17_pick_percent, sea_week_18_pick_percent],
-    'Tampa Bay Buccaneers': [tb_week_1_pick_percent, tb_week_2_pick_percent, tb_week_3_pick_percent, tb_week_4_pick_percent, tb_week_5_pick_percent, tb_week_6_pick_percent, tb_week_7_pick_percent, tb_week_8_pick_percent, tb_week_9_pick_percent, tb_week_10_pick_percent, tb_week_11_pick_percent, tb_week_12_pick_percent, tb_week_13_pick_percent, tb_week_14_pick_percent, tb_week_15_pick_percent, tb_week_16_pick_percent, tb_week_17_pick_percent, tb_week_18_pick_percent],
-    'Tennessee Titans': [ten_week_1_pick_percent, ten_week_2_pick_percent, ten_week_3_pick_percent, ten_week_4_pick_percent, ten_week_5_pick_percent, ten_week_6_pick_percent, ten_week_7_pick_percent, ten_week_8_pick_percent, ten_week_9_pick_percent, ten_week_10_pick_percent, ten_week_11_pick_percent, ten_week_12_pick_percent, ten_week_13_pick_percent, ten_week_14_pick_percent, ten_week_15_pick_percent, ten_week_16_pick_percent, ten_week_17_pick_percent, ten_week_18_pick_percent],
-     'Washington Commanders': [was_week_1_pick_percent, was_week_2_pick_percent, was_week_3_pick_percent, was_week_4_pick_percent, was_week_5_pick_percent, was_week_6_pick_percent, was_week_7_pick_percent, was_week_8_pick_percent, was_week_9_pick_percent, was_week_10_pick_percent, was_week_11_pick_percent, was_week_12_pick_percent, was_week_13_pick_percent, was_week_14_pick_percent, was_week_15_pick_percent, was_week_16_pick_percent, was_week_17_pick_percent, was_week_18_pick_percent]
-}
-
-splash_pick_percentages = {
-    'Arizona Cardinals': [az_week_1_pick_percent, az_week_2_pick_percent, az_week_3_pick_percent, az_week_4_pick_percent, az_week_5_pick_percent, az_week_6_pick_percent, az_week_7_pick_percent, az_week_8_pick_percent, az_week_9_pick_percent, az_week_10_pick_percent, az_week_11_pick_percent, az_week_12_pick_percent, az_week_13_pick_percent, az_week_14_pick_percent, az_week_15_pick_percent, az_week_16_pick_percent, az_week_17_pick_percent, az_week_18_pick_percent],
-    'Atlanta Falcons': [atl_week_1_pick_percent, atl_week_2_pick_percent, atl_week_3_pick_percent, atl_week_4_pick_percent, atl_week_5_pick_percent, atl_week_6_pick_percent, atl_week_7_pick_percent, atl_week_8_pick_percent, atl_week_9_pick_percent, atl_week_10_pick_percent, atl_week_11_pick_percent, atl_week_12_pick_percent, atl_week_13_pick_percent, atl_week_14_pick_percent, atl_week_15_pick_percent, atl_week_16_pick_percent, atl_week_17_pick_percent, atl_week_18_pick_percent],
-    'Baltimore Ravens': [bal_week_1_pick_percent, bal_week_2_pick_percent, bal_week_3_pick_percent, bal_week_4_pick_percent, bal_week_5_pick_percent, bal_week_6_pick_percent, bal_week_7_pick_percent, bal_week_8_pick_percent, bal_week_9_pick_percent, bal_week_10_pick_percent, bal_week_11_pick_percent, bal_week_12_pick_percent, bal_week_13_pick_percent, bal_week_14_pick_percent, bal_week_15_pick_percent, bal_week_16_pick_percent, bal_week_17_pick_percent, bal_week_18_pick_percent],
-    'Buffalo Bills': [buf_week_1_pick_percent, buf_week_2_pick_percent, buf_week_3_pick_percent, buf_week_4_pick_percent, buf_week_5_pick_percent, buf_week_6_pick_percent, buf_week_7_pick_percent, buf_week_8_pick_percent, buf_week_9_pick_percent, buf_week_10_pick_percent, buf_week_11_pick_percent, buf_week_12_pick_percent, buf_week_13_pick_percent, buf_week_14_pick_percent, buf_week_15_pick_percent, buf_week_16_pick_percent, buf_week_17_pick_percent, buf_week_18_pick_percent],
-    'Carolina Panthers': [car_week_1_pick_percent, car_week_2_pick_percent, car_week_3_pick_percent, car_week_4_pick_percent, car_week_5_pick_percent, car_week_6_pick_percent, car_week_7_pick_percent, car_week_8_pick_percent, car_week_9_pick_percent, car_week_10_pick_percent, car_week_11_pick_percent, car_week_12_pick_percent, car_week_13_pick_percent, car_week_14_pick_percent, car_week_15_pick_percent, car_week_16_pick_percent, car_week_17_pick_percent, car_week_18_pick_percent],
-    'Chicago Bears': [chi_week_1_pick_percent, chi_week_2_pick_percent, chi_week_3_pick_percent, chi_week_4_pick_percent, chi_week_5_pick_percent, chi_week_6_pick_percent, chi_week_7_pick_percent, chi_week_8_pick_percent, chi_week_9_pick_percent, chi_week_10_pick_percent, chi_week_11_pick_percent, chi_week_12_pick_percent, chi_week_13_pick_percent, chi_week_14_pick_percent, chi_week_15_pick_percent, chi_week_16_pick_percent, chi_week_17_pick_percent, chi_week_18_pick_percent],
-    'Cincinnati Bengals': [cin_week_1_pick_percent, cin_week_2_pick_percent, cin_week_3_pick_percent, cin_week_4_pick_percent, cin_week_5_pick_percent, cin_week_6_pick_percent, cin_week_7_pick_percent, cin_week_8_pick_percent, cin_week_9_pick_percent, cin_week_10_pick_percent, cin_week_11_pick_percent, cin_week_12_pick_percent, cin_week_13_pick_percent, cin_week_14_pick_percent, cin_week_15_pick_percent, cin_week_16_pick_percent, cin_week_17_pick_percent, cin_week_18_pick_percent],
-    'Cleveland Browns': [cle_week_1_pick_percent, cle_week_2_pick_percent, cle_week_3_pick_percent, cle_week_4_pick_percent, cle_week_5_pick_percent, cle_week_6_pick_percent, cle_week_7_pick_percent, cle_week_8_pick_percent, cle_week_9_pick_percent, cle_week_10_pick_percent, cle_week_11_pick_percent, cle_week_12_pick_percent, cle_week_13_pick_percent, cle_week_14_pick_percent, cle_week_15_pick_percent, cle_week_16_pick_percent, cle_week_17_pick_percent, cle_week_18_pick_percent],
-    'Dallas Cowboys': [dal_week_1_pick_percent, dal_week_2_pick_percent, dal_week_3_pick_percent, dal_week_4_pick_percent, dal_week_5_pick_percent, dal_week_6_pick_percent, dal_week_7_pick_percent, dal_week_8_pick_percent, dal_week_9_pick_percent, dal_week_10_pick_percent, dal_week_11_pick_percent, dal_week_12_pick_percent, dal_week_13_pick_percent, dal_week_14_pick_percent, dal_week_15_pick_percent, dal_week_16_pick_percent, dal_week_17_pick_percent, dal_week_18_pick_percent],
-    'Denver Broncos': [den_week_1_pick_percent, den_week_2_pick_percent, den_week_3_pick_percent, den_week_4_pick_percent, den_week_5_pick_percent, den_week_6_pick_percent, den_week_7_pick_percent, den_week_8_pick_percent, den_week_9_pick_percent, den_week_10_pick_percent, den_week_11_pick_percent, den_week_12_pick_percent, den_week_13_pick_percent, den_week_14_pick_percent, den_week_15_pick_percent, den_week_16_pick_percent, den_week_17_pick_percent, den_week_18_pick_percent],
-    'Detroit Lions': [det_week_1_pick_percent, det_week_2_pick_percent, det_week_3_pick_percent, det_week_4_pick_percent, det_week_5_pick_percent, det_week_6_pick_percent, det_week_7_pick_percent, det_week_8_pick_percent, det_week_9_pick_percent, det_week_10_pick_percent, det_week_11_pick_percent, det_week_12_pick_percent, det_week_13_pick_percent, det_week_14_pick_percent, det_week_15_pick_percent, det_week_16_pick_percent, det_week_17_pick_percent, det_week_18_pick_percent],
-    'Green Bay Packers': [gb_week_1_pick_percent, gb_week_2_pick_percent, gb_week_3_pick_percent, gb_week_4_pick_percent, gb_week_5_pick_percent, gb_week_6_pick_percent, gb_week_7_pick_percent, gb_week_8_pick_percent, gb_week_9_pick_percent, gb_week_10_pick_percent, gb_week_11_pick_percent, gb_week_12_pick_percent, gb_week_13_pick_percent, gb_week_14_pick_percent, gb_week_15_pick_percent, gb_week_16_pick_percent, gb_week_17_pick_percent, gb_week_18_pick_percent],
-    'Houston Texans': [hou_week_1_pick_percent, hou_week_2_pick_percent, hou_week_3_pick_percent, hou_week_4_pick_percent, hou_week_5_pick_percent, hou_week_6_pick_percent, hou_week_7_pick_percent, hou_week_8_pick_percent, hou_week_9_pick_percent, hou_week_10_pick_percent, hou_week_11_pick_percent, hou_week_12_pick_percent, hou_week_13_pick_percent, hou_week_14_pick_percent, hou_week_15_pick_percent, hou_week_16_pick_percent, hou_week_17_pick_percent, hou_week_18_pick_percent],
-    'Indianapolis Colts': [ind_week_1_pick_percent, ind_week_2_pick_percent, ind_week_3_pick_percent, ind_week_4_pick_percent, ind_week_5_pick_percent, ind_week_6_pick_percent, ind_week_7_pick_percent, ind_week_8_pick_percent, ind_week_9_pick_percent, ind_week_10_pick_percent, ind_week_11_pick_percent, ind_week_12_pick_percent, ind_week_13_pick_percent, ind_week_14_pick_percent, ind_week_15_pick_percent, ind_week_16_pick_percent, ind_week_17_pick_percent, ind_week_18_pick_percent],
-    'Jacksonville Jaguars': [jax_week_1_pick_percent, jax_week_2_pick_percent, jax_week_3_pick_percent, jax_week_4_pick_percent, jax_week_5_pick_percent, jax_week_6_pick_percent, jax_week_7_pick_percent, jax_week_8_pick_percent, jax_week_9_pick_percent, jax_week_10_pick_percent, jax_week_11_pick_percent, jax_week_12_pick_percent, jax_week_13_pick_percent, jax_week_14_pick_percent, jax_week_15_pick_percent, jax_week_16_pick_percent, jax_week_17_pick_percent, jax_week_18_pick_percent],
-    'Kansas City Chiefs': [kc_week_1_pick_percent, kc_week_2_pick_percent, kc_week_3_pick_percent, kc_week_4_pick_percent, kc_week_5_pick_percent, kc_week_6_pick_percent, kc_week_7_pick_percent, kc_week_8_pick_percent, kc_week_9_pick_percent, kc_week_10_pick_percent, kc_week_11_pick_percent, kc_week_12_pick_percent, kc_week_13_pick_percent, kc_week_14_pick_percent, kc_week_15_pick_percent, kc_week_16_pick_percent, kc_week_17_pick_percent, kc_week_18_pick_percent],
-    'Las Vegas Raiders': [lv_week_1_pick_percent, lv_week_2_pick_percent, lv_week_3_pick_percent, lv_week_4_pick_percent, lv_week_5_pick_percent, lv_week_6_pick_percent, lv_week_7_pick_percent, lv_week_8_pick_percent, lv_week_9_pick_percent, lv_week_10_pick_percent, lv_week_11_pick_percent, lv_week_12_pick_percent, lv_week_13_pick_percent, lv_week_14_pick_percent, lv_week_15_pick_percent, lv_week_16_pick_percent, lv_week_17_pick_percent, lv_week_18_pick_percent],
-    'Los Angeles Chargers': [lac_week_1_pick_percent, lac_week_2_pick_percent, lac_week_3_pick_percent, lac_week_4_pick_percent, lac_week_5_pick_percent, lac_week_6_pick_percent, lac_week_7_pick_percent, lac_week_8_pick_percent, lac_week_9_pick_percent, lac_week_10_pick_percent, lac_week_11_pick_percent, lac_week_12_pick_percent, lac_week_13_pick_percent, lac_week_14_pick_percent, lac_week_15_pick_percent, lac_week_16_pick_percent, lac_week_17_pick_percent, lac_week_18_pick_percent],
-    'Los Angeles Rams': [lar_week_1_pick_percent, lar_week_2_pick_percent, lar_week_3_pick_percent, lar_week_4_pick_percent, lar_week_5_pick_percent, lar_week_6_pick_percent, lar_week_7_pick_percent, lar_week_8_pick_percent, lar_week_9_pick_percent, lar_week_10_pick_percent, lar_week_11_pick_percent, lar_week_12_pick_percent, lar_week_13_pick_percent, lar_week_14_pick_percent, lar_week_15_pick_percent, lar_week_16_pick_percent, lar_week_17_pick_percent, lar_week_18_pick_percent],
-    'Miami Dolphins': [mia_week_1_pick_percent, mia_week_2_pick_percent, mia_week_3_pick_percent, mia_week_4_pick_percent, mia_week_5_pick_percent, mia_week_6_pick_percent, mia_week_7_pick_percent, mia_week_8_pick_percent, mia_week_9_pick_percent, mia_week_10_pick_percent, mia_week_11_pick_percent, mia_week_12_pick_percent, mia_week_13_pick_percent, mia_week_14_pick_percent, mia_week_15_pick_percent, mia_week_16_pick_percent, mia_week_17_pick_percent, mia_week_18_pick_percent],
-    'Minnesota Vikings': [min_week_1_pick_percent, min_week_2_pick_percent, min_week_3_pick_percent, min_week_4_pick_percent, min_week_5_pick_percent, min_week_6_pick_percent, min_week_7_pick_percent, min_week_8_pick_percent, min_week_9_pick_percent, min_week_10_pick_percent, min_week_11_pick_percent, min_week_12_pick_percent, min_week_13_pick_percent, min_week_14_pick_percent, min_week_15_pick_percent, min_week_16_pick_percent, min_week_17_pick_percent, min_week_18_pick_percent],
-    'New England Patriots': [ne_week_1_pick_percent, ne_week_2_pick_percent, ne_week_3_pick_percent, ne_week_4_pick_percent, ne_week_5_pick_percent, ne_week_6_pick_percent, ne_week_7_pick_percent, ne_week_8_pick_percent, ne_week_9_pick_percent, ne_week_10_pick_percent, ne_week_11_pick_percent, ne_week_12_pick_percent, ne_week_13_pick_percent, ne_week_14_pick_percent, ne_week_15_pick_percent, ne_week_16_pick_percent, ne_week_17_pick_percent, ne_week_18_pick_percent],
-    'New Orleans Saints': [no_week_1_pick_percent, no_week_2_pick_percent, no_week_3_pick_percent, no_week_4_pick_percent, no_week_5_pick_percent, no_week_6_pick_percent, no_week_7_pick_percent, no_week_8_pick_percent, no_week_9_pick_percent, no_week_10_pick_percent, no_week_11_pick_percent, no_week_12_pick_percent, no_week_13_pick_percent, no_week_14_pick_percent, no_week_15_pick_percent, no_week_16_pick_percent, no_week_17_pick_percent, no_week_18_pick_percent],
-    'New York Giants': [nyg_week_1_pick_percent, nyg_week_2_pick_percent, nyg_week_3_pick_percent, nyg_week_4_pick_percent, nyg_week_5_pick_percent, nyg_week_6_pick_percent, nyg_week_7_pick_percent, nyg_week_8_pick_percent, nyg_week_9_pick_percent, nyg_week_10_pick_percent, nyg_week_11_pick_percent, nyg_week_12_pick_percent, nyg_week_13_pick_percent, nyg_week_14_pick_percent, nyg_week_15_pick_percent, nyg_week_16_pick_percent, nyg_week_17_pick_percent, nyg_week_18_pick_percent],
-    'New York Jets': [nyj_week_1_pick_percent, nyj_week_2_pick_percent, nyj_week_3_pick_percent, nyj_week_4_pick_percent, nyj_week_5_pick_percent, nyj_week_6_pick_percent, nyj_week_7_pick_percent, nyj_week_8_pick_percent, nyj_week_9_pick_percent, nyj_week_10_pick_percent, nyj_week_11_pick_percent, nyj_week_12_pick_percent, nyj_week_13_pick_percent, nyj_week_14_pick_percent, nyj_week_15_pick_percent, nyj_week_16_pick_percent, nyj_week_17_pick_percent, nyj_week_18_pick_percent],
-    'Philadelphia Eagles': [phi_week_1_pick_percent, phi_week_2_pick_percent, phi_week_3_pick_percent, phi_week_4_pick_percent, phi_week_5_pick_percent, phi_week_6_pick_percent, phi_week_7_pick_percent, phi_week_8_pick_percent, phi_week_9_pick_percent, phi_week_10_pick_percent, phi_week_11_pick_percent, phi_week_12_pick_percent, phi_week_13_pick_percent, phi_week_14_pick_percent, phi_week_15_pick_percent, phi_week_16_pick_percent, phi_week_17_pick_percent, phi_week_18_pick_percent],
-    'Pittsburgh Steelers': [pit_week_1_pick_percent, pit_week_2_pick_percent, pit_week_3_pick_percent, pit_week_4_pick_percent, pit_week_5_pick_percent, pit_week_6_pick_percent, pit_week_7_pick_percent, pit_week_8_pick_percent, pit_week_9_pick_percent, pit_week_10_pick_percent, pit_week_11_pick_percent, pit_week_12_pick_percent, pit_week_13_pick_percent, pit_week_14_pick_percent, pit_week_15_pick_percent, pit_week_16_pick_percent, pit_week_17_pick_percent, pit_week_18_pick_percent],
-    'San Francisco 49ers': [sf_week_1_pick_percent, sf_week_2_pick_percent, sf_week_3_pick_percent, sf_week_4_pick_percent, sf_week_5_pick_percent, sf_week_6_pick_percent, sf_week_7_pick_percent, sf_week_8_pick_percent, sf_week_9_pick_percent, sf_week_10_pick_percent, sf_week_11_pick_percent, sf_week_12_pick_percent, sf_week_13_pick_percent, sf_week_14_pick_percent, sf_week_15_pick_percent, sf_week_16_pick_percent, sf_week_17_pick_percent, sf_week_18_pick_percent],
-    'Seattle Seahawks': [sea_week_1_pick_percent, sea_week_2_pick_percent, sea_week_3_pick_percent, sea_week_4_pick_percent, sea_week_5_pick_percent, sea_week_6_pick_percent, sea_week_7_pick_percent, sea_week_8_pick_percent, sea_week_9_pick_percent, sea_week_10_pick_percent, sea_week_11_pick_percent, sea_week_12_pick_percent, sea_week_13_pick_percent, sea_week_14_pick_percent, sea_week_15_pick_percent, sea_week_16_pick_percent, sea_week_17_pick_percent, sea_week_18_pick_percent],
-    'Tampa Bay Buccaneers': [tb_week_1_pick_percent, tb_week_2_pick_percent, tb_week_3_pick_percent, tb_week_4_pick_percent, tb_week_5_pick_percent, tb_week_6_pick_percent, tb_week_7_pick_percent, tb_week_8_pick_percent, tb_week_9_pick_percent, tb_week_10_pick_percent, tb_week_11_pick_percent, tb_week_12_pick_percent, tb_week_13_pick_percent, tb_week_14_pick_percent, tb_week_15_pick_percent, tb_week_16_pick_percent, tb_week_17_pick_percent, tb_week_18_pick_percent],
-    'Tennessee Titans': [ten_week_1_pick_percent, ten_week_2_pick_percent, ten_week_3_pick_percent, ten_week_4_pick_percent, ten_week_5_pick_percent, ten_week_6_pick_percent, ten_week_7_pick_percent, ten_week_8_pick_percent, ten_week_9_pick_percent, ten_week_10_pick_percent, ten_week_11_pick_percent, ten_week_12_pick_percent, ten_week_13_pick_percent, ten_week_14_pick_percent, ten_week_15_pick_percent, ten_week_16_pick_percent, ten_week_17_pick_percent, ten_week_18_pick_percent],
-     'Washington Commanders': [was_week_1_pick_percent, was_week_2_pick_percent, was_week_3_pick_percent, was_week_4_pick_percent, was_week_5_pick_percent, was_week_6_pick_percent, was_week_7_pick_percent, was_week_8_pick_percent, was_week_9_pick_percent, was_week_10_pick_percent, was_week_11_pick_percent, was_week_12_pick_percent, was_week_13_pick_percent, was_week_14_pick_percent, was_week_15_pick_percent, was_week_16_pick_percent, was_week_17_pick_percent, was_week_18_pick_percent]
-}
-
-circa_pick_percentages = {
-    'Arizona Cardinals': [az_week_1_pick_percent, az_week_2_pick_percent, az_week_3_pick_percent, az_week_4_pick_percent, az_week_5_pick_percent, az_week_6_pick_percent, az_week_7_pick_percent, az_week_8_pick_percent, az_week_9_pick_percent, az_week_10_pick_percent, az_week_11_pick_percent, az_week_12_pick_percent, az_week_13_pick_percent, az_week_14_pick_percent, az_week_15_pick_percent, az_week_16_pick_percent, az_week_17_pick_percent, az_week_18_pick_percent, az_week_19_pick_percent, az_week_20_pick_percent],
-    'Atlanta Falcons': [atl_week_1_pick_percent, atl_week_2_pick_percent, atl_week_3_pick_percent, atl_week_4_pick_percent, atl_week_5_pick_percent, atl_week_6_pick_percent, atl_week_7_pick_percent, atl_week_8_pick_percent, atl_week_9_pick_percent, atl_week_10_pick_percent, atl_week_11_pick_percent, atl_week_12_pick_percent, atl_week_13_pick_percent, atl_week_14_pick_percent, atl_week_15_pick_percent, atl_week_16_pick_percent, atl_week_17_pick_percent, atl_week_18_pick_percent, atl_week_19_pick_percent, atl_week_20_pick_percent],
-    'Baltimore Ravens': [bal_week_1_pick_percent, bal_week_2_pick_percent, bal_week_3_pick_percent, bal_week_4_pick_percent, bal_week_5_pick_percent, bal_week_6_pick_percent, bal_week_7_pick_percent, bal_week_8_pick_percent, bal_week_9_pick_percent, bal_week_10_pick_percent, bal_week_11_pick_percent, bal_week_12_pick_percent, bal_week_13_pick_percent, bal_week_14_pick_percent, bal_week_15_pick_percent, bal_week_16_pick_percent, bal_week_17_pick_percent, bal_week_18_pick_percent, bal_week_19_pick_percent, bal_week_20_pick_percent],
-    'Buffalo Bills': [buf_week_1_pick_percent, buf_week_2_pick_percent, buf_week_3_pick_percent, buf_week_4_pick_percent, buf_week_5_pick_percent, buf_week_6_pick_percent, buf_week_7_pick_percent, buf_week_8_pick_percent, buf_week_9_pick_percent, buf_week_10_pick_percent, buf_week_11_pick_percent, buf_week_12_pick_percent, buf_week_13_pick_percent, buf_week_14_pick_percent, buf_week_15_pick_percent, buf_week_16_pick_percent, buf_week_17_pick_percent, buf_week_18_pick_percent, buf_week_19_pick_percent, buf_week_20_pick_percent],
-    'Carolina Panthers': [car_week_1_pick_percent, car_week_2_pick_percent, car_week_3_pick_percent, car_week_4_pick_percent, car_week_5_pick_percent, car_week_6_pick_percent, car_week_7_pick_percent, car_week_8_pick_percent, car_week_9_pick_percent, car_week_10_pick_percent, car_week_11_pick_percent, car_week_12_pick_percent, car_week_13_pick_percent, car_week_14_pick_percent, car_week_15_pick_percent, car_week_16_pick_percent, car_week_17_pick_percent, car_week_18_pick_percent, car_week_19_pick_percent, car_week_20_pick_percent],
-    'Chicago Bears': [chi_week_1_pick_percent, chi_week_2_pick_percent, chi_week_3_pick_percent, chi_week_4_pick_percent, chi_week_5_pick_percent, chi_week_6_pick_percent, chi_week_7_pick_percent, chi_week_8_pick_percent, chi_week_9_pick_percent, chi_week_10_pick_percent, chi_week_11_pick_percent, chi_week_12_pick_percent, chi_week_13_pick_percent, chi_week_14_pick_percent, chi_week_15_pick_percent, chi_week_16_pick_percent, chi_week_17_pick_percent, chi_week_18_pick_percent, chi_week_19_pick_percent, chi_week_20_pick_percent],
-    'Cincinnati Bengals': [cin_week_1_pick_percent, cin_week_2_pick_percent, cin_week_3_pick_percent, cin_week_4_pick_percent, cin_week_5_pick_percent, cin_week_6_pick_percent, cin_week_7_pick_percent, cin_week_8_pick_percent, cin_week_9_pick_percent, cin_week_10_pick_percent, cin_week_11_pick_percent, cin_week_12_pick_percent, cin_week_13_pick_percent, cin_week_14_pick_percent, cin_week_15_pick_percent, cin_week_16_pick_percent, cin_week_17_pick_percent, cin_week_18_pick_percent, cin_week_19_pick_percent, cin_week_20_pick_percent],
-    'Cleveland Browns': [cle_week_1_pick_percent, cle_week_2_pick_percent, cle_week_3_pick_percent, cle_week_4_pick_percent, cle_week_5_pick_percent, cle_week_6_pick_percent, cle_week_7_pick_percent, cle_week_8_pick_percent, cle_week_9_pick_percent, cle_week_10_pick_percent, cle_week_11_pick_percent, cle_week_12_pick_percent, cle_week_13_pick_percent, cle_week_14_pick_percent, cle_week_15_pick_percent, cle_week_16_pick_percent, cle_week_17_pick_percent, cle_week_18_pick_percent, cle_week_19_pick_percent, cle_week_20_pick_percent],
-    'Dallas Cowboys': [dal_week_1_pick_percent, dal_week_2_pick_percent, dal_week_3_pick_percent, dal_week_4_pick_percent, dal_week_5_pick_percent, dal_week_6_pick_percent, dal_week_7_pick_percent, dal_week_8_pick_percent, dal_week_9_pick_percent, dal_week_10_pick_percent, dal_week_11_pick_percent, dal_week_12_pick_percent, dal_week_13_pick_percent, dal_week_14_pick_percent, dal_week_15_pick_percent, dal_week_16_pick_percent, dal_week_17_pick_percent, dal_week_18_pick_percent, dal_week_19_pick_percent, dal_week_20_pick_percent],
-    'Denver Broncos': [den_week_1_pick_percent, den_week_2_pick_percent, den_week_3_pick_percent, den_week_4_pick_percent, den_week_5_pick_percent, den_week_6_pick_percent, den_week_7_pick_percent, den_week_8_pick_percent, den_week_9_pick_percent, den_week_10_pick_percent, den_week_11_pick_percent, den_week_12_pick_percent, den_week_13_pick_percent, den_week_14_pick_percent, den_week_15_pick_percent, den_week_16_pick_percent, den_week_17_pick_percent, den_week_18_pick_percent, den_week_19_pick_percent, den_week_20_pick_percent],
-    'Detroit Lions': [det_week_1_pick_percent, det_week_2_pick_percent, det_week_3_pick_percent, det_week_4_pick_percent, det_week_5_pick_percent, det_week_6_pick_percent, det_week_7_pick_percent, det_week_8_pick_percent, det_week_9_pick_percent, det_week_10_pick_percent, det_week_11_pick_percent, det_week_12_pick_percent, det_week_13_pick_percent, det_week_14_pick_percent, det_week_15_pick_percent, det_week_16_pick_percent, det_week_17_pick_percent, det_week_18_pick_percent, det_week_19_pick_percent, det_week_20_pick_percent],
-    'Green Bay Packers': [gb_week_1_pick_percent, gb_week_2_pick_percent, gb_week_3_pick_percent, gb_week_4_pick_percent, gb_week_5_pick_percent, gb_week_6_pick_percent, gb_week_7_pick_percent, gb_week_8_pick_percent, gb_week_9_pick_percent, gb_week_10_pick_percent, gb_week_11_pick_percent, gb_week_12_pick_percent, gb_week_13_pick_percent, gb_week_14_pick_percent, gb_week_15_pick_percent, gb_week_16_pick_percent, gb_week_17_pick_percent, gb_week_18_pick_percent, gb_week_19_pick_percent, gb_week_20_pick_percent],
-    'Houston Texans': [hou_week_1_pick_percent, hou_week_2_pick_percent, hou_week_3_pick_percent, hou_week_4_pick_percent, hou_week_5_pick_percent, hou_week_6_pick_percent, hou_week_7_pick_percent, hou_week_8_pick_percent, hou_week_9_pick_percent, hou_week_10_pick_percent, hou_week_11_pick_percent, hou_week_12_pick_percent, hou_week_13_pick_percent, hou_week_14_pick_percent, hou_week_15_pick_percent, hou_week_16_pick_percent, hou_week_17_pick_percent, hou_week_18_pick_percent, hou_week_19_pick_percent, hou_week_20_pick_percent],
-    'Indianapolis Colts': [ind_week_1_pick_percent, ind_week_2_pick_percent, ind_week_3_pick_percent, ind_week_4_pick_percent, ind_week_5_pick_percent, ind_week_6_pick_percent, ind_week_7_pick_percent, ind_week_8_pick_percent, ind_week_9_pick_percent, ind_week_10_pick_percent, ind_week_11_pick_percent, ind_week_12_pick_percent, ind_week_13_pick_percent, ind_week_14_pick_percent, ind_week_15_pick_percent, ind_week_16_pick_percent, ind_week_17_pick_percent, ind_week_18_pick_percent, ind_week_19_pick_percent, ind_week_20_pick_percent],
-    'Jacksonville Jaguars': [jax_week_1_pick_percent, jax_week_2_pick_percent, jax_week_3_pick_percent, jax_week_4_pick_percent, jax_week_5_pick_percent, jax_week_6_pick_percent, jax_week_7_pick_percent, jax_week_8_pick_percent, jax_week_9_pick_percent, jax_week_10_pick_percent, jax_week_11_pick_percent, jax_week_12_pick_percent, jax_week_13_pick_percent, jax_week_14_pick_percent, jax_week_15_pick_percent, jax_week_16_pick_percent, jax_week_17_pick_percent, jax_week_18_pick_percent, jax_week_19_pick_percent, jax_week_20_pick_percent],
-    'Kansas City Chiefs': [kc_week_1_pick_percent, kc_week_2_pick_percent, kc_week_3_pick_percent, kc_week_4_pick_percent, kc_week_5_pick_percent, kc_week_6_pick_percent, kc_week_7_pick_percent, kc_week_8_pick_percent, kc_week_9_pick_percent, kc_week_10_pick_percent, kc_week_11_pick_percent, kc_week_12_pick_percent, kc_week_13_pick_percent, kc_week_14_pick_percent, kc_week_15_pick_percent, kc_week_16_pick_percent, kc_week_17_pick_percent, kc_week_18_pick_percent, kc_week_19_pick_percent, kc_week_20_pick_percent],
-    'Las Vegas Raiders': [lv_week_1_pick_percent, lv_week_2_pick_percent, lv_week_3_pick_percent, lv_week_4_pick_percent, lv_week_5_pick_percent, lv_week_6_pick_percent, lv_week_7_pick_percent, lv_week_8_pick_percent, lv_week_9_pick_percent, lv_week_10_pick_percent, lv_week_11_pick_percent, lv_week_12_pick_percent, lv_week_13_pick_percent, lv_week_14_pick_percent, lv_week_15_pick_percent, lv_week_16_pick_percent, lv_week_17_pick_percent, lv_week_18_pick_percent, lv_week_19_pick_percent, lv_week_20_pick_percent],
-    'Los Angeles Chargers': [lac_week_1_pick_percent, lac_week_2_pick_percent, lac_week_3_pick_percent, lac_week_4_pick_percent, lac_week_5_pick_percent, lac_week_6_pick_percent, lac_week_7_pick_percent, lac_week_8_pick_percent, lac_week_9_pick_percent, lac_week_10_pick_percent, lac_week_11_pick_percent, lac_week_12_pick_percent, lac_week_13_pick_percent, lac_week_14_pick_percent, lac_week_15_pick_percent, lac_week_16_pick_percent, lac_week_17_pick_percent, lac_week_18_pick_percent, lac_week_19_pick_percent, lac_week_20_pick_percent],
-    'Los Angeles Rams': [lar_week_1_pick_percent, lar_week_2_pick_percent, lar_week_3_pick_percent, lar_week_4_pick_percent, lar_week_5_pick_percent, lar_week_6_pick_percent, lar_week_7_pick_percent, lar_week_8_pick_percent, lar_week_9_pick_percent, lar_week_10_pick_percent, lar_week_11_pick_percent, lar_week_12_pick_percent, lar_week_13_pick_percent, lar_week_14_pick_percent, lar_week_15_pick_percent, lar_week_16_pick_percent, lar_week_17_pick_percent, lar_week_18_pick_percent, lar_week_19_pick_percent, lar_week_20_pick_percent],
-    'Miami Dolphins': [mia_week_1_pick_percent, mia_week_2_pick_percent, mia_week_3_pick_percent, mia_week_4_pick_percent, mia_week_5_pick_percent, mia_week_6_pick_percent, mia_week_7_pick_percent, mia_week_8_pick_percent, mia_week_9_pick_percent, mia_week_10_pick_percent, mia_week_11_pick_percent, mia_week_12_pick_percent, mia_week_13_pick_percent, mia_week_14_pick_percent, mia_week_15_pick_percent, mia_week_16_pick_percent, mia_week_17_pick_percent, mia_week_18_pick_percent, mia_week_19_pick_percent, mia_week_20_pick_percent],
-    'Minnesota Vikings': [min_week_1_pick_percent, min_week_2_pick_percent, min_week_3_pick_percent, min_week_4_pick_percent, min_week_5_pick_percent, min_week_6_pick_percent, min_week_7_pick_percent, min_week_8_pick_percent, min_week_9_pick_percent, min_week_10_pick_percent, min_week_11_pick_percent, min_week_12_pick_percent, min_week_13_pick_percent, min_week_14_pick_percent, min_week_15_pick_percent, min_week_16_pick_percent, min_week_17_pick_percent, min_week_18_pick_percent, min_week_19_pick_percent, min_week_20_pick_percent],
-    'New England Patriots': [ne_week_1_pick_percent, ne_week_2_pick_percent, ne_week_3_pick_percent, ne_week_4_pick_percent, ne_week_5_pick_percent, ne_week_6_pick_percent, ne_week_7_pick_percent, ne_week_8_pick_percent, ne_week_9_pick_percent, ne_week_10_pick_percent, ne_week_11_pick_percent, ne_week_12_pick_percent, ne_week_13_pick_percent, ne_week_14_pick_percent, ne_week_15_pick_percent, ne_week_16_pick_percent, ne_week_17_pick_percent, ne_week_18_pick_percent, ne_week_19_pick_percent, ne_week_20_pick_percent],
-    'New Orleans Saints': [no_week_1_pick_percent, no_week_2_pick_percent, no_week_3_pick_percent, no_week_4_pick_percent, no_week_5_pick_percent, no_week_6_pick_percent, no_week_7_pick_percent, no_week_8_pick_percent, no_week_9_pick_percent, no_week_10_pick_percent, no_week_11_pick_percent, no_week_12_pick_percent, no_week_13_pick_percent, no_week_14_pick_percent, no_week_15_pick_percent, no_week_16_pick_percent, no_week_17_pick_percent, no_week_18_pick_percent, no_week_19_pick_percent, no_week_20_pick_percent],
-    'New York Giants': [nyg_week_1_pick_percent, nyg_week_2_pick_percent, nyg_week_3_pick_percent, nyg_week_4_pick_percent, nyg_week_5_pick_percent, nyg_week_6_pick_percent, nyg_week_7_pick_percent, nyg_week_8_pick_percent, nyg_week_9_pick_percent, nyg_week_10_pick_percent, nyg_week_11_pick_percent, nyg_week_12_pick_percent, nyg_week_13_pick_percent, nyg_week_14_pick_percent, nyg_week_15_pick_percent, nyg_week_16_pick_percent, nyg_week_17_pick_percent, nyg_week_18_pick_percent, nyg_week_19_pick_percent, nyg_week_20_pick_percent],
-    'New York Jets': [nyj_week_1_pick_percent, nyj_week_2_pick_percent, nyj_week_3_pick_percent, nyj_week_4_pick_percent, nyj_week_5_pick_percent, nyj_week_6_pick_percent, nyj_week_7_pick_percent, nyj_week_8_pick_percent, nyj_week_9_pick_percent, nyj_week_10_pick_percent, nyj_week_11_pick_percent, nyj_week_12_pick_percent, nyj_week_13_pick_percent, nyj_week_14_pick_percent, nyj_week_15_pick_percent, nyj_week_16_pick_percent, nyj_week_17_pick_percent, nyj_week_18_pick_percent, nyj_week_19_pick_percent, nyj_week_20_pick_percent],
-    'Philadelphia Eagles': [phi_week_1_pick_percent, phi_week_2_pick_percent, phi_week_3_pick_percent, phi_week_4_pick_percent, phi_week_5_pick_percent, phi_week_6_pick_percent, phi_week_7_pick_percent, phi_week_8_pick_percent, phi_week_9_pick_percent, phi_week_10_pick_percent, phi_week_11_pick_percent, phi_week_12_pick_percent, phi_week_13_pick_percent, phi_week_14_pick_percent, phi_week_15_pick_percent, phi_week_16_pick_percent, phi_week_17_pick_percent, phi_week_18_pick_percent, phi_week_19_pick_percent, phi_week_20_pick_percent],
-    'Pittsburgh Steelers': [pit_week_1_pick_percent, pit_week_2_pick_percent, pit_week_3_pick_percent, pit_week_4_pick_percent, pit_week_5_pick_percent, pit_week_6_pick_percent, pit_week_7_pick_percent, pit_week_8_pick_percent, pit_week_9_pick_percent, pit_week_10_pick_percent, pit_week_11_pick_percent, pit_week_12_pick_percent, pit_week_13_pick_percent, pit_week_14_pick_percent, pit_week_15_pick_percent, pit_week_16_pick_percent, pit_week_17_pick_percent, pit_week_18_pick_percent, pit_week_19_pick_percent, pit_week_20_pick_percent],
-    'San Francisco 49ers': [sf_week_1_pick_percent, sf_week_2_pick_percent, sf_week_3_pick_percent, sf_week_4_pick_percent, sf_week_5_pick_percent, sf_week_6_pick_percent, sf_week_7_pick_percent, sf_week_8_pick_percent, sf_week_9_pick_percent, sf_week_10_pick_percent, sf_week_11_pick_percent, sf_week_12_pick_percent, sf_week_13_pick_percent, sf_week_14_pick_percent, sf_week_15_pick_percent, sf_week_16_pick_percent, sf_week_17_pick_percent, sf_week_18_pick_percent, sf_week_19_pick_percent, sf_week_20_pick_percent],
-    'Seattle Seahawks': [sea_week_1_pick_percent, sea_week_2_pick_percent, sea_week_3_pick_percent, sea_week_4_pick_percent, sea_week_5_pick_percent, sea_week_6_pick_percent, sea_week_7_pick_percent, sea_week_8_pick_percent, sea_week_9_pick_percent, sea_week_10_pick_percent, sea_week_11_pick_percent, sea_week_12_pick_percent, sea_week_13_pick_percent, sea_week_14_pick_percent, sea_week_15_pick_percent, sea_week_16_pick_percent, sea_week_17_pick_percent, sea_week_18_pick_percent, sea_week_19_pick_percent, sea_week_20_pick_percent],
-    'Tampa Bay Buccaneers': [tb_week_1_pick_percent, tb_week_2_pick_percent, tb_week_3_pick_percent, tb_week_4_pick_percent, tb_week_5_pick_percent, tb_week_6_pick_percent, tb_week_7_pick_percent, tb_week_8_pick_percent, tb_week_9_pick_percent, tb_week_10_pick_percent, tb_week_11_pick_percent, tb_week_12_pick_percent, tb_week_13_pick_percent, tb_week_14_pick_percent, tb_week_15_pick_percent, tb_week_16_pick_percent, tb_week_17_pick_percent, tb_week_18_pick_percent, tb_week_19_pick_percent, tb_week_20_pick_percent],
-    'Tennessee Titans': [ten_week_1_pick_percent, ten_week_2_pick_percent, ten_week_3_pick_percent, ten_week_4_pick_percent, ten_week_5_pick_percent, ten_week_6_pick_percent, ten_week_7_pick_percent, ten_week_8_pick_percent, ten_week_9_pick_percent, ten_week_10_pick_percent, ten_week_11_pick_percent, ten_week_12_pick_percent, ten_week_13_pick_percent, ten_week_14_pick_percent, ten_week_15_pick_percent, ten_week_16_pick_percent, ten_week_17_pick_percent, ten_week_18_pick_percent, ten_week_19_pick_percent, ten_week_20_pick_percent],
-    'Washington Commanders': [was_week_1_pick_percent, was_week_2_pick_percent, was_week_3_pick_percent, was_week_4_pick_percent, was_week_5_pick_percent, was_week_6_pick_percent, was_week_7_pick_percent, was_week_8_pick_percent, was_week_9_pick_percent, was_week_10_pick_percent, was_week_11_pick_percent, was_week_12_pick_percent, was_week_13_pick_percent, was_week_14_pick_percent, was_week_15_pick_percent, was_week_16_pick_percent, was_week_17_pick_percent, was_week_18_pick_percent, was_week_19_pick_percent, was_week_20_pick_percent]
-}
-
-az_current_week_availability = -1
-atl_current_week_availability = -1
-bal_current_week_availability = -1
-buf_current_week_availability = -1
-car_current_week_availability = -1
-chi_current_week_availability = -1
-cin_current_week_availability = -1
-cle_current_week_availability = -1
-dal_current_week_availability = -1
-den_current_week_availability = -1
-det_current_week_availability = -1
-gb_current_week_availability = -1
-hou_current_week_availability = -1
-ind_current_week_availability = -1
-jax_current_week_availability = -1
-kc_current_week_availability = -1
-lv_current_week_availability = -1
-lac_current_week_availability = -1
-lar_current_week_availability = -1
-mia_current_week_availability = -1
-min_current_week_availability = -1
-ne_current_week_availability = -1
-no_current_week_availability = -1
-nyg_current_week_availability = -1
-nyj_current_week_availability = -1
-phi_current_week_availability = -1
-pit_current_week_availability = -1
-sf_current_week_availability = -1
-sea_current_week_availability = -1
-tb_current_week_availability = -1
-ten_current_week_availability = -1
-was_current_week_availability = -1
-
-
-default_current_week_entries_circa = 17500
-default_current_week_entries_dk = 20000
-default_current_week_entries_splash_sports = 18519
-
-
-current_week_entries_circa = 18718
-current_week_entries_dk = 1111
-current_week_entries_big_splash = 18519
-current_week_entries_splash_high_roller = 1000
-current_week_entries_splash_4_for_4 = 9753
-current_week_entries_splash_walker_ultimate = 33846
-current_week_entries_splash_for_the_fans = 10000
-current_week_entries_splash__rotowire_free_entry = 8383
-
+# --- 1. Constants and Configuration ---
 LOGO_PATH = "GSF Survivor Logo Clear BG.png"
+DB_FILE = 'user_configs.db'
+
+# Define NFL teams list (used multiple times)
+nfl_teams = [
+    "Arizona Cardinals", "Atlanta Falcons", "Baltimore Ravens", "Buffalo Bills",
+    "Carolina Panthers", "Chicago Bears", "Cincinnati Bengals", "Cleveland Browns",
+    "Dallas Cowboys", "Denver Broncos", "Detroit Lions", "Green Bay Packers",
+    "Houston Texans", "Indianapolis Colts", "Jacksonville Jaguars", "Kansas City Chiefs",
+    "Las Vegas Raiders", "Los Angeles Chargers", "Los Angeles Rams", "Miami Dolphins",
+    "Minnesota Vikings", "New England Patriots", "New Orleans Saints", "New York Giants",
+    "New York Jets", "Philadelphia Eagles", "Pittsburgh Steelers", "San Francisco 49ers",
+    "Seattle Seahawks", "Tampa Bay Buccaneers", "Tennessee Titans", "Washington Commanders"
+]
+
+# Contest Options
+contest_options = ["Circa", "DraftKings", "Splash Sports"]
+subcontest_options = [
+    "The Big Splash ($150 Entry)", "High Roller ($1000 Entry)", "Free RotoWire (Free Entry)",
+    "4 for 4 ($50 Entry)", "For the Fans ($40 Entry)", "Walker's Ultimate Survivor ($25 Entry)",
+    "Ship It Nation ($25 Entry)"
+]
+
+# --- 2. Database Functions (Using JSON) ---
+
+def get_db_connection():
+    db_file = 'user_configs.db'
+    conn = sqlite3.connect(db_file)
+    conn.execute("""
+        CREATE TABLE IF NOT EXISTS user_configs (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id TEXT NOT NULL,
+            config_name TEXT NOT NULL,
+            config_data TEXT NOT NULL,  # <<< CHANGED TO STORE JSON STRING
+            timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+            UNIQUE (user_id, config_name)
+        )
+    """)
+    conn.commit()
+    return conn
+
+# Updated save_config function
+# Note: You need to pass the config JSON string here, not input_1, input_2
+def save_config(user_id, config_name, config_json_string):
+    conn = get_db_connection()  # <-- ADD THIS
+    try:
+        # Prevent users from overwriting an existing config name
+        cursor = conn.cursor()
+        cursor.execute(
+            "SELECT id FROM user_configs WHERE user_id = ? AND config_name = ?", [cite: 724, 725]
+            (user_id, config_name)
+        )
+        if cursor.fetchone():
+            conn.close()  # <-- ADD THIS
+            return f"Configuration '{config_name}' already exists. Please choose a new name." [cite: 725, 726]
+
+        # Insert new configuration
+        conn.execute(
+            "INSERT INTO user_configs (user_id, config_name, config_data) VALUES (?, ?, ?)",
+            (user_id, config_name, config_json_string) # <<< INSERT config_data
+        )
+        conn.commit()
+        conn.close()  # <-- ADD THIS
+        return f"Configuration '{config_name}' saved successfully!"
+    except Exception as e:
+        conn.close()  # <-- ADD THIS
+        return f"An error occurred during save: {e}" [cite: 727]
+
+# Updated load_config function
+def load_config(user_id, config_name):
+    """Retrieves the JSON string for a selected configuration."""
+    conn = get_db_connection()  # <-- ADD THIS
+    
+    # SELECT only the config_data column
+    data = conn.execute(
+        "SELECT config_data FROM user_configs WHERE user_id = ? AND config_name = ?",
+        (user_id, config_name)
+    ).fetchone()
+    
+    conn.close()  # <-- ADD THIS
+
+    if data:
+        # Returns the JSON string
+        return data[0] [cite: 728]
+    return None
+
+def get_all_configs(user_id: str):
+    """Returns a list of saved config names for the user."""
+    conn = get_db_connection()
+    configs = conn.execute(
+        "SELECT config_name FROM user_configs WHERE user_id = ? ORDER BY timestamp DESC",
+        (user_id,)
+    ).fetchall()
+    conn.close()
+    return [c[0] for c in configs]
+
+# --- 3. Helper Functions for Updating Session State ---
+
+def update_config_value(key):
+    """Generic callback to update a top-level key in current_config from a widget's session state key."""
+    widget_key = key + "_widget" # Assumes widget key is like 'selected_contest_widget'
+    if widget_key in st.session_state:
+        st.session_state.current_config[key] = st.session_state[widget_key]
+
+def update_nested_value(outer_key, inner_key):
+    """Generic callback for nested dictionaries (e.g., rankings, availabilities)."""
+    widget_key = f"{outer_key}_{inner_key}_widget".replace(" ", "_").replace("(", "").replace(")", "").replace("$","") # Create a unique widget key
+    if widget_key in st.session_state:
+        # Special handling for sliders/numbers needing conversion
+        value = st.session_state[widget_key]
+        if outer_key == 'team_availabilities' or outer_key == 'pick_percentages':
+             value = value / 100.0 # Convert percentage back to float
+        elif outer_key == 'team_rankings' and value == "Default":
+             value = DEFAULT_RANKS.get(inner_key, 0) # Use default rank
+
+        if outer_key not in st.session_state.current_config:
+             st.session_state.current_config[outer_key] = {}
+        st.session_state.current_config[outer_key][inner_key] = value
+
+def update_pick_percentage(week, team_name):
+    """Specific callback for the nested pick percentage dictionary."""
+    widget_key = f"pick_perc_week_{week}_{team_name.replace(' ', '_')}_widget"
+    if widget_key in st.session_state:
+        percentage_int = st.session_state[widget_key]
+        percentage_float = percentage_int / 100.0
+        week_key = f"week_{week}"
+        
+        # Ensure week dictionary exists
+        if week_key not in st.session_state.current_config['pick_percentages']:
+            st.session_state.current_config['pick_percentages'][week_key] = {}
+            
+        st.session_state.current_config['pick_percentages'][week_key][team_name] = percentage_float
+
+
+# --- 4. Main Streamlit App ---
+
+st.set_page_config(layout="wide") # Use wide layout
+
+# --- Authentication ---
 def login_screen():
+    st.image(LOGO_PATH, width=200) # Smaller logo for login
     st.title("Welcome to Generic Sports Fan Survivor Optimization")
     st.subheader("Please log in with Google to access the optimizer.")
     st.write("This tool requires authentication to ensure proper usage and to save your progress.")
     st.write("")
-    if st.button("Log in with Google", use_container_width=True):
-        st.login() # This triggers the Google OAuth flow
+    if st.button("Log in with Google", use_container_width=True, type="primary"):
+        st.login()
 
 if not st.user.is_logged_in:
-    # User is not logged in, show the login screen
     login_screen()
 else:
-        # --- Add Logo in Sidebar when logged in ---
+    # --- User Logged In ---
     CURRENT_USER_ID = st.user.email
-    if 'selected_contest' not in st.session_state:
-        st.session_state.selected_contest = "Circa"
-    if 'subcontest' not in st.session_state:
-        st.session_state.subcontest = "The Big Splash ($150 Entry)"
-    if 'weeks_two_picks' not in st.session_state:
-        st.session_state.weeks_two_picks = [] # Use a generic name for the multiselect
-    if 'has_picked_teams' not in st.session_state:
-        st.session_state.has_picked_teams = False
+
+    # --- Initialize Master Config Dictionary in Session State ---
+    if 'current_config' not in st.session_state:
+        # Define ALL default values for a new user session
+        st.session_state.current_config = {
+            'selected_contest': "Circa",
+            'subcontest': "The Big Splash ($150 Entry)",
+            'weeks_two_picks': [],
+            'has_picked_teams': False,
+            'prohibited_picks': [],
+            'choose_weeks': False,
+            'starting_week': 1,
+            'ending_week': 21, # Default to Circa max
+            'current_week_entries': -1,
+            'use_live_data': False,
+            'team_availabilities': {team: -1.0 for team in nfl_teams},
+            'require_team': False,
+            'required_weeks': {team: 0 for team in nfl_teams},
+            'prohibit_teams': False,
+            'prohibited_weeks': {team: [] for team in nfl_teams},
+            'custom_rankings': False,
+            'team_rankings': {team: 'Default' for team in nfl_teams}, # Use 'Default' string marker
+            'must_be_favored': False,
+            'favored_qualifier': 'Live Sportsbook Odds (If Available)',
+            'add_constraints': False,
+            # Simple constraint flags (can use 0/1 or False/True)
+            'avoid_away_short_rest': False,
+            'avoid_close_divisional': False,
+            'min_div_spread': 7.0,
+            'avoid_away_divisional': False,
+            'avoid_3_in_10': False,
+            'avoid_4_in_17': False,
+            'avoid_away_close': False,
+            'min_away_spread': 3.0,
+            'avoid_cumulative_rest': False,
+            'avoid_thursday': False,
+            'avoid_away_thursday': False,
+            'avoid_b2b_away': False,
+            'avoid_international': False,
+            'avoid_weekly_rest_disadvantage': False,
+            'avoid_travel_disadvantage': False,
+            'bayesian_constraint': "No Rest, Bayesian, and Travel Constraints",
+            'custom_pick_percentages': False,
+            'pick_percentages': {f"week_{w}": {team: -1.0 for team in nfl_teams} for w in range(1, 21)},
+            'number_solutions': 10,
+            # Add placeholders for other sections if needed
+        }
+        # Dynamically set ending week based on default contest
+        if st.session_state.current_config['selected_contest'] != 'Circa':
+            st.session_state.current_config['ending_week'] = 19
+
+    # --- Initialize other session state variables ---
     if 'config_status' not in st.session_state:
         st.session_state.config_status = ""
-    if 'config_name_input' not in st.session_state:
-        st.session_state.config_name_input = ""
+    if 'selected_config_to_load' not in st.session_state:
+        st.session_state.selected_config_to_load = None
+
+
+    # --- Sidebar ---
     with st.sidebar:
-        st.image(LOGO_PATH, use_container_width=True) # Fills the sidebar width
+        st.image(LOGO_PATH, use_container_width=True)
+        st.write(f"Hello, **{st.user.name}**!")
         if st.button("Logout"):
-            st.logout()# Logout button inside sidebar
-        st.write(f"Hello, {st.user.name}!")
-    # User is logged in, display the main application content
-    # --- End Logo in Sidebar ---
-    st.image(LOGO_PATH)
+            st.logout()
+        st.write("---")
+        # Add Save/Load to Sidebar for better access
+        st.header("💾 Configurations")
+
+        # Load
+        saved_configs = get_all_configs(CURRENT_USER_ID)
+        if saved_configs:
+            st.selectbox(
+                "Load Configuration:",
+                options=[""] + saved_configs, # Add empty option
+                key='selected_config_to_load',
+                index=0 # Default to empty
+            )
+            if st.button("🔄 Load Selected", use_container_width=True):
+                if st.session_state.selected_config_to_load:
+                    loaded_json_string = load_config(CURRENT_USER_ID, st.session_state.selected_config_to_load)
+                    if loaded_json_string:
+                        try:
+                            loaded_data = json.loads(loaded_json_string)
+                            st.session_state.current_config = loaded_data # Now it's a dictionary
+                            st.session_state.config_status = f"'{st.session_state.selected_config_to_load}' loaded!"
+                            st.rerun()
+                        except json.JSONDecodeError:
+                            st.session_state.config_status = "Error: Failed to parse configuration data."
+                    else:
+                        st.session_state.config_status = "Error loading configuration."
+                    # --- END CHANGE ---
+                        
+                else:
+                    st.session_state.config_status = "Please select a configuration to load." [cite: 746]
+
+        # Save
+        with st.form("save_form_sidebar", clear_on_submit=True):
+            save_name = st.text_input("Save Current Config As:", key='save_name_input')
+            if st.form_submit_button("๐ ’พ Save", use_container_width=True):
+                if save_name: [cite: 747]
+                    # --- THIS IS THE PART TO CHANGE ---
+                    # OLD:
+                    # message = save_config(CURRENT_USER_ID, save_name, st.session_state.current_config) [cite: 747]
+                    
+                    # NEW:
+                    config_json_string = json.dumps(st.session_state.current_config)
+                    message = save_config(CURRENT_USER_ID, save_name, config_json_string)
+                    # --- END CHANGE ---
+                    
+                    st.session_state.config_status = message
+                    # No rerun needed, just update status
+                else:
+                    st.session_state.config_status = "Please enter a name to save." [cite: 748]
+
+        # Display Status in Sidebar
+        if st.session_state.config_status:
+            st.info(st.session_state.config_status)
+
+
+    # --- Main Page Content ---
+    st.image(LOGO_PATH, width=150)
     st.title("NFL Survivor Optimization")
     st.subheader("The best NFL Survivor Contest optimizer")
-    contest_options = [
-        "Circa", "DraftKings", "Splash Sports"
-    ]
-    subcontest_options = [
-		"The Big Splash ($150 Entry)","High Roller ($1000 Entry)", "Free RotoWire (Free Entry)","4 for 4 ($50 Entry)","For the Fans ($40 Entry)","Walker's Ultimate Survivor ($25 Entry)","Ship It Nation ($25 Entry)"
-    ]
+
     with st.expander("More Information"):
         st.write("Alright, clowns. This site is built to help you optimize your picks for the Circa Survivor contest (And Draftkings and Splash Sports). :red[This tool is just for informational use. It does not take into account injuries, weather, resting players, or certain other factors. Do not use this tool as your only source of information.] Simply input which week you're in, your team rankings, constraints, etc... and the algorithm will do the rest.")
         st.write("Calculating Expected Value, or EV, will take the longest in this process. For a full season, this step will take roughly 5-10 minutes or more. Do not close your browser. It's worth the wait. Good luck!")
-    st.write('')
-    st.write('')
+
+    st.write('---')
+
+    # --- A. Contest Selection ---
     st.subheader('Select Contest')
     help_text_seletced_contest = f"""
     \nThe biggest differences between the three contests:
@@ -5277,31 +4182,61 @@ else:
     \n- Players in Circa and Splash Sports tend to be sharper, making it more difficult to play contrarian and ultimately win
     
     """
+    
+    # Widget Key and linking to config dictionary
+    st.selectbox(
+        'Choose Platform:',
+        options=contest_options,
+        key='selected_contest_widget', # Temporary widget key
+        index=contest_options.index(st.session_state.current_config['selected_contest']),
+        on_change=update_config_value,
+        args=('selected_contest',), # Key in the main dictionary to update
+        help=help_text_seletced_contest
+    )
 
-    two_team_selections_help_text = f"""
+    # Conditional UI based on selected contest (reading from config dict)
+    selected_contest = st.session_state.current_config['selected_contest'] # Use value from dict
+    
+    # Update default ending week if contest changes
+    if selected_contest == 'Circa' and st.session_state.current_config['ending_week'] != 21:
+         st.session_state.current_config['ending_week'] = 21
+    elif selected_contest != 'Circa' and st.session_state.current_config['ending_week'] != 19:
+         st.session_state.current_config['ending_week'] = 19
+    
+    
+    if selected_contest == "Splash Sports":
+        subcontest_help_text = f"""
+    \n- Choose the specific contest you're playing on Splash Sports.
+    \n- Differences in contests include which weeks require double picks, entry stake, number of entries, and weekly percentage picks.
+    
+    """	
+        two_team_selections_help_text = f"""
     \nIn Splash Sports, most survivor contests have a unique requirement: You must select two teams per week in select weeks. Sometimes this is weeks where all 32 teams play, or sometimes it's the last few weeks of the season.  
     \n- However, when you start selecting two teams per week varies, depending on which contest you enter. For some, this may begin in week 11, and for others it may begin as late as week 16.
     \n- Because it varies, we want to give you the option to select which week this applies to you. Plus, it gives you more flexibility to play around with the tool. 
     
     """
-
-    subcontest_help_text = f"""
-    \n- Choose the specific contest you're playing on Splash Sports.
-    \n- Differences in contests include which weeks require double picks, entry stake, number of entries, and weekly percentage picks.
-    
-    """	
-	
-    selected_contest = st.selectbox('Choose Platform:', options = contest_options, help = 'Choose the contest you are using this algorithm for: Circa (Advanced), Draftkings (Traditional and Pathetic), or Splash Sports (Somewhere between the other two)' + help_text_seletced_contest)
-    if selected_contest == "DraftKings":
-    	ending_week = 19
-    	week_requiring_two_selections = []
-    elif selected_contest == "Splash Sports":
-        ending_week = 19
         st.write('')
-        st.write('')
-        st.write('')
-        subcontest = st.selectbox('Choose Specific Contest from Splash Sports: ', options = subcontest_options, help = subcontest_help_text)
-        week_requiring_two_selections = st.multiselect("Which weeks do you need to select two teams?:", options=range(1, 19), help = two_team_selections_help_text)
+        st.selectbox(
+            'Choose Specific Contest from Splash Sports:',
+            options=subcontest_options,
+            key='subcontest_widget',
+            index=subcontest_options.index(st.session_state.current_config['subcontest']),
+            on_change=update_config_value,
+            args=('subcontest',),
+            help=subcontest_help_text
+        )
+        st.multiselect(
+            "Which weeks do you need to select two teams?:",
+            options=range(1, 19),
+            key='weeks_two_picks_widget',
+            default=st.session_state.current_config['weeks_two_picks'],
+            on_change=update_config_value,
+            args=('weeks_two_picks',),
+            help=two_team_selections_help_text
+        )
+        # Display helper text based on subcontest
+        subcontest = st.session_state.current_config['subcontest']
         if subcontest == "The Big Splash ($150 Entry)":
             st.write("Weeks requiring double picks in The Big Splash Survivor Contest: :green[11, 12, 13, 14, 15, 16, 17, 18]")
         elif subcontest == "4 for 4 ($50 Entry)":
@@ -5316,6926 +4251,553 @@ else:
             st.write("Weeks requiring double picks in the Ship It Nation Survivor Contest: :green[12, 13, 14, 15, 16, 17, 18]")
         elif subcontest == "High Roller ($1000 Entry)":
             st.write("Weeks requiring double picks in the High Roller Survivor Contest: :green[None]")
-		
-    else:
-    	ending_week = 21
-    	week_requiring_two_selections = []
-    st.write('')
-    st.write('')
-    st.write('')
-    st.write('')
-    st.subheader('Picked Teams:')
-    yes_i_have_picked_teams = st.checkbox('Have you already used any teams in the contest, or want to prevent the algorithm from using any specific teams at any point in the season?')
-    
-    #def create_nfl_app():
-    
-    nfl_teams = [
-        "Arizona Cardinals", "Atlanta Falcons", "Baltimore Ravens", "Buffalo Bills",
-        "Carolina Panthers", "Chicago Bears", "Cincinnati Bengals", "Cleveland Browns",
-        "Dallas Cowboys", "Denver Broncos", "Detroit Lions", "Green Bay Packers",
-        "Houston Texans", "Indianapolis Colts", "Jacksonville Jaguars", "Kansas City Chiefs",
-        "Las Vegas Raiders", "Los Angeles Chargers", "Los Angeles Rams", "Miami Dolphins",
-        "Minnesota Vikings", "New England Patriots", "New Orleans Saints", "New York Giants",
-        "New York Jets", "Philadelphia Eagles", "Pittsburgh Steelers", "San Francisco 49ers",
-        "Seattle Seahawks", "Tampa Bay Buccaneers", "Tennessee Titans", "Washington Commanders"
-    ]
-    if yes_i_have_picked_teams:
-        selected_teams_help_text = 'Select the teams that you have already used in the survivor contest, or teams that you just do not want to pick in the enirety of the contest'
-        selected_teams = st.multiselect("Prohibited Picks:", options=nfl_teams, help = selected_teams_help_text)
-        picked_teams = selected_teams if selected_teams else []
+
+    st.write('---')
+
+    # --- B. Picked Teams (Prohibited Picks) ---
+    st.subheader('Picked Teams / Season-Long Prohibitions')
+    st.checkbox(
+        'Have you already used any teams OR want to prohibit teams for the entire season?',
+        key='has_picked_teams_widget', # Use key for simple boolean
+        value=st.session_state.current_config['has_picked_teams'],
+        on_change=update_config_value,
+        args=('has_picked_teams',)
+    )
+
+    if st.session_state.current_config['has_picked_teams']:
+        selected_teams_help_text = 'Select teams already used or teams you NEVER want picked.'
+        st.multiselect(
+            "Season Prohibited Picks:",
+            options=nfl_teams,
+            key='prohibited_picks_widget',
+            default=st.session_state.current_config['prohibited_picks'],
+            on_change=update_config_value,
+            args=('prohibited_picks',),
+            help=selected_teams_help_text
+        )
+        # Display selected teams
+        picked_teams = st.session_state.current_config['prohibited_picks']
         if picked_teams:
-            st.write("You selected:")
-            for team in picked_teams:
-                st.write(f"- {team}")
+            st.write("Currently Prohibited:", ", ".join(picked_teams))
         else:
-            st.write("No teams selected")
-    st.write('')
-    st.write('')
-    st.write('')
-    st.subheader('Remaining Weeks:')
-    yes_i_would_like_to_choose_weeks = st.checkbox('Would you like to choose a range of weeks, instead of the entire season?')
-    if yes_i_would_like_to_choose_weeks:
-        remaining_weeks_help_text = f"""Select the upcoming week for the starting week and select the week you want the algorithm to stop at. \n- If you select one week, Calculating EV can take up to 30 seconds. \n- All 18 weeks will take 5-10 minutes.\n- Ending Week must be greater than or equal to Starting Week."""
-        if selected_contest == "DraftKings":
-            starting_week = st.selectbox("Select Starting Week:", options=range(1, 19), help = remaining_weeks_help_text)
-        elif selected_contest == "Splash Sports":
-            splash_sports_remaining_weeks_help_text = f"""Select the upcoming week for the starting week and select the week you want the algorithm to stop at. \n- If you select one week, Calculating EV can take up to 30 seconds. \n- All 18 weeks will take 5-10 minutes.\n- Ending Week must be greater than or equal to Starting Week. In the later part of the season, you will be required to select two teams per week."""
-            starting_week = st.selectbox("Select Starting Week:", options=range(1, 19), help = remaining_weeks_help_text)
-        else:
-            circa_remaining_weeks_warning = f"""Select the upcoming week for the starting week and select the week you want the algorithm to stop at. \n- If you select one week, Calculating EV can take up to 30 seconds. \n- All 20 weeks will take 5-10 minutes.\n- Ending Week must be greater than or equal to Starting Week. \n- :red[Week 13 is Thanksgiving/Black Friday Week and Week 18 is Christmas Week]"""
-            starting_week = st.selectbox("Select Starting Week:", options=range(1, 21), help = circa_remaining_weeks_warning)
-        #if starting_week:
-            #st.write(f"Selected Starting Week: {starting_week}")
-        # Create a dynamic range for ending week based on starting week
-        st.write('')
-        if selected_contest == "DraftKings":
-            ending_week_options = range(starting_week, 19)
-        elif selected_contest == "Splash Sports":
-            ending_week_options = range(starting_week, 19)
-        else:
-            ending_week_options = range(starting_week, 21)
-        ending_week = st.selectbox("Select Ending Week:", options=ending_week_options)
-        ending_week = ending_week + 1
-    
-        st.write('')
-        st.write('')
-        st.write('')
-        st.subheader('Current Week Entries')
-        current_week_entries_help_text = 'For accurate predictions, you must input the number of remaining entries in your contest'
-        # Get an integer input with no maximum
-        if selected_contest == "DraftKings":
-            current_week_entries_dk = st.number_input("Number of Remaining Entries:", value=-1, max_value=None, help = current_week_entries_help_text)
-            st.write(f"You entered: {current_week_entries_dk}")
-        if selected_contest == "Splash Sports":
-            current_week_entries_splash_sports = st.number_input("Number of Remaining Entries:", value=-1, max_value=None, help = current_week_entries_help_text)
-            st.write(f"You entered: {current_week_entries_splash_sports}")
-        else:
-            current_week_entries_circa = st.number_input("Number of Remaining Entries:", value=-1, max_value=None, help = current_week_entries_help_text)
-            st.write(f"You entered: {current_week_entries_circa}")
-        st.write('')
-        st.write('')
-        st.write('')
-        st.subheader('Current Week Team Availability')
-        st.write('')
-        if selected_contest == 'Circa' or selected_contest == 'Splash Sports':
-            use_live_contest_data = st.checkbox('Would you like to use live contest data for individual entries to estimate availability?')
-        st.write('')
-        az_current_week_availability = st.slider("Arizona Cardinals Current Week Availability:", -1, 100) / 100
-        az_current_week_availability_percent = az_current_week_availability*100
-        if az_current_week_availability < 0:
-            st.write(f"Arizona Cardinals Current Week Availability: :red[Automatically Calculated]")
-        else:
-            st.write(f"Arizona Cardinals Current Week Availability: :green[{az_current_week_availability_percent}%]")
-        st.write("")
-        st.write("")
-	    
-        atl_current_week_availability = st.slider("Atlanta Falcons Current Week Availability:", -1, 100) / 100
-        atl_current_week_availability_percent = atl_current_week_availability*100
-        if atl_current_week_availability < 0:
-            st.write(f"Atlanta Falcons Current Week Availability: :red[Automatically Calculated]")
-        else:
-            st.write(f"Atlanta Falcons Current Week Availability: :green[{atl_current_week_availability_percent}%]")
-        st.write("")
-        st.write("")
-	    
-        bal_current_week_availability = st.slider("Baltimore Ravens Current Week Availability:", -1, 100) / 100
-        bal_current_week_availability_percent = bal_current_week_availability*100
-        if bal_current_week_availability < 0:
-            st.write(f"Baltimore Ravens Current Week Availability: :red[Automatically Calculated]")
-        else:
-            st.write(f"Baltimore Ravenss Current Week Availability: :green[{bal_current_week_availability_percent}%]")
-        st.write("")
-        st.write("")
-	    
-        buf_current_week_availability = st.slider("Buffalo Bills Current Week Availability:", -1, 100) / 100
-        buf_current_week_availability_percent = buf_current_week_availability*100
-        if buf_current_week_availability < 0:
-            st.write(f"Buffalo Bills Current Week Availability: :red[Automatically Calculated]")
-        else:
-            st.write(f"Buffalo Bills Current Week Availability: :green[{buf_current_week_availability_percent}%]")
-        st.write("")
-        st.write("")
-	    
-        car_current_week_availability = st.slider("Carolina Panthers Current Week Availability:", -1, 100) / 100
-        car_current_week_availability_percent = car_current_week_availability*100
-        if car_current_week_availability < 0:
-            st.write(f"Carolina Panthers Current Week Availability: :red[Automatically Calculated]")
-        else:
-            st.write(f"Carolina Panthers Current Week Availability: :green[{car_current_week_availability_percent}%]")
-        st.write("")
-        st.write("")
-	    
-        chi_current_week_availability = st.slider("Chicago Bears Current Week Availability:", -1, 100) / 100
-        chi_current_week_availability_percent = chi_current_week_availability*100
-        if chi_current_week_availability < 0:
-            st.write(f"Chicago Bears Current Week Availability: :red[Automatically Calculated]")
-        else:
-            st.write(f"Chicago Bears Current Week Availability: :green[{chi_current_week_availability_percent}%]")
-        st.write("")
-        st.write("")
-	    
-        cin_current_week_availability = st.slider("Cincinnati Bengals Current Week Availability:", -1, 100) / 100
-        cin_current_week_availability_percent = cin_current_week_availability*100
-        if cin_current_week_availability < 0:
-            st.write(f"Cincinnati Bengals Current Week Availability: :red[Automatically Calculated]")
-        else:
-            st.write(f"Cincinnati Bengals Current Week Availability: :green[{cin_current_week_availability_percent}%]")
-        st.write("")
-        st.write("")
-	    
-        cle_current_week_availability = st.slider("Cleveland Browns Current Week Availability:", -1, 100) / 100
-        cle_current_week_availability_percent = cle_current_week_availability*100
-        if cle_current_week_availability < 0:
-            st.write(f"Cleveland Browns Current Week Availability: :red[Automatically Calculated]")
-        else:
-            st.write(f"Cleveland Browns Current Week Availability: :green[{cle_current_week_availability_percent}%]")
-        st.write("")
-        st.write("")
-	    
-        dal_current_week_availability = st.slider("Dallas Cowboys Current Week Availability:", -1, 100) / 100
-        dal_current_week_availability_percent = dal_current_week_availability*100
-        if dal_current_week_availability < 0:
-            st.write(f"Dallas Cowboys Current Week Availability: :red[Automatically Calculated]")
-        else:
-            st.write(f"Dallas Cowboys Current Week Availability: :green[{dal_current_week_availability_percent}%]")
-        st.write("")
-        st.write("")
-	    
-        den_current_week_availability = st.slider("Denver Broncos Current Week Availability:", -1, 100) / 100
-        den_current_week_availability_percent = den_current_week_availability*100
-        if den_current_week_availability < 0:
-            st.write(f"Denver Broncos Current Week Availability: :red[Automatically Calculated]")
-        else:
-            st.write(f"Denver Broncos Current Week Availability: :green[{den_current_week_availability_percent}%]")
-        st.write("")
-        st.write("")
-	    
-        det_current_week_availability = st.slider("Detroit Lions Current Week Availability:", -1, 100) / 100
-        det_current_week_availability_percent = det_current_week_availability*100
-        if det_current_week_availability < 0:
-            st.write(f"Detroit Lions Current Week Availability: :red[Automatically Calculated]")
-        else:
-            st.write(f"Detroit Lions Current Week Availability: :green[{det_current_week_availability_percent}%]")
-        st.write("")
-        st.write("")
-	    
-        gb_current_week_availability = st.slider("Green Bay Packers Current Week Availability:", -1, 100) / 100
-        gb_current_week_availability_percent = gb_current_week_availability*100
-        if gb_current_week_availability < 0:
-            st.write(f"Green Bay Packers Current Week Availability: :red[Automatically Calculated]")
-        else:
-            st.write(f"Green Bay Packers Current Week Availability: :green[{gb_current_week_availability_percent}%]")
-        st.write("")
-        st.write("")
-	    
-        hou_current_week_availability = st.slider("Houston Texans Current Week Availability:", -1, 100) / 100
-        hou_current_week_availability_percent = hou_current_week_availability*100
-        if hou_current_week_availability < 0:
-            st.write(f"Houston Texans Current Week Availability: :red[Automatically Calculated]")
-        else:
-            st.write(f"Houston Texans Current Week Availability: :green[{hou_current_week_availability_percent}%]")
-        st.write("")
-        st.write("")
-	    
-        ind_current_week_availability = st.slider("Indianapoils Colts Current Week Availability:", -1, 100) / 100
-        ind_current_week_availability_percent = ind_current_week_availability*100
-        if ind_current_week_availability < 0:
-            st.write(f"Indianapoils Colts Current Week Availability: :red[Automatically Calculated]")
-        else:
-            st.write(f"Indianapoils Colts Current Week Availability: :green[{ind_current_week_availability_percent}%]")
-        st.write("")
-        st.write("")
-	    
-        jax_current_week_availability = st.slider("Jacksonville Jaguars Current Week Availability:", -1, 100) / 100
-        jax_current_week_availability_percent = jax_current_week_availability*100
-        if jax_current_week_availability < 0:
-            st.write(f"Jacksonville Jaguars Current Week Availability: :red[Automatically Calculated]")
-        else:
-            st.write(f"Jacksonville Jaguars Current Week Availability: :green[{jax_current_week_availability_percent}%]")
-        st.write("")
-        st.write("")
-	    
-        kc_current_week_availability = st.slider("Kansas City Chiefs Current Week Availability:", -1, 100) / 100
-        kc_current_week_availability_percent = kc_current_week_availability*100
-        if kc_current_week_availability < 0:
-            st.write(f"Kansas City Chiefs Current Week Availability: :red[Automatically Calculated]")
-        else:
-            st.write(f"Kansas City Chiefs Current Week Availability: :green[{kc_current_week_availability_percent}%]")
-        st.write("")
-        st.write("")
-	    
-        lv_current_week_availability = st.slider("Las Vegas Raiders Current Week Availability:", -1, 100) / 100
-        lv_current_week_availability_percent = lv_current_week_availability*100
-        if lv_current_week_availability < 0:
-            st.write(f"Las Vegas Raiders Current Week Availability: :red[Automatically Calculated]")
-        else:
-            st.write(f"Las vegas Raiders Current Week Availability: :green[{lv_current_week_availability_percent}%]")
-        st.write("")
-        st.write("")
-	    
-        lac_current_week_availability = st.slider("Los Angeles Chargers Current Week Availability:", -1, 100) / 100
-        lac_current_week_availability_percent = lac_current_week_availability*100
-        if lac_current_week_availability < 0:
-            st.write(f"Los Angeles Chargers Current Week Availability: :red[Automatically Calculated]")
-        else:
-            st.write(f"Los angeles Chargers Current Week Availability: :green[{lac_current_week_availability_percent}%]")
-        st.write("")
-        st.write("")
-	    
-        lar_current_week_availability = st.slider("Los Angeles Rams Current Week Availability:", -1, 100) / 100
-        lar_current_week_availability_percent = lar_current_week_availability*100
-        if lar_current_week_availability < 0:
-            st.write(f"Los Angeles Rams Current Week Availability: :red[Automatically Calculated]")
-        else:
-            st.write(f"Los Angeles Rams Current Week Availability: :green[{lar_current_week_availability_percent}%]")
-        st.write("")
-        st.write("")
-	    
-        mia_current_week_availability = st.slider("Miami Dolphins Current Week Availability:", -1, 100) / 100
-        mia_current_week_availability_percent = mia_current_week_availability*100
-        if mia_current_week_availability < 0:
-            st.write(f"Miami Dolphins Current Week Availability: :red[Automatically Calculated]")
-        else:
-            st.write(f"Miami Dolphins Current Week Availability: :green[{mia_current_week_availability_percent}%]")
-        st.write("")
-        st.write("")
-	    
-        min_current_week_availability = st.slider("Minnesota Vikings Current Week Availability:", -1, 100) / 100
-        min_current_week_availability_percent = min_current_week_availability*100
-        if min_current_week_availability < 0:
-            st.write(f"Minnesota Vikings Current Week Availability: :red[Automatically Calculated]")
-        else:
-            st.write(f"Minnesota Vikings Current Week Availability: :green[{min_current_week_availability_percent}%]")
-        st.write("")
-        st.write("")
-	    
-        ne_current_week_availability = st.slider("New England Patriots Current Week Availability:", -1, 100) / 100
-        ne_current_week_availability_percent = ne_current_week_availability*100
-        if ne_current_week_availability < 0:
-            st.write(f"New England Patriots Current Week Availability: :red[Automatically Calculated]")
-        else:
-            st.write(f"New England Patriots Current Week Availability: :green[{ne_current_week_availability_percent}%]")
-        st.write("")
-        st.write("")
-	    
-        no_current_week_availability = st.slider("New Orleans Saints Current Week Availability:", -1, 100) / 100
-        no_current_week_availability_percent = no_current_week_availability*100
-        if no_current_week_availability < 0:
-            st.write(f"New Orleans Saints Current Week Availability: :red[Automatically Calculated]")
-        else:
-            st.write(f"New Orleans Saints Current Week Availability: :green[{no_current_week_availability_percent}%]")
-        st.write("")
-        st.write("")
-	    
-        nyg_current_week_availability = st.slider("New York Giants Current Week Availability:", -1, 100) / 100
-        nyg_current_week_availability_percent = nyg_current_week_availability*100
-        if nyg_current_week_availability < 0:
-            st.write(f"New York Giants Current Week Availability: :red[Automatically Calculated]")
-        else:
-            st.write(f"New York Giants Current Week Availability: :green[{nyg_current_week_availability_percent}%]")
-        st.write("")
-        st.write("")
-	    
-        nyj_current_week_availability = st.slider("New York Jets Current Week Availability:", -1, 100) / 100
-        nyj_current_week_availability_percent = nyj_current_week_availability*100
-        if nyj_current_week_availability < 0:
-            st.write(f"New York Jets Current Week Availability: :red[Automatically Calculated]")
-        else:
-            st.write(f"New York Jets Current Week Availability: :green[{nyj_current_week_availability_percent}%]")
-        st.write("")
-        st.write("")
-	    
-        phi_current_week_availability = st.slider("Philadelphia Eagles Current Week Availability:", -1, 100) / 100
-        phi_current_week_availability_percent = phi_current_week_availability*100
-        if phi_current_week_availability < 0:
-            st.write(f"Philadelphia Eagles Current Week Availability: :red[Automatically Calculated]")
-        else:
-            st.write(f"Philadelphia Eagles Current Week Availability: :green[{phi_current_week_availability_percent}%]")
-        st.write("")
-        st.write("")
-	    
-        pit_current_week_availability = st.slider("Pittsburgh Steelers Current Week Availability:", -1, 100) / 100
-        pit_current_week_availability_percent = pit_current_week_availability*100
-        if pit_current_week_availability < 0:
-            st.write(f"Pittsburgh Steelers Current Week Availability: :red[Automatically Calculated]")
-        else:
-            st.write(f"Pittsburgh Steelers Current Week Availability: :green[{pit_current_week_availability_percent}%]")
-        st.write("")
-        st.write("")
-	    
-        sf_current_week_availability = st.slider("San Francisco 49ers Current Week Availability:", -1, 100) / 100
-        sf_current_week_availability_percent = sf_current_week_availability*100
-        if sf_current_week_availability < 0:
-            st.write(f"San Francisco 49ers Current Week Availability: :red[Automatically Calculated]")
-        else:
-            st.write(f"San Francisco 49ers Current Week Availability: :green[{sf_current_week_availability_percent}%]")
-        st.write("")
-        st.write("")
-	    
-        sea_current_week_availability = st.slider("Seattle Seahawks Current Week Availability:", -1, 100) / 100
-        sea_current_week_availability_percent = sea_current_week_availability*100
-        if sea_current_week_availability < 0:
-            st.write(f"Seattle Seahawks Current Week Availability: :red[Automatically Calculated]")
-        else:
-            st.write(f"Seattle Seahawks Current Week Availability: :green[{sea_current_week_availability_percent}%]")
-        st.write("")
-        st.write("")
-	    
-        tb_current_week_availability = st.slider("Tampa Bay Buccaneers Current Week Availability:", -1, 100) / 100
-        tb_current_week_availability_percent = tb_current_week_availability*100
-        if tb_current_week_availability < 0:
-            st.write(f"Tampa Bay Buccaneers Current Week Availability: :red[Automatically Calculated]")
-        else:
-            st.write(f"Tampa Bay Buccaneers Current Week Availability: :green[{tb_current_week_availability_percent}%]")
-        st.write("")
-        st.write("")
-	    
-        ten_current_week_availability = st.slider("Tennessee Titans Current Week Availability:", -1, 100) / 100
-        ten_current_week_availability_percent = ten_current_week_availability*100
-        if ten_current_week_availability < 0:
-            st.write(f"Tennessee Titans Current Week Availability: :red[Automatically Calculated]")
-        else:
-            st.write(f"Tennessee Titans Current Week Availability: :green[{ten_current_week_availability_percent}%]")
-        st.write("")
-        st.write("")
-	    
-        was_current_week_availability = st.slider("Washington Commanders Current Week Availability:", -1, 100) / 100
-        was_current_week_availability_percent = was_current_week_availability*100
-        if was_current_week_availability < 0:
-            st.write(f"Washington Commanders Current Week Availability: :red[Automatically Calculated]")
-        else:
-            st.write(f"Washington Commanders Current Week Availability: :green[{was_current_week_availability_percent}%]")
-        st.write("")
-        st.write("")
-    
-    team_availability = {
-        'Arizona Cardinals': az_current_week_availability,
-        'Atlanta Falcons': atl_current_week_availability,
-        'Baltimore Ravens': bal_current_week_availability,
-        'Buffalo Bills': buf_current_week_availability,
-        'Carolina Panthers': car_current_week_availability,
-        'Chicago Bears': chi_current_week_availability,
-        'Cincinnati Bengals': cin_current_week_availability,
-        'Cleveland Browns': cle_current_week_availability,
-        'Dallas Cowboys': dal_current_week_availability,
-        'Denver Broncos': den_current_week_availability,
-        'Detroit Lions': det_current_week_availability,
-        'Green Bay Packers': gb_current_week_availability,
-        'Houston Texans': hou_current_week_availability,
-        'Indianapolis Colts': ind_current_week_availability,
-        'Jacksonville Jaguars': jax_current_week_availability,
-        'Kansas City Chiefs': kc_current_week_availability,
-        'Las Vegas Raiders': lv_current_week_availability,
-        'Los Angeles Chargers': lac_current_week_availability,
-        'Los Angeles Rams': lar_current_week_availability,
-        'Miami Dolphins': mia_current_week_availability,
-        'Minnesota Vikings': min_current_week_availability,
-        'New England Patriots': ne_current_week_availability,
-        'New Orleans Saints': no_current_week_availability,
-        'New York Giants': nyg_current_week_availability,
-        'New York Jets': nyj_current_week_availability,
-        'Philadelphia Eagles': phi_current_week_availability,
-        'Pittsburgh Steelers': pit_current_week_availability,
-        'San Francisco 49ers': sf_current_week_availability,
-        'Seattle Seahawks': sea_current_week_availability,
-        'Tampa Bay Buccaneers': tb_current_week_availability,
-        'Tennessee Titans': ten_current_week_availability,
-        'Washington Commanders': was_current_week_availability
-        }
-    	
-    #return starting_week, ending_week, picked_teams
-        #if ending_week:
-            #st.write(f"Selected Ending Week: {ending_week}")
-    #if __name__ == "__main__":
-    #    starting_week, ending_week, picked_teams = create_nfl_app()
-    st.write('')
-    st.write('')
-    st.write('')
-    st.subheader('Teams That Have to Be Picked')
-    yes_i_have_a_required_team = st.checkbox('Do you have a team that you require to be used in a specific week?')
-    required_week_options = [0] + list(range(starting_week, ending_week))
-    if yes_i_have_a_required_team:
-        with st.expander("More Information"):
-            st.write("\n- Select the teams that you would like to be used in a specific week. \n- For example, if you would like to select the Philadelphia Eagles in week 4, just select '4' Under the Eagles' dropdown.")
-		
-        az_req_week = st.selectbox("Arizona Cardinals Week Required to Be Picked:", options=required_week_options)
-        atl_req_week = st.selectbox("Atlanta Falcons Week Required to Be Picked:", options=required_week_options)
-        bal_req_week = st.selectbox("Baltimore Ravens Week Required to Be Picked:", options=required_week_options)
-        buf_req_week = st.selectbox("Buffalo Bills Week Required to Be Picked:", options=required_week_options)
-        car_req_week = st.selectbox("Carolina Panthers Week Required to Be Picked:", options=required_week_options)
-        chi_req_week = st.selectbox("Chicago Bears Week Required to Be Picked:", options=required_week_options)
-        cin_req_week = st.selectbox("Cincinnati Bengals Week Required to Be Picked:", options=required_week_options)
-        cle_req_week = st.selectbox("Cleveland Browns Week Required to Be Picked:", options=required_week_options)
-        dal_req_week = st.selectbox("Dallas Cowboys Week Required to Be Picked:", options=required_week_options)
-        den_req_week = st.selectbox("Denver Broncos Week Required to Be Picked:", options=required_week_options)
-        det_req_week = st.selectbox("Detroit Lions Week Required to Be Picked:", options=required_week_options)
-        gb_req_week = st.selectbox("Green Bay Packers Week Required to Be Picked:", options=required_week_options)
-        hou_req_week = st.selectbox("Houston Texans Week Required to Be Picked:", options=required_week_options)
-        ind_req_week = st.selectbox("Indianapoils Colts Week Required to Be Picked:", options=required_week_options)
-        jax_req_week = st.selectbox("Jacksonville Jaguars Week Required to Be Picked:", options=required_week_options)
-        kc_req_week = st.selectbox("Kansas City Chiefs Week Required to Be Picked:", options=required_week_options)
-        lv_req_week = st.selectbox("Las Vegas Raiders Week Required to Be Picked:", options=required_week_options)
-        lac_req_week = st.selectbox("Los Angeles Chargers Week Required to Be Picked:", options=required_week_options)
-        lar_req_week = st.selectbox("Los Angeles Rams Week Required to Be Picked:", options=required_week_options)
-        mia_req_week = st.selectbox("Miami Dolphins Week Required to Be Picked:", options=required_week_options)
-        min_req_week = st.selectbox("Minnesota Vikings Week Required to Be Picked:", options=required_week_options)
-        ne_req_week = st.selectbox("New England Patriots Week Required to Be Picked:", options=required_week_options)
-        no_req_week = st.selectbox("New Orleans Saints Week Required to Be Picked:", options=required_week_options)
-        nyg_req_week = st.selectbox("New York Giants Week Required to Be Picked:", options=required_week_options)
-        nyj_req_week = st.selectbox("New York Jets Week Required to Be Picked:", options=required_week_options)
-        phi_req_week = st.selectbox("Philadelphia Eagles Week Required to Be Picked:", options=required_week_options)
-        pit_req_week = st.selectbox("Pittsburgh Steelers Week Required to Be Picked:", options=required_week_options)
-        sf_req_week = st.selectbox("San Francisco 49ers Week Required to Be Picked:", options=required_week_options)
-        sea_req_week = st.selectbox("Seattle Seahawks Week Required to Be Picked:", options=required_week_options)
-        tb_req_week = st.selectbox("Tampa Bay Buccaneers Week Required to Be Picked:", options=required_week_options)
-        ten_req_week = st.selectbox("Tennessee Titans Week Required to Be Picked:", options=required_week_options)
-        was_req_week = st.selectbox("Washington Commanders Week Required to Be Picked:", options=required_week_options)
-    
-    st.write('')
-    st.write('')
-    st.write('')
-    st.subheader('Prohibited Teams')
-    yes_i_have_prohibited_teams = st.checkbox('Do you have teams that you want to prohibit the alogrithm from choosing in a specifc week?')
-    if yes_i_have_prohibited_teams:
-        with st.expander("More Information"):
-            st.write('\n-Choose which week you do :red[NOT] want a team to be picked. \n-If, for example, you think the 49ers have a bad matchup in Week 15, and you do not want them to be used then, select "15" for the San Francisco 49ers. \n- You may select multiple weeks for each team.')
-    
-        az_prohibited_weeks = st.multiselect("Arizona Cardinals Week to Be Excluded:", options=required_week_options)
-        atl_prohibited_weeks = st.multiselect("Atlanta Falcons Week to Be Excluded:", options=required_week_options)
-        bal_prohibited_weeks = st.multiselect("Baltimore Ravens Week to Be Excluded:", options=required_week_options)
-        buf_prohibited_weeks = st.multiselect("Buffalo Bills Week to Be Excluded:", options=required_week_options)
-        car_prohibited_weeks = st.multiselect("Carolina Panthers Week to Be Excluded:", options=required_week_options)
-        chi_prohibited_weeks = st.multiselect("Chicago Bears Week to Be Excluded:", options=required_week_options)
-        cin_prohibited_weeks = st.multiselect("Cincinnati Bengals Week to Be Excluded:", options=required_week_options)
-        cle_prohibited_weeks = st.multiselect("Cleveland Browns Week to Be Excluded:", options=required_week_options)
-        dal_prohibited_weeks = st.multiselect("Dallas Cowboys Week to Be Excluded:", options=required_week_options)
-        den_prohibited_weeks = st.multiselect("Denver Broncos Week to Be Excluded:", options=required_week_options)
-        det_prohibited_weeks = st.multiselect("Detroit Lions Week to Be Excluded:", options=required_week_options)
-        gb_prohibited_weeks = st.multiselect("Green Bay Packers Week to Be Excluded:", options=required_week_options)
-        hou_prohibited_weeks = st.multiselect("Houston Texans Week to Be Excluded:", options=required_week_options)
-        ind_prohibited_weeks = st.multiselect("Indianapoils Colts Week to Be Excluded:", options=required_week_options)
-        jax_prohibited_weeks = st.multiselect("Jacksonville Jaguars Week to Be Excluded:", options=required_week_options)
-        kc_prohibited_weeks = st.multiselect("Kansas City Chiefs Week to Be Excluded:", options=required_week_options)
-        lv_prohibited_weeks = st.multiselect("Las Vegas Raiders Week to Be Excluded:", options=required_week_options)
-        lac_prohibited_weeks = st.multiselect("Los Angeles Chargers Week to Be Excluded:", options=required_week_options)
-        lar_prohibited_weeks = st.multiselect("Los Angeles Rams Week to Be Excluded:", options=required_week_options)
-        mia_prohibited_weeks = st.multiselect("Miami Dolphins Week to Be Excluded:", options=required_week_options)
-        min_prohibited_weeks = st.multiselect("Minnesota Vikings Week to Be Excluded:", options=required_week_options)
-        ne_prohibited_weeks = st.multiselect("New England Patriots Week to Be Excluded:", options=required_week_options)
-        no_prohibited_weeks = st.multiselect("New Orleans Saints Week to Be Excluded:", options=required_week_options)
-        nyg_prohibited_weeks = st.multiselect("New York Giants Week to Be Excluded:", options=required_week_options)
-        nyj_prohibited_weeks = st.multiselect("New York Jets Week to Be Excluded:", options=required_week_options)
-        phi_prohibited_weeks = st.multiselect("Philadelphia Eagles Week to Be Excluded:", options=required_week_options)
-        pit_prohibited_weeks = st.multiselect("Pittsburgh Steelers Week to Be Excluded:", options=required_week_options)
-        sf_prohibited_weeks = st.multiselect("San Francisco 49ers Week to Be Excluded:", options=required_week_options)
-        sea_prohibited_weeks = st.multiselect("Seattle Seahawks Week to Be Excluded:", options=required_week_options)
-        tb_prohibited_weeks = st.multiselect("Tampa Bay Buccaneers Week to Be Excluded:", options=required_week_options)
-        ten_prohibited_weeks = st.multiselect("Tennessee Titans Week to Be Excluded:", options=required_week_options)
-        was_prohibited_weeks = st.multiselect("Washington Commanders Week to Be Excluded:", options=required_week_options)
-        az_excluded_weeks = az_prohibited_weeks if az_prohibited_weeks else []
-        atl_excluded_weeks = atl_prohibited_weeks if atl_prohibited_weeks else []
-        bal_excluded_weeks = bal_prohibited_weeks if bal_prohibited_weeks else []
-        buf_excluded_weeks = buf_prohibited_weeks if buf_prohibited_weeks else []
-        car_excluded_weeks = car_prohibited_weeks if car_prohibited_weeks else []
-        chi_excluded_weeks = chi_prohibited_weeks if chi_prohibited_weeks else []
-        cin_excluded_weeks = cin_prohibited_weeks if cin_prohibited_weeks else []
-        cle_excluded_weeks = cle_prohibited_weeks if cle_prohibited_weeks else []
-        dal_excluded_weeks = dal_prohibited_weeks if dal_prohibited_weeks else []
-        den_excluded_weeks = den_prohibited_weeks if den_prohibited_weeks else []
-        det_excluded_weeks = det_prohibited_weeks if det_prohibited_weeks else []
-        gb_excluded_weeks = gb_prohibited_weeks if gb_prohibited_weeks else []
-        hou_excluded_weeks = hou_prohibited_weeks if hou_prohibited_weeks else []
-        ind_excluded_weeks = ind_prohibited_weeks if ind_prohibited_weeks else []
-        jax_excluded_weeks = jax_prohibited_weeks if jax_prohibited_weeks else []
-        kc_excluded_weeks = kc_prohibited_weeks if kc_prohibited_weeks else []
-        lv_excluded_weeks = lv_prohibited_weeks if lv_prohibited_weeks else []
-        lac_excluded_weeks = lac_prohibited_weeks if lac_prohibited_weeks else []
-        lar_excluded_weeks = lar_prohibited_weeks if lar_prohibited_weeks else []
-        mia_excluded_weeks = mia_prohibited_weeks if mia_prohibited_weeks else []
-        min_excluded_weeks = min_prohibited_weeks if min_prohibited_weeks else []
-        ne_excluded_weeks = ne_prohibited_weeks if ne_prohibited_weeks else []
-        no_excluded_weeks = no_prohibited_weeks if no_prohibited_weeks else []
-        nyg_excluded_weeks = nyg_prohibited_weeks if nyg_prohibited_weeks else []
-        nyj_excluded_weeks = nyj_prohibited_weeks if nyj_prohibited_weeks else []
-        phi_excluded_weeks = phi_prohibited_weeks if phi_prohibited_weeks else []
-        pit_excluded_weeks = pit_prohibited_weeks if pit_prohibited_weeks else []
-        sf_excluded_weeks = sf_prohibited_weeks if sf_prohibited_weeks else []
-        sea_excluded_weeks = sea_prohibited_weeks if sea_prohibited_weeks else []
-        tb_excluded_weeks = tb_prohibited_weeks if tb_prohibited_weeks else []
-        ten_excluded_weeks = ten_prohibited_weeks if ten_prohibited_weeks else []
-        was_excluded_weeks = was_prohibited_weeks if was_prohibited_weeks else []
-    
-    
-    st.write('')
-    st.write('')
-    st.write('')
-    
-    st.subheader('NFL Team Rankings')
-    yes_i_have_customized_rankings = st.checkbox('Would you like to use customized rankings instead of our default rankings?')
-    if yes_i_have_customized_rankings:
-        with st.expander("More Information"):
-            st.write('\n- The Ranking represents :red[how much a team would either win (positive number) or lose (negative number) by to an average NFL team] on a neutral field. 0 means the team is perfectly average. If you leave the "Default" value, the default rankings will be used. \n- If you use your own rankings, we will use them in the calculation based on internal rankings. \n- If you use your own rankings, We will use public Draftkings ML odds to predict pick percentages for the EV calculation (The public largely relies on public lines to make their decisions), but then we will use your internal rankinsg to predict win percentage and help you find an EV edge based on your internal rankings. \n- If Draftkings moneyline odds are unavailable, we will use your internal rankings throughout.')
-		
+            st.write("No teams selected for season-long prohibition.")
+
+    st.write('---')
+
+
+    # --- C. Remaining Weeks ---
+    st.subheader('Remaining Weeks')
+    st.checkbox(
+        'Choose a specific range of weeks (instead of the entire season)?',
+        key='choose_weeks_widget',
+        value=st.session_state.current_config['choose_weeks'],
+        on_change=update_config_value,
+        args=('choose_weeks',)
+    )
+
+    # Get potentially updated values from config dict
+    choose_weeks = st.session_state.current_config['choose_weeks']
+    current_start_week = st.session_state.current_config['starting_week']
+    current_end_week = st.session_state.current_config['ending_week'] # This is exclusive end
+    current_contest = st.session_state.current_config['selected_contest']
+
+    if choose_weeks:
+        max_week = 21 if current_contest == 'Circa' else 19
+        week_options = range(1, max_week)
         
+        # Ensure start week is valid
+        if current_start_week not in week_options:
+            current_start_week = week_options[0]
+            st.session_state.current_config['starting_week'] = current_start_week
+
+        # Starting Week
+        help_text = "..." # Your help text
+        st.selectbox(
+            "Select Starting Week:",
+            options=week_options,
+            key='starting_week_widget',
+            index=week_options.index(current_start_week),
+            on_change=update_config_value,
+            args=('starting_week',),
+            help=help_text
+        )
         
-        team_rankings = [
-            "Default", 0,-15,-14.5,-14,-13.5,-13,-12.5,-12,-11.5,-11,-10.5,-10,-9.5,-9,-8.5,-8,-7.5,
-            -7,-6.5,-6,-5.5,-5,-4.5,-4,-3.5,-3,-2.5,-2,-1.5,-1,-.5,.5,1,1.5,2,2.5,3,3.5,4,
-            4.5,5,5.5,6,6.5,7,7.5,8,8.5,9,9.5,10,10.5,11,11.5,12,12.5,13,13.5,14,14.5,15
-        ]
-        az_rank = st.selectbox("Arizona Cardinals Ranking:", options=team_rankings)
-        if az_rank == "Default":
-            az_rank = default_atl_rank
-        st.write(f'Current Arizona Cardinals Ranking: :green[{az_rank}]')
-        st.write('')
-        atl_rank = st.selectbox("Atlanta Falcons Ranking:", options=team_rankings)
-        if atl_rank == "Default":
-            atl_rank = default_atl_rank
-        st.write(f'Current Atlanta Falcons Ranking: :green[{atl_rank}]')
-        st.write('')
-        bal_rank = st.selectbox("Baltimore Ravens Ranking:", options=team_rankings)
-        if bal_rank == "Default":
-            bal_rank = default_bal_rank
-        st.write(f'Current Baltimore Ravens Ranking: :green[{bal_rank}]')
-        st.write('')
-        buf_rank = st.selectbox("Buffalo Bills Ranking:", options=team_rankings)
-        if buf_rank == "Default":
-            buf_rank = default_buf_rank
-        st.write(f'Current Buffalo Bills Ranking: :green[{buf_rank}]')
-        st.write('')
-        car_rank = st.selectbox("Carolina Panthers Ranking:", options=team_rankings)
-        if car_rank == "Default":
-            car_rank = default_car_rank
-        st.write(f'Current Carolina Panthers Ranking: :green[{car_rank}]')
-        st.write('')
-        chi_rank = st.selectbox("Chicago Bears Ranking:", options=team_rankings)
-        if chi_rank == "Default":
-            chi_rank = default_chi_rank
-        st.write(f'Current Chicago Bears Ranking: :green[{chi_rank}]')
-        st.write('')
-        cin_rank = st.selectbox("Cincinnati Bengals Ranking:", options=team_rankings)
-        if cin_rank == "Default":
-            cin_rank = default_cin_rank
-        st.write(f'Current Cincinnati Bengals Ranking: :green[{cin_rank}]')
-        st.write('')
-        cle_rank = st.selectbox("Cleveland Browns Ranking:", options=team_rankings)
-        if cle_rank == "Default":
-            cle_rank = default_cle_rank
-        st.write(f'Current Cleveland Browns Ranking: :green[{cle_rank}]')
-        st.write('')
-        dal_rank = st.selectbox("Dallas Cowboys Ranking:", options=team_rankings)
-        if dal_rank == "Default":
-            dal_rank = default_dal_rank
-        st.write(f'Current Dallas Cowboys Ranking: :green[{dal_rank}]')
-        st.write('')
-        den_rank = st.selectbox("Denver Broncos Ranking:", options=team_rankings)
-        if den_rank == "Default":
-            den_rank = default_den_rank
-        st.write(f'Current Denver Broncos Ranking: :green[{den_rank}]')
-        st.write('')
-        det_rank = st.selectbox("Detroit Lions Ranking:", options=team_rankings)
-        if det_rank == "Default":
-            det_rank = default_det_rank
-        st.write(f'Current Detroit Lions Ranking: :green[{det_rank}]')
-        st.write('')
-        gb_rank = st.selectbox("Green Bay Packers Ranking:", options=team_rankings)
-        if gb_rank == "Default":
-            gb_rank = default_gb_rank
-        st.write(f'Current Green Bay Packers Ranking: :green[{gb_rank}]')
-        st.write('')
-        hou_rank = st.selectbox("Houston Texans Ranking:", options=team_rankings)
-        if hou_rank == "Default":
-            hou_rank = default_hou_rank
-        st.write(f'Current Houston Texans Ranking: :green[{hou_rank}]')
-        st.write('')
-        ind_rank = st.selectbox("Indianapoils Colts Ranking:", options=team_rankings)
-        if ind_rank == "Default":
-            ind_rank = default_ind_rank
-        st.write(f'Current Indianapoils Colts Ranking: :green[{ind_rank}]')
-        st.write('')
-        jax_rank = st.selectbox("Jacksonville Jaguars Ranking:", options=team_rankings)
-        if jax_rank == "Default":
-            jax_rank = default_jax_rank
-        st.write(f'Current Jacksonville Jaguars Ranking: :green[{jax_rank}]')
-        st.write('')
-        kc_rank = st.selectbox("Kansas City Chiefs Ranking:", options=team_rankings)
-        if kc_rank == "Default":
-            kc_rank = default_kc_rank
-        st.write(f'Current Kansas City Chiefs Ranking: :green[{kc_rank}]')
-        st.write('')
-        lv_rank = st.selectbox("Las Vegas Raiders Ranking:", options=team_rankings)
-        if lv_rank == "Default":
-            lv_rank = default_lv_rank
-        st.write(f'Current Las Vegas Raiders Ranking: :green[{lv_rank}]')
-        st.write('')
-        lac_rank = st.selectbox("Los Angeles Chargers Ranking:", options=team_rankings)
-        if lac_rank == "Default":
-            lac_rank = default_lac_rank
-        st.write(f'Current Los Angeles Chargers Ranking: :green[{lac_rank}]')
-        st.write('')
-        lar_rank = st.selectbox("Los Angeles Rams Ranking:", options=team_rankings)
-        if lar_rank == "Default":
-            lar_rank = default_lar_rank
-        st.write(f'Current Los Angeles Rams Ranking: :green[{lar_rank}]')
-        st.write('')
-        mia_rank = st.selectbox("Miami Dolphins Ranking:", options=team_rankings)
-        if mia_rank == "Default":
-            mia_rank = default_mia_rank
-        st.write(f'Current Miami Dolphins Ranking: :green[{mia_rank}]')
-        st.write('')
-        min_rank = st.selectbox("Minnesota Vikings Ranking:", options=team_rankings)
-        if min_rank == "Default":
-            min_rank = default_min_rank
-        st.write(f'Current Minnesota Vikings Ranking: :green[{min_rank}]')
-        st.write('')
-        ne_rank = st.selectbox("New England Patriots Ranking:", options=team_rankings)
-        if ne_rank == "Default":
-            ne_rank = default_ne_rank
-        st.write(f'Current New England Patriots Ranking: :green[{ne_rank}]')
-        st.write('')
-        no_rank = st.selectbox("New Orleans Saints Ranking:", options=team_rankings)
-        if no_rank == "Default":
-            no_rank = default_no_rank
-        st.write(f'Current New Orleans Saints Ranking: :green[{no_rank}]')
-        st.write('')
-        nyg_rank = st.selectbox("New York Giants Ranking:", options=team_rankings)
-        if nyg_rank == "Default":
-            nyg_rank = default_nyg_rank
-        st.write(f'Current New York Giants Ranking: :green[{nyg_rank}]')
-        st.write('')
-        nyj_rank = st.selectbox("New York Jets Ranking:", options=team_rankings)
-        if nyj_rank == "Default":
-            nyj_rank = default_nyj_rank
-        st.write(f'Current New York Jets Ranking: :green[{nyj_rank}]')
-        st.write('')
-        phi_rank = st.selectbox("Philadelphia Eagles Ranking:", options=team_rankings)
-        if phi_rank == "Default":
-            phi_rank = default_phi_rank
-        st.write(f'Current Philadelphia Eagles Ranking: :green[{phi_rank}]')
-        st.write('')
-        pit_rank = st.selectbox("Pittsburgh Steelers Ranking:", options=team_rankings)
-        if pit_rank == "Default":
-            pit_rank = default_pit_rank
-        st.write(f'Current Pittsburgh Steelers Ranking: :green[{pit_rank}]')
-        st.write('')
-        sf_rank = st.selectbox("San Francisco 49ers Ranking:", options=team_rankings)
-        if sf_rank == "Default":
-            sf_rank = default_sf_rank
-        st.write(f'Current San Francisco 49ers Ranking: :green[{sf_rank}]')
-        st.write('')
-        sea_rank = st.selectbox("Seattle Seahawks Ranking:", options=team_rankings)
-        if sea_rank == "Default":
-            sea_rank = default_sea_rank
-        st.write(f'Current Seattle Seahawks Ranking: :green[{sea_rank}]')
-        st.write('')
-        tb_rank = st.selectbox("Tampa Bay Buccaneers Ranking:", options=team_rankings)
-        if tb_rank == "Default":
-            tb_rank = default_tb_rank
-        st.write(f'Current Tampa Bay Buccaneers Ranking: :green[{tb_rank}]')
-        st.write('')
-        ten_rank = st.selectbox("Tennessee Titans Ranking:", options=team_rankings)
-        if ten_rank == "Default":
-            ten_rank = default_ten_rank
-        st.write(f'Current Tennessee Titans Ranking: :green[{ten_rank}]')
-        st.write('')
-        was_rank = st.selectbox("Washington Commanders Ranking:", options=team_rankings)
-        if was_rank == "Default":
-            was_rank = default_was_rank
-        st.write(f'Current Washington Commanders Ranking: :green[{was_rank}]')
+        # Update current_start_week immediately for ending week options
+        current_start_week = st.session_state.current_config['starting_week']
+
+        # Ending Week
+        ending_week_options = range(current_start_week, max_week)
+        current_end_week_display = current_end_week - 1 # Value to display/select
+
+        # Ensure end week is valid
+        if current_end_week_display not in ending_week_options:
+             current_end_week_display = ending_week_options[0]
+             st.session_state.current_config['ending_week'] = current_end_week_display + 1
+
+        st.selectbox(
+            "Select Ending Week (Inclusive):",
+            options=ending_week_options,
+            key='ending_week_display_widget', # Use a different key
+            index=ending_week_options.index(current_end_week_display),
+            # Use a lambda or dedicated function to update the 'ending_week' (exclusive) value
+            on_change=lambda: st.session_state.current_config.update({'ending_week': st.session_state.ending_week_display_widget + 1}),
+            help="Select the last week you want the algorithm to run for."
+        )
+
+    # Display the selected range
+    start_disp = st.session_state.current_config['starting_week']
+    end_disp = st.session_state.current_config['ending_week'] - 1
+    st.write(f"Algorithm will run from week **{start_disp}** to week **{end_disp}**.")
+    st.write('---')
+
+
+    # --- D. Current Week Entries ---
+    st.subheader('Current Week Entries')
+    current_week_entries_help_text = 'Input remaining entries. Use -1 to estimate automatically.'
+    st.number_input(
+        "Number of Remaining Entries (-1 for Auto):",
+        min_value=-1,
+        step=1,
+        key='current_week_entries_widget',
+        value=st.session_state.current_config['current_week_entries'],
+        on_change=update_config_value,
+        args=('current_week_entries',),
+        help=current_week_entries_help_text
+    )
+    st.write(f"Entered: {st.session_state.current_config['current_week_entries']}")
+    st.write('---')
+
+
+    # --- E. Current Week Team Availability ---
+    st.subheader('Current Week Team Availability')
+    if current_contest in ['Circa', 'Splash Sports']:
+        st.checkbox(
+            'Use live contest data to estimate availability?',
+            key='use_live_data_widget',
+            value=st.session_state.current_config['use_live_data'],
+            on_change=update_config_value,
+            args=('use_live_data',)
+        )
+
+    st.write("Set availability % (0-100). Use -1 to estimate automatically.")
     
-    st.write('')
-    st.write('')
-    st.write('')
-    st.subheader('Pick Exclusively Favorites?')
-    pick_must_be_favored = st.checkbox('All teams picked must be favored at the time of running this script', help = "When this is selected. All teams that are picked must be favored to win the game in order to be selected for this week. \n- There are many cases where the system may select an underdog to create a larger advantage in a different week. \n- We recommend turning this on for smaller pools, but for Circa we recommend turning this off to give you th best EV advantage.")
-    st.write('')
-    favored_qualifier = 'Live Sportsbook Odds (If Available)'
-    must_be_favored_options = ['Live Sportsbook Odds (If Available)', 'Internal Rankings', 'Both Live Sportsbook Odds and Internal Rankings']
-    if pick_must_be_favored:
-        favored_qualifier = st.selectbox('What qualifies a team as favored?', must_be_favored_options, help = """The three options may change your results greatly. Here's how they work: 
-	                                                                                                                                           \n- If you select 'Live Sportsbook Odds', then we will use an API to gather live game information and aggregate the data from multiple sportsbooks. Data includes moneyline, fair odds, and thus favotites and underdogs. For games where data is unavailable, we will fill in the gaps with the Internal Rankings.   
-																				  \n- Selecting 'Internal Rankings' means that we will use your personal rankings, (or ours if you did not input any) to build an estimated spread. From there we use historical data to calculate the estimated moneyline and thus the favorite and underdog in each game.
-																	              \n- If you select 'Both Live Sportsbook Odds and Internal Rankings', then the team must be favored using both the live sportsbook odds and the internal ranking methods. For games where sportsbook odds are unavauilable, it will solely rely on the internal ranking method.""")
-    st.write('')
-    st.write('')
-    st.write('')
-    st.subheader('Select Constraints')
-    yes_i_have_constraints = st.checkbox('Would you like to add constraints? For example, "Avoid Teams on Short Rest"')
-    spread_options = [10, 9.5, 9, 8.5, 8, 7.5, 7, 6.5, 6, 5.5, 5, 4.5, 4, 3.5, 3, 2.5, 2, 1.5, 1, .5]
-    if yes_i_have_constraints:
-        with st.expander("More Information"):
-            st.write("""These constraints will not work 100% of the time (For example in week 18, all Games are divisional matchups). However, it will require a team to be so heavily favored that the impact of the constrained factor should be minimal.'
-	    \n- We recommend using only a few constraints at a time, to avoid limiting the  system to failure.
-            \n- Most of the time, sprotsbooks' odds take into account these kinds of concerns, however, if you are adamanetly against picking away teams or teams in a divisional matchup, we give you the option to limit them as much as possible.""")
-        avoid_away_teams_on_short_rest = 1 if st.checkbox('Avoid Away Teams on Short Rest') else 0
-        avoid_close_divisional_matchups = 1 if st.checkbox('Avoid Close Divisional Matchups') else 0
-        if avoid_close_divisional_matchups == 1:
-            min_div_spread = st.selectbox('What point spread do you consider "close" for divisional matchups?', spread_options)          
-        avoid_away_divisional_matchups = 1 if st.checkbox('Avoid :red[AWAY] Divisional Matchups') else 0
-        avoid_3_games_in_10_days = 1 if st.checkbox('Avoid 3 games in 10 days') else 0
-        avoid_4_games_in_17_days = 1 if st.checkbox('Avoid 4 games in 17 days') else 0
-        avoid_away_teams_in_close_matchups = 1 if st.checkbox('Avoid Away Teams in Close Games') else 0
-        if avoid_away_teams_in_close_matchups == 1:
-            min_away_spread = st.selectbox('What point spread do you consider "close" for away games?', spread_options) 
-        avoid_cumulative_rest_disadvantage = 1 if st.checkbox('Avoid Cumulative Rest Disadvantage') else 0
-        avoid_thursday_night = 1 if st.checkbox('Avoid :red[ALL TEAMS] in Thursday Night Games') else 0
-        avoid_away_thursday_night = 1 if st.checkbox('Avoid :red[ONLY AWAY TEAMS] in Thursday Night Games') else 0
-        avoid_back_to_back_away = 1 if st.checkbox('Avoid Teams on Back to Back Away Games') else 0
-        avoid_international_game = 1 if st.checkbox('Avoid International Games') else 0
-        avoid_teams_with_weekly_rest_disadvantage = 1 if st.checkbox('Avoid Teams with Rest Disadvantage') else 0
-        avoid_away_teams_with_travel_disadvantage = 1 if st.checkbox('Avoid Teams with Travel Disadvatage') else 0
-        bayesian_and_travel_options = [
-            "No Rest, Bayesian, and Travel Constraints",
-            "Selected team must have been projected to win based on preseason rankings, current rankings, and with and without travel/rest adjustments",
-            "Selected team must be projected to win with and without travel and rest impact based on current rankings",
-            "Selected team must have been projected to win based on preseason rankings in addition to current rankings",
-        ]
+    # Use columns for better layout
+    num_cols = 3
+    cols = st.columns(num_cols)
+    col_idx = 0
+
+    for team in nfl_teams:
+        with cols[col_idx]:
+            outer_key = 'team_availabilities'
+            inner_key = team
+            widget_key = f"{outer_key}_{inner_key}_widget".replace(" ", "_")
             
-        #use_same_winners_across_all_4_metrics = 1 if st.selectbox('Bayesian, Rest, and Travel Impact:', options = bayesian_and_travel_options) == "Selected team must have been projected to win based on preseason rankings, current rankings, and with and without travel/rest adjustments" else 0
-        #use_same_current_and_adjusted_current_winners = 1 if st.selectbox('Bayesian, Rest, and Travel Impact:', options = bayesian_and_travel_options) == "Selected team must be projected to win with and without travel and rest impact based on current rankings" else 0
-        #use_same_adj_preseason_and_adj_current_winner = 1 if st.selectbox('Bayesian, Rest, and Travel Impact:', options = bayesian_and_travel_options) == "Selected team must have been projected to win based on preseason rankings in addition to current rankings" else 0
-        if pick_must_be_favored:
-        	bayesian_rest_travel_constraint = st.selectbox('Bayesian, Rest, and Travel Impact:', options = bayesian_and_travel_options, help = """Rest, and Travel Impact allows you to choose teams based on the factors working against them or for them. For example: 
-	                                                                                                                                              \n- Distance traveled.
-																	              \n- Timezones traveled through
-																	              \n- Rest advantage
-																	              \n- Season-long cumulative rest advantage 
-																	              \n- Many more factors
-																	              \n\n Bayesian Impact is the weight/importance of preseason rankings. When checked:
-																	              \n- This takes into account both preseason rankings and current rankings
-																	              \n- Team must have been projected to win this game before the season started and based on currrent rankings
-																	              \n- This is important, because in theory the general public's intitial opinion on a team has validity. For example, if a team has great talent, but hasn't put it together so far this season, they could easily upset a team you picked.
-																	              \n- Use with caution, this can be too large of a constraint and lead to no possible solutions.""")
-    
-    st.write('')
-    st.write('')
-    st.write('')
-    
+            # Get current value, handle potential float issues from JSON load
+            current_val_float = st.session_state.current_config[outer_key].get(inner_key, -1.0)
+            current_val_int = int(current_val_float * 100) # Convert to integer for slider
+
+            st.slider(
+                f"{team}:",
+                min_value=-1,
+                max_value=100,
+                key=widget_key,
+                value=current_val_int,
+                on_change=update_nested_value,
+                args=(outer_key, inner_key)
+            )
+            # Display current setting from the dictionary
+            display_val = st.session_state.current_config[outer_key].get(inner_key, -1.0)
+            if display_val < 0:
+                 st.caption(":red[Auto]")
+            else:
+                 st.caption(f":green[{display_val*100:.0f}%]")
+
+        col_idx = (col_idx + 1) % num_cols # Cycle through columns
+
+    st.write('---')
+
+    # --- F. Required Team Picks ---
+    st.subheader('Required Weekly Picks')
+    st.checkbox(
+        'Require a specific team to be used in a specific week?',
+        key='require_team_widget',
+        value=st.session_state.current_config['require_team'],
+        on_change=update_config_value,
+        args=('require_team',)
+    )
+
+    if st.session_state.current_config['require_team']:
+        with st.expander("Set Required Picks"):
+            st.write("Select the week (0 = No Requirement).")
+            # Determine valid week options based on current start/end week
+            start_w = st.session_state.current_config['starting_week']
+            end_w = st.session_state.current_config['ending_week'] # exclusive
+            required_week_options = [0] + list(range(start_w, end_w))
+            
+            req_cols = st.columns(3)
+            req_col_idx = 0
+            for team in nfl_teams:
+                with req_cols[req_col_idx]:
+                    outer_key = 'required_weeks'
+                    inner_key = team
+                    widget_key = f"{outer_key}_{inner_key}_widget".replace(" ", "_")
+                    current_val = st.session_state.current_config[outer_key].get(inner_key, 0)
+                    
+                    # Ensure current value is in options, default to 0 if not
+                    if current_val not in required_week_options:
+                        current_val = 0
+                        st.session_state.current_config[outer_key][inner_key] = 0
+
+                    st.selectbox(
+                        f"{team} Req Week:",
+                        options=required_week_options,
+                        key=widget_key,
+                        index=required_week_options.index(current_val),
+                        on_change=update_nested_value,
+                        args=(outer_key, inner_key)
+                    )
+                req_col_idx = (req_col_idx + 1) % 3
+    st.write('---')
+
+
+    # --- G. Prohibited Weekly Picks ---
+    st.subheader('Prohibited Weekly Picks')
+    st.checkbox(
+        'Prohibit specific teams from being picked in specific weeks?',
+        key='prohibit_teams_widget',
+        value=st.session_state.current_config['prohibit_teams'],
+        on_change=update_config_value,
+        args=('prohibit_teams',)
+    )
+
+    if st.session_state.current_config['prohibit_teams']:
+        with st.expander("Set Prohibited Picks"):
+            st.write("Select weeks where the team CANNOT be picked.")
+            start_w = st.session_state.current_config['starting_week']
+            end_w = st.session_state.current_config['ending_week'] # exclusive
+            prohibited_week_options = list(range(start_w, end_w))
+
+            pro_cols = st.columns(2) # Fewer columns for multiselect
+            pro_col_idx = 0
+            for team in nfl_teams:
+                with pro_cols[pro_col_idx]:
+                    outer_key = 'prohibited_weeks'
+                    inner_key = team
+                    widget_key = f"{outer_key}_{inner_key}_widget".replace(" ", "_")
+                    current_val = st.session_state.current_config[outer_key].get(inner_key, [])
+                    
+                    # Filter out invalid weeks from current value
+                    current_val = [w for w in current_val if w in prohibited_week_options]
+                    st.session_state.current_config[outer_key][inner_key] = current_val
+
+                    st.multiselect(
+                        f"{team} Prohibited Wks:",
+                        options=prohibited_week_options,
+                        key=widget_key,
+                        default=current_val,
+                        on_change=update_nested_value,
+                        args=(outer_key, inner_key)
+                    )
+                pro_col_idx = (pro_col_idx + 1) % 2
+    st.write('---')
+
+
+    # --- H. Team Rankings ---
+    st.subheader('NFL Team Rankings')
+    st.checkbox(
+        'Use customized rankings instead of default rankings?',
+        key='custom_rankings_widget',
+        value=st.session_state.current_config['custom_rankings'],
+        on_change=update_config_value,
+        args=('custom_rankings',)
+    )
+
+    if st.session_state.current_config['custom_rankings']:
+        with st.expander("Set Custom Team Rankings"):
+            st.write("Ranking = Expected points vs. average team on neutral field. Select 'Default' to use default.")
+            team_rankings_options = ["Default"] + [i / 2.0 for i in range(-30, 31)] # -15 to 15 in 0.5 steps
+
+            rank_cols = st.columns(3)
+            rank_col_idx = 0
+            for team in nfl_teams:
+                 with rank_cols[rank_col_idx]:
+                    outer_key = 'team_rankings'
+                    inner_key = team
+                    widget_key = f"{outer_key}_{inner_key}_widget".replace(" ", "_")
+                    current_val = st.session_state.current_config[outer_key].get(inner_key, 'Default')
+                    
+                    # Ensure value is valid
+                    if current_val not in team_rankings_options:
+                        current_val = 'Default'
+
+                    st.selectbox(
+                        f"{team} Rank:",
+                        options=team_rankings_options,
+                        key=widget_key,
+                        index=team_rankings_options.index(current_val),
+                        on_change=update_nested_value,
+                        args=(outer_key, inner_key)
+                    )
+                    # Display the effective rank
+                    effective_rank = current_val if current_val != 'Default' else DEFAULT_RANKS.get(team, 0)
+                    st.caption(f"Effective: :green[{effective_rank}]")
+
+                 rank_col_idx = (rank_col_idx + 1) % 3
+    st.write('---')
+
+    # --- I. Pick Must Be Favored ---
+    st.subheader('Pick Exclusively Favorites?')
+    st.checkbox(
+        'All teams picked must be favored?',
+        key='must_be_favored_widget',
+        value=st.session_state.current_config['must_be_favored'],
+        on_change=update_config_value,
+        args=('must_be_favored',)
+    )
+
+    if st.session_state.current_config['must_be_favored']:
+        must_be_favored_options = ['Live Sportsbook Odds (If Available)', 'Internal Rankings', 'Both Live Sportsbook Odds and Internal Rankings']
+        current_qualifier = st.session_state.current_config['favored_qualifier']
+        if current_qualifier not in must_be_favored_options:
+            current_qualifier = must_be_favored_options[0]
+
+        st.selectbox(
+            'What qualifies a team as favored?',
+            options=must_be_favored_options,
+            key='favored_qualifier_widget',
+            index=must_be_favored_options.index(current_qualifier),
+            on_change=update_config_value,
+            args=('favored_qualifier',),
+            help="How to determine if a team is favored."
+        )
+    st.write('---')
+
+
+    # --- J. Constraints ---
+    st.subheader('Select Constraints')
+    st.checkbox(
+        'Add scheduling/travel/situational constraints?',
+        key='add_constraints_widget',
+        value=st.session_state.current_config['add_constraints'],
+        on_change=update_config_value,
+        args=('add_constraints',)
+    )
+
+    if st.session_state.current_config['add_constraints']:
+        with st.expander("Configure Constraints"):
+            spread_options = [i / 2.0 for i in range(1, 21)] # 0.5 to 10.0
+            
+            # Simple Checkbox Constraints (update directly in dictionary)
+            constraints_simple = {
+                'avoid_away_short_rest': 'Avoid Away Teams on Short Rest',
+                'avoid_away_divisional': 'Avoid AWAY Divisional Matchups',
+                'avoid_3_in_10': 'Avoid 3 games in 10 days',
+                'avoid_4_in_17': 'Avoid 4 games in 17 days',
+                'avoid_cumulative_rest': 'Avoid Cumulative Rest Disadvantage',
+                'avoid_thursday': 'Avoid ALL TEAMS in Thursday Night Games',
+                'avoid_away_thursday': 'Avoid ONLY AWAY TEAMS in Thursday Night Games',
+                'avoid_b2b_away': 'Avoid Teams on Back to Back Away Games',
+                'avoid_international': 'Avoid International Games',
+                'avoid_weekly_rest_disadvantage': 'Avoid Teams with Rest Disadvantage',
+                'avoid_travel_disadvantage': 'Avoid Teams with Travel Disadvantage'
+            }
+            for key, label in constraints_simple.items():
+                 st.checkbox(label, key=f"{key}_widget", value=st.session_state.current_config[key],
+                             on_change=update_config_value, args=(key,))
+
+            # Constraints needing selectboxes
+            st.checkbox(
+                'Avoid Close Divisional Matchups', key='avoid_close_divisional_widget',
+                value=st.session_state.current_config['avoid_close_divisional'],
+                on_change=update_config_value, args=('avoid_close_divisional',)
+            )
+            if st.session_state.current_config['avoid_close_divisional']:
+                current_div_spread = st.session_state.current_config['min_div_spread']
+                st.selectbox(
+                    'Min spread to NOT consider "close" for divisional:', spread_options,
+                    key='min_div_spread_widget', index=spread_options.index(current_div_spread),
+                    on_change=update_config_value, args=('min_div_spread',)
+                )
+
+            st.checkbox(
+                'Avoid Away Teams in Close Games', key='avoid_away_close_widget',
+                value=st.session_state.current_config['avoid_away_close'],
+                on_change=update_config_value, args=('avoid_away_close',)
+            )
+            if st.session_state.current_config['avoid_away_close']:
+                current_away_spread = st.session_state.current_config['min_away_spread']
+                st.selectbox(
+                    'Min spread to NOT consider "close" for away games:', spread_options,
+                    key='min_away_spread_widget', index=spread_options.index(current_away_spread),
+                    on_change=update_config_value, args=('min_away_spread',)
+                )
+
+            # Bayesian/Rest Constraint
+            bayesian_options = [
+                "No Rest, Bayesian, and Travel Constraints",
+                "Selected team must have been projected to win based on preseason rankings, current rankings, and with and without travel/rest adjustments",
+                "Selected team must be projected to win with and without travel and rest impact based on current rankings",
+                "Selected team must have been projected to win based on preseason rankings in addition to current rankings",
+            ]
+            current_bayes = st.session_state.current_config['bayesian_constraint']
+            st.selectbox(
+                'Bayesian, Rest, and Travel Impact:', options=bayesian_options,
+                key='bayesian_constraint_widget', index=bayesian_options.index(current_bayes),
+                on_change=update_config_value, args=('bayesian_constraint',),
+                help="Apply constraints based on consistency across ranking/adjustment methods."
+            )
+    st.write('---')
+
+
+    # --- K. Estimate Pick Percentages ---
     st.subheader('Estimate Pick Percentages')
-    yes_i_have_pick_percents = st.checkbox('Would you like to add your own estimated pick percentages, instead of using our estimated picks?')
-    if yes_i_have_pick_percents:
-        with st.expander("More Information"):
-            st.write('\n- Select your own estimated pick percentages for each team. \n- If you do not change the default value of -1, then it will automatically calculate the estimated pick percentages for that team. \n- This tool will be especially useful later in the season \n- For teams on bye, you can leave them at -1.')
-        st.write('')
-        st.write('')
-        if starting_week <= 1 and ending_week > 1:
-            week_1_pick_percents = st.checkbox('Add Week 1 Pick Percentages?', help = "Check this box if you want to adjust the estimated pick percentages for each team in week 1.")
-            if week_1_pick_percents:
-                st.write('')
-                st.subheader('Week 1 Estimated Pick Percentages')
-                st.write('')
-                az_week_1_pick_percent = st.slider("Arizona Cardinals Week 1 Pick Percent:", -1, 100) / 100
-                az_week_1_pick_percent_percent = az_week_1_pick_percent*100
-                if az_week_1_pick_percent < 0:
-                    st.write(f"Arizona Cardinals Week 1 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Arizona Cardinals Week 1 Pick Percent: :green[{az_week_1_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                atl_week_1_pick_percent = st.slider("Atlanta Falcons Week 1 Pick Percent:", -1, 100) / 100
-                atl_week_1_pick_percent_percent = atl_week_1_pick_percent*100
-                if atl_week_1_pick_percent < 0:
-                    st.write(f"Atlanta Falcons Week 1 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Atlanta Falcons Week 1 Pick Percent: :green[{atl_week_1_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                bal_week_1_pick_percent = st.slider("Baltimore Ravens Week 1 Pick Percent:", -1, 100) / 100
-                bal_week_1_pick_percent_percent = bal_week_1_pick_percent*100
-                if bal_week_1_pick_percent < 0:
-                    st.write(f"Baltimore Ravens Week 1 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Baltimore Ravenss Week 1 Pick Percent: :green[{bal_week_1_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                buf_week_1_pick_percent = st.slider("Buffalo Bills Week 1 Pick Percent:", -1, 100) / 100
-                buf_week_1_pick_percent_percent = buf_week_1_pick_percent*100
-                if buf_week_1_pick_percent < 0:
-                    st.write(f"Buffalo Bills Week 1 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Buffalo Bills Week 1 Pick Percent: :green[{buf_week_1_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                car_week_1_pick_percent = st.slider("Carolina Panthers Week 1 Pick Percent:", -1, 100) / 100
-                car_week_1_pick_percent_percent = car_week_1_pick_percent*100
-                if car_week_1_pick_percent < 0:
-                    st.write(f"Carolina Panthers Week 1 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Carolina Panthers Week 1 Pick Percent: :green[{car_week_1_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                chi_week_1_pick_percent = st.slider("Chicago Bears Week 1 Pick Percent:", -1, 100) / 100
-                chi_week_1_pick_percent_percent = chi_week_1_pick_percent*100
-                if chi_week_1_pick_percent < 0:
-                    st.write(f"Chicago Bears Week 1 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Chicago Bears Week 1 Pick Percent: :green[{chi_week_1_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                cin_week_1_pick_percent = st.slider("Cincinnati Bengals Week 1 Pick Percent:", -1, 100) / 100
-                cin_week_1_pick_percent_percent = cin_week_1_pick_percent*100
-                if cin_week_1_pick_percent < 0:
-                    st.write(f"Cincinnati Bengals Week 1 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Cincinnati Bengals Week 1 Pick Percent: :green[{cin_week_1_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                cle_week_1_pick_percent = st.slider("Cleveland Browns Week 1 Pick Percent:", -1, 100) / 100
-                cle_week_1_pick_percent_percent = cle_week_1_pick_percent*100
-                if cle_week_1_pick_percent < 0:
-                    st.write(f"Cleveland Browns Week 1 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Cleveland Browns Week 1 Pick Percent: :green[{cle_week_1_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                dal_week_1_pick_percent = st.slider("Dallas Cowboys Week 1 Pick Percent:", -1, 100) / 100
-                dal_week_1_pick_percent_percent = dal_week_1_pick_percent*100
-                if dal_week_1_pick_percent < 0:
-                    st.write(f"Dallas Cowboys Week 1 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Dallas Cowboys Week 1 Pick Percent: :green[{dal_week_1_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                den_week_1_pick_percent = st.slider("Denver Broncos Week 1 Pick Percent:", -1, 100) / 100
-                den_week_1_pick_percent_percent = den_week_1_pick_percent*100
-                if den_week_1_pick_percent < 0:
-                    st.write(f"Denver Broncos Week 1 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Denver Broncos Week 1 Pick Percent: :green[{den_week_1_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                det_week_1_pick_percent = st.slider("Detroit Lions Week 1 Pick Percent:", -1, 100) / 100
-                det_week_1_pick_percent_percent = det_week_1_pick_percent*100
-                if det_week_1_pick_percent < 0:
-                    st.write(f"Detroit Lions Week 1 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Detroit Lions Week 1 Pick Percent: :green[{det_week_1_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                gb_week_1_pick_percent = st.slider("Green Bay Packers Week 1 Pick Percent:", -1, 100) / 100
-                gb_week_1_pick_percent_percent = gb_week_1_pick_percent*100
-                if gb_week_1_pick_percent < 0:
-                    st.write(f"Green Bay Packers Week 1 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Green Bay Packers Week 1 Pick Percent: :green[{gb_week_1_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                hou_week_1_pick_percent = st.slider("Houston Texans Week 1 Pick Percent:", -1, 100) / 100
-                hou_week_1_pick_percent_percent = hou_week_1_pick_percent*100
-                if hou_week_1_pick_percent < 0:
-                    st.write(f"Houston Texans Week 1 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Houston Texans Week 1 Pick Percent: :green[{hou_week_1_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                ind_week_1_pick_percent = st.slider("Indianapoils Colts Week 1 Pick Percent:", -1, 100) / 100
-                ind_week_1_pick_percent_percent = ind_week_1_pick_percent*100
-                if ind_week_1_pick_percent < 0:
-                    st.write(f"Indianapoils Colts Week 1 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Indianapoils Colts Week 1 Pick Percent: :green[{ind_week_1_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                jax_week_1_pick_percent = st.slider("Jacksonville Jaguars Week 1 Pick Percent:", -1, 100) / 100
-                jax_week_1_pick_percent_percent = jax_week_1_pick_percent*100
-                if jax_week_1_pick_percent < 0:
-                    st.write(f"Jacksonville Jaguars Week 1 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Jacksonville Jaguars Week 1 Pick Percent: :green[{jax_week_1_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                kc_week_1_pick_percent = st.slider("Kansas City Chiefs Week 1 Pick Percent:", -1, 100) / 100
-                kc_week_1_pick_percent_percent = kc_week_1_pick_percent*100
-                if kc_week_1_pick_percent < 0:
-                    st.write(f"Kansas City Chiefs Week 1 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Kansas City Chiefs Week 1 Pick Percent: :green[{kc_week_1_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                lv_week_1_pick_percent = st.slider("Las Vegas Raiders Week 1 Pick Percent:", -1, 100) / 100
-                lv_week_1_pick_percent_percent = lv_week_1_pick_percent*100
-                if lv_week_1_pick_percent < 0:
-                    st.write(f"Las Vegas Raiders Week 1 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Las vegas Raiders Week 1 Pick Percent: :green[{lv_week_1_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                lac_week_1_pick_percent = st.slider("Los Angeles Chargers Week 1 Pick Percent:", -1, 100) / 100
-                lac_week_1_pick_percent_percent = lac_week_1_pick_percent*100
-                if lac_week_1_pick_percent < 0:
-                    st.write(f"Los Angeles Chargers Week 1 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Los angeles Chargers Week 1 Pick Percent: :green[{lac_week_1_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                lar_week_1_pick_percent = st.slider("Los Angeles Rams Week 1 Pick Percent:", -1, 100) / 100
-                lar_week_1_pick_percent_percent = lar_week_1_pick_percent*100
-                if lar_week_1_pick_percent < 0:
-                    st.write(f"Los Angeles Rams Week 1 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Los Angeles Rams Week 1 Pick Percent: :green[{lar_week_1_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                mia_week_1_pick_percent = st.slider("Miami Dolphins Week 1 Pick Percent:", -1, 100) / 100
-                mia_week_1_pick_percent_percent = mia_week_1_pick_percent*100
-                if mia_week_1_pick_percent < 0:
-                    st.write(f"Miami Dolphins Week 1 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Miami Dolphins Week 1 Pick Percent: :green[{mia_week_1_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                min_week_1_pick_percent = st.slider("Minnesota Vikings Week 1 Pick Percent:", -1, 100) / 100
-                min_week_1_pick_percent_percent = min_week_1_pick_percent*100
-                if min_week_1_pick_percent < 0:
-                    st.write(f"Minnesota Vikings Week 1 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Minnesota Vikings Week 1 Pick Percent: :green[{min_week_1_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                ne_week_1_pick_percent = st.slider("New England Patriots Week 1 Pick Percent:", -1, 100) / 100
-                ne_week_1_pick_percent_percent = ne_week_1_pick_percent*100
-                if ne_week_1_pick_percent < 0:
-                    st.write(f"New England Patriots Week 1 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"New England Patriots Week 1 Pick Percent: :green[{ne_week_1_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                no_week_1_pick_percent = st.slider("New Orleans Saints Week 1 Pick Percent:", -1, 100) / 100
-                no_week_1_pick_percent_percent = no_week_1_pick_percent*100
-                if no_week_1_pick_percent < 0:
-                    st.write(f"New Orleans Saints Week 1 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"New Orleans Saints Week 1 Pick Percent: :green[{no_week_1_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                nyg_week_1_pick_percent = st.slider("New York Giants Week 1 Pick Percent:", -1, 100) / 100
-                nyg_week_1_pick_percent_percent = nyg_week_1_pick_percent*100
-                if nyg_week_1_pick_percent < 0:
-                    st.write(f"New York Giants Week 1 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"New York Giants Week 1 Pick Percent: :green[{nyg_week_1_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                nyj_week_1_pick_percent = st.slider("New York Jets Week 1 Pick Percent:", -1, 100) / 100
-                nyj_week_1_pick_percent_percent = nyj_week_1_pick_percent*100
-                if nyj_week_1_pick_percent < 0:
-                    st.write(f"New York Jets Week 1 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"New York Jets Week 1 Pick Percent: :green[{nyj_week_1_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                phi_week_1_pick_percent = st.slider("Philadelphia Eagles Week 1 Pick Percent:", -1, 100) / 100
-                phi_week_1_pick_percent_percent = phi_week_1_pick_percent*100
-                if phi_week_1_pick_percent < 0:
-                    st.write(f"Philadelphia Eagles Week 1 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Philadelphia Eagles Week 1 Pick Percent: :green[{phi_week_1_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                pit_week_1_pick_percent = st.slider("Pittsburgh Steelers Week 1 Pick Percent:", -1, 100) / 100
-                pit_week_1_pick_percent_percent = pit_week_1_pick_percent*100
-                if pit_week_1_pick_percent < 0:
-                    st.write(f"Pittsburgh Steelers Week 1 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Pittsburgh Steelers Week 1 Pick Percent: :green[{pit_week_1_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                sf_week_1_pick_percent = st.slider("San Francisco 49ers Week 1 Pick Percent:", -1, 100) / 100
-                sf_week_1_pick_percent_percent = sf_week_1_pick_percent*100
-                if sf_week_1_pick_percent < 0:
-                    st.write(f"San Francisco 49ers Week 1 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"San Francisco 49ers Week 1 Pick Percent: :green[{sf_week_1_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                sea_week_1_pick_percent = st.slider("Seattle Seahawks Week 1 Pick Percent:", -1, 100) / 100
-                sea_week_1_pick_percent_percent = sea_week_1_pick_percent*100
-                if sea_week_1_pick_percent < 0:
-                    st.write(f"Seattle Seahawks Week 1 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Seattle Seahawks Week 1 Pick Percent: :green[{sea_week_1_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                tb_week_1_pick_percent = st.slider("Tampa Bay Buccaneers Week 1 Pick Percent:", -1, 100) / 100
-                tb_week_1_pick_percent_percent = tb_week_1_pick_percent*100
-                if tb_week_1_pick_percent < 0:
-                    st.write(f"Tampa Bay Buccaneers Week 1 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Tampa Bay Buccaneers Week 1 Pick Percent: :green[{tb_week_1_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                ten_week_1_pick_percent = st.slider("Tennessee Titans Week 1 Pick Percent:", -1, 100) / 100
-                ten_week_1_pick_percent_percent = ten_week_1_pick_percent*100
-                if ten_week_1_pick_percent < 0:
-                    st.write(f"Tennessee Titans Week 1 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Tennessee Titans Week 1 Pick Percent: :green[{ten_week_1_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                was_week_1_pick_percent = st.slider("Washington Commanders Week 1 Pick Percent:", -1, 100) / 100
-                was_week_1_pick_percent_percent = was_week_1_pick_percent*100
-                if was_week_1_pick_percent < 0:
-                    st.write(f"Washington Commanders Week 1 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Washington Commanders Week 1 Pick Percent: :green[{was_week_1_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-            st.write('')
-            st.write('')
-        if starting_week <= 2 and ending_week > 2:
-            week_2_pick_percents = st.checkbox('Add Week 2 Pick Percentages?', help = "Check this box if you want to adjust the estimated pick percentages for each team in week 2.")
-            if week_2_pick_percents:
-                st.write('')
-                st.subheader('Week 2 Estimated Pick Percentages')
-                st.write('')
-                az_week_2_pick_percent = st.slider("Arizona Cardinals Week 2 Pick Percent:", -1, 100) / 100
-                az_week_2_pick_percent_percent = az_week_2_pick_percent*100
-                if az_week_2_pick_percent < 0:
-                    st.write(f"Arizona Cardinals Week 2 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Arizona Cardinals Week 2 Pick Percent: :green[{az_week_2_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                atl_week_2_pick_percent = st.slider("Atlanta Falcons Week 2 Pick Percent:", -1, 100) / 100
-                atl_week_2_pick_percent_percent = atl_week_2_pick_percent*100
-                if atl_week_2_pick_percent < 0:
-                    st.write(f"Atlanta Falcons Week 2 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Atlanta Falcons Week 2 Pick Percent: :green[{atl_week_2_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                bal_week_2_pick_percent = st.slider("Baltimore Ravens Week 2 Pick Percent:", -1, 100) / 100
-                bal_week_2_pick_percent_percent = bal_week_2_pick_percent*100
-                if bal_week_2_pick_percent < 0:
-                    st.write(f"Baltimore Ravens Week 2 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Baltimore Ravenss Week 2 Pick Percent: :green[{bal_week_2_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                buf_week_2_pick_percent = st.slider("Buffalo Bills Week 2 Pick Percent:", -1, 100) / 100
-                buf_week_2_pick_percent_percent = buf_week_2_pick_percent*100
-                if buf_week_2_pick_percent < 0:
-                    st.write(f"Buffalo Bills Week 2 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Buffalo Bills Week 2 Pick Percent: :green[{buf_week_2_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                car_week_2_pick_percent = st.slider("Carolina Panthers Week 2 Pick Percent:", -1, 100) / 100
-                car_week_2_pick_percent_percent = car_week_2_pick_percent*100
-                if car_week_2_pick_percent < 0:
-                    st.write(f"Carolina Panthers Week 2 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Carolina Panthers Week 2 Pick Percent: :green[{car_week_2_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                chi_week_2_pick_percent = st.slider("Chicago Bears Week 2 Pick Percent:", -1, 100) / 100
-                chi_week_2_pick_percent_percent = chi_week_2_pick_percent*100
-                if chi_week_2_pick_percent < 0:
-                    st.write(f"Chicago Bears Week 2 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Chicago Bears Week 2 Pick Percent: :green[{chi_week_2_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                cin_week_2_pick_percent = st.slider("Cincinnati Bengals Week 2 Pick Percent:", -1, 100) / 100
-                cin_week_2_pick_percent_percent = cin_week_2_pick_percent*100
-                if cin_week_2_pick_percent < 0:
-                    st.write(f"Cincinnati Bengals Week 2 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Cincinnati Bengals Week 2 Pick Percent: :green[{cin_week_2_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                cle_week_2_pick_percent = st.slider("Cleveland Browns Week 2 Pick Percent:", -1, 100) / 100
-                cle_week_2_pick_percent_percent = cle_week_2_pick_percent*100
-                if cle_week_2_pick_percent < 0:
-                    st.write(f"Cleveland Browns Week 2 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Cleveland Browns Week 2 Pick Percent: :green[{cle_week_2_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                dal_week_2_pick_percent = st.slider("Dallas Cowboys Week 2 Pick Percent:", -1, 100) / 100
-                dal_week_2_pick_percent_percent = dal_week_2_pick_percent*100
-                if dal_week_2_pick_percent < 0:
-                    st.write(f"Dallas Cowboys Week 2 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Dallas Cowboys Week 2 Pick Percent: :green[{dal_week_2_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                den_week_2_pick_percent = st.slider("Denver Broncos Week 2 Pick Percent:", -1, 100) / 100
-                den_week_2_pick_percent_percent = den_week_2_pick_percent*100
-                if den_week_2_pick_percent < 0:
-                    st.write(f"Denver Broncos Week 2 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Denver Broncos Week 2 Pick Percent: :green[{den_week_2_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                det_week_2_pick_percent = st.slider("Detroit Lions Week 2 Pick Percent:", -1, 100) / 100
-                det_week_2_pick_percent_percent = det_week_2_pick_percent*100
-                if det_week_2_pick_percent < 0:
-                    st.write(f"Detroit Lions Week 2 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Detroit Lions Week 2 Pick Percent: :green[{det_week_2_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                gb_week_2_pick_percent = st.slider("Green Bay Packers Week 2 Pick Percent:", -1, 100) / 100
-                gb_week_2_pick_percent_percent = gb_week_2_pick_percent*100
-                if gb_week_2_pick_percent < 0:
-                    st.write(f"Green Bay Packers Week 2 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Green Bay Packers Week 2 Pick Percent: :green[{gb_week_2_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                hou_week_2_pick_percent = st.slider("Houston Texans Week 2 Pick Percent:", -1, 100) / 100
-                hou_week_2_pick_percent_percent = hou_week_2_pick_percent*100
-                if hou_week_2_pick_percent < 0:
-                    st.write(f"Houston Texans Week 2 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Houston Texans Week 2 Pick Percent: :green[{hou_week_2_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                ind_week_2_pick_percent = st.slider("Indianapoils Colts Week 2 Pick Percent:", -1, 100) / 100
-                ind_week_2_pick_percent_percent = ind_week_2_pick_percent*100
-                if ind_week_2_pick_percent < 0:
-                    st.write(f"Indianapoils Colts Week 2 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Indianapoils Colts Week 2 Pick Percent: :green[{ind_week_2_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                jax_week_2_pick_percent = st.slider("Jacksonville Jaguars Week 2 Pick Percent:", -1, 100) / 100
-                jax_week_2_pick_percent_percent = jax_week_2_pick_percent*100
-                if jax_week_2_pick_percent < 0:
-                    st.write(f"Jacksonville Jaguars Week 2 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Jacksonville Jaguars Week 2 Pick Percent: :green[{jax_week_2_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                kc_week_2_pick_percent = st.slider("Kansas City Chiefs Week 2 Pick Percent:", -1, 100) / 100
-                kc_week_2_pick_percent_percent = kc_week_2_pick_percent*100
-                if kc_week_2_pick_percent < 0:
-                    st.write(f"Kansas City Chiefs Week 2 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Kansas City Chiefs Week 2 Pick Percent: :green[{kc_week_2_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                lv_week_2_pick_percent = st.slider("Las Vegas Raiders Week 2 Pick Percent:", -1, 100) / 100
-                lv_week_2_pick_percent_percent = lv_week_2_pick_percent*100
-                if lv_week_2_pick_percent < 0:
-                    st.write(f"Las Vegas Raiders Week 2 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Las vegas Raiders Week 2 Pick Percent: :green[{lv_week_2_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                lac_week_2_pick_percent = st.slider("Los Angeles Chargers Week 2 Pick Percent:", -1, 100) / 100
-                lac_week_2_pick_percent_percent = lac_week_2_pick_percent*100
-                if lac_week_2_pick_percent < 0:
-                    st.write(f"Los Angeles Chargers Week 2 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Los angeles Chargers Week 2 Pick Percent: :green[{lac_week_2_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                lar_week_2_pick_percent = st.slider("Los Angeles Rams Week 2 Pick Percent:", -1, 100) / 100
-                lar_week_2_pick_percent_percent = lar_week_2_pick_percent*100
-                if lar_week_2_pick_percent < 0:
-                    st.write(f"Los Angeles Rams Week 2 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Los Angeles Rams Week 2 Pick Percent: :green[{lar_week_2_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                mia_week_2_pick_percent = st.slider("Miami Dolphins Week 2 Pick Percent:", -1, 100) / 100
-                mia_week_2_pick_percent_percent = mia_week_2_pick_percent*100
-                if mia_week_2_pick_percent < 0:
-                    st.write(f"Miami Dolphins Week 2 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Miami Dolphins Week 2 Pick Percent: :green[{mia_week_2_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                min_week_2_pick_percent = st.slider("Minnesota Vikings Week 2 Pick Percent:", -1, 100) / 100
-                min_week_2_pick_percent_percent = min_week_2_pick_percent*100
-                if min_week_2_pick_percent < 0:
-                    st.write(f"Minnesota Vikings Week 2 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Minnesota Vikings Week 2 Pick Percent: :green[{min_week_2_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                ne_week_2_pick_percent = st.slider("New England Patriots Week 2 Pick Percent:", -1, 100) / 100
-                ne_week_2_pick_percent_percent = ne_week_2_pick_percent*100
-                if ne_week_2_pick_percent < 0:
-                    st.write(f"New England Patriots Week 2 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"New England Patriots Week 2 Pick Percent: :green[{ne_week_2_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                no_week_2_pick_percent = st.slider("New Orleans Saints Week 2 Pick Percent:", -1, 100) / 100
-                no_week_2_pick_percent_percent = no_week_2_pick_percent*100
-                if no_week_2_pick_percent < 0:
-                    st.write(f"New Orleans Saints Week 2 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"New Orleans Saints Week 2 Pick Percent: :green[{no_week_2_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                nyg_week_2_pick_percent = st.slider("New York Giants Week 2 Pick Percent:", -1, 100) / 100
-                nyg_week_2_pick_percent_percent = nyg_week_2_pick_percent*100
-                if nyg_week_2_pick_percent < 0:
-                    st.write(f"New York Giants Week 2 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"New York Giants Week 2 Pick Percent: :green[{nyg_week_2_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                nyj_week_2_pick_percent = st.slider("New York Jets Week 2 Pick Percent:", -1, 100) / 100
-                nyj_week_2_pick_percent_percent = nyj_week_2_pick_percent*100
-                if nyj_week_2_pick_percent < 0:
-                    st.write(f"New York Jets Week 2 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"New York Jets Week 2 Pick Percent: :green[{nyj_week_2_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                phi_week_2_pick_percent = st.slider("Philadelphia Eagles Week 2 Pick Percent:", -1, 100) / 100
-                phi_week_2_pick_percent_percent = phi_week_2_pick_percent*100
-                if phi_week_2_pick_percent < 0:
-                    st.write(f"Philadelphia Eagles Week 2 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Philadelphia Eagles Week 2 Pick Percent: :green[{phi_week_2_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                pit_week_2_pick_percent = st.slider("Pittsburgh Steelers Week 2 Pick Percent:", -1, 100) / 100
-                pit_week_2_pick_percent_percent = pit_week_2_pick_percent*100
-                if pit_week_2_pick_percent < 0:
-                    st.write(f"Pittsburgh Steelers Week 2 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Pittsburgh Steelers Week 2 Pick Percent: :green[{pit_week_2_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                sf_week_2_pick_percent = st.slider("San Francisco 49ers Week 2 Pick Percent:", -1, 100) / 100
-                sf_week_2_pick_percent_percent = sf_week_2_pick_percent*100
-                if sf_week_2_pick_percent < 0:
-                    st.write(f"San Francisco 49ers Week 2 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"San Francisco 49ers Week 2 Pick Percent: :green[{sf_week_2_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                sea_week_2_pick_percent = st.slider("Seattle Seahawks Week 2 Pick Percent:", -1, 100) / 100
-                sea_week_2_pick_percent_percent = sea_week_2_pick_percent*100
-                if sea_week_2_pick_percent < 0:
-                    st.write(f"Seattle Seahawks Week 2 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Seattle Seahawks Week 2 Pick Percent: :green[{sea_week_2_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                tb_week_2_pick_percent = st.slider("Tampa Bay Buccaneers Week 2 Pick Percent:", -1, 100) / 100
-                tb_week_2_pick_percent_percent = tb_week_2_pick_percent*100
-                if tb_week_2_pick_percent < 0:
-                    st.write(f"Tampa Bay Buccaneers Week 2 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Tampa Bay Buccaneers Week 2 Pick Percent: :green[{tb_week_2_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                ten_week_2_pick_percent = st.slider("Tennessee Titans Week 2 Pick Percent:", -1, 100) / 100
-                ten_week_2_pick_percent_percent = ten_week_2_pick_percent*100
-                if ten_week_2_pick_percent < 0:
-                    st.write(f"Tennessee Titans Week 2 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Tennessee Titans Week 2 Pick Percent: :green[{ten_week_2_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                was_week_2_pick_percent = st.slider("Washington Commanders Week 2 Pick Percent:", -1, 100) / 100
-                was_week_2_pick_percent_percent = was_week_2_pick_percent*100
-                if was_week_2_pick_percent < 0:
-                    st.write(f"Washington Commanders Week 2 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Washington Commanders Week 2 Pick Percent: :green[{was_week_2_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-            st.write('')
-            st.write('')
-        if starting_week <= 3 and ending_week > 3:
-            week_3_pick_percents = st.checkbox('Add Week 3 Pick Percentages?', help = "Check this box if you want to adjust the estimated pick percentages for each team in week 3.")
-            if week_3_pick_percents:
-                st.write('')
-                st.subheader('Week 3 Estimated Pick Percentages')
-                st.write('')
-                az_week_3_pick_percent = st.slider("Arizona Cardinals Week 3 Pick Percent:", -1, 100) / 100
-                az_week_3_pick_percent_percent = az_week_3_pick_percent*100
-                if az_week_3_pick_percent < 0:
-                    st.write(f"Arizona Cardinals Week 3 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Arizona Cardinals Week 3 Pick Percent: :green[{az_week_3_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                atl_week_3_pick_percent = st.slider("Atlanta Falcons Week 3 Pick Percent:", -1, 100) / 100
-                atl_week_3_pick_percent_percent = atl_week_3_pick_percent*100
-                if atl_week_3_pick_percent < 0:
-                    st.write(f"Atlanta Falcons Week 3 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Atlanta Falcons Week 3 Pick Percent: :green[{atl_week_3_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                bal_week_3_pick_percent = st.slider("Baltimore Ravens Week 3 Pick Percent:", -1, 100) / 100
-                bal_week_3_pick_percent_percent = bal_week_3_pick_percent*100
-                if bal_week_3_pick_percent < 0:
-                    st.write(f"Baltimore Ravens Week 3 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Baltimore Ravenss Week 3 Pick Percent: :green[{bal_week_3_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                buf_week_3_pick_percent = st.slider("Buffalo Bills Week 3 Pick Percent:", -1, 100) / 100
-                buf_week_3_pick_percent_percent = buf_week_3_pick_percent*100
-                if buf_week_3_pick_percent < 0:
-                    st.write(f"Buffalo Bills Week 3 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Buffalo Bills Week 3 Pick Percent: :green[{buf_week_3_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                car_week_3_pick_percent = st.slider("Carolina Panthers Week 3 Pick Percent:", -1, 100) / 100
-                car_week_3_pick_percent_percent = car_week_3_pick_percent*100
-                if car_week_3_pick_percent < 0:
-                    st.write(f"Carolina Panthers Week 3 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Carolina Panthers Week 3 Pick Percent: :green[{car_week_3_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                chi_week_3_pick_percent = st.slider("Chicago Bears Week 3 Pick Percent:", -1, 100) / 100
-                chi_week_3_pick_percent_percent = chi_week_3_pick_percent*100
-                if chi_week_3_pick_percent < 0:
-                    st.write(f"Chicago Bears Week 3 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Chicago Bears Week 3 Pick Percent: :green[{chi_week_3_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                cin_week_3_pick_percent = st.slider("Cincinnati Bengals Week 3 Pick Percent:", -1, 100) / 100
-                cin_week_3_pick_percent_percent = cin_week_3_pick_percent*100
-                if cin_week_3_pick_percent < 0:
-                    st.write(f"Cincinnati Bengals Week 3 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Cincinnati Bengals Week 3 Pick Percent: :green[{cin_week_3_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                cle_week_3_pick_percent = st.slider("Cleveland Browns Week 3 Pick Percent:", -1, 100) / 100
-                cle_week_3_pick_percent_percent = cle_week_3_pick_percent*100
-                if cle_week_3_pick_percent < 0:
-                    st.write(f"Cleveland Browns Week 3 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Cleveland Browns Week 3 Pick Percent: :green[{cle_week_3_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                dal_week_3_pick_percent = st.slider("Dallas Cowboys Week 3 Pick Percent:", -1, 100) / 100
-                dal_week_3_pick_percent_percent = dal_week_3_pick_percent*100
-                if dal_week_3_pick_percent < 0:
-                    st.write(f"Dallas Cowboys Week 3 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Dallas Cowboys Week 3 Pick Percent: :green[{dal_week_3_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                den_week_3_pick_percent = st.slider("Denver Broncos Week 3 Pick Percent:", -1, 100) / 100
-                den_week_3_pick_percent_percent = den_week_3_pick_percent*100
-                if den_week_3_pick_percent < 0:
-                    st.write(f"Denver Broncos Week 3 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Denver Broncos Week 3 Pick Percent: :green[{den_week_3_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                det_week_3_pick_percent = st.slider("Detroit Lions Week 3 Pick Percent:", -1, 100) / 100
-                det_week_3_pick_percent_percent = det_week_3_pick_percent*100
-                if det_week_3_pick_percent < 0:
-                    st.write(f"Detroit Lions Week 3 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Detroit Lions Week 3 Pick Percent: :green[{det_week_3_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                gb_week_3_pick_percent = st.slider("Green Bay Packers Week 3 Pick Percent:", -1, 100) / 100
-                gb_week_3_pick_percent_percent = gb_week_3_pick_percent*100
-                if gb_week_3_pick_percent < 0:
-                    st.write(f"Green Bay Packers Week 3 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Green Bay Packers Week 3 Pick Percent: :green[{gb_week_3_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                hou_week_3_pick_percent = st.slider("Houston Texans Week 3 Pick Percent:", -1, 100) / 100
-                hou_week_3_pick_percent_percent = hou_week_3_pick_percent*100
-                if hou_week_3_pick_percent < 0:
-                    st.write(f"Houston Texans Week 3 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Houston Texans Week 3 Pick Percent: :green[{hou_week_3_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                ind_week_3_pick_percent = st.slider("Indianapoils Colts Week 3 Pick Percent:", -1, 100) / 100
-                ind_week_3_pick_percent_percent = ind_week_3_pick_percent*100
-                if ind_week_3_pick_percent < 0:
-                    st.write(f"Indianapoils Colts Week 3 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Indianapoils Colts Week 3 Pick Percent: :green[{ind_week_3_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                jax_week_3_pick_percent = st.slider("Jacksonville Jaguars Week 3 Pick Percent:", -1, 100) / 100
-                jax_week_3_pick_percent_percent = jax_week_3_pick_percent*100
-                if jax_week_3_pick_percent < 0:
-                    st.write(f"Jacksonville Jaguars Week 3 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Jacksonville Jaguars Week 3 Pick Percent: :green[{jax_week_3_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                kc_week_3_pick_percent = st.slider("Kansas City Chiefs Week 3 Pick Percent:", -1, 100) / 100
-                kc_week_3_pick_percent_percent = kc_week_3_pick_percent*100
-                if kc_week_3_pick_percent < 0:
-                    st.write(f"Kansas City Chiefs Week 3 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Kansas City Chiefs Week 3 Pick Percent: :green[{kc_week_3_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                lv_week_3_pick_percent = st.slider("Las Vegas Raiders Week 3 Pick Percent:", -1, 100) / 100
-                lv_week_3_pick_percent_percent = lv_week_3_pick_percent*100
-                if lv_week_3_pick_percent < 0:
-                    st.write(f"Las Vegas Raiders Week 3 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Las vegas Raiders Week 3 Pick Percent: :green[{lv_week_3_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                lac_week_3_pick_percent = st.slider("Los Angeles Chargers Week 3 Pick Percent:", -1, 100) / 100
-                lac_week_3_pick_percent_percent = lac_week_3_pick_percent*100
-                if lac_week_3_pick_percent < 0:
-                    st.write(f"Los Angeles Chargers Week 3 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Los angeles Chargers Week 3 Pick Percent: :green[{lac_week_3_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                lar_week_3_pick_percent = st.slider("Los Angeles Rams Week 3 Pick Percent:", -1, 100) / 100
-                lar_week_3_pick_percent_percent = lar_week_3_pick_percent*100
-                if lar_week_3_pick_percent < 0:
-                    st.write(f"Los Angeles Rams Week 3 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Los Angeles Rams Week 3 Pick Percent: :green[{lar_week_3_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                mia_week_3_pick_percent = st.slider("Miami Dolphins Week 3 Pick Percent:", -1, 100) / 100
-                mia_week_3_pick_percent_percent = mia_week_3_pick_percent*100
-                if mia_week_3_pick_percent < 0:
-                    st.write(f"Miami Dolphins Week 3 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Miami Dolphins Week 3 Pick Percent: :green[{mia_week_3_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                min_week_3_pick_percent = st.slider("Minnesota Vikings Week 3 Pick Percent:", -1, 100) / 100
-                min_week_3_pick_percent_percent = min_week_3_pick_percent*100
-                if min_week_3_pick_percent < 0:
-                    st.write(f"Minnesota Vikings Week 3 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Minnesota Vikings Week 3 Pick Percent: :green[{min_week_3_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                ne_week_3_pick_percent = st.slider("New England Patriots Week 3 Pick Percent:", -1, 100) / 100
-                ne_week_3_pick_percent_percent = ne_week_3_pick_percent*100
-                if ne_week_3_pick_percent < 0:
-                    st.write(f"New England Patriots Week 3 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"New England Patriots Week 3 Pick Percent: :green[{ne_week_3_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                no_week_3_pick_percent = st.slider("New Orleans Saints Week 3 Pick Percent:", -1, 100) / 100
-                no_week_3_pick_percent_percent = no_week_3_pick_percent*100
-                if no_week_3_pick_percent < 0:
-                    st.write(f"New Orleans Saints Week 3 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"New Orleans Saints Week 3 Pick Percent: :green[{no_week_3_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                nyg_week_3_pick_percent = st.slider("New York Giants Week 3 Pick Percent:", -1, 100) / 100
-                nyg_week_3_pick_percent_percent = nyg_week_3_pick_percent*100
-                if nyg_week_3_pick_percent < 0:
-                    st.write(f"New York Giants Week 3 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"New York Giants Week 3 Pick Percent: :green[{nyg_week_3_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                nyj_week_3_pick_percent = st.slider("New York Jets Week 3 Pick Percent:", -1, 100) / 100
-                nyj_week_3_pick_percent_percent = nyj_week_3_pick_percent*100
-                if nyj_week_3_pick_percent < 0:
-                    st.write(f"New York Jets Week 3 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"New York Jets Week 3 Pick Percent: :green[{nyj_week_3_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                phi_week_3_pick_percent = st.slider("Philadelphia Eagles Week 3 Pick Percent:", -1, 100) / 100
-                phi_week_3_pick_percent_percent = phi_week_3_pick_percent*100
-                if phi_week_3_pick_percent < 0:
-                    st.write(f"Philadelphia Eagles Week 3 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Philadelphia Eagles Week 3 Pick Percent: :green[{phi_week_3_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                pit_week_3_pick_percent = st.slider("Pittsburgh Steelers Week 3 Pick Percent:", -1, 100) / 100
-                pit_week_3_pick_percent_percent = pit_week_3_pick_percent*100
-                if pit_week_3_pick_percent < 0:
-                    st.write(f"Pittsburgh Steelers Week 3 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Pittsburgh Steelers Week 3 Pick Percent: :green[{pit_week_3_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                sf_week_3_pick_percent = st.slider("San Francisco 49ers Week 3 Pick Percent:", -1, 100) / 100
-                sf_week_3_pick_percent_percent = sf_week_3_pick_percent*100
-                if sf_week_3_pick_percent < 0:
-                    st.write(f"San Francisco 49ers Week 3 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"San Francisco 49ers Week 3 Pick Percent: :green[{sf_week_3_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                sea_week_3_pick_percent = st.slider("Seattle Seahawks Week 3 Pick Percent:", -1, 100) / 100
-                sea_week_3_pick_percent_percent = sea_week_3_pick_percent*100
-                if sea_week_3_pick_percent < 0:
-                    st.write(f"Seattle Seahawks Week 3 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Seattle Seahawks Week 3 Pick Percent: :green[{sea_week_3_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                tb_week_3_pick_percent = st.slider("Tampa Bay Buccaneers Week 3 Pick Percent:", -1, 100) / 100
-                tb_week_3_pick_percent_percent = tb_week_3_pick_percent*100
-                if tb_week_3_pick_percent < 0:
-                    st.write(f"Tampa Bay Buccaneers Week 3 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Tampa Bay Buccaneers Week 3 Pick Percent: :green[{tb_week_3_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                ten_week_3_pick_percent = st.slider("Tennessee Titans Week 3 Pick Percent:", -1, 100) / 100
-                ten_week_3_pick_percent_percent = ten_week_3_pick_percent*100
-                if ten_week_3_pick_percent < 0:
-                    st.write(f"Tennessee Titans Week 3 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Tennessee Titans Week 3 Pick Percent: :green[{ten_week_3_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                was_week_3_pick_percent = st.slider("Washington Commanders Week 3 Pick Percent:", -1, 100) / 100
-                was_week_3_pick_percent_percent = was_week_3_pick_percent*100
-                if was_week_3_pick_percent < 0:
-                    st.write(f"Washington Commanders Week 3 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Washington Commanders Week 3 Pick Percent: :green[{was_week_3_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-            st.write('')
-            st.write('')
-        if starting_week <= 4 and ending_week > 4:
-            week_4_pick_percents = st.checkbox('Add Week 4 Pick Percentages?')
-            if week_4_pick_percents:
-                st.write('')
-                st.subheader('Week 4 Estimated Pick Percentages', help = "Check this box if you want to adjust the estimated pick percentages for each team in week 4.")
-                st.write('')
-                az_week_4_pick_percent = st.slider("Arizona Cardinals Week 4 Pick Percent:", -1, 100) / 100
-                az_week_4_pick_percent_percent = az_week_4_pick_percent*100
-                if az_week_4_pick_percent < 0:
-                    st.write(f"Arizona Cardinals Week 4 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Arizona Cardinals Week 4 Pick Percent: :green[{az_week_4_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                atl_week_4_pick_percent = st.slider("Atlanta Falcons Week 4 Pick Percent:", -1, 100) / 100
-                atl_week_4_pick_percent_percent = atl_week_4_pick_percent*100
-                if atl_week_4_pick_percent < 0:
-                    st.write(f"Atlanta Falcons Week 4 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Atlanta Falcons Week 4 Pick Percent: :green[{atl_week_4_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                bal_week_4_pick_percent = st.slider("Baltimore Ravens Week 4 Pick Percent:", -1, 100) / 100
-                bal_week_4_pick_percent_percent = bal_week_4_pick_percent*100
-                if bal_week_4_pick_percent < 0:
-                    st.write(f"Baltimore Ravens Week 4 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Baltimore Ravenss Week 4 Pick Percent: :green[{bal_week_4_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                buf_week_4_pick_percent = st.slider("Buffalo Bills Week 4 Pick Percent:", -1, 100) / 100
-                buf_week_4_pick_percent_percent = buf_week_4_pick_percent*100
-                if buf_week_4_pick_percent < 0:
-                    st.write(f"Buffalo Bills Week 4 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Buffalo Bills Week 4 Pick Percent: :green[{buf_week_4_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                car_week_4_pick_percent = st.slider("Carolina Panthers Week 4 Pick Percent:", -1, 100) / 100
-                car_week_4_pick_percent_percent = car_week_4_pick_percent*100
-                if car_week_4_pick_percent < 0:
-                    st.write(f"Carolina Panthers Week 4 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Carolina Panthers Week 4 Pick Percent: :green[{car_week_4_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                chi_week_4_pick_percent = st.slider("Chicago Bears Week 4 Pick Percent:", -1, 100) / 100
-                chi_week_4_pick_percent_percent = chi_week_4_pick_percent*100
-                if chi_week_4_pick_percent < 0:
-                    st.write(f"Chicago Bears Week 4 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Chicago Bears Week 4 Pick Percent: :green[{chi_week_4_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                cin_week_4_pick_percent = st.slider("Cincinnati Bengals Week 4 Pick Percent:", -1, 100) / 100
-                cin_week_4_pick_percent_percent = cin_week_4_pick_percent*100
-                if cin_week_4_pick_percent < 0:
-                    st.write(f"Cincinnati Bengals Week 4 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Cincinnati Bengals Week 4 Pick Percent: :green[{cin_week_4_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                cle_week_4_pick_percent = st.slider("Cleveland Browns Week 4 Pick Percent:", -1, 100) / 100
-                cle_week_4_pick_percent_percent = cle_week_4_pick_percent*100
-                if cle_week_4_pick_percent < 0:
-                    st.write(f"Cleveland Browns Week 4 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Cleveland Browns Week 4 Pick Percent: :green[{cle_week_4_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                dal_week_4_pick_percent = st.slider("Dallas Cowboys Week 4 Pick Percent:", -1, 100) / 100
-                dal_week_4_pick_percent_percent = dal_week_4_pick_percent*100
-                if dal_week_4_pick_percent < 0:
-                    st.write(f"Dallas Cowboys Week 4 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Dallas Cowboys Week 4 Pick Percent: :green[{dal_week_4_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                den_week_4_pick_percent = st.slider("Denver Broncos Week 4 Pick Percent:", -1, 100) / 100
-                den_week_4_pick_percent_percent = den_week_4_pick_percent*100
-                if den_week_4_pick_percent < 0:
-                    st.write(f"Denver Broncos Week 4 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Denver Broncos Week 4 Pick Percent: :green[{den_week_4_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                det_week_4_pick_percent = st.slider("Detroit Lions Week 4 Pick Percent:", -1, 100) / 100
-                det_week_4_pick_percent_percent = det_week_4_pick_percent*100
-                if det_week_4_pick_percent < 0:
-                    st.write(f"Detroit Lions Week 4 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Detroit Lions Week 4 Pick Percent: :green[{det_week_4_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                gb_week_4_pick_percent = st.slider("Green Bay Packers Week 4 Pick Percent:", -1, 100) / 100
-                gb_week_4_pick_percent_percent = gb_week_4_pick_percent*100
-                if gb_week_4_pick_percent < 0:
-                    st.write(f"Green Bay Packers Week 4 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Green Bay Packers Week 4 Pick Percent: :green[{gb_week_4_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                hou_week_4_pick_percent = st.slider("Houston Texans Week 4 Pick Percent:", -1, 100) / 100
-                hou_week_4_pick_percent_percent = hou_week_4_pick_percent*100
-                if hou_week_4_pick_percent < 0:
-                    st.write(f"Houston Texans Week 4 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Houston Texans Week 4 Pick Percent: :green[{hou_week_4_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                ind_week_4_pick_percent = st.slider("Indianapoils Colts Week 4 Pick Percent:", -1, 100) / 100
-                ind_week_4_pick_percent_percent = ind_week_4_pick_percent*100
-                if ind_week_4_pick_percent < 0:
-                    st.write(f"Indianapoils Colts Week 4 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Indianapoils Colts Week 4 Pick Percent: :green[{ind_week_4_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                jax_week_4_pick_percent = st.slider("Jacksonville Jaguars Week 4 Pick Percent:", -1, 100) / 100
-                jax_week_4_pick_percent_percent = jax_week_4_pick_percent*100
-                if jax_week_4_pick_percent < 0:
-                    st.write(f"Jacksonville Jaguars Week 4 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Jacksonville Jaguars Week 4 Pick Percent: :green[{jax_week_4_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                kc_week_4_pick_percent = st.slider("Kansas City Chiefs Week 4 Pick Percent:", -1, 100) / 100
-                kc_week_4_pick_percent_percent = kc_week_4_pick_percent*100
-                if kc_week_4_pick_percent < 0:
-                    st.write(f"Kansas City Chiefs Week 4 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Kansas City Chiefs Week 4 Pick Percent: :green[{kc_week_4_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                lv_week_4_pick_percent = st.slider("Las Vegas Raiders Week 4 Pick Percent:", -1, 100) / 100
-                lv_week_4_pick_percent_percent = lv_week_4_pick_percent*100
-                if lv_week_4_pick_percent < 0:
-                    st.write(f"Las Vegas Raiders Week 4 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Las vegas Raiders Week 4 Pick Percent: :green[{lv_week_4_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                lac_week_4_pick_percent = st.slider("Los Angeles Chargers Week 4 Pick Percent:", -1, 100) / 100
-                lac_week_4_pick_percent_percent = lac_week_4_pick_percent*100
-                if lac_week_4_pick_percent < 0:
-                    st.write(f"Los Angeles Chargers Week 4 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Los angeles Chargers Week 4 Pick Percent: :green[{lac_week_4_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                lar_week_4_pick_percent = st.slider("Los Angeles Rams Week 4 Pick Percent:", -1, 100) / 100
-                lar_week_4_pick_percent_percent = lar_week_4_pick_percent*100
-                if lar_week_4_pick_percent < 0:
-                    st.write(f"Los Angeles Rams Week 4 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Los Angeles Rams Week 4 Pick Percent: :green[{lar_week_4_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                mia_week_4_pick_percent = st.slider("Miami Dolphins Week 4 Pick Percent:", -1, 100) / 100
-                mia_week_4_pick_percent_percent = mia_week_4_pick_percent*100
-                if mia_week_4_pick_percent < 0:
-                    st.write(f"Miami Dolphins Week 4 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Miami Dolphins Week 4 Pick Percent: :green[{mia_week_4_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                min_week_4_pick_percent = st.slider("Minnesota Vikings Week 4 Pick Percent:", -1, 100) / 100
-                min_week_4_pick_percent_percent = min_week_4_pick_percent*100
-                if min_week_4_pick_percent < 0:
-                    st.write(f"Minnesota Vikings Week 4 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Minnesota Vikings Week 4 Pick Percent: :green[{min_week_4_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                ne_week_4_pick_percent = st.slider("New England Patriots Week 4 Pick Percent:", -1, 100) / 100
-                ne_week_4_pick_percent_percent = ne_week_4_pick_percent*100
-                if ne_week_4_pick_percent < 0:
-                    st.write(f"New England Patriots Week 4 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"New England Patriots Week 4 Pick Percent: :green[{ne_week_4_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                no_week_4_pick_percent = st.slider("New Orleans Saints Week 4 Pick Percent:", -1, 100) / 100
-                no_week_4_pick_percent_percent = no_week_4_pick_percent*100
-                if no_week_4_pick_percent < 0:
-                    st.write(f"New Orleans Saints Week 4 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"New Orleans Saints Week 4 Pick Percent: :green[{no_week_4_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                nyg_week_4_pick_percent = st.slider("New York Giants Week 4 Pick Percent:", -1, 100) / 100
-                nyg_week_4_pick_percent_percent = nyg_week_4_pick_percent*100
-                if nyg_week_4_pick_percent < 0:
-                    st.write(f"New York Giants Week 4 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"New York Giants Week 4 Pick Percent: :green[{nyg_week_4_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                nyj_week_4_pick_percent = st.slider("New York Jets Week 4 Pick Percent:", -1, 100) / 100
-                nyj_week_4_pick_percent_percent = nyj_week_4_pick_percent*100
-                if nyj_week_4_pick_percent < 0:
-                    st.write(f"New York Jets Week 4 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"New York Jets Week 4 Pick Percent: :green[{nyj_week_4_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                phi_week_4_pick_percent = st.slider("Philadelphia Eagles Week 4 Pick Percent:", -1, 100) / 100
-                phi_week_4_pick_percent_percent = phi_week_4_pick_percent*100
-                if phi_week_4_pick_percent < 0:
-                    st.write(f"Philadelphia Eagles Week 4 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Philadelphia Eagles Week 4 Pick Percent: :green[{phi_week_4_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                pit_week_4_pick_percent = st.slider("Pittsburgh Steelers Week 4 Pick Percent:", -1, 100) / 100
-                pit_week_4_pick_percent_percent = pit_week_4_pick_percent*100
-                if pit_week_4_pick_percent < 0:
-                    st.write(f"Pittsburgh Steelers Week 4 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Pittsburgh Steelers Week 4 Pick Percent: :green[{pit_week_4_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                sf_week_4_pick_percent = st.slider("San Francisco 49ers Week 4 Pick Percent:", -1, 100) / 100
-                sf_week_4_pick_percent_percent = sf_week_4_pick_percent*100
-                if sf_week_4_pick_percent < 0:
-                    st.write(f"San Francisco 49ers Week 4 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"San Francisco 49ers Week 4 Pick Percent: :green[{sf_week_4_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                sea_week_4_pick_percent = st.slider("Seattle Seahawks Week 4 Pick Percent:", -1, 100) / 100
-                sea_week_4_pick_percent_percent = sea_week_4_pick_percent*100
-                if sea_week_4_pick_percent < 0:
-                    st.write(f"Seattle Seahawks Week 4 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Seattle Seahawks Week 4 Pick Percent: :green[{sea_week_4_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                tb_week_4_pick_percent = st.slider("Tampa Bay Buccaneers Week 4 Pick Percent:", -1, 100) / 100
-                tb_week_4_pick_percent_percent = tb_week_4_pick_percent*100
-                if tb_week_4_pick_percent < 0:
-                    st.write(f"Tampa Bay Buccaneers Week 4 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Tampa Bay Buccaneers Week 4 Pick Percent: :green[{tb_week_4_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                ten_week_4_pick_percent = st.slider("Tennessee Titans Week 4 Pick Percent:", -1, 100) / 100
-                ten_week_4_pick_percent_percent = ten_week_4_pick_percent*100
-                if ten_week_4_pick_percent < 0:
-                    st.write(f"Tennessee Titans Week 4 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Tennessee Titans Week 4 Pick Percent: :green[{ten_week_4_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                was_week_4_pick_percent = st.slider("Washington Commanders Week 4 Pick Percent:", -1, 100) / 100
-                was_week_4_pick_percent_percent = was_week_4_pick_percent*100
-                if was_week_4_pick_percent < 0:
-                    st.write(f"Washington Commanders Week 4 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Washington Commanders Week 4 Pick Percent: :green[{was_week_4_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-            st.write('')
-            st.write('')
-        if starting_week <= 5 and ending_week > 5:
-            week_5_pick_percents = st.checkbox('Add Week 5 Pick Percentages?', help = "Check this box if you want to adjust the estimated pick percentages for each team in week 5.")
-            if week_5_pick_percents:
-                st.write('')
-                st.subheader('Week 5 Estimated Pick Percentages')
-                st.write('')
-                az_week_5_pick_percent = st.slider("Arizona Cardinals Week 5 Pick Percent:", -1, 100) / 100
-                az_week_5_pick_percent_percent = az_week_5_pick_percent*100
-                if az_week_5_pick_percent < 0:
-                    st.write(f"Arizona Cardinals Week 5 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Arizona Cardinals Week 5 Pick Percent: :green[{az_week_5_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                atl_week_5_pick_percent = st.slider("Atlanta Falcons Week 5 Pick Percent:", -1, 100) / 100
-                atl_week_5_pick_percent_percent = atl_week_5_pick_percent*100
-                if atl_week_5_pick_percent < 0:
-                    st.write(f"Atlanta Falcons Week 5 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Atlanta Falcons Week 5 Pick Percent: :green[{atl_week_5_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                bal_week_5_pick_percent = st.slider("Baltimore Ravens Week 5 Pick Percent:", -1, 100) / 100
-                bal_week_5_pick_percent_percent = bal_week_5_pick_percent*100
-                if bal_week_5_pick_percent < 0:
-                    st.write(f"Baltimore Ravens Week 5 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Baltimore Ravenss Week 5 Pick Percent: :green[{bal_week_5_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                buf_week_5_pick_percent = st.slider("Buffalo Bills Week 5 Pick Percent:", -1, 100) / 100
-                buf_week_5_pick_percent_percent = buf_week_5_pick_percent*100
-                if buf_week_5_pick_percent < 0:
-                    st.write(f"Buffalo Bills Week 5 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Buffalo Bills Week 5 Pick Percent: :green[{buf_week_5_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                car_week_5_pick_percent = st.slider("Carolina Panthers Week 5 Pick Percent:", -1, 100) / 100
-                car_week_5_pick_percent_percent = car_week_5_pick_percent*100
-                if car_week_5_pick_percent < 0:
-                    st.write(f"Carolina Panthers Week 5 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Carolina Panthers Week 5 Pick Percent: :green[{car_week_5_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                chi_week_5_pick_percent = st.slider("Chicago Bears Week 5 Pick Percent:", -1, 100) / 100
-                chi_week_5_pick_percent_percent = chi_week_5_pick_percent*100
-                if chi_week_5_pick_percent < 0:
-                    st.write(f"Chicago Bears Week 5 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Chicago Bears Week 5 Pick Percent: :green[{chi_week_5_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                cin_week_5_pick_percent = st.slider("Cincinnati Bengals Week 5 Pick Percent:", -1, 100) / 100
-                cin_week_5_pick_percent_percent = cin_week_5_pick_percent*100
-                if cin_week_5_pick_percent < 0:
-                    st.write(f"Cincinnati Bengals Week 5 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Cincinnati Bengals Week 5 Pick Percent: :green[{cin_week_5_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                cle_week_5_pick_percent = st.slider("Cleveland Browns Week 5 Pick Percent:", -1, 100) / 100
-                cle_week_5_pick_percent_percent = cle_week_5_pick_percent*100
-                if cle_week_5_pick_percent < 0:
-                    st.write(f"Cleveland Browns Week 5 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Cleveland Browns Week 5 Pick Percent: :green[{cle_week_5_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                dal_week_5_pick_percent = st.slider("Dallas Cowboys Week 5 Pick Percent:", -1, 100) / 100
-                dal_week_5_pick_percent_percent = dal_week_5_pick_percent*100
-                if dal_week_5_pick_percent < 0:
-                    st.write(f"Dallas Cowboys Week 5 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Dallas Cowboys Week 5 Pick Percent: :green[{dal_week_5_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                den_week_5_pick_percent = st.slider("Denver Broncos Week 5 Pick Percent:", -1, 100) / 100
-                den_week_5_pick_percent_percent = den_week_5_pick_percent*100
-                if den_week_5_pick_percent < 0:
-                    st.write(f"Denver Broncos Week 5 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Denver Broncos Week 5 Pick Percent: :green[{den_week_5_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                det_week_5_pick_percent = st.slider("Detroit Lions Week 5 Pick Percent:", -1, 100) / 100
-                det_week_5_pick_percent_percent = det_week_5_pick_percent*100
-                if det_week_5_pick_percent < 0:
-                    st.write(f"Detroit Lions Week 5 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Detroit Lions Week 5 Pick Percent: :green[{det_week_5_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                gb_week_5_pick_percent = st.slider("Green Bay Packers Week 5 Pick Percent:", -1, 100) / 100
-                gb_week_5_pick_percent_percent = gb_week_5_pick_percent*100
-                if gb_week_5_pick_percent < 0:
-                    st.write(f"Green Bay Packers Week 5 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Green Bay Packers Week 5 Pick Percent: :green[{gb_week_5_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                hou_week_5_pick_percent = st.slider("Houston Texans Week 5 Pick Percent:", -1, 100) / 100
-                hou_week_5_pick_percent_percent = hou_week_5_pick_percent*100
-                if hou_week_5_pick_percent < 0:
-                    st.write(f"Houston Texans Week 5 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Houston Texans Week 5 Pick Percent: :green[{hou_week_5_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                ind_week_5_pick_percent = st.slider("Indianapoils Colts Week 5 Pick Percent:", -1, 100) / 100
-                ind_week_5_pick_percent_percent = ind_week_5_pick_percent*100
-                if ind_week_5_pick_percent < 0:
-                    st.write(f"Indianapoils Colts Week 5 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Indianapoils Colts Week 5 Pick Percent: :green[{ind_week_5_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                jax_week_5_pick_percent = st.slider("Jacksonville Jaguars Week 5 Pick Percent:", -1, 100) / 100
-                jax_week_5_pick_percent_percent = jax_week_5_pick_percent*100
-                if jax_week_5_pick_percent < 0:
-                    st.write(f"Jacksonville Jaguars Week 5 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Jacksonville Jaguars Week 5 Pick Percent: :green[{jax_week_5_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                kc_week_5_pick_percent = st.slider("Kansas City Chiefs Week 5 Pick Percent:", -1, 100) / 100
-                kc_week_5_pick_percent_percent = kc_week_5_pick_percent*100
-                if kc_week_5_pick_percent < 0:
-                    st.write(f"Kansas City Chiefs Week 5 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Kansas City Chiefs Week 5 Pick Percent: :green[{kc_week_5_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                lv_week_5_pick_percent = st.slider("Las Vegas Raiders Week 5 Pick Percent:", -1, 100) / 100
-                lv_week_5_pick_percent_percent = lv_week_5_pick_percent*100
-                if lv_week_5_pick_percent < 0:
-                    st.write(f"Las Vegas Raiders Week 5 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Las vegas Raiders Week 5 Pick Percent: :green[{lv_week_5_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                lac_week_5_pick_percent = st.slider("Los Angeles Chargers Week 5 Pick Percent:", -1, 100) / 100
-                lac_week_5_pick_percent_percent = lac_week_5_pick_percent*100
-                if lac_week_5_pick_percent < 0:
-                    st.write(f"Los Angeles Chargers Week 5 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Los angeles Chargers Week 5 Pick Percent: :green[{lac_week_5_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                lar_week_5_pick_percent = st.slider("Los Angeles Rams Week 5 Pick Percent:", -1, 100) / 100
-                lar_week_5_pick_percent_percent = lar_week_5_pick_percent*100
-                if lar_week_5_pick_percent < 0:
-                    st.write(f"Los Angeles Rams Week 5 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Los Angeles Rams Week 5 Pick Percent: :green[{lar_week_5_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                mia_week_5_pick_percent = st.slider("Miami Dolphins Week 5 Pick Percent:", -1, 100) / 100
-                mia_week_5_pick_percent_percent = mia_week_5_pick_percent*100
-                if mia_week_5_pick_percent < 0:
-                    st.write(f"Miami Dolphins Week 5 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Miami Dolphins Week 5 Pick Percent: :green[{mia_week_5_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                min_week_5_pick_percent = st.slider("Minnesota Vikings Week 5 Pick Percent:", -1, 100) / 100
-                min_week_5_pick_percent_percent = min_week_5_pick_percent*100
-                if min_week_5_pick_percent < 0:
-                    st.write(f"Minnesota Vikings Week 5 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Minnesota Vikings Week 5 Pick Percent: :green[{min_week_5_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                ne_week_5_pick_percent = st.slider("New England Patriots Week 5 Pick Percent:", -1, 100) / 100
-                ne_week_5_pick_percent_percent = ne_week_5_pick_percent*100
-                if ne_week_5_pick_percent < 0:
-                    st.write(f"New England Patriots Week 5 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"New England Patriots Week 5 Pick Percent: :green[{ne_week_5_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                no_week_5_pick_percent = st.slider("New Orleans Saints Week 5 Pick Percent:", -1, 100) / 100
-                no_week_5_pick_percent_percent = no_week_5_pick_percent*100
-                if no_week_5_pick_percent < 0:
-                    st.write(f"New Orleans Saints Week 5 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"New Orleans Saints Week 5 Pick Percent: :green[{no_week_5_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                nyg_week_5_pick_percent = st.slider("New York Giants Week 5 Pick Percent:", -1, 100) / 100
-                nyg_week_5_pick_percent_percent = nyg_week_5_pick_percent*100
-                if nyg_week_5_pick_percent < 0:
-                    st.write(f"New York Giants Week 5 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"New York Giants Week 5 Pick Percent: :green[{nyg_week_5_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                nyj_week_5_pick_percent = st.slider("New York Jets Week 5 Pick Percent:", -1, 100) / 100
-                nyj_week_5_pick_percent_percent = nyj_week_5_pick_percent*100
-                if nyj_week_5_pick_percent < 0:
-                    st.write(f"New York Jets Week 5 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"New York Jets Week 5 Pick Percent: :green[{nyj_week_5_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                phi_week_5_pick_percent = st.slider("Philadelphia Eagles Week 5 Pick Percent:", -1, 100) / 100
-                phi_week_5_pick_percent_percent = phi_week_5_pick_percent*100
-                if phi_week_5_pick_percent < 0:
-                    st.write(f"Philadelphia Eagles Week 5 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Philadelphia Eagles Week 5 Pick Percent: :green[{phi_week_5_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                pit_week_5_pick_percent = st.slider("Pittsburgh Steelers Week 5 Pick Percent:", -1, 100) / 100
-                pit_week_5_pick_percent_percent = pit_week_5_pick_percent*100
-                if pit_week_5_pick_percent < 0:
-                    st.write(f"Pittsburgh Steelers Week 5 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Pittsburgh Steelers Week 5 Pick Percent: :green[{pit_week_5_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                sf_week_5_pick_percent = st.slider("San Francisco 49ers Week 5 Pick Percent:", -1, 100) / 100
-                sf_week_5_pick_percent_percent = sf_week_5_pick_percent*100
-                if sf_week_5_pick_percent < 0:
-                    st.write(f"San Francisco 49ers Week 5 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"San Francisco 49ers Week 5 Pick Percent: :green[{sf_week_5_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                sea_week_5_pick_percent = st.slider("Seattle Seahawks Week 5 Pick Percent:", -1, 100) / 100
-                sea_week_5_pick_percent_percent = sea_week_5_pick_percent*100
-                if sea_week_5_pick_percent < 0:
-                    st.write(f"Seattle Seahawks Week 5 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Seattle Seahawks Week 5 Pick Percent: :green[{sea_week_5_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                tb_week_5_pick_percent = st.slider("Tampa Bay Buccaneers Week 5 Pick Percent:", -1, 100) / 100
-                tb_week_5_pick_percent_percent = tb_week_5_pick_percent*100
-                if tb_week_5_pick_percent < 0:
-                    st.write(f"Tampa Bay Buccaneers Week 5 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Tampa Bay Buccaneers Week 5 Pick Percent: :green[{tb_week_5_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                ten_week_5_pick_percent = st.slider("Tennessee Titans Week 5 Pick Percent:", -1, 100) / 100
-                ten_week_5_pick_percent_percent = ten_week_5_pick_percent*100
-                if ten_week_5_pick_percent < 0:
-                    st.write(f"Tennessee Titans Week 5 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Tennessee Titans Week 5 Pick Percent: :green[{ten_week_5_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                was_week_5_pick_percent = st.slider("Washington Commanders Week 5 Pick Percent:", -1, 100) / 100
-                was_week_5_pick_percent_percent = was_week_5_pick_percent*100
-                if was_week_5_pick_percent < 0:
-                    st.write(f"Washington Commanders Week 5 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Washington Commanders Week 5 Pick Percent: :green[{was_week_5_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-            st.write('')
-            st.write('')
-        if starting_week <= 6 and ending_week > 6:
-            week_6_pick_percents = st.checkbox('Add Week 6 Pick Percentages?', help = "Check this box if you want to adjust the estimated pick percentages for each team in week 6.")
-            if week_6_pick_percents:
-                st.write('')
-                st.subheader('Week 6 Estimated Pick Percentages')
-                st.write('')
-                az_week_6_pick_percent = st.slider("Arizona Cardinals Week 6 Pick Percent:", -1, 100) / 100
-                az_week_6_pick_percent_percent = az_week_6_pick_percent*100
-                if az_week_6_pick_percent < 0:
-                    st.write(f"Arizona Cardinals Week 6 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Arizona Cardinals Week 6 Pick Percent: :green[{az_week_6_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                atl_week_6_pick_percent = st.slider("Atlanta Falcons Week 6 Pick Percent:", -1, 100) / 100
-                atl_week_6_pick_percent_percent = atl_week_6_pick_percent*100
-                if atl_week_6_pick_percent < 0:
-                    st.write(f"Atlanta Falcons Week 6 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Atlanta Falcons Week 6 Pick Percent: :green[{atl_week_6_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                bal_week_6_pick_percent = st.slider("Baltimore Ravens Week 6 Pick Percent:", -1, 100) / 100
-                bal_week_6_pick_percent_percent = bal_week_6_pick_percent*100
-                if bal_week_6_pick_percent < 0:
-                    st.write(f"Baltimore Ravens Week 6 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Baltimore Ravenss Week 6 Pick Percent: :green[{bal_week_6_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                buf_week_6_pick_percent = st.slider("Buffalo Bills Week 6 Pick Percent:", -1, 100) / 100
-                buf_week_6_pick_percent_percent = buf_week_6_pick_percent*100
-                if buf_week_6_pick_percent < 0:
-                    st.write(f"Buffalo Bills Week 6 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Buffalo Bills Week 6 Pick Percent: :green[{buf_week_6_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                car_week_6_pick_percent = st.slider("Carolina Panthers Week 6 Pick Percent:", -1, 100) / 100
-                car_week_6_pick_percent_percent = car_week_6_pick_percent*100
-                if car_week_6_pick_percent < 0:
-                    st.write(f"Carolina Panthers Week 6 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Carolina Panthers Week 6 Pick Percent: :green[{car_week_6_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                chi_week_6_pick_percent = st.slider("Chicago Bears Week 6 Pick Percent:", -1, 100) / 100
-                chi_week_6_pick_percent_percent = chi_week_6_pick_percent*100
-                if chi_week_6_pick_percent < 0:
-                    st.write(f"Chicago Bears Week 6 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Chicago Bears Week 6 Pick Percent: :green[{chi_week_6_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                cin_week_6_pick_percent = st.slider("Cincinnati Bengals Week 6 Pick Percent:", -1, 100) / 100
-                cin_week_6_pick_percent_percent = cin_week_6_pick_percent*100
-                if cin_week_6_pick_percent < 0:
-                    st.write(f"Cincinnati Bengals Week 6 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Cincinnati Bengals Week 6 Pick Percent: :green[{cin_week_6_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                cle_week_6_pick_percent = st.slider("Cleveland Browns Week 6 Pick Percent:", -1, 100) / 100
-                cle_week_6_pick_percent_percent = cle_week_6_pick_percent*100
-                if cle_week_6_pick_percent < 0:
-                    st.write(f"Cleveland Browns Week 6 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Cleveland Browns Week 6 Pick Percent: :green[{cle_week_6_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                dal_week_6_pick_percent = st.slider("Dallas Cowboys Week 6 Pick Percent:", -1, 100) / 100
-                dal_week_6_pick_percent_percent = dal_week_6_pick_percent*100
-                if dal_week_6_pick_percent < 0:
-                    st.write(f"Dallas Cowboys Week 6 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Dallas Cowboys Week 6 Pick Percent: :green[{dal_week_6_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                den_week_6_pick_percent = st.slider("Denver Broncos Week 6 Pick Percent:", -1, 100) / 100
-                den_week_6_pick_percent_percent = den_week_6_pick_percent*100
-                if den_week_6_pick_percent < 0:
-                    st.write(f"Denver Broncos Week 6 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Denver Broncos Week 6 Pick Percent: :green[{den_week_6_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                det_week_6_pick_percent = st.slider("Detroit Lions Week 6 Pick Percent:", -1, 100) / 100
-                det_week_6_pick_percent_percent = det_week_6_pick_percent*100
-                if det_week_6_pick_percent < 0:
-                    st.write(f"Detroit Lions Week 6 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Detroit Lions Week 6 Pick Percent: :green[{det_week_6_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                gb_week_6_pick_percent = st.slider("Green Bay Packers Week 6 Pick Percent:", -1, 100) / 100
-                gb_week_6_pick_percent_percent = gb_week_6_pick_percent*100
-                if gb_week_6_pick_percent < 0:
-                    st.write(f"Green Bay Packers Week 6 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Green Bay Packers Week 6 Pick Percent: :green[{gb_week_6_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                hou_week_6_pick_percent = st.slider("Houston Texans Week 6 Pick Percent:", -1, 100) / 100
-                hou_week_6_pick_percent_percent = hou_week_6_pick_percent*100
-                if hou_week_6_pick_percent < 0:
-                    st.write(f"Houston Texans Week 6 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Houston Texans Week 6 Pick Percent: :green[{hou_week_6_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                ind_week_6_pick_percent = st.slider("Indianapoils Colts Week 6 Pick Percent:", -1, 100) / 100
-                ind_week_6_pick_percent_percent = ind_week_6_pick_percent*100
-                if ind_week_6_pick_percent < 0:
-                    st.write(f"Indianapoils Colts Week 6 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Indianapoils Colts Week 6 Pick Percent: :green[{ind_week_6_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                jax_week_6_pick_percent = st.slider("Jacksonville Jaguars Week 6 Pick Percent:", -1, 100) / 100
-                jax_week_6_pick_percent_percent = jax_week_6_pick_percent*100
-                if jax_week_6_pick_percent < 0:
-                    st.write(f"Jacksonville Jaguars Week 6 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Jacksonville Jaguars Week 6 Pick Percent: :green[{jax_week_6_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                kc_week_6_pick_percent = st.slider("Kansas City Chiefs Week 6 Pick Percent:", -1, 100) / 100
-                kc_week_6_pick_percent_percent = kc_week_6_pick_percent*100
-                if kc_week_6_pick_percent < 0:
-                    st.write(f"Kansas City Chiefs Week 6 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Kansas City Chiefs Week 6 Pick Percent: :green[{kc_week_6_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                lv_week_6_pick_percent = st.slider("Las Vegas Raiders Week 6 Pick Percent:", -1, 100) / 100
-                lv_week_6_pick_percent_percent = lv_week_6_pick_percent*100
-                if lv_week_6_pick_percent < 0:
-                    st.write(f"Las Vegas Raiders Week 6 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Las vegas Raiders Week 6 Pick Percent: :green[{lv_week_6_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                lac_week_6_pick_percent = st.slider("Los Angeles Chargers Week 6 Pick Percent:", -1, 100) / 100
-                lac_week_6_pick_percent_percent = lac_week_6_pick_percent*100
-                if lac_week_6_pick_percent < 0:
-                    st.write(f"Los Angeles Chargers Week 6 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Los angeles Chargers Week 6 Pick Percent: :green[{lac_week_6_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                lar_week_6_pick_percent = st.slider("Los Angeles Rams Week 6 Pick Percent:", -1, 100) / 100
-                lar_week_6_pick_percent_percent = lar_week_6_pick_percent*100
-                if lar_week_6_pick_percent < 0:
-                    st.write(f"Los Angeles Rams Week 6 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Los Angeles Rams Week 6 Pick Percent: :green[{lar_week_6_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                mia_week_6_pick_percent = st.slider("Miami Dolphins Week 6 Pick Percent:", -1, 100) / 100
-                mia_week_6_pick_percent_percent = mia_week_6_pick_percent*100
-                if mia_week_6_pick_percent < 0:
-                    st.write(f"Miami Dolphins Week 6 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Miami Dolphins Week 6 Pick Percent: :green[{mia_week_6_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                min_week_6_pick_percent = st.slider("Minnesota Vikings Week 6 Pick Percent:", -1, 100) / 100
-                min_week_6_pick_percent_percent = min_week_6_pick_percent*100
-                if min_week_6_pick_percent < 0:
-                    st.write(f"Minnesota Vikings Week 6 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Minnesota Vikings Week 6 Pick Percent: :green[{min_week_6_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                ne_week_6_pick_percent = st.slider("New England Patriots Week 6 Pick Percent:", -1, 100) / 100
-                ne_week_6_pick_percent_percent = ne_week_6_pick_percent*100
-                if ne_week_6_pick_percent < 0:
-                    st.write(f"New England Patriots Week 6 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"New England Patriots Week 6 Pick Percent: :green[{ne_week_6_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                no_week_6_pick_percent = st.slider("New Orleans Saints Week 6 Pick Percent:", -1, 100) / 100
-                no_week_6_pick_percent_percent = no_week_6_pick_percent*100
-                if no_week_6_pick_percent < 0:
-                    st.write(f"New Orleans Saints Week 6 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"New Orleans Saints Week 6 Pick Percent: :green[{no_week_6_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                nyg_week_6_pick_percent = st.slider("New York Giants Week 6 Pick Percent:", -1, 100) / 100
-                nyg_week_6_pick_percent_percent = nyg_week_6_pick_percent*100
-                if nyg_week_6_pick_percent < 0:
-                    st.write(f"New York Giants Week 6 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"New York Giants Week 6 Pick Percent: :green[{nyg_week_6_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                nyj_week_6_pick_percent = st.slider("New York Jets Week 6 Pick Percent:", -1, 100) / 100
-                nyj_week_6_pick_percent_percent = nyj_week_6_pick_percent*100
-                if nyj_week_6_pick_percent < 0:
-                    st.write(f"New York Jets Week 6 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"New York Jets Week 6 Pick Percent: :green[{nyj_week_6_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                phi_week_6_pick_percent = st.slider("Philadelphia Eagles Week 6 Pick Percent:", -1, 100) / 100
-                phi_week_6_pick_percent_percent = phi_week_6_pick_percent*100
-                if phi_week_6_pick_percent < 0:
-                    st.write(f"Philadelphia Eagles Week 6 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Philadelphia Eagles Week 6 Pick Percent: :green[{phi_week_6_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                pit_week_6_pick_percent = st.slider("Pittsburgh Steelers Week 6 Pick Percent:", -1, 100) / 100
-                pit_week_6_pick_percent_percent = pit_week_6_pick_percent*100
-                if pit_week_6_pick_percent < 0:
-                    st.write(f"Pittsburgh Steelers Week 6 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Pittsburgh Steelers Week 6 Pick Percent: :green[{pit_week_6_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                sf_week_6_pick_percent = st.slider("San Francisco 49ers Week 6 Pick Percent:", -1, 100) / 100
-                sf_week_6_pick_percent_percent = sf_week_6_pick_percent*100
-                if sf_week_6_pick_percent < 0:
-                    st.write(f"San Francisco 49ers Week 6 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"San Francisco 49ers Week 6 Pick Percent: :green[{sf_week_6_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                sea_week_6_pick_percent = st.slider("Seattle Seahawks Week 6 Pick Percent:", -1, 100) / 100
-                sea_week_6_pick_percent_percent = sea_week_6_pick_percent*100
-                if sea_week_6_pick_percent < 0:
-                    st.write(f"Seattle Seahawks Week 6 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Seattle Seahawks Week 6 Pick Percent: :green[{sea_week_6_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                tb_week_6_pick_percent = st.slider("Tampa Bay Buccaneers Week 6 Pick Percent:", -1, 100) / 100
-                tb_week_6_pick_percent_percent = tb_week_6_pick_percent*100
-                if tb_week_6_pick_percent < 0:
-                    st.write(f"Tampa Bay Buccaneers Week 6 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Tampa Bay Buccaneers Week 6 Pick Percent: :green[{tb_week_6_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                ten_week_6_pick_percent = st.slider("Tennessee Titans Week 6 Pick Percent:", -1, 100) / 100
-                ten_week_6_pick_percent_percent = ten_week_6_pick_percent*100
-                if ten_week_6_pick_percent < 0:
-                    st.write(f"Tennessee Titans Week 6 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Tennessee Titans Week 6 Pick Percent: :green[{ten_week_6_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                was_week_6_pick_percent = st.slider("Washington Commanders Week 6 Pick Percent:", -1, 100) / 100
-                was_week_6_pick_percent_percent = was_week_6_pick_percent*100
-                if was_week_6_pick_percent < 0:
-                    st.write(f"Washington Commanders Week 6 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Washington Commanders Week 6 Pick Percent: :green[{was_week_6_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-            st.write('')
-            st.write('')
-        if starting_week <= 7 and ending_week > 7:
-            week_7_pick_percents = st.checkbox('Add Week 7 Pick Percentages?', help = "Check this box if you want to adjust the estimated pick percentages for each team in week 7.")
-            if week_7_pick_percents:
-                st.write('')
-                st.subheader('Week 7 Estimated Pick Percentages')
-                st.write('')
-                az_week_7_pick_percent = st.slider("Arizona Cardinals Week 7 Pick Percent:", -1, 100) / 100
-                az_week_7_pick_percent_percent = az_week_7_pick_percent*100
-                if az_week_7_pick_percent < 0:
-                    st.write(f"Arizona Cardinals Week 7 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Arizona Cardinals Week 7 Pick Percent: :green[{az_week_7_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                atl_week_7_pick_percent = st.slider("Atlanta Falcons Week 7 Pick Percent:", -1, 100) / 100
-                atl_week_7_pick_percent_percent = atl_week_7_pick_percent*100
-                if atl_week_7_pick_percent < 0:
-                    st.write(f"Atlanta Falcons Week 7 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Atlanta Falcons Week 7 Pick Percent: :green[{atl_week_7_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                bal_week_7_pick_percent = st.slider("Baltimore Ravens Week 7 Pick Percent:", -1, 100) / 100
-                bal_week_7_pick_percent_percent = bal_week_7_pick_percent*100
-                if bal_week_7_pick_percent < 0:
-                    st.write(f"Baltimore Ravens Week 7 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Baltimore Ravenss Week 7 Pick Percent: :green[{bal_week_7_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                buf_week_7_pick_percent = st.slider("Buffalo Bills Week 7 Pick Percent:", -1, 100) / 100
-                buf_week_7_pick_percent_percent = buf_week_7_pick_percent*100
-                if buf_week_7_pick_percent < 0:
-                    st.write(f"Buffalo Bills Week 7 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Buffalo Bills Week 7 Pick Percent: :green[{buf_week_7_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                car_week_7_pick_percent = st.slider("Carolina Panthers Week 7 Pick Percent:", -1, 100) / 100
-                car_week_7_pick_percent_percent = car_week_7_pick_percent*100
-                if car_week_7_pick_percent < 0:
-                    st.write(f"Carolina Panthers Week 7 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Carolina Panthers Week 7 Pick Percent: :green[{car_week_7_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                chi_week_7_pick_percent = st.slider("Chicago Bears Week 7 Pick Percent:", -1, 100) / 100
-                chi_week_7_pick_percent_percent = chi_week_7_pick_percent*100
-                if chi_week_7_pick_percent < 0:
-                    st.write(f"Chicago Bears Week 7 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Chicago Bears Week 7 Pick Percent: :green[{chi_week_7_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                cin_week_7_pick_percent = st.slider("Cincinnati Bengals Week 7 Pick Percent:", -1, 100) / 100
-                cin_week_7_pick_percent_percent = cin_week_7_pick_percent*100
-                if cin_week_7_pick_percent < 0:
-                    st.write(f"Cincinnati Bengals Week 7 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Cincinnati Bengals Week 7 Pick Percent: :green[{cin_week_7_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                cle_week_7_pick_percent = st.slider("Cleveland Browns Week 7 Pick Percent:", -1, 100) / 100
-                cle_week_7_pick_percent_percent = cle_week_7_pick_percent*100
-                if cle_week_7_pick_percent < 0:
-                    st.write(f"Cleveland Browns Week 7 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Cleveland Browns Week 7 Pick Percent: :green[{cle_week_7_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                dal_week_7_pick_percent = st.slider("Dallas Cowboys Week 7 Pick Percent:", -1, 100) / 100
-                dal_week_7_pick_percent_percent = dal_week_7_pick_percent*100
-                if dal_week_7_pick_percent < 0:
-                    st.write(f"Dallas Cowboys Week 7 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Dallas Cowboys Week 7 Pick Percent: :green[{dal_week_7_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                den_week_7_pick_percent = st.slider("Denver Broncos Week 7 Pick Percent:", -1, 100) / 100
-                den_week_7_pick_percent_percent = den_week_7_pick_percent*100
-                if den_week_7_pick_percent < 0:
-                    st.write(f"Denver Broncos Week 7 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Denver Broncos Week 7 Pick Percent: :green[{den_week_7_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                det_week_7_pick_percent = st.slider("Detroit Lions Week 7 Pick Percent:", -1, 100) / 100
-                det_week_7_pick_percent_percent = det_week_7_pick_percent*100
-                if det_week_7_pick_percent < 0:
-                    st.write(f"Detroit Lions Week 7 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Detroit Lions Week 7 Pick Percent: :green[{det_week_7_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                gb_week_7_pick_percent = st.slider("Green Bay Packers Week 7 Pick Percent:", -1, 100) / 100
-                gb_week_7_pick_percent_percent = gb_week_7_pick_percent*100
-                if gb_week_7_pick_percent < 0:
-                    st.write(f"Green Bay Packers Week 7 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Green Bay Packers Week 7 Pick Percent: :green[{gb_week_7_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                hou_week_7_pick_percent = st.slider("Houston Texans Week 7 Pick Percent:", -1, 100) / 100
-                hou_week_7_pick_percent_percent = hou_week_7_pick_percent*100
-                if hou_week_7_pick_percent < 0:
-                    st.write(f"Houston Texans Week 7 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Houston Texans Week 7 Pick Percent: :green[{hou_week_7_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                ind_week_7_pick_percent = st.slider("Indianapoils Colts Week 7 Pick Percent:", -1, 100) / 100
-                ind_week_7_pick_percent_percent = ind_week_7_pick_percent*100
-                if ind_week_7_pick_percent < 0:
-                    st.write(f"Indianapoils Colts Week 7 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Indianapoils Colts Week 7 Pick Percent: :green[{ind_week_7_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                jax_week_7_pick_percent = st.slider("Jacksonville Jaguars Week 7 Pick Percent:", -1, 100) / 100
-                jax_week_7_pick_percent_percent = jax_week_7_pick_percent*100
-                if jax_week_7_pick_percent < 0:
-                    st.write(f"Jacksonville Jaguars Week 7 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Jacksonville Jaguars Week 7 Pick Percent: :green[{jax_week_7_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                kc_week_7_pick_percent = st.slider("Kansas City Chiefs Week 7 Pick Percent:", -1, 100) / 100
-                kc_week_7_pick_percent_percent = kc_week_7_pick_percent*100
-                if kc_week_7_pick_percent < 0:
-                    st.write(f"Kansas City Chiefs Week 7 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Kansas City Chiefs Week 7 Pick Percent: :green[{kc_week_7_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                lv_week_7_pick_percent = st.slider("Las Vegas Raiders Week 7 Pick Percent:", -1, 100) / 100
-                lv_week_7_pick_percent_percent = lv_week_7_pick_percent*100
-                if lv_week_7_pick_percent < 0:
-                    st.write(f"Las Vegas Raiders Week 7 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Las vegas Raiders Week 7 Pick Percent: :green[{lv_week_7_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                lac_week_7_pick_percent = st.slider("Los Angeles Chargers Week 7 Pick Percent:", -1, 100) / 100
-                lac_week_7_pick_percent_percent = lac_week_7_pick_percent*100
-                if lac_week_7_pick_percent < 0:
-                    st.write(f"Los Angeles Chargers Week 7 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Los angeles Chargers Week 7 Pick Percent: :green[{lac_week_7_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                lar_week_7_pick_percent = st.slider("Los Angeles Rams Week 7 Pick Percent:", -1, 100) / 100
-                lar_week_7_pick_percent_percent = lar_week_7_pick_percent*100
-                if lar_week_7_pick_percent < 0:
-                    st.write(f"Los Angeles Rams Week 7 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Los Angeles Rams Week 7 Pick Percent: :green[{lar_week_7_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                mia_week_7_pick_percent = st.slider("Miami Dolphins Week 7 Pick Percent:", -1, 100) / 100
-                mia_week_7_pick_percent_percent = mia_week_7_pick_percent*100
-                if mia_week_7_pick_percent < 0:
-                    st.write(f"Miami Dolphins Week 7 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Miami Dolphins Week 7 Pick Percent: :green[{mia_week_7_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                min_week_7_pick_percent = st.slider("Minnesota Vikings Week 7 Pick Percent:", -1, 100) / 100
-                min_week_7_pick_percent_percent = min_week_7_pick_percent*100
-                if min_week_7_pick_percent < 0:
-                    st.write(f"Minnesota Vikings Week 7 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Minnesota Vikings Week 7 Pick Percent: :green[{min_week_7_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                ne_week_7_pick_percent = st.slider("New England Patriots Week 7 Pick Percent:", -1, 100) / 100
-                ne_week_7_pick_percent_percent = ne_week_7_pick_percent*100
-                if ne_week_7_pick_percent < 0:
-                    st.write(f"New England Patriots Week 7 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"New England Patriots Week 7 Pick Percent: :green[{ne_week_7_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                no_week_7_pick_percent = st.slider("New Orleans Saints Week 7 Pick Percent:", -1, 100) / 100
-                no_week_7_pick_percent_percent = no_week_7_pick_percent*100
-                if no_week_7_pick_percent < 0:
-                    st.write(f"New Orleans Saints Week 7 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"New Orleans Saints Week 7 Pick Percent: :green[{no_week_7_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                nyg_week_7_pick_percent = st.slider("New York Giants Week 7 Pick Percent:", -1, 100) / 100
-                nyg_week_7_pick_percent_percent = nyg_week_7_pick_percent*100
-                if nyg_week_7_pick_percent < 0:
-                    st.write(f"New York Giants Week 7 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"New York Giants Week 7 Pick Percent: :green[{nyg_week_7_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                nyj_week_7_pick_percent = st.slider("New York Jets Week 7 Pick Percent:", -1, 100) / 100
-                nyj_week_7_pick_percent_percent = nyj_week_7_pick_percent*100
-                if nyj_week_7_pick_percent < 0:
-                    st.write(f"New York Jets Week 7 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"New York Jets Week 7 Pick Percent: :green[{nyj_week_7_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                phi_week_7_pick_percent = st.slider("Philadelphia Eagles Week 7 Pick Percent:", -1, 100) / 100
-                phi_week_7_pick_percent_percent = phi_week_7_pick_percent*100
-                if phi_week_7_pick_percent < 0:
-                    st.write(f"Philadelphia Eagles Week 7 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Philadelphia Eagles Week 7 Pick Percent: :green[{phi_week_7_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                pit_week_7_pick_percent = st.slider("Pittsburgh Steelers Week 7 Pick Percent:", -1, 100) / 100
-                pit_week_7_pick_percent_percent = pit_week_7_pick_percent*100
-                if pit_week_7_pick_percent < 0:
-                    st.write(f"Pittsburgh Steelers Week 7 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Pittsburgh Steelers Week 7 Pick Percent: :green[{pit_week_7_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                sf_week_7_pick_percent = st.slider("San Francisco 49ers Week 7 Pick Percent:", -1, 100) / 100
-                sf_week_7_pick_percent_percent = sf_week_7_pick_percent*100
-                if sf_week_7_pick_percent < 0:
-                    st.write(f"San Francisco 49ers Week 7 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"San Francisco 49ers Week 7 Pick Percent: :green[{sf_week_7_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                sea_week_7_pick_percent = st.slider("Seattle Seahawks Week 7 Pick Percent:", -1, 100) / 100
-                sea_week_7_pick_percent_percent = sea_week_7_pick_percent*100
-                if sea_week_7_pick_percent < 0:
-                    st.write(f"Seattle Seahawks Week 7 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Seattle Seahawks Week 7 Pick Percent: :green[{sea_week_7_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                tb_week_7_pick_percent = st.slider("Tampa Bay Buccaneers Week 7 Pick Percent:", -1, 100) / 100
-                tb_week_7_pick_percent_percent = tb_week_7_pick_percent*100
-                if tb_week_7_pick_percent < 0:
-                    st.write(f"Tampa Bay Buccaneers Week 7 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Tampa Bay Buccaneers Week 7 Pick Percent: :green[{tb_week_7_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                ten_week_7_pick_percent = st.slider("Tennessee Titans Week 7 Pick Percent:", -1, 100) / 100
-                ten_week_7_pick_percent_percent = ten_week_7_pick_percent*100
-                if ten_week_7_pick_percent < 0:
-                    st.write(f"Tennessee Titans Week 7 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Tennessee Titans Week 7 Pick Percent: :green[{ten_week_7_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                was_week_7_pick_percent = st.slider("Washington Commanders Week 7 Pick Percent:", -1, 100) / 100
-                was_week_7_pick_percent_percent = was_week_7_pick_percent*100
-                if was_week_7_pick_percent < 0:
-                    st.write(f"Washington Commanders Week 7 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Washington Commanders Week 7 Pick Percent: :green[{was_week_7_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-            st.write('')
-            st.write('')
-        if starting_week <= 8 and ending_week > 8:
-            week_8_pick_percents = st.checkbox('Add Week 8 Pick Percentages?', help = "Check this box if you want to adjust the estimated pick percentages for each team in week 8.")
-            if week_8_pick_percents:
-                st.write('')
-                st.subheader('Week 8 Estimated Pick Percentages')
-                st.write('')
-                az_week_8_pick_percent = st.slider("Arizona Cardinals Week 8 Pick Percent:", -1, 100) / 100
-                az_week_8_pick_percent_percent = az_week_8_pick_percent*100
-                if az_week_8_pick_percent < 0:
-                    st.write(f"Arizona Cardinals Week 8 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Arizona Cardinals Week 8 Pick Percent: :green[{az_week_8_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                atl_week_8_pick_percent = st.slider("Atlanta Falcons Week 8 Pick Percent:", -1, 100) / 100
-                atl_week_8_pick_percent_percent = atl_week_8_pick_percent*100
-                if atl_week_8_pick_percent < 0:
-                    st.write(f"Atlanta Falcons Week 8 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Atlanta Falcons Week 8 Pick Percent: :green[{atl_week_8_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                bal_week_8_pick_percent = st.slider("Baltimore Ravens Week 8 Pick Percent:", -1, 100) / 100
-                bal_week_8_pick_percent_percent = bal_week_8_pick_percent*100
-                if bal_week_8_pick_percent < 0:
-                    st.write(f"Baltimore Ravens Week 8 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Baltimore Ravenss Week 8 Pick Percent: :green[{bal_week_8_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                buf_week_8_pick_percent = st.slider("Buffalo Bills Week 8 Pick Percent:", -1, 100) / 100
-                buf_week_8_pick_percent_percent = buf_week_8_pick_percent*100
-                if buf_week_8_pick_percent < 0:
-                    st.write(f"Buffalo Bills Week 8 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Buffalo Bills Week 8 Pick Percent: :green[{buf_week_8_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                car_week_8_pick_percent = st.slider("Carolina Panthers Week 8 Pick Percent:", -1, 100) / 100
-                car_week_8_pick_percent_percent = car_week_8_pick_percent*100
-                if car_week_8_pick_percent < 0:
-                    st.write(f"Carolina Panthers Week 8 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Carolina Panthers Week 8 Pick Percent: :green[{car_week_8_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                chi_week_8_pick_percent = st.slider("Chicago Bears Week 8 Pick Percent:", -1, 100) / 100
-                chi_week_8_pick_percent_percent = chi_week_8_pick_percent*100
-                if chi_week_8_pick_percent < 0:
-                    st.write(f"Chicago Bears Week 8 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Chicago Bears Week 8 Pick Percent: :green[{chi_week_8_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                cin_week_8_pick_percent = st.slider("Cincinnati Bengals Week 8 Pick Percent:", -1, 100) / 100
-                cin_week_8_pick_percent_percent = cin_week_8_pick_percent*100
-                if cin_week_8_pick_percent < 0:
-                    st.write(f"Cincinnati Bengals Week 8 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Cincinnati Bengals Week 8 Pick Percent: :green[{cin_week_8_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                cle_week_8_pick_percent = st.slider("Cleveland Browns Week 8 Pick Percent:", -1, 100) / 100
-                cle_week_8_pick_percent_percent = cle_week_8_pick_percent*100
-                if cle_week_8_pick_percent < 0:
-                    st.write(f"Cleveland Browns Week 8 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Cleveland Browns Week 8 Pick Percent: :green[{cle_week_8_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                dal_week_8_pick_percent = st.slider("Dallas Cowboys Week 8 Pick Percent:", -1, 100) / 100
-                dal_week_8_pick_percent_percent = dal_week_8_pick_percent*100
-                if dal_week_8_pick_percent < 0:
-                    st.write(f"Dallas Cowboys Week 8 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Dallas Cowboys Week 8 Pick Percent: :green[{dal_week_8_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                den_week_8_pick_percent = st.slider("Denver Broncos Week 8 Pick Percent:", -1, 100) / 100
-                den_week_8_pick_percent_percent = den_week_8_pick_percent*100
-                if den_week_8_pick_percent < 0:
-                    st.write(f"Denver Broncos Week 8 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Denver Broncos Week 8 Pick Percent: :green[{den_week_8_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                det_week_8_pick_percent = st.slider("Detroit Lions Week 8 Pick Percent:", -1, 100) / 100
-                det_week_8_pick_percent_percent = det_week_8_pick_percent*100
-                if det_week_8_pick_percent < 0:
-                    st.write(f"Detroit Lions Week 8 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Detroit Lions Week 8 Pick Percent: :green[{det_week_8_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                gb_week_8_pick_percent = st.slider("Green Bay Packers Week 8 Pick Percent:", -1, 100) / 100
-                gb_week_8_pick_percent_percent = gb_week_8_pick_percent*100
-                if gb_week_8_pick_percent < 0:
-                    st.write(f"Green Bay Packers Week 8 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Green Bay Packers Week 8 Pick Percent: :green[{gb_week_8_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                hou_week_8_pick_percent = st.slider("Houston Texans Week 8 Pick Percent:", -1, 100) / 100
-                hou_week_8_pick_percent_percent = hou_week_8_pick_percent*100
-                if hou_week_8_pick_percent < 0:
-                    st.write(f"Houston Texans Week 8 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Houston Texans Week 8 Pick Percent: :green[{hou_week_8_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                ind_week_8_pick_percent = st.slider("Indianapoils Colts Week 8 Pick Percent:", -1, 100) / 100
-                ind_week_8_pick_percent_percent = ind_week_8_pick_percent*100
-                if ind_week_8_pick_percent < 0:
-                    st.write(f"Indianapoils Colts Week 8 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Indianapoils Colts Week 8 Pick Percent: :green[{ind_week_8_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                jax_week_8_pick_percent = st.slider("Jacksonville Jaguars Week 8 Pick Percent:", -1, 100) / 100
-                jax_week_8_pick_percent_percent = jax_week_8_pick_percent*100
-                if jax_week_8_pick_percent < 0:
-                    st.write(f"Jacksonville Jaguars Week 8 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Jacksonville Jaguars Week 8 Pick Percent: :green[{jax_week_8_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                kc_week_8_pick_percent = st.slider("Kansas City Chiefs Week 8 Pick Percent:", -1, 100) / 100
-                kc_week_8_pick_percent_percent = kc_week_8_pick_percent*100
-                if kc_week_8_pick_percent < 0:
-                    st.write(f"Kansas City Chiefs Week 8 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Kansas City Chiefs Week 8 Pick Percent: :green[{kc_week_8_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                lv_week_8_pick_percent = st.slider("Las Vegas Raiders Week 8 Pick Percent:", -1, 100) / 100
-                lv_week_8_pick_percent_percent = lv_week_8_pick_percent*100
-                if lv_week_8_pick_percent < 0:
-                    st.write(f"Las Vegas Raiders Week 8 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Las vegas Raiders Week 8 Pick Percent: :green[{lv_week_8_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                lac_week_8_pick_percent = st.slider("Los Angeles Chargers Week 8 Pick Percent:", -1, 100) / 100
-                lac_week_8_pick_percent_percent = lac_week_8_pick_percent*100
-                if lac_week_8_pick_percent < 0:
-                    st.write(f"Los Angeles Chargers Week 8 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Los angeles Chargers Week 8 Pick Percent: :green[{lac_week_8_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                lar_week_8_pick_percent = st.slider("Los Angeles Rams Week 8 Pick Percent:", -1, 100) / 100
-                lar_week_8_pick_percent_percent = lar_week_8_pick_percent*100
-                if lar_week_8_pick_percent < 0:
-                    st.write(f"Los Angeles Rams Week 8 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Los Angeles Rams Week 8 Pick Percent: :green[{lar_week_8_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                mia_week_8_pick_percent = st.slider("Miami Dolphins Week 8 Pick Percent:", -1, 100) / 100
-                mia_week_8_pick_percent_percent = mia_week_8_pick_percent*100
-                if mia_week_8_pick_percent < 0:
-                    st.write(f"Miami Dolphins Week 8 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Miami Dolphins Week 8 Pick Percent: :green[{mia_week_8_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                min_week_8_pick_percent = st.slider("Minnesota Vikings Week 8 Pick Percent:", -1, 100) / 100
-                min_week_8_pick_percent_percent = min_week_8_pick_percent*100
-                if min_week_8_pick_percent < 0:
-                    st.write(f"Minnesota Vikings Week 8 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Minnesota Vikings Week 8 Pick Percent: :green[{min_week_8_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                ne_week_8_pick_percent = st.slider("New England Patriots Week 8 Pick Percent:", -1, 100) / 100
-                ne_week_8_pick_percent_percent = ne_week_8_pick_percent*100
-                if ne_week_8_pick_percent < 0:
-                    st.write(f"New England Patriots Week 8 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"New England Patriots Week 8 Pick Percent: :green[{ne_week_8_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                no_week_8_pick_percent = st.slider("New Orleans Saints Week 8 Pick Percent:", -1, 100) / 100
-                no_week_8_pick_percent_percent = no_week_8_pick_percent*100
-                if no_week_8_pick_percent < 0:
-                    st.write(f"New Orleans Saints Week 8 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"New Orleans Saints Week 8 Pick Percent: :green[{no_week_8_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                nyg_week_8_pick_percent = st.slider("New York Giants Week 8 Pick Percent:", -1, 100) / 100
-                nyg_week_8_pick_percent_percent = nyg_week_8_pick_percent*100
-                if nyg_week_8_pick_percent < 0:
-                    st.write(f"New York Giants Week 8 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"New York Giants Week 8 Pick Percent: :green[{nyg_week_8_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                nyj_week_8_pick_percent = st.slider("New York Jets Week 8 Pick Percent:", -1, 100) / 100
-                nyj_week_8_pick_percent_percent = nyj_week_8_pick_percent*100
-                if nyj_week_8_pick_percent < 0:
-                    st.write(f"New York Jets Week 8 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"New York Jets Week 8 Pick Percent: :green[{nyj_week_8_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                phi_week_8_pick_percent = st.slider("Philadelphia Eagles Week 8 Pick Percent:", -1, 100) / 100
-                phi_week_8_pick_percent_percent = phi_week_8_pick_percent*100
-                if phi_week_8_pick_percent < 0:
-                    st.write(f"Philadelphia Eagles Week 8 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Philadelphia Eagles Week 8 Pick Percent: :green[{phi_week_8_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                pit_week_8_pick_percent = st.slider("Pittsburgh Steelers Week 8 Pick Percent:", -1, 100) / 100
-                pit_week_8_pick_percent_percent = pit_week_8_pick_percent*100
-                if pit_week_8_pick_percent < 0:
-                    st.write(f"Pittsburgh Steelers Week 8 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Pittsburgh Steelers Week 8 Pick Percent: :green[{pit_week_8_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                sf_week_8_pick_percent = st.slider("San Francisco 49ers Week 8 Pick Percent:", -1, 100) / 100
-                sf_week_8_pick_percent_percent = sf_week_8_pick_percent*100
-                if sf_week_8_pick_percent < 0:
-                    st.write(f"San Francisco 49ers Week 8 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"San Francisco 49ers Week 8 Pick Percent: :green[{sf_week_8_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                sea_week_8_pick_percent = st.slider("Seattle Seahawks Week 8 Pick Percent:", -1, 100) / 100
-                sea_week_8_pick_percent_percent = sea_week_8_pick_percent*100
-                if sea_week_8_pick_percent < 0:
-                    st.write(f"Seattle Seahawks Week 8 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Seattle Seahawks Week 8 Pick Percent: :green[{sea_week_8_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                tb_week_8_pick_percent = st.slider("Tampa Bay Buccaneers Week 8 Pick Percent:", -1, 100) / 100
-                tb_week_8_pick_percent_percent = tb_week_8_pick_percent*100
-                if tb_week_8_pick_percent < 0:
-                    st.write(f"Tampa Bay Buccaneers Week 8 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Tampa Bay Buccaneers Week 8 Pick Percent: :green[{tb_week_8_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                ten_week_8_pick_percent = st.slider("Tennessee Titans Week 8 Pick Percent:", -1, 100) / 100
-                ten_week_8_pick_percent_percent = ten_week_8_pick_percent*100
-                if ten_week_8_pick_percent < 0:
-                    st.write(f"Tennessee Titans Week 8 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Tennessee Titans Week 8 Pick Percent: :green[{ten_week_8_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                was_week_8_pick_percent = st.slider("Washington Commanders Week 8 Pick Percent:", -1, 100) / 100
-                was_week_8_pick_percent_percent = was_week_8_pick_percent*100
-                if was_week_8_pick_percent < 0:
-                    st.write(f"Washington Commanders Week 8 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Washington Commanders Week 8 Pick Percent: :green[{was_week_8_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-            st.write('')
-            st.write('')
-        if starting_week <= 9 and ending_week > 9:
-            week_9_pick_percents = st.checkbox('Add Week 9 Pick Percentages?', help = "Check this box if you want to adjust the estimated pick percentages for each team in week 9.")
-            if week_9_pick_percents:
-                st.write('')
-                st.subheader('Week 9 Estimated Pick Percentages')
-                st.write('')
-                az_week_9_pick_percent = st.slider("Arizona Cardinals Week 9 Pick Percent:", -1, 100) / 100
-                az_week_9_pick_percent_percent = az_week_9_pick_percent*100
-                if az_week_9_pick_percent < 0:
-                    st.write(f"Arizona Cardinals Week 9 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Arizona Cardinals Week 9 Pick Percent: :green[{az_week_9_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                atl_week_9_pick_percent = st.slider("Atlanta Falcons Week 9 Pick Percent:", -1, 100) / 100
-                atl_week_9_pick_percent_percent = atl_week_9_pick_percent*100
-                if atl_week_9_pick_percent < 0:
-                    st.write(f"Atlanta Falcons Week 9 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Atlanta Falcons Week 9 Pick Percent: :green[{atl_week_9_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                bal_week_9_pick_percent = st.slider("Baltimore Ravens Week 9 Pick Percent:", -1, 100) / 100
-                bal_week_9_pick_percent_percent = bal_week_9_pick_percent*100
-                if bal_week_9_pick_percent < 0:
-                    st.write(f"Baltimore Ravens Week 9 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Baltimore Ravenss Week 9 Pick Percent: :green[{bal_week_9_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                buf_week_9_pick_percent = st.slider("Buffalo Bills Week 9 Pick Percent:", -1, 100) / 100
-                buf_week_9_pick_percent_percent = buf_week_9_pick_percent*100
-                if buf_week_9_pick_percent < 0:
-                    st.write(f"Buffalo Bills Week 9 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Buffalo Bills Week 9 Pick Percent: :green[{buf_week_9_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                car_week_9_pick_percent = st.slider("Carolina Panthers Week 9 Pick Percent:", -1, 100) / 100
-                car_week_9_pick_percent_percent = car_week_9_pick_percent*100
-                if car_week_9_pick_percent < 0:
-                    st.write(f"Carolina Panthers Week 9 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Carolina Panthers Week 9 Pick Percent: :green[{car_week_9_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                chi_week_9_pick_percent = st.slider("Chicago Bears Week 9 Pick Percent:", -1, 100) / 100
-                chi_week_9_pick_percent_percent = chi_week_9_pick_percent*100
-                if chi_week_9_pick_percent < 0:
-                    st.write(f"Chicago Bears Week 9 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Chicago Bears Week 9 Pick Percent: :green[{chi_week_9_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                cin_week_9_pick_percent = st.slider("Cincinnati Bengals Week 9 Pick Percent:", -1, 100) / 100
-                cin_week_9_pick_percent_percent = cin_week_9_pick_percent*100
-                if cin_week_9_pick_percent < 0:
-                    st.write(f"Cincinnati Bengals Week 9 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Cincinnati Bengals Week 9 Pick Percent: :green[{cin_week_9_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                cle_week_9_pick_percent = st.slider("Cleveland Browns Week 9 Pick Percent:", -1, 100) / 100
-                cle_week_9_pick_percent_percent = cle_week_9_pick_percent*100
-                if cle_week_9_pick_percent < 0:
-                    st.write(f"Cleveland Browns Week 9 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Cleveland Browns Week 9 Pick Percent: :green[{cle_week_9_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                dal_week_9_pick_percent = st.slider("Dallas Cowboys Week 9 Pick Percent:", -1, 100) / 100
-                dal_week_9_pick_percent_percent = dal_week_9_pick_percent*100
-                if dal_week_9_pick_percent < 0:
-                    st.write(f"Dallas Cowboys Week 9 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Dallas Cowboys Week 9 Pick Percent: :green[{dal_week_9_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                den_week_9_pick_percent = st.slider("Denver Broncos Week 9 Pick Percent:", -1, 100) / 100
-                den_week_9_pick_percent_percent = den_week_9_pick_percent*100
-                if den_week_9_pick_percent < 0:
-                    st.write(f"Denver Broncos Week 9 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Denver Broncos Week 9 Pick Percent: :green[{den_week_9_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                det_week_9_pick_percent = st.slider("Detroit Lions Week 9 Pick Percent:", -1, 100) / 100
-                det_week_9_pick_percent_percent = det_week_9_pick_percent*100
-                if det_week_9_pick_percent < 0:
-                    st.write(f"Detroit Lions Week 9 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Detroit Lions Week 9 Pick Percent: :green[{det_week_9_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                gb_week_9_pick_percent = st.slider("Green Bay Packers Week 9 Pick Percent:", -1, 100) / 100
-                gb_week_9_pick_percent_percent = gb_week_9_pick_percent*100
-                if gb_week_9_pick_percent < 0:
-                    st.write(f"Green Bay Packers Week 9 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Green Bay Packers Week 9 Pick Percent: :green[{gb_week_9_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                hou_week_9_pick_percent = st.slider("Houston Texans Week 9 Pick Percent:", -1, 100) / 100
-                hou_week_9_pick_percent_percent = hou_week_9_pick_percent*100
-                if hou_week_9_pick_percent < 0:
-                    st.write(f"Houston Texans Week 9 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Houston Texans Week 9 Pick Percent: :green[{hou_week_9_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                ind_week_9_pick_percent = st.slider("Indianapoils Colts Week 9 Pick Percent:", -1, 100) / 100
-                ind_week_9_pick_percent_percent = ind_week_9_pick_percent*100
-                if ind_week_9_pick_percent < 0:
-                    st.write(f"Indianapoils Colts Week 9 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Indianapoils Colts Week 9 Pick Percent: :green[{ind_week_9_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                jax_week_9_pick_percent = st.slider("Jacksonville Jaguars Week 9 Pick Percent:", -1, 100) / 100
-                jax_week_9_pick_percent_percent = jax_week_9_pick_percent*100
-                if jax_week_9_pick_percent < 0:
-                    st.write(f"Jacksonville Jaguars Week 9 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Jacksonville Jaguars Week 9 Pick Percent: :green[{jax_week_9_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                kc_week_9_pick_percent = st.slider("Kansas City Chiefs Week 9 Pick Percent:", -1, 100) / 100
-                kc_week_9_pick_percent_percent = kc_week_9_pick_percent*100
-                if kc_week_9_pick_percent < 0:
-                    st.write(f"Kansas City Chiefs Week 9 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Kansas City Chiefs Week 9 Pick Percent: :green[{kc_week_9_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                lv_week_9_pick_percent = st.slider("Las Vegas Raiders Week 9 Pick Percent:", -1, 100) / 100
-                lv_week_9_pick_percent_percent = lv_week_9_pick_percent*100
-                if lv_week_9_pick_percent < 0:
-                    st.write(f"Las Vegas Raiders Week 9 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Las vegas Raiders Week 9 Pick Percent: :green[{lv_week_9_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                lac_week_9_pick_percent = st.slider("Los Angeles Chargers Week 9 Pick Percent:", -1, 100) / 100
-                lac_week_9_pick_percent_percent = lac_week_9_pick_percent*100
-                if lac_week_9_pick_percent < 0:
-                    st.write(f"Los Angeles Chargers Week 9 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Los angeles Chargers Week 9 Pick Percent: :green[{lac_week_9_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                lar_week_9_pick_percent = st.slider("Los Angeles Rams Week 9 Pick Percent:", -1, 100) / 100
-                lar_week_9_pick_percent_percent = lar_week_9_pick_percent*100
-                if lar_week_9_pick_percent < 0:
-                    st.write(f"Los Angeles Rams Week 9 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Los Angeles Rams Week 9 Pick Percent: :green[{lar_week_9_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                mia_week_9_pick_percent = st.slider("Miami Dolphins Week 9 Pick Percent:", -1, 100) / 100
-                mia_week_9_pick_percent_percent = mia_week_9_pick_percent*100
-                if mia_week_9_pick_percent < 0:
-                    st.write(f"Miami Dolphins Week 9 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Miami Dolphins Week 9 Pick Percent: :green[{mia_week_9_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                min_week_9_pick_percent = st.slider("Minnesota Vikings Week 9 Pick Percent:", -1, 100) / 100
-                min_week_9_pick_percent_percent = min_week_9_pick_percent*100
-                if min_week_9_pick_percent < 0:
-                    st.write(f"Minnesota Vikings Week 9 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Minnesota Vikings Week 9 Pick Percent: :green[{min_week_9_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                ne_week_9_pick_percent = st.slider("New England Patriots Week 9 Pick Percent:", -1, 100) / 100
-                ne_week_9_pick_percent_percent = ne_week_9_pick_percent*100
-                if ne_week_9_pick_percent < 0:
-                    st.write(f"New England Patriots Week 9 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"New England Patriots Week 9 Pick Percent: :green[{ne_week_9_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                no_week_9_pick_percent = st.slider("New Orleans Saints Week 9 Pick Percent:", -1, 100) / 100
-                no_week_9_pick_percent_percent = no_week_9_pick_percent*100
-                if no_week_9_pick_percent < 0:
-                    st.write(f"New Orleans Saints Week 9 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"New Orleans Saints Week 9 Pick Percent: :green[{no_week_9_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                nyg_week_9_pick_percent = st.slider("New York Giants Week 9 Pick Percent:", -1, 100) / 100
-                nyg_week_9_pick_percent_percent = nyg_week_9_pick_percent*100
-                if nyg_week_9_pick_percent < 0:
-                    st.write(f"New York Giants Week 9 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"New York Giants Week 9 Pick Percent: :green[{nyg_week_9_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                nyj_week_9_pick_percent = st.slider("New York Jets Week 9 Pick Percent:", -1, 100) / 100
-                nyj_week_9_pick_percent_percent = nyj_week_9_pick_percent*100
-                if nyj_week_9_pick_percent < 0:
-                    st.write(f"New York Jets Week 9 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"New York Jets Week 9 Pick Percent: :green[{nyj_week_9_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                phi_week_9_pick_percent = st.slider("Philadelphia Eagles Week 9 Pick Percent:", -1, 100) / 100
-                phi_week_9_pick_percent_percent = phi_week_9_pick_percent*100
-                if phi_week_9_pick_percent < 0:
-                    st.write(f"Philadelphia Eagles Week 9 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Philadelphia Eagles Week 9 Pick Percent: :green[{phi_week_9_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                pit_week_9_pick_percent = st.slider("Pittsburgh Steelers Week 9 Pick Percent:", -1, 100) / 100
-                pit_week_9_pick_percent_percent = pit_week_9_pick_percent*100
-                if pit_week_9_pick_percent < 0:
-                    st.write(f"Pittsburgh Steelers Week 9 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Pittsburgh Steelers Week 9 Pick Percent: :green[{pit_week_9_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                sf_week_9_pick_percent = st.slider("San Francisco 49ers Week 9 Pick Percent:", -1, 100) / 100
-                sf_week_9_pick_percent_percent = sf_week_9_pick_percent*100
-                if sf_week_9_pick_percent < 0:
-                    st.write(f"San Francisco 49ers Week 9 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"San Francisco 49ers Week 9 Pick Percent: :green[{sf_week_9_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                sea_week_9_pick_percent = st.slider("Seattle Seahawks Week 9 Pick Percent:", -1, 100) / 100
-                sea_week_9_pick_percent_percent = sea_week_9_pick_percent*100
-                if sea_week_9_pick_percent < 0:
-                    st.write(f"Seattle Seahawks Week 9 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Seattle Seahawks Week 9 Pick Percent: :green[{sea_week_9_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                tb_week_9_pick_percent = st.slider("Tampa Bay Buccaneers Week 9 Pick Percent:", -1, 100) / 100
-                tb_week_9_pick_percent_percent = tb_week_9_pick_percent*100
-                if tb_week_9_pick_percent < 0:
-                    st.write(f"Tampa Bay Buccaneers Week 9 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Tampa Bay Buccaneers Week 9 Pick Percent: :green[{tb_week_9_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                ten_week_9_pick_percent = st.slider("Tennessee Titans Week 9 Pick Percent:", -1, 100) / 100
-                ten_week_9_pick_percent_percent = ten_week_9_pick_percent*100
-                if ten_week_9_pick_percent < 0:
-                    st.write(f"Tennessee Titans Week 9 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Tennessee Titans Week 9 Pick Percent: :green[{ten_week_9_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                was_week_9_pick_percent = st.slider("Washington Commanders Week 9 Pick Percent:", -1, 100) / 100
-                was_week_9_pick_percent_percent = was_week_9_pick_percent*100
-                if was_week_9_pick_percent < 0:
-                    st.write(f"Washington Commanders Week 9 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Washington Commanders Week 9 Pick Percent: :green[{was_week_9_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-            st.write('')
-            st.write('')
-        if starting_week <= 10 and ending_week > 10:
-            week_10_pick_percents = st.checkbox('Add Week 10 Pick Percentages?', help = "Check this box if you want to adjust the estimated pick percentages for each team in week 10.")
-            if week_10_pick_percents:
-                st.write('')
-                st.subheader('Week 10 Estimated Pick Percentages')
-                st.write('')
-                az_week_10_pick_percent = st.slider("Arizona Cardinals Week 10 Pick Percent:", -1, 100) / 100
-                az_week_10_pick_percent_percent = az_week_10_pick_percent*100
-                if az_week_10_pick_percent < 0:
-                    st.write(f"Arizona Cardinals Week 10 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Arizona Cardinals Week 10 Pick Percent: :green[{az_week_10_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                atl_week_10_pick_percent = st.slider("Atlanta Falcons Week 10 Pick Percent:", -1, 100) / 100
-                atl_week_10_pick_percent_percent = atl_week_10_pick_percent*100
-                if atl_week_10_pick_percent < 0:
-                    st.write(f"Atlanta Falcons Week 10 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Atlanta Falcons Week 10 Pick Percent: :green[{atl_week_10_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                bal_week_10_pick_percent = st.slider("Baltimore Ravens Week 10 Pick Percent:", -1, 100) / 100
-                bal_week_10_pick_percent_percent = bal_week_10_pick_percent*100
-                if bal_week_10_pick_percent < 0:
-                    st.write(f"Baltimore Ravens Week 10 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Baltimore Ravenss Week 10 Pick Percent: :green[{bal_week_10_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                buf_week_10_pick_percent = st.slider("Buffalo Bills Week 10 Pick Percent:", -1, 100) / 100
-                buf_week_10_pick_percent_percent = buf_week_10_pick_percent*100
-                if buf_week_10_pick_percent < 0:
-                    st.write(f"Buffalo Bills Week 10 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Buffalo Bills Week 10 Pick Percent: :green[{buf_week_10_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                car_week_10_pick_percent = st.slider("Carolina Panthers Week 10 Pick Percent:", -1, 100) / 100
-                car_week_10_pick_percent_percent = car_week_10_pick_percent*100
-                if car_week_10_pick_percent < 0:
-                    st.write(f"Carolina Panthers Week 10 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Carolina Panthers Week 10 Pick Percent: :green[{car_week_10_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                chi_week_10_pick_percent = st.slider("Chicago Bears Week 10 Pick Percent:", -1, 100) / 100
-                chi_week_10_pick_percent_percent = chi_week_10_pick_percent*100
-                if chi_week_10_pick_percent < 0:
-                    st.write(f"Chicago Bears Week 10 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Chicago Bears Week 10 Pick Percent: :green[{chi_week_10_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                cin_week_10_pick_percent = st.slider("Cincinnati Bengals Week 10 Pick Percent:", -1, 100) / 100
-                cin_week_10_pick_percent_percent = cin_week_10_pick_percent*100
-                if cin_week_10_pick_percent < 0:
-                    st.write(f"Cincinnati Bengals Week 10 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Cincinnati Bengals Week 10 Pick Percent: :green[{cin_week_10_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                cle_week_10_pick_percent = st.slider("Cleveland Browns Week 10 Pick Percent:", -1, 100) / 100
-                cle_week_10_pick_percent_percent = cle_week_10_pick_percent*100
-                if cle_week_10_pick_percent < 0:
-                    st.write(f"Cleveland Browns Week 10 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Cleveland Browns Week 10 Pick Percent: :green[{cle_week_10_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                dal_week_10_pick_percent = st.slider("Dallas Cowboys Week 10 Pick Percent:", -1, 100) / 100
-                dal_week_10_pick_percent_percent = dal_week_10_pick_percent*100
-                if dal_week_10_pick_percent < 0:
-                    st.write(f"Dallas Cowboys Week 10 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Dallas Cowboys Week 10 Pick Percent: :green[{dal_week_10_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                den_week_10_pick_percent = st.slider("Denver Broncos Week 10 Pick Percent:", -1, 100) / 100
-                den_week_10_pick_percent_percent = den_week_10_pick_percent*100
-                if den_week_10_pick_percent < 0:
-                    st.write(f"Denver Broncos Week 10 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Denver Broncos Week 10 Pick Percent: :green[{den_week_10_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                det_week_10_pick_percent = st.slider("Detroit Lions Week 10 Pick Percent:", -1, 100) / 100
-                det_week_10_pick_percent_percent = det_week_10_pick_percent*100
-                if det_week_10_pick_percent < 0:
-                    st.write(f"Detroit Lions Week 10 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Detroit Lions Week 10 Pick Percent: :green[{det_week_10_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                gb_week_10_pick_percent = st.slider("Green Bay Packers Week 10 Pick Percent:", -1, 100) / 100
-                gb_week_10_pick_percent_percent = gb_week_10_pick_percent*100
-                if gb_week_10_pick_percent < 0:
-                    st.write(f"Green Bay Packers Week 10 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Green Bay Packers Week 10 Pick Percent: :green[{gb_week_10_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                hou_week_10_pick_percent = st.slider("Houston Texans Week 10 Pick Percent:", -1, 100) / 100
-                hou_week_10_pick_percent_percent = hou_week_10_pick_percent*100
-                if hou_week_10_pick_percent < 0:
-                    st.write(f"Houston Texans Week 10 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Houston Texans Week 10 Pick Percent: :green[{hou_week_10_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                ind_week_10_pick_percent = st.slider("Indianapoils Colts Week 10 Pick Percent:", -1, 100) / 100
-                ind_week_10_pick_percent_percent = ind_week_10_pick_percent*100
-                if ind_week_10_pick_percent < 0:
-                    st.write(f"Indianapoils Colts Week 10 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Indianapoils Colts Week 10 Pick Percent: :green[{ind_week_10_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                jax_week_10_pick_percent = st.slider("Jacksonville Jaguars Week 10 Pick Percent:", -1, 100) / 100
-                jax_week_10_pick_percent_percent = jax_week_10_pick_percent*100
-                if jax_week_10_pick_percent < 0:
-                    st.write(f"Jacksonville Jaguars Week 10 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Jacksonville Jaguars Week 10 Pick Percent: :green[{jax_week_10_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                kc_week_10_pick_percent = st.slider("Kansas City Chiefs Week 10 Pick Percent:", -1, 100) / 100
-                kc_week_10_pick_percent_percent = kc_week_10_pick_percent*100
-                if kc_week_10_pick_percent < 0:
-                    st.write(f"Kansas City Chiefs Week 10 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Kansas City Chiefs Week 10 Pick Percent: :green[{kc_week_10_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                lv_week_10_pick_percent = st.slider("Las Vegas Raiders Week 10 Pick Percent:", -1, 100) / 100
-                lv_week_10_pick_percent_percent = lv_week_10_pick_percent*100
-                if lv_week_10_pick_percent < 0:
-                    st.write(f"Las Vegas Raiders Week 10 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Las vegas Raiders Week 10 Pick Percent: :green[{lv_week_10_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                lac_week_10_pick_percent = st.slider("Los Angeles Chargers Week 10 Pick Percent:", -1, 100) / 100
-                lac_week_10_pick_percent_percent = lac_week_10_pick_percent*100
-                if lac_week_10_pick_percent < 0:
-                    st.write(f"Los Angeles Chargers Week 10 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Los angeles Chargers Week 10 Pick Percent: :green[{lac_week_10_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                lar_week_10_pick_percent = st.slider("Los Angeles Rams Week 10 Pick Percent:", -1, 100) / 100
-                lar_week_10_pick_percent_percent = lar_week_10_pick_percent*100
-                if lar_week_10_pick_percent < 0:
-                    st.write(f"Los Angeles Rams Week 10 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Los Angeles Rams Week 10 Pick Percent: :green[{lar_week_10_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                mia_week_10_pick_percent = st.slider("Miami Dolphins Week 10 Pick Percent:", -1, 100) / 100
-                mia_week_10_pick_percent_percent = mia_week_10_pick_percent*100
-                if mia_week_10_pick_percent < 0:
-                    st.write(f"Miami Dolphins Week 10 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Miami Dolphins Week 10 Pick Percent: :green[{mia_week_10_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                min_week_10_pick_percent = st.slider("Minnesota Vikings Week 10 Pick Percent:", -1, 100) / 100
-                min_week_10_pick_percent_percent = min_week_10_pick_percent*100
-                if min_week_10_pick_percent < 0:
-                    st.write(f"Minnesota Vikings Week 10 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Minnesota Vikings Week 10 Pick Percent: :green[{min_week_10_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                ne_week_10_pick_percent = st.slider("New England Patriots Week 10 Pick Percent:", -1, 100) / 100
-                ne_week_10_pick_percent_percent = ne_week_10_pick_percent*100
-                if ne_week_10_pick_percent < 0:
-                    st.write(f"New England Patriots Week 10 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"New England Patriots Week 10 Pick Percent: :green[{ne_week_10_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                no_week_10_pick_percent = st.slider("New Orleans Saints Week 10 Pick Percent:", -1, 100) / 100
-                no_week_10_pick_percent_percent = no_week_10_pick_percent*100
-                if no_week_10_pick_percent < 0:
-                    st.write(f"New Orleans Saints Week 10 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"New Orleans Saints Week 10 Pick Percent: :green[{no_week_10_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                nyg_week_10_pick_percent = st.slider("New York Giants Week 10 Pick Percent:", -1, 100) / 100
-                nyg_week_10_pick_percent_percent = nyg_week_10_pick_percent*100
-                if nyg_week_10_pick_percent < 0:
-                    st.write(f"New York Giants Week 10 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"New York Giants Week 10 Pick Percent: :green[{nyg_week_10_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                nyj_week_10_pick_percent = st.slider("New York Jets Week 10 Pick Percent:", -1, 100) / 100
-                nyj_week_10_pick_percent_percent = nyj_week_10_pick_percent*100
-                if nyj_week_10_pick_percent < 0:
-                    st.write(f"New York Jets Week 10 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"New York Jets Week 10 Pick Percent: :green[{nyj_week_10_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                phi_week_10_pick_percent = st.slider("Philadelphia Eagles Week 10 Pick Percent:", -1, 100) / 100
-                phi_week_10_pick_percent_percent = phi_week_10_pick_percent*100
-                if phi_week_10_pick_percent < 0:
-                    st.write(f"Philadelphia Eagles Week 10 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Philadelphia Eagles Week 10 Pick Percent: :green[{phi_week_10_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                pit_week_10_pick_percent = st.slider("Pittsburgh Steelers Week 10 Pick Percent:", -1, 100) / 100
-                pit_week_10_pick_percent_percent = pit_week_10_pick_percent*100
-                if pit_week_10_pick_percent < 0:
-                    st.write(f"Pittsburgh Steelers Week 10 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Pittsburgh Steelers Week 10 Pick Percent: :green[{pit_week_10_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                sf_week_10_pick_percent = st.slider("San Francisco 49ers Week 10 Pick Percent:", -1, 100) / 100
-                sf_week_10_pick_percent_percent = sf_week_10_pick_percent*100
-                if sf_week_10_pick_percent < 0:
-                    st.write(f"San Francisco 49ers Week 10 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"San Francisco 49ers Week 10 Pick Percent: :green[{sf_week_10_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                sea_week_10_pick_percent = st.slider("Seattle Seahawks Week 10 Pick Percent:", -1, 100) / 100
-                sea_week_10_pick_percent_percent = sea_week_10_pick_percent*100
-                if sea_week_10_pick_percent < 0:
-                    st.write(f"Seattle Seahawks Week 10 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Seattle Seahawks Week 10 Pick Percent: :green[{sea_week_10_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                tb_week_10_pick_percent = st.slider("Tampa Bay Buccaneers Week 10 Pick Percent:", -1, 100) / 100
-                tb_week_10_pick_percent_percent = tb_week_10_pick_percent*100
-                if tb_week_10_pick_percent < 0:
-                    st.write(f"Tampa Bay Buccaneers Week 10 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Tampa Bay Buccaneers Week 10 Pick Percent: :green[{tb_week_10_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                ten_week_10_pick_percent = st.slider("Tennessee Titans Week 10 Pick Percent:", -1, 100) / 100
-                ten_week_10_pick_percent_percent = ten_week_10_pick_percent*100
-                if ten_week_10_pick_percent < 0:
-                    st.write(f"Tennessee Titans Week 10 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Tennessee Titans Week 10 Pick Percent: :green[{ten_week_10_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                was_week_10_pick_percent = st.slider("Washington Commanders Week 10 Pick Percent:", -1, 100) / 100
-                was_week_10_pick_percent_percent = was_week_10_pick_percent*100
-                if was_week_10_pick_percent < 0:
-                    st.write(f"Washington Commanders Week 10 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Washington Commanders Week 10 Pick Percent: :green[{was_week_10_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-            st.write('')
-            st.write('')
-        if starting_week <= 11 and ending_week > 11:
-            week_11_pick_percents = st.checkbox('Add Week 11 Pick Percentages?', help = "Check this box if you want to adjust the estimated pick percentages for each team in week 11.")
-            if week_11_pick_percents:
-                st.write('')
-                st.subheader('Week 11 Estimated Pick Percentages')
-                st.write('')
-                az_week_11_pick_percent = st.slider("Arizona Cardinals Week 11 Pick Percent:", -1, 100) / 100
-                az_week_11_pick_percent_percent = az_week_11_pick_percent*100
-                if az_week_11_pick_percent < 0:
-                    st.write(f"Arizona Cardinals Week 11 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Arizona Cardinals Week 11 Pick Percent: :green[{az_week_11_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                atl_week_11_pick_percent = st.slider("Atlanta Falcons Week 11 Pick Percent:", -1, 100) / 100
-                atl_week_11_pick_percent_percent = atl_week_11_pick_percent*100
-                if atl_week_11_pick_percent < 0:
-                    st.write(f"Atlanta Falcons Week 11 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Atlanta Falcons Week 11 Pick Percent: :green[{atl_week_11_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                bal_week_11_pick_percent = st.slider("Baltimore Ravens Week 11 Pick Percent:", -1, 100) / 100
-                bal_week_11_pick_percent_percent = bal_week_11_pick_percent*100
-                if bal_week_11_pick_percent < 0:
-                    st.write(f"Baltimore Ravens Week 11 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Baltimore Ravenss Week 11 Pick Percent: :green[{bal_week_11_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                buf_week_11_pick_percent = st.slider("Buffalo Bills Week 11 Pick Percent:", -1, 100) / 100
-                buf_week_11_pick_percent_percent = buf_week_11_pick_percent*100
-                if buf_week_11_pick_percent < 0:
-                    st.write(f"Buffalo Bills Week 11 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Buffalo Bills Week 11 Pick Percent: :green[{buf_week_11_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                car_week_11_pick_percent = st.slider("Carolina Panthers Week 11 Pick Percent:", -1, 100) / 100
-                car_week_11_pick_percent_percent = car_week_11_pick_percent*100
-                if car_week_11_pick_percent < 0:
-                    st.write(f"Carolina Panthers Week 11 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Carolina Panthers Week 11 Pick Percent: :green[{car_week_11_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                chi_week_11_pick_percent = st.slider("Chicago Bears Week 11 Pick Percent:", -1, 100) / 100
-                chi_week_11_pick_percent_percent = chi_week_11_pick_percent*100
-                if chi_week_11_pick_percent < 0:
-                    st.write(f"Chicago Bears Week 11 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Chicago Bears Week 11 Pick Percent: :green[{chi_week_11_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                cin_week_11_pick_percent = st.slider("Cincinnati Bengals Week 11 Pick Percent:", -1, 100) / 100
-                cin_week_11_pick_percent_percent = cin_week_11_pick_percent*100
-                if cin_week_11_pick_percent < 0:
-                    st.write(f"Cincinnati Bengals Week 11 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Cincinnati Bengals Week 11 Pick Percent: :green[{cin_week_11_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                cle_week_11_pick_percent = st.slider("Cleveland Browns Week 11 Pick Percent:", -1, 100) / 100
-                cle_week_11_pick_percent_percent = cle_week_11_pick_percent*100
-                if cle_week_11_pick_percent < 0:
-                    st.write(f"Cleveland Browns Week 11 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Cleveland Browns Week 11 Pick Percent: :green[{cle_week_11_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                dal_week_11_pick_percent = st.slider("Dallas Cowboys Week 11 Pick Percent:", -1, 100) / 100
-                dal_week_11_pick_percent_percent = dal_week_11_pick_percent*100
-                if dal_week_11_pick_percent < 0:
-                    st.write(f"Dallas Cowboys Week 11 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Dallas Cowboys Week 11 Pick Percent: :green[{dal_week_11_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                den_week_11_pick_percent = st.slider("Denver Broncos Week 11 Pick Percent:", -1, 100) / 100
-                den_week_11_pick_percent_percent = den_week_11_pick_percent*100
-                if den_week_11_pick_percent < 0:
-                    st.write(f"Denver Broncos Week 11 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Denver Broncos Week 11 Pick Percent: :green[{den_week_11_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                det_week_11_pick_percent = st.slider("Detroit Lions Week 11 Pick Percent:", -1, 100) / 100
-                det_week_11_pick_percent_percent = det_week_11_pick_percent*100
-                if det_week_11_pick_percent < 0:
-                    st.write(f"Detroit Lions Week 11 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Detroit Lions Week 11 Pick Percent: :green[{det_week_11_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                gb_week_11_pick_percent = st.slider("Green Bay Packers Week 11 Pick Percent:", -1, 100) / 100
-                gb_week_11_pick_percent_percent = gb_week_11_pick_percent*100
-                if gb_week_11_pick_percent < 0:
-                    st.write(f"Green Bay Packers Week 11 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Green Bay Packers Week 11 Pick Percent: :green[{gb_week_11_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                hou_week_11_pick_percent = st.slider("Houston Texans Week 11 Pick Percent:", -1, 100) / 100
-                hou_week_11_pick_percent_percent = hou_week_11_pick_percent*100
-                if hou_week_11_pick_percent < 0:
-                    st.write(f"Houston Texans Week 11 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Houston Texans Week 11 Pick Percent: :green[{hou_week_11_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                ind_week_11_pick_percent = st.slider("Indianapoils Colts Week 11 Pick Percent:", -1, 100) / 100
-                ind_week_11_pick_percent_percent = ind_week_11_pick_percent*100
-                if ind_week_11_pick_percent < 0:
-                    st.write(f"Indianapoils Colts Week 11 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Indianapoils Colts Week 11 Pick Percent: :green[{ind_week_11_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                jax_week_11_pick_percent = st.slider("Jacksonville Jaguars Week 11 Pick Percent:", -1, 100) / 100
-                jax_week_11_pick_percent_percent = jax_week_11_pick_percent*100
-                if jax_week_11_pick_percent < 0:
-                    st.write(f"Jacksonville Jaguars Week 11 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Jacksonville Jaguars Week 11 Pick Percent: :green[{jax_week_11_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                kc_week_11_pick_percent = st.slider("Kansas City Chiefs Week 11 Pick Percent:", -1, 100) / 100
-                kc_week_11_pick_percent_percent = kc_week_11_pick_percent*100
-                if kc_week_11_pick_percent < 0:
-                    st.write(f"Kansas City Chiefs Week 11 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Kansas City Chiefs Week 11 Pick Percent: :green[{kc_week_11_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                lv_week_11_pick_percent = st.slider("Las Vegas Raiders Week 11 Pick Percent:", -1, 100) / 100
-                lv_week_11_pick_percent_percent = lv_week_11_pick_percent*100
-                if lv_week_11_pick_percent < 0:
-                    st.write(f"Las Vegas Raiders Week 11 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Las vegas Raiders Week 11 Pick Percent: :green[{lv_week_11_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                lac_week_11_pick_percent = st.slider("Los Angeles Chargers Week 11 Pick Percent:", -1, 100) / 100
-                lac_week_11_pick_percent_percent = lac_week_11_pick_percent*100
-                if lac_week_11_pick_percent < 0:
-                    st.write(f"Los Angeles Chargers Week 11 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Los angeles Chargers Week 11 Pick Percent: :green[{lac_week_11_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                lar_week_11_pick_percent = st.slider("Los Angeles Rams Week 11 Pick Percent:", -1, 100) / 100
-                lar_week_11_pick_percent_percent = lar_week_11_pick_percent*100
-                if lar_week_11_pick_percent < 0:
-                    st.write(f"Los Angeles Rams Week 11 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Los Angeles Rams Week 11 Pick Percent: :green[{lar_week_11_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                mia_week_11_pick_percent = st.slider("Miami Dolphins Week 11 Pick Percent:", -1, 100) / 100
-                mia_week_11_pick_percent_percent = mia_week_11_pick_percent*100
-                if mia_week_11_pick_percent < 0:
-                    st.write(f"Miami Dolphins Week 11 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Miami Dolphins Week 11 Pick Percent: :green[{mia_week_11_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                min_week_11_pick_percent = st.slider("Minnesota Vikings Week 11 Pick Percent:", -1, 100) / 100
-                min_week_11_pick_percent_percent = min_week_11_pick_percent*100
-                if min_week_11_pick_percent < 0:
-                    st.write(f"Minnesota Vikings Week 11 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Minnesota Vikings Week 11 Pick Percent: :green[{min_week_11_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                ne_week_11_pick_percent = st.slider("New England Patriots Week 11 Pick Percent:", -1, 100) / 100
-                ne_week_11_pick_percent_percent = ne_week_11_pick_percent*100
-                if ne_week_11_pick_percent < 0:
-                    st.write(f"New England Patriots Week 11 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"New England Patriots Week 11 Pick Percent: :green[{ne_week_11_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                no_week_11_pick_percent = st.slider("New Orleans Saints Week 11 Pick Percent:", -1, 100) / 100
-                no_week_11_pick_percent_percent = no_week_11_pick_percent*100
-                if no_week_11_pick_percent < 0:
-                    st.write(f"New Orleans Saints Week 11 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"New Orleans Saints Week 11 Pick Percent: :green[{no_week_11_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                nyg_week_11_pick_percent = st.slider("New York Giants Week 11 Pick Percent:", -1, 100) / 100
-                nyg_week_11_pick_percent_percent = nyg_week_11_pick_percent*100
-                if nyg_week_11_pick_percent < 0:
-                    st.write(f"New York Giants Week 11 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"New York Giants Week 11 Pick Percent: :green[{nyg_week_11_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                nyj_week_11_pick_percent = st.slider("New York Jets Week 11 Pick Percent:", -1, 100) / 100
-                nyj_week_11_pick_percent_percent = nyj_week_11_pick_percent*100
-                if nyj_week_11_pick_percent < 0:
-                    st.write(f"New York Jets Week 11 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"New York Jets Week 11 Pick Percent: :green[{nyj_week_11_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                phi_week_11_pick_percent = st.slider("Philadelphia Eagles Week 11 Pick Percent:", -1, 100) / 100
-                phi_week_11_pick_percent_percent = phi_week_11_pick_percent*100
-                if phi_week_11_pick_percent < 0:
-                    st.write(f"Philadelphia Eagles Week 11 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Philadelphia Eagles Week 11 Pick Percent: :green[{phi_week_11_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                pit_week_11_pick_percent = st.slider("Pittsburgh Steelers Week 11 Pick Percent:", -1, 100) / 100
-                pit_week_11_pick_percent_percent = pit_week_11_pick_percent*100
-                if pit_week_11_pick_percent < 0:
-                    st.write(f"Pittsburgh Steelers Week 11 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Pittsburgh Steelers Week 11 Pick Percent: :green[{pit_week_11_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                sf_week_11_pick_percent = st.slider("San Francisco 49ers Week 11 Pick Percent:", -1, 100) / 100
-                sf_week_11_pick_percent_percent = sf_week_11_pick_percent*100
-                if sf_week_11_pick_percent < 0:
-                    st.write(f"San Francisco 49ers Week 11 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"San Francisco 49ers Week 11 Pick Percent: :green[{sf_week_11_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                sea_week_11_pick_percent = st.slider("Seattle Seahawks Week 11 Pick Percent:", -1, 100) / 100
-                sea_week_11_pick_percent_percent = sea_week_11_pick_percent*100
-                if sea_week_11_pick_percent < 0:
-                    st.write(f"Seattle Seahawks Week 11 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Seattle Seahawks Week 11 Pick Percent: :green[{sea_week_11_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                tb_week_11_pick_percent = st.slider("Tampa Bay Buccaneers Week 11 Pick Percent:", -1, 100) / 100
-                tb_week_11_pick_percent_percent = tb_week_11_pick_percent*100
-                if tb_week_11_pick_percent < 0:
-                    st.write(f"Tampa Bay Buccaneers Week 11 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Tampa Bay Buccaneers Week 11 Pick Percent: :green[{tb_week_11_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                ten_week_11_pick_percent = st.slider("Tennessee Titans Week 11 Pick Percent:", -1, 100) / 100
-                ten_week_11_pick_percent_percent = ten_week_11_pick_percent*100
-                if ten_week_11_pick_percent < 0:
-                    st.write(f"Tennessee Titans Week 11 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Tennessee Titans Week 11 Pick Percent: :green[{ten_week_11_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                was_week_11_pick_percent = st.slider("Washington Commanders Week 11 Pick Percent:", -1, 100) / 100
-                was_week_11_pick_percent_percent = was_week_11_pick_percent*100
-                if was_week_11_pick_percent < 0:
-                    st.write(f"Washington Commanders Week 11 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Washington Commanders Week 11 Pick Percent: :green[{was_week_11_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-            st.write('')
-            st.write('')
-        if starting_week <= 12 and ending_week > 12:
-            week_12_pick_percents = st.checkbox('Add Week 12 Pick Percentages?', help = "Check this box if you want to adjust the estimated pick percentages for each team in week 12.")
-            if week_12_pick_percents:
-                st.write('')
-                st.subheader('Week 12 Estimated Pick Percentages')
-                st.write('')
-                az_week_12_pick_percent = st.slider("Arizona Cardinals Week 12 Pick Percent:", -1, 100) / 100
-                az_week_12_pick_percent_percent = az_week_12_pick_percent*100
-                if az_week_12_pick_percent < 0:
-                    st.write(f"Arizona Cardinals Week 12 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Arizona Cardinals Week 12 Pick Percent: :green[{az_week_12_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                atl_week_12_pick_percent = st.slider("Atlanta Falcons Week 12 Pick Percent:", -1, 100) / 100
-                atl_week_12_pick_percent_percent = atl_week_12_pick_percent*100
-                if atl_week_12_pick_percent < 0:
-                    st.write(f"Atlanta Falcons Week 12 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Atlanta Falcons Week 12 Pick Percent: :green[{atl_week_12_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                bal_week_12_pick_percent = st.slider("Baltimore Ravens Week 12 Pick Percent:", -1, 100) / 100
-                bal_week_12_pick_percent_percent = bal_week_12_pick_percent*100
-                if bal_week_12_pick_percent < 0:
-                    st.write(f"Baltimore Ravens Week 12 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Baltimore Ravenss Week 12 Pick Percent: :green[{bal_week_12_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                buf_week_12_pick_percent = st.slider("Buffalo Bills Week 12 Pick Percent:", -1, 100) / 100
-                buf_week_12_pick_percent_percent = buf_week_12_pick_percent*100
-                if buf_week_12_pick_percent < 0:
-                    st.write(f"Buffalo Bills Week 12 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Buffalo Bills Week 12 Pick Percent: :green[{buf_week_12_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                car_week_12_pick_percent = st.slider("Carolina Panthers Week 12 Pick Percent:", -1, 100) / 100
-                car_week_12_pick_percent_percent = car_week_12_pick_percent*100
-                if car_week_12_pick_percent < 0:
-                    st.write(f"Carolina Panthers Week 12 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Carolina Panthers Week 12 Pick Percent: :green[{car_week_12_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                chi_week_12_pick_percent = st.slider("Chicago Bears Week 12 Pick Percent:", -1, 100) / 100
-                chi_week_12_pick_percent_percent = chi_week_12_pick_percent*100
-                if chi_week_12_pick_percent < 0:
-                    st.write(f"Chicago Bears Week 12 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Chicago Bears Week 12 Pick Percent: :green[{chi_week_12_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                cin_week_12_pick_percent = st.slider("Cincinnati Bengals Week 12 Pick Percent:", -1, 100) / 100
-                cin_week_12_pick_percent_percent = cin_week_12_pick_percent*100
-                if cin_week_12_pick_percent < 0:
-                    st.write(f"Cincinnati Bengals Week 12 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Cincinnati Bengals Week 12 Pick Percent: :green[{cin_week_12_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                cle_week_12_pick_percent = st.slider("Cleveland Browns Week 12 Pick Percent:", -1, 100) / 100
-                cle_week_12_pick_percent_percent = cle_week_12_pick_percent*100
-                if cle_week_12_pick_percent < 0:
-                    st.write(f"Cleveland Browns Week 12 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Cleveland Browns Week 12 Pick Percent: :green[{cle_week_12_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                dal_week_12_pick_percent = st.slider("Dallas Cowboys Week 12 Pick Percent:", -1, 100) / 100
-                dal_week_12_pick_percent_percent = dal_week_12_pick_percent*100
-                if dal_week_12_pick_percent < 0:
-                    st.write(f"Dallas Cowboys Week 12 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Dallas Cowboys Week 12 Pick Percent: :green[{dal_week_12_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                den_week_12_pick_percent = st.slider("Denver Broncos Week 12 Pick Percent:", -1, 100) / 100
-                den_week_12_pick_percent_percent = den_week_12_pick_percent*100
-                if den_week_12_pick_percent < 0:
-                    st.write(f"Denver Broncos Week 12 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Denver Broncos Week 12 Pick Percent: :green[{den_week_12_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                det_week_12_pick_percent = st.slider("Detroit Lions Week 12 Pick Percent:", -1, 100) / 100
-                det_week_12_pick_percent_percent = det_week_12_pick_percent*100
-                if det_week_12_pick_percent < 0:
-                    st.write(f"Detroit Lions Week 12 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Detroit Lions Week 12 Pick Percent: :green[{det_week_12_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                gb_week_12_pick_percent = st.slider("Green Bay Packers Week 12 Pick Percent:", -1, 100) / 100
-                gb_week_12_pick_percent_percent = gb_week_12_pick_percent*100
-                if gb_week_12_pick_percent < 0:
-                    st.write(f"Green Bay Packers Week 12 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Green Bay Packers Week 12 Pick Percent: :green[{gb_week_12_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                hou_week_12_pick_percent = st.slider("Houston Texans Week 12 Pick Percent:", -1, 100) / 100
-                hou_week_12_pick_percent_percent = hou_week_12_pick_percent*100
-                if hou_week_12_pick_percent < 0:
-                    st.write(f"Houston Texans Week 12 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Houston Texans Week 12 Pick Percent: :green[{hou_week_12_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                ind_week_12_pick_percent = st.slider("Indianapoils Colts Week 12 Pick Percent:", -1, 100) / 100
-                ind_week_12_pick_percent_percent = ind_week_12_pick_percent*100
-                if ind_week_12_pick_percent < 0:
-                    st.write(f"Indianapoils Colts Week 12 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Indianapoils Colts Week 12 Pick Percent: :green[{ind_week_12_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                jax_week_12_pick_percent = st.slider("Jacksonville Jaguars Week 12 Pick Percent:", -1, 100) / 100
-                jax_week_12_pick_percent_percent = jax_week_12_pick_percent*100
-                if jax_week_12_pick_percent < 0:
-                    st.write(f"Jacksonville Jaguars Week 12 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Jacksonville Jaguars Week 12 Pick Percent: :green[{jax_week_12_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                kc_week_12_pick_percent = st.slider("Kansas City Chiefs Week 12 Pick Percent:", -1, 100) / 100
-                kc_week_12_pick_percent_percent = kc_week_12_pick_percent*100
-                if kc_week_12_pick_percent < 0:
-                    st.write(f"Kansas City Chiefs Week 12 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Kansas City Chiefs Week 12 Pick Percent: :green[{kc_week_12_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                lv_week_12_pick_percent = st.slider("Las Vegas Raiders Week 12 Pick Percent:", -1, 100) / 100
-                lv_week_12_pick_percent_percent = lv_week_12_pick_percent*100
-                if lv_week_12_pick_percent < 0:
-                    st.write(f"Las Vegas Raiders Week 12 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Las vegas Raiders Week 12 Pick Percent: :green[{lv_week_12_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                lac_week_12_pick_percent = st.slider("Los Angeles Chargers Week 12 Pick Percent:", -1, 100) / 100
-                lac_week_12_pick_percent_percent = lac_week_12_pick_percent*100
-                if lac_week_12_pick_percent < 0:
-                    st.write(f"Los Angeles Chargers Week 12 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Los angeles Chargers Week 12 Pick Percent: :green[{lac_week_12_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                lar_week_12_pick_percent = st.slider("Los Angeles Rams Week 12 Pick Percent:", -1, 100) / 100
-                lar_week_12_pick_percent_percent = lar_week_12_pick_percent*100
-                if lar_week_12_pick_percent < 0:
-                    st.write(f"Los Angeles Rams Week 12 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Los Angeles Rams Week 12 Pick Percent: :green[{lar_week_12_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                mia_week_12_pick_percent = st.slider("Miami Dolphins Week 12 Pick Percent:", -1, 100) / 100
-                mia_week_12_pick_percent_percent = mia_week_12_pick_percent*100
-                if mia_week_12_pick_percent < 0:
-                    st.write(f"Miami Dolphins Week 12 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Miami Dolphins Week 12 Pick Percent: :green[{mia_week_12_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                min_week_12_pick_percent = st.slider("Minnesota Vikings Week 12 Pick Percent:", -1, 100) / 100
-                min_week_12_pick_percent_percent = min_week_12_pick_percent*100
-                if min_week_12_pick_percent < 0:
-                    st.write(f"Minnesota Vikings Week 12 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Minnesota Vikings Week 12 Pick Percent: :green[{min_week_12_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                ne_week_12_pick_percent = st.slider("New England Patriots Week 12 Pick Percent:", -1, 100) / 100
-                ne_week_12_pick_percent_percent = ne_week_12_pick_percent*100
-                if ne_week_12_pick_percent < 0:
-                    st.write(f"New England Patriots Week 12 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"New England Patriots Week 12 Pick Percent: :green[{ne_week_12_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                no_week_12_pick_percent = st.slider("New Orleans Saints Week 12 Pick Percent:", -1, 100) / 100
-                no_week_12_pick_percent_percent = no_week_12_pick_percent*100
-                if no_week_12_pick_percent < 0:
-                    st.write(f"New Orleans Saints Week 12 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"New Orleans Saints Week 12 Pick Percent: :green[{no_week_12_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                nyg_week_12_pick_percent = st.slider("New York Giants Week 12 Pick Percent:", -1, 100) / 100
-                nyg_week_12_pick_percent_percent = nyg_week_12_pick_percent*100
-                if nyg_week_12_pick_percent < 0:
-                    st.write(f"New York Giants Week 12 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"New York Giants Week 12 Pick Percent: :green[{nyg_week_12_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                nyj_week_12_pick_percent = st.slider("New York Jets Week 12 Pick Percent:", -1, 100) / 100
-                nyj_week_12_pick_percent_percent = nyj_week_12_pick_percent*100
-                if nyj_week_12_pick_percent < 0:
-                    st.write(f"New York Jets Week 12 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"New York Jets Week 12 Pick Percent: :green[{nyj_week_12_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                phi_week_12_pick_percent = st.slider("Philadelphia Eagles Week 12 Pick Percent:", -1, 100) / 100
-                phi_week_12_pick_percent_percent = phi_week_12_pick_percent*100
-                if phi_week_12_pick_percent < 0:
-                    st.write(f"Philadelphia Eagles Week 12 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Philadelphia Eagles Week 12 Pick Percent: :green[{phi_week_12_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                pit_week_12_pick_percent = st.slider("Pittsburgh Steelers Week 12 Pick Percent:", -1, 100) / 100
-                pit_week_12_pick_percent_percent = pit_week_12_pick_percent*100
-                if pit_week_12_pick_percent < 0:
-                    st.write(f"Pittsburgh Steelers Week 12 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Pittsburgh Steelers Week 12 Pick Percent: :green[{pit_week_12_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                sf_week_12_pick_percent = st.slider("San Francisco 49ers Week 12 Pick Percent:", -1, 100) / 100
-                sf_week_12_pick_percent_percent = sf_week_12_pick_percent*100
-                if sf_week_12_pick_percent < 0:
-                    st.write(f"San Francisco 49ers Week 12 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"San Francisco 49ers Week 12 Pick Percent: :green[{sf_week_12_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                sea_week_12_pick_percent = st.slider("Seattle Seahawks Week 12 Pick Percent:", -1, 100) / 100
-                sea_week_12_pick_percent_percent = sea_week_12_pick_percent*100
-                if sea_week_12_pick_percent < 0:
-                    st.write(f"Seattle Seahawks Week 12 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Seattle Seahawks Week 12 Pick Percent: :green[{sea_week_12_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                tb_week_12_pick_percent = st.slider("Tampa Bay Buccaneers Week 12 Pick Percent:", -1, 100) / 100
-                tb_week_12_pick_percent_percent = tb_week_12_pick_percent*100
-                if tb_week_12_pick_percent < 0:
-                    st.write(f"Tampa Bay Buccaneers Week 12 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Tampa Bay Buccaneers Week 12 Pick Percent: :green[{tb_week_12_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                ten_week_12_pick_percent = st.slider("Tennessee Titans Week 12 Pick Percent:", -1, 100) / 100
-                ten_week_12_pick_percent_percent = ten_week_12_pick_percent*100
-                if ten_week_12_pick_percent < 0:
-                    st.write(f"Tennessee Titans Week 12 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Tennessee Titans Week 12 Pick Percent: :green[{ten_week_12_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                was_week_12_pick_percent = st.slider("Washington Commanders Week 12 Pick Percent:", -1, 100) / 100
-                was_week_12_pick_percent_percent = was_week_12_pick_percent*100
-                if was_week_12_pick_percent < 0:
-                    st.write(f"Washington Commanders Week 12 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Washington Commanders Week 12 Pick Percent: :green[{was_week_12_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-            st.write('')
-            st.write('')
-        if starting_week <= 13 and ending_week > 13:
-            week_13_pick_percents = st.checkbox('Add Week 13 (Thanksgiving Week if in Circa Survivor Contest) Pick Percentages?', help = "Check this box if you want to adjust the estimated pick percentages for each team in week 13 (Thanksgiving Week if in Circa Survivor Contest).")
-            if week_13_pick_percents:
-                st.write('')
-                st.subheader('Week 13 Estimated Pick Percentages')
-                st.write('')
-                az_week_13_pick_percent = st.slider("Arizona Cardinals Week 13 Pick Percent:", -1, 100) / 100
-                az_week_13_pick_percent_percent = az_week_13_pick_percent*100
-                if az_week_13_pick_percent < 0:
-                    st.write(f"Arizona Cardinals Week 13 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Arizona Cardinals Week 13 Pick Percent: :green[{az_week_13_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                atl_week_13_pick_percent = st.slider("Atlanta Falcons Week 13 Pick Percent:", -1, 100) / 100
-                atl_week_13_pick_percent_percent = atl_week_13_pick_percent*100
-                if atl_week_13_pick_percent < 0:
-                    st.write(f"Atlanta Falcons Week 13 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Atlanta Falcons Week 13 Pick Percent: :green[{atl_week_13_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                bal_week_13_pick_percent = st.slider("Baltimore Ravens Week 13 Pick Percent:", -1, 100) / 100
-                bal_week_13_pick_percent_percent = bal_week_13_pick_percent*100
-                if bal_week_13_pick_percent < 0:
-                    st.write(f"Baltimore Ravens Week 13 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Baltimore Ravenss Week 13 Pick Percent: :green[{bal_week_13_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                buf_week_13_pick_percent = st.slider("Buffalo Bills Week 13 Pick Percent:", -1, 100) / 100
-                buf_week_13_pick_percent_percent = buf_week_13_pick_percent*100
-                if buf_week_13_pick_percent < 0:
-                    st.write(f"Buffalo Bills Week 13 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Buffalo Bills Week 13 Pick Percent: :green[{buf_week_13_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                car_week_13_pick_percent = st.slider("Carolina Panthers Week 13 Pick Percent:", -1, 100) / 100
-                car_week_13_pick_percent_percent = car_week_13_pick_percent*100
-                if car_week_13_pick_percent < 0:
-                    st.write(f"Carolina Panthers Week 13 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Carolina Panthers Week 13 Pick Percent: :green[{car_week_13_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                chi_week_13_pick_percent = st.slider("Chicago Bears Week 13 Pick Percent:", -1, 100) / 100
-                chi_week_13_pick_percent_percent = chi_week_13_pick_percent*100
-                if chi_week_13_pick_percent < 0:
-                    st.write(f"Chicago Bears Week 13 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Chicago Bears Week 13 Pick Percent: :green[{chi_week_13_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                cin_week_13_pick_percent = st.slider("Cincinnati Bengals Week 13 Pick Percent:", -1, 100) / 100
-                cin_week_13_pick_percent_percent = cin_week_13_pick_percent*100
-                if cin_week_13_pick_percent < 0:
-                    st.write(f"Cincinnati Bengals Week 13 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Cincinnati Bengals Week 13 Pick Percent: :green[{cin_week_13_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                cle_week_13_pick_percent = st.slider("Cleveland Browns Week 13 Pick Percent:", -1, 100) / 100
-                cle_week_13_pick_percent_percent = cle_week_13_pick_percent*100
-                if cle_week_13_pick_percent < 0:
-                    st.write(f"Cleveland Browns Week 13 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Cleveland Browns Week 13 Pick Percent: :green[{cle_week_13_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                dal_week_13_pick_percent = st.slider("Dallas Cowboys Week 13 Pick Percent:", -1, 100) / 100
-                dal_week_13_pick_percent_percent = dal_week_13_pick_percent*100
-                if dal_week_13_pick_percent < 0:
-                    st.write(f"Dallas Cowboys Week 13 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Dallas Cowboys Week 13 Pick Percent: :green[{dal_week_13_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                den_week_13_pick_percent = st.slider("Denver Broncos Week 13 Pick Percent:", -1, 100) / 100
-                den_week_13_pick_percent_percent = den_week_13_pick_percent*100
-                if den_week_13_pick_percent < 0:
-                    st.write(f"Denver Broncos Week 13 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Denver Broncos Week 13 Pick Percent: :green[{den_week_13_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                det_week_13_pick_percent = st.slider("Detroit Lions Week 13 Pick Percent:", -1, 100) / 100
-                det_week_13_pick_percent_percent = det_week_13_pick_percent*100
-                if det_week_13_pick_percent < 0:
-                    st.write(f"Detroit Lions Week 13 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Detroit Lions Week 13 Pick Percent: :green[{det_week_13_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                gb_week_13_pick_percent = st.slider("Green Bay Packers Week 13 Pick Percent:", -1, 100) / 100
-                gb_week_13_pick_percent_percent = gb_week_13_pick_percent*100
-                if gb_week_13_pick_percent < 0:
-                    st.write(f"Green Bay Packers Week 13 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Green Bay Packers Week 13 Pick Percent: :green[{gb_week_13_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                hou_week_13_pick_percent = st.slider("Houston Texans Week 13 Pick Percent:", -1, 100) / 100
-                hou_week_13_pick_percent_percent = hou_week_13_pick_percent*100
-                if hou_week_13_pick_percent < 0:
-                    st.write(f"Houston Texans Week 13 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Houston Texans Week 13 Pick Percent: :green[{hou_week_13_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                ind_week_13_pick_percent = st.slider("Indianapoils Colts Week 13 Pick Percent:", -1, 100) / 100
-                ind_week_13_pick_percent_percent = ind_week_13_pick_percent*100
-                if ind_week_13_pick_percent < 0:
-                    st.write(f"Indianapoils Colts Week 13 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Indianapoils Colts Week 13 Pick Percent: :green[{ind_week_13_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                jax_week_13_pick_percent = st.slider("Jacksonville Jaguars Week 13 Pick Percent:", -1, 100) / 100
-                jax_week_13_pick_percent_percent = jax_week_13_pick_percent*100
-                if jax_week_13_pick_percent < 0:
-                    st.write(f"Jacksonville Jaguars Week 13 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Jacksonville Jaguars Week 13 Pick Percent: :green[{jax_week_13_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                kc_week_13_pick_percent = st.slider("Kansas City Chiefs Week 13 Pick Percent:", -1, 100) / 100
-                kc_week_13_pick_percent_percent = kc_week_13_pick_percent*100
-                if kc_week_13_pick_percent < 0:
-                    st.write(f"Kansas City Chiefs Week 13 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Kansas City Chiefs Week 13 Pick Percent: :green[{kc_week_13_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                lv_week_13_pick_percent = st.slider("Las Vegas Raiders Week 13 Pick Percent:", -1, 100) / 100
-                lv_week_13_pick_percent_percent = lv_week_13_pick_percent*100
-                if lv_week_13_pick_percent < 0:
-                    st.write(f"Las Vegas Raiders Week 13 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Las vegas Raiders Week 13 Pick Percent: :green[{lv_week_13_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                lac_week_13_pick_percent = st.slider("Los Angeles Chargers Week 13 Pick Percent:", -1, 100) / 100
-                lac_week_13_pick_percent_percent = lac_week_13_pick_percent*100
-                if lac_week_13_pick_percent < 0:
-                    st.write(f"Los Angeles Chargers Week 13 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Los angeles Chargers Week 13 Pick Percent: :green[{lac_week_13_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                lar_week_13_pick_percent = st.slider("Los Angeles Rams Week 13 Pick Percent:", -1, 100) / 100
-                lar_week_13_pick_percent_percent = lar_week_13_pick_percent*100
-                if lar_week_13_pick_percent < 0:
-                    st.write(f"Los Angeles Rams Week 13 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Los Angeles Rams Week 13 Pick Percent: :green[{lar_week_13_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                mia_week_13_pick_percent = st.slider("Miami Dolphins Week 13 Pick Percent:", -1, 100) / 100
-                mia_week_13_pick_percent_percent = mia_week_13_pick_percent*100
-                if mia_week_13_pick_percent < 0:
-                    st.write(f"Miami Dolphins Week 13 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Miami Dolphins Week 13 Pick Percent: :green[{mia_week_13_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                min_week_13_pick_percent = st.slider("Minnesota Vikings Week 13 Pick Percent:", -1, 100) / 100
-                min_week_13_pick_percent_percent = min_week_13_pick_percent*100
-                if min_week_13_pick_percent < 0:
-                    st.write(f"Minnesota Vikings Week 13 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Minnesota Vikings Week 13 Pick Percent: :green[{min_week_13_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                ne_week_13_pick_percent = st.slider("New England Patriots Week 13 Pick Percent:", -1, 100) / 100
-                ne_week_13_pick_percent_percent = ne_week_13_pick_percent*100
-                if ne_week_13_pick_percent < 0:
-                    st.write(f"New England Patriots Week 13 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"New England Patriots Week 13 Pick Percent: :green[{ne_week_13_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                no_week_13_pick_percent = st.slider("New Orleans Saints Week 13 Pick Percent:", -1, 100) / 100
-                no_week_13_pick_percent_percent = no_week_13_pick_percent*100
-                if no_week_13_pick_percent < 0:
-                    st.write(f"New Orleans Saints Week 13 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"New Orleans Saints Week 13 Pick Percent: :green[{no_week_13_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                nyg_week_13_pick_percent = st.slider("New York Giants Week 13 Pick Percent:", -1, 100) / 100
-                nyg_week_13_pick_percent_percent = nyg_week_13_pick_percent*100
-                if nyg_week_13_pick_percent < 0:
-                    st.write(f"New York Giants Week 13 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"New York Giants Week 13 Pick Percent: :green[{nyg_week_13_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                nyj_week_13_pick_percent = st.slider("New York Jets Week 13 Pick Percent:", -1, 100) / 100
-                nyj_week_13_pick_percent_percent = nyj_week_13_pick_percent*100
-                if nyj_week_13_pick_percent < 0:
-                    st.write(f"New York Jets Week 13 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"New York Jets Week 13 Pick Percent: :green[{nyj_week_13_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                phi_week_13_pick_percent = st.slider("Philadelphia Eagles Week 13 Pick Percent:", -1, 100) / 100
-                phi_week_13_pick_percent_percent = phi_week_13_pick_percent*100
-                if phi_week_13_pick_percent < 0:
-                    st.write(f"Philadelphia Eagles Week 13 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Philadelphia Eagles Week 13 Pick Percent: :green[{phi_week_13_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                pit_week_13_pick_percent = st.slider("Pittsburgh Steelers Week 13 Pick Percent:", -1, 100) / 100
-                pit_week_13_pick_percent_percent = pit_week_13_pick_percent*100
-                if pit_week_13_pick_percent < 0:
-                    st.write(f"Pittsburgh Steelers Week 13 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Pittsburgh Steelers Week 13 Pick Percent: :green[{pit_week_13_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                sf_week_13_pick_percent = st.slider("San Francisco 49ers Week 13 Pick Percent:", -1, 100) / 100
-                sf_week_13_pick_percent_percent = sf_week_13_pick_percent*100
-                if sf_week_13_pick_percent < 0:
-                    st.write(f"San Francisco 49ers Week 13 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"San Francisco 49ers Week 13 Pick Percent: :green[{sf_week_13_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                sea_week_13_pick_percent = st.slider("Seattle Seahawks Week 13 Pick Percent:", -1, 100) / 100
-                sea_week_13_pick_percent_percent = sea_week_13_pick_percent*100
-                if sea_week_13_pick_percent < 0:
-                    st.write(f"Seattle Seahawks Week 13 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Seattle Seahawks Week 13 Pick Percent: :green[{sea_week_13_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                tb_week_13_pick_percent = st.slider("Tampa Bay Buccaneers Week 13 Pick Percent:", -1, 100) / 100
-                tb_week_13_pick_percent_percent = tb_week_13_pick_percent*100
-                if tb_week_13_pick_percent < 0:
-                    st.write(f"Tampa Bay Buccaneers Week 13 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Tampa Bay Buccaneers Week 13 Pick Percent: :green[{tb_week_13_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                ten_week_13_pick_percent = st.slider("Tennessee Titans Week 13 Pick Percent:", -1, 100) / 100
-                ten_week_13_pick_percent_percent = ten_week_13_pick_percent*100
-                if ten_week_13_pick_percent < 0:
-                    st.write(f"Tennessee Titans Week 13 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Tennessee Titans Week 13 Pick Percent: :green[{ten_week_13_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                was_week_13_pick_percent = st.slider("Washington Commanders Week 13 Pick Percent:", -1, 100) / 100
-                was_week_13_pick_percent_percent = was_week_13_pick_percent*100
-                if was_week_13_pick_percent < 0:
-                    st.write(f"Washington Commanders Week 13 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Washington Commanders Week 13 Pick Percent: :green[{was_week_13_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-            st.write('')
-            st.write('')
-        if starting_week <= 14 and ending_week > 14:
-            week_14_pick_percents = st.checkbox('Add Week 14 Pick Percentages?', help = "Check this box if you want to adjust the estimated pick percentages for each team in week 14.")
-            if week_14_pick_percents:
-                st.write('')
-                st.subheader('Week 14 Estimated Pick Percentages')
-                st.write('')
-                az_week_14_pick_percent = st.slider("Arizona Cardinals Week 14 Pick Percent:", -1, 100) / 100
-                az_week_14_pick_percent_percent = az_week_14_pick_percent*100
-                if az_week_14_pick_percent < 0:
-                    st.write(f"Arizona Cardinals Week 14 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Arizona Cardinals Week 14 Pick Percent: :green[{az_week_14_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                atl_week_14_pick_percent = st.slider("Atlanta Falcons Week 14 Pick Percent:", -1, 100) / 100
-                atl_week_14_pick_percent_percent = atl_week_14_pick_percent*100
-                if atl_week_14_pick_percent < 0:
-                    st.write(f"Atlanta Falcons Week 14 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Atlanta Falcons Week 14 Pick Percent: :green[{atl_week_14_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                bal_week_14_pick_percent = st.slider("Baltimore Ravens Week 14 Pick Percent:", -1, 100) / 100
-                bal_week_14_pick_percent_percent = bal_week_14_pick_percent*100
-                if bal_week_14_pick_percent < 0:
-                    st.write(f"Baltimore Ravens Week 14 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Baltimore Ravenss Week 14 Pick Percent: :green[{bal_week_14_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                buf_week_14_pick_percent = st.slider("Buffalo Bills Week 14 Pick Percent:", -1, 100) / 100
-                buf_week_14_pick_percent_percent = buf_week_14_pick_percent*100
-                if buf_week_14_pick_percent < 0:
-                    st.write(f"Buffalo Bills Week 14 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Buffalo Bills Week 14 Pick Percent: :green[{buf_week_14_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                car_week_14_pick_percent = st.slider("Carolina Panthers Week 14 Pick Percent:", -1, 100) / 100
-                car_week_14_pick_percent_percent = car_week_14_pick_percent*100
-                if car_week_14_pick_percent < 0:
-                    st.write(f"Carolina Panthers Week 14 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Carolina Panthers Week 14 Pick Percent: :green[{car_week_14_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                chi_week_14_pick_percent = st.slider("Chicago Bears Week 14 Pick Percent:", -1, 100) / 100
-                chi_week_14_pick_percent_percent = chi_week_14_pick_percent*100
-                if chi_week_14_pick_percent < 0:
-                    st.write(f"Chicago Bears Week 14 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Chicago Bears Week 14 Pick Percent: :green[{chi_week_14_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                cin_week_14_pick_percent = st.slider("Cincinnati Bengals Week 14 Pick Percent:", -1, 100) / 100
-                cin_week_14_pick_percent_percent = cin_week_14_pick_percent*100
-                if cin_week_14_pick_percent < 0:
-                    st.write(f"Cincinnati Bengals Week 14 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Cincinnati Bengals Week 14 Pick Percent: :green[{cin_week_14_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                cle_week_14_pick_percent = st.slider("Cleveland Browns Week 14 Pick Percent:", -1, 100) / 100
-                cle_week_14_pick_percent_percent = cle_week_14_pick_percent*100
-                if cle_week_14_pick_percent < 0:
-                    st.write(f"Cleveland Browns Week 14 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Cleveland Browns Week 14 Pick Percent: :green[{cle_week_14_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                dal_week_14_pick_percent = st.slider("Dallas Cowboys Week 14 Pick Percent:", -1, 100) / 100
-                dal_week_14_pick_percent_percent = dal_week_14_pick_percent*100
-                if dal_week_14_pick_percent < 0:
-                    st.write(f"Dallas Cowboys Week 14 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Dallas Cowboys Week 14 Pick Percent: :green[{dal_week_14_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                den_week_14_pick_percent = st.slider("Denver Broncos Week 14 Pick Percent:", -1, 100) / 100
-                den_week_14_pick_percent_percent = den_week_14_pick_percent*100
-                if den_week_14_pick_percent < 0:
-                    st.write(f"Denver Broncos Week 14 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Denver Broncos Week 14 Pick Percent: :green[{den_week_14_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                det_week_14_pick_percent = st.slider("Detroit Lions Week 14 Pick Percent:", -1, 100) / 100
-                det_week_14_pick_percent_percent = det_week_14_pick_percent*100
-                if det_week_14_pick_percent < 0:
-                    st.write(f"Detroit Lions Week 14 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Detroit Lions Week 14 Pick Percent: :green[{det_week_14_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                gb_week_14_pick_percent = st.slider("Green Bay Packers Week 14 Pick Percent:", -1, 100) / 100
-                gb_week_14_pick_percent_percent = gb_week_14_pick_percent*100
-                if gb_week_14_pick_percent < 0:
-                    st.write(f"Green Bay Packers Week 14 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Green Bay Packers Week 14 Pick Percent: :green[{gb_week_14_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                hou_week_14_pick_percent = st.slider("Houston Texans Week 14 Pick Percent:", -1, 100) / 100
-                hou_week_14_pick_percent_percent = hou_week_14_pick_percent*100
-                if hou_week_14_pick_percent < 0:
-                    st.write(f"Houston Texans Week 14 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Houston Texans Week 14 Pick Percent: :green[{hou_week_14_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                ind_week_14_pick_percent = st.slider("Indianapoils Colts Week 14 Pick Percent:", -1, 100) / 100
-                ind_week_14_pick_percent_percent = ind_week_14_pick_percent*100
-                if ind_week_14_pick_percent < 0:
-                    st.write(f"Indianapoils Colts Week 14 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Indianapoils Colts Week 14 Pick Percent: :green[{ind_week_14_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                jax_week_14_pick_percent = st.slider("Jacksonville Jaguars Week 14 Pick Percent:", -1, 100) / 100
-                jax_week_14_pick_percent_percent = jax_week_14_pick_percent*100
-                if jax_week_14_pick_percent < 0:
-                    st.write(f"Jacksonville Jaguars Week 14 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Jacksonville Jaguars Week 14 Pick Percent: :green[{jax_week_14_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                kc_week_14_pick_percent = st.slider("Kansas City Chiefs Week 14 Pick Percent:", -1, 100) / 100
-                kc_week_14_pick_percent_percent = kc_week_14_pick_percent*100
-                if kc_week_14_pick_percent < 0:
-                    st.write(f"Kansas City Chiefs Week 14 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Kansas City Chiefs Week 14 Pick Percent: :green[{kc_week_14_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                lv_week_14_pick_percent = st.slider("Las Vegas Raiders Week 14 Pick Percent:", -1, 100) / 100
-                lv_week_14_pick_percent_percent = lv_week_14_pick_percent*100
-                if lv_week_14_pick_percent < 0:
-                    st.write(f"Las Vegas Raiders Week 14 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Las vegas Raiders Week 14 Pick Percent: :green[{lv_week_14_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                lac_week_14_pick_percent = st.slider("Los Angeles Chargers Week 14 Pick Percent:", -1, 100) / 100
-                lac_week_14_pick_percent_percent = lac_week_14_pick_percent*100
-                if lac_week_14_pick_percent < 0:
-                    st.write(f"Los Angeles Chargers Week 14 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Los angeles Chargers Week 14 Pick Percent: :green[{lac_week_14_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                lar_week_14_pick_percent = st.slider("Los Angeles Rams Week 14 Pick Percent:", -1, 100) / 100
-                lar_week_14_pick_percent_percent = lar_week_14_pick_percent*100
-                if lar_week_14_pick_percent < 0:
-                    st.write(f"Los Angeles Rams Week 14 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Los Angeles Rams Week 14 Pick Percent: :green[{lar_week_14_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                mia_week_14_pick_percent = st.slider("Miami Dolphins Week 14 Pick Percent:", -1, 100) / 100
-                mia_week_14_pick_percent_percent = mia_week_14_pick_percent*100
-                if mia_week_14_pick_percent < 0:
-                    st.write(f"Miami Dolphins Week 14 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Miami Dolphins Week 14 Pick Percent: :green[{mia_week_14_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                min_week_14_pick_percent = st.slider("Minnesota Vikings Week 14 Pick Percent:", -1, 100) / 100
-                min_week_14_pick_percent_percent = min_week_14_pick_percent*100
-                if min_week_14_pick_percent < 0:
-                    st.write(f"Minnesota Vikings Week 14 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Minnesota Vikings Week 14 Pick Percent: :green[{min_week_14_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                ne_week_14_pick_percent = st.slider("New England Patriots Week 14 Pick Percent:", -1, 100) / 100
-                ne_week_14_pick_percent_percent = ne_week_14_pick_percent*100
-                if ne_week_14_pick_percent < 0:
-                    st.write(f"New England Patriots Week 14 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"New England Patriots Week 14 Pick Percent: :green[{ne_week_14_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                no_week_14_pick_percent = st.slider("New Orleans Saints Week 14 Pick Percent:", -1, 100) / 100
-                no_week_14_pick_percent_percent = no_week_14_pick_percent*100
-                if no_week_14_pick_percent < 0:
-                    st.write(f"New Orleans Saints Week 14 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"New Orleans Saints Week 14 Pick Percent: :green[{no_week_14_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                nyg_week_14_pick_percent = st.slider("New York Giants Week 14 Pick Percent:", -1, 100) / 100
-                nyg_week_14_pick_percent_percent = nyg_week_14_pick_percent*100
-                if nyg_week_14_pick_percent < 0:
-                    st.write(f"New York Giants Week 14 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"New York Giants Week 14 Pick Percent: :green[{nyg_week_14_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                nyj_week_14_pick_percent = st.slider("New York Jets Week 14 Pick Percent:", -1, 100) / 100
-                nyj_week_14_pick_percent_percent = nyj_week_14_pick_percent*100
-                if nyj_week_14_pick_percent < 0:
-                    st.write(f"New York Jets Week 14 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"New York Jets Week 14 Pick Percent: :green[{nyj_week_14_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                phi_week_14_pick_percent = st.slider("Philadelphia Eagles Week 14 Pick Percent:", -1, 100) / 100
-                phi_week_14_pick_percent_percent = phi_week_14_pick_percent*100
-                if phi_week_14_pick_percent < 0:
-                    st.write(f"Philadelphia Eagles Week 14 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Philadelphia Eagles Week 14 Pick Percent: :green[{phi_week_14_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                pit_week_14_pick_percent = st.slider("Pittsburgh Steelers Week 14 Pick Percent:", -1, 100) / 100
-                pit_week_14_pick_percent_percent = pit_week_14_pick_percent*100
-                if pit_week_14_pick_percent < 0:
-                    st.write(f"Pittsburgh Steelers Week 14 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Pittsburgh Steelers Week 14 Pick Percent: :green[{pit_week_14_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                sf_week_14_pick_percent = st.slider("San Francisco 49ers Week 14 Pick Percent:", -1, 100) / 100
-                sf_week_14_pick_percent_percent = sf_week_14_pick_percent*100
-                if sf_week_14_pick_percent < 0:
-                    st.write(f"San Francisco 49ers Week 14 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"San Francisco 49ers Week 14 Pick Percent: :green[{sf_week_14_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                sea_week_14_pick_percent = st.slider("Seattle Seahawks Week 14 Pick Percent:", -1, 100) / 100
-                sea_week_14_pick_percent_percent = sea_week_14_pick_percent*100
-                if sea_week_14_pick_percent < 0:
-                    st.write(f"Seattle Seahawks Week 14 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Seattle Seahawks Week 14 Pick Percent: :green[{sea_week_14_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                tb_week_14_pick_percent = st.slider("Tampa Bay Buccaneers Week 14 Pick Percent:", -1, 100) / 100
-                tb_week_14_pick_percent_percent = tb_week_14_pick_percent*100
-                if tb_week_14_pick_percent < 0:
-                    st.write(f"Tampa Bay Buccaneers Week 14 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Tampa Bay Buccaneers Week 14 Pick Percent: :green[{tb_week_14_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                ten_week_14_pick_percent = st.slider("Tennessee Titans Week 14 Pick Percent:", -1, 100) / 100
-                ten_week_14_pick_percent_percent = ten_week_14_pick_percent*100
-                if ten_week_14_pick_percent < 0:
-                    st.write(f"Tennessee Titans Week 14 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Tennessee Titans Week 14 Pick Percent: :green[{ten_week_14_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                was_week_14_pick_percent = st.slider("Washington Commanders Week 14 Pick Percent:", -1, 100) / 100
-                was_week_14_pick_percent_percent = was_week_14_pick_percent*100
-                if was_week_14_pick_percent < 0:
-                    st.write(f"Washington Commanders Week 14 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Washington Commanders Week 14 Pick Percent: :green[{was_week_14_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-            st.write('')
-            st.write('')
-        if starting_week <= 15 and ending_week > 15:
-            week_15_pick_percents = st.checkbox('Add Week 15 Pick Percentages?', help = "Check this box if you want to adjust the estimated pick percentages for each team in week 15.")
-            if week_15_pick_percents:
-                st.write('')
-                st.subheader('Week 15 Estimated Pick Percentages')
-                st.write('')
-                az_week_15_pick_percent = st.slider("Arizona Cardinals Week 15 Pick Percent:", -1, 100) / 100
-                az_week_15_pick_percent_percent = az_week_15_pick_percent*100
-                if az_week_15_pick_percent < 0:
-                    st.write(f"Arizona Cardinals Week 15 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Arizona Cardinals Week 15 Pick Percent: :green[{az_week_15_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                atl_week_15_pick_percent = st.slider("Atlanta Falcons Week 15 Pick Percent:", -1, 100) / 100
-                atl_week_15_pick_percent_percent = atl_week_15_pick_percent*100
-                if atl_week_15_pick_percent < 0:
-                    st.write(f"Atlanta Falcons Week 15 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Atlanta Falcons Week 15 Pick Percent: :green[{atl_week_15_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                bal_week_15_pick_percent = st.slider("Baltimore Ravens Week 15 Pick Percent:", -1, 100) / 100
-                bal_week_15_pick_percent_percent = bal_week_15_pick_percent*100
-                if bal_week_15_pick_percent < 0:
-                    st.write(f"Baltimore Ravens Week 15 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Baltimore Ravenss Week 15 Pick Percent: :green[{bal_week_15_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                buf_week_15_pick_percent = st.slider("Buffalo Bills Week 15 Pick Percent:", -1, 100) / 100
-                buf_week_15_pick_percent_percent = buf_week_15_pick_percent*100
-                if buf_week_15_pick_percent < 0:
-                    st.write(f"Buffalo Bills Week 15 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Buffalo Bills Week 15 Pick Percent: :green[{buf_week_15_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                car_week_15_pick_percent = st.slider("Carolina Panthers Week 15 Pick Percent:", -1, 100) / 100
-                car_week_15_pick_percent_percent = car_week_15_pick_percent*100
-                if car_week_15_pick_percent < 0:
-                    st.write(f"Carolina Panthers Week 15 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Carolina Panthers Week 15 Pick Percent: :green[{car_week_15_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                chi_week_15_pick_percent = st.slider("Chicago Bears Week 15 Pick Percent:", -1, 100) / 100
-                chi_week_15_pick_percent_percent = chi_week_15_pick_percent*100
-                if chi_week_15_pick_percent < 0:
-                    st.write(f"Chicago Bears Week 15 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Chicago Bears Week 15 Pick Percent: :green[{chi_week_15_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                cin_week_15_pick_percent = st.slider("Cincinnati Bengals Week 15 Pick Percent:", -1, 100) / 100
-                cin_week_15_pick_percent_percent = cin_week_15_pick_percent*100
-                if cin_week_15_pick_percent < 0:
-                    st.write(f"Cincinnati Bengals Week 15 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Cincinnati Bengals Week 15 Pick Percent: :green[{cin_week_15_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                cle_week_15_pick_percent = st.slider("Cleveland Browns Week 15 Pick Percent:", -1, 100) / 100
-                cle_week_15_pick_percent_percent = cle_week_15_pick_percent*100
-                if cle_week_15_pick_percent < 0:
-                    st.write(f"Cleveland Browns Week 15 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Cleveland Browns Week 15 Pick Percent: :green[{cle_week_15_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                dal_week_15_pick_percent = st.slider("Dallas Cowboys Week 15 Pick Percent:", -1, 100) / 100
-                dal_week_15_pick_percent_percent = dal_week_15_pick_percent*100
-                if dal_week_15_pick_percent < 0:
-                    st.write(f"Dallas Cowboys Week 15 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Dallas Cowboys Week 15 Pick Percent: :green[{dal_week_15_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                den_week_15_pick_percent = st.slider("Denver Broncos Week 15 Pick Percent:", -1, 100) / 100
-                den_week_15_pick_percent_percent = den_week_15_pick_percent*100
-                if den_week_15_pick_percent < 0:
-                    st.write(f"Denver Broncos Week 15 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Denver Broncos Week 15 Pick Percent: :green[{den_week_15_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                det_week_15_pick_percent = st.slider("Detroit Lions Week 15 Pick Percent:", -1, 100) / 100
-                det_week_15_pick_percent_percent = det_week_15_pick_percent*100
-                if det_week_15_pick_percent < 0:
-                    st.write(f"Detroit Lions Week 15 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Detroit Lions Week 15 Pick Percent: :green[{det_week_15_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                gb_week_15_pick_percent = st.slider("Green Bay Packers Week 15 Pick Percent:", -1, 100) / 100
-                gb_week_15_pick_percent_percent = gb_week_15_pick_percent*100
-                if gb_week_15_pick_percent < 0:
-                    st.write(f"Green Bay Packers Week 15 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Green Bay Packers Week 15 Pick Percent: :green[{gb_week_15_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                hou_week_15_pick_percent = st.slider("Houston Texans Week 15 Pick Percent:", -1, 100) / 100
-                hou_week_15_pick_percent_percent = hou_week_15_pick_percent*100
-                if hou_week_15_pick_percent < 0:
-                    st.write(f"Houston Texans Week 15 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Houston Texans Week 15 Pick Percent: :green[{hou_week_15_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                ind_week_15_pick_percent = st.slider("Indianapoils Colts Week 15 Pick Percent:", -1, 100) / 100
-                ind_week_15_pick_percent_percent = ind_week_15_pick_percent*100
-                if ind_week_15_pick_percent < 0:
-                    st.write(f"Indianapoils Colts Week 15 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Indianapoils Colts Week 15 Pick Percent: :green[{ind_week_15_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                jax_week_15_pick_percent = st.slider("Jacksonville Jaguars Week 15 Pick Percent:", -1, 100) / 100
-                jax_week_15_pick_percent_percent = jax_week_15_pick_percent*100
-                if jax_week_15_pick_percent < 0:
-                    st.write(f"Jacksonville Jaguars Week 15 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Jacksonville Jaguars Week 15 Pick Percent: :green[{jax_week_15_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                kc_week_15_pick_percent = st.slider("Kansas City Chiefs Week 15 Pick Percent:", -1, 100) / 100
-                kc_week_15_pick_percent_percent = kc_week_15_pick_percent*100
-                if kc_week_15_pick_percent < 0:
-                    st.write(f"Kansas City Chiefs Week 15 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Kansas City Chiefs Week 15 Pick Percent: :green[{kc_week_15_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                lv_week_15_pick_percent = st.slider("Las Vegas Raiders Week 15 Pick Percent:", -1, 100) / 100
-                lv_week_15_pick_percent_percent = lv_week_15_pick_percent*100
-                if lv_week_15_pick_percent < 0:
-                    st.write(f"Las Vegas Raiders Week 15 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Las vegas Raiders Week 15 Pick Percent: :green[{lv_week_15_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                lac_week_15_pick_percent = st.slider("Los Angeles Chargers Week 15 Pick Percent:", -1, 100) / 100
-                lac_week_15_pick_percent_percent = lac_week_15_pick_percent*100
-                if lac_week_15_pick_percent < 0:
-                    st.write(f"Los Angeles Chargers Week 15 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Los angeles Chargers Week 15 Pick Percent: :green[{lac_week_15_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                lar_week_15_pick_percent = st.slider("Los Angeles Rams Week 15 Pick Percent:", -1, 100) / 100
-                lar_week_15_pick_percent_percent = lar_week_15_pick_percent*100
-                if lar_week_15_pick_percent < 0:
-                    st.write(f"Los Angeles Rams Week 15 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Los Angeles Rams Week 15 Pick Percent: :green[{lar_week_15_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                mia_week_15_pick_percent = st.slider("Miami Dolphins Week 15 Pick Percent:", -1, 100) / 100
-                mia_week_15_pick_percent_percent = mia_week_15_pick_percent*100
-                if mia_week_15_pick_percent < 0:
-                    st.write(f"Miami Dolphins Week 15 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Miami Dolphins Week 15 Pick Percent: :green[{mia_week_15_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                min_week_15_pick_percent = st.slider("Minnesota Vikings Week 15 Pick Percent:", -1, 100) / 100
-                min_week_15_pick_percent_percent = min_week_15_pick_percent*100
-                if min_week_15_pick_percent < 0:
-                    st.write(f"Minnesota Vikings Week 15 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Minnesota Vikings Week 15 Pick Percent: :green[{min_week_15_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                ne_week_15_pick_percent = st.slider("New England Patriots Week 15 Pick Percent:", -1, 100) / 100
-                ne_week_15_pick_percent_percent = ne_week_15_pick_percent*100
-                if ne_week_15_pick_percent < 0:
-                    st.write(f"New England Patriots Week 15 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"New England Patriots Week 15 Pick Percent: :green[{ne_week_15_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                no_week_15_pick_percent = st.slider("New Orleans Saints Week 15 Pick Percent:", -1, 100) / 100
-                no_week_15_pick_percent_percent = no_week_15_pick_percent*100
-                if no_week_15_pick_percent < 0:
-                    st.write(f"New Orleans Saints Week 15 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"New Orleans Saints Week 15 Pick Percent: :green[{no_week_15_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                nyg_week_15_pick_percent = st.slider("New York Giants Week 15 Pick Percent:", -1, 100) / 100
-                nyg_week_15_pick_percent_percent = nyg_week_15_pick_percent*100
-                if nyg_week_15_pick_percent < 0:
-                    st.write(f"New York Giants Week 15 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"New York Giants Week 15 Pick Percent: :green[{nyg_week_15_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                nyj_week_15_pick_percent = st.slider("New York Jets Week 15 Pick Percent:", -1, 100) / 100
-                nyj_week_15_pick_percent_percent = nyj_week_15_pick_percent*100
-                if nyj_week_15_pick_percent < 0:
-                    st.write(f"New York Jets Week 15 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"New York Jets Week 15 Pick Percent: :green[{nyj_week_15_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                phi_week_15_pick_percent = st.slider("Philadelphia Eagles Week 15 Pick Percent:", -1, 100) / 100
-                phi_week_15_pick_percent_percent = phi_week_15_pick_percent*100
-                if phi_week_15_pick_percent < 0:
-                    st.write(f"Philadelphia Eagles Week 15 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Philadelphia Eagles Week 15 Pick Percent: :green[{phi_week_15_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                pit_week_15_pick_percent = st.slider("Pittsburgh Steelers Week 15 Pick Percent:", -1, 100) / 100
-                pit_week_15_pick_percent_percent = pit_week_15_pick_percent*100
-                if pit_week_15_pick_percent < 0:
-                    st.write(f"Pittsburgh Steelers Week 15 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Pittsburgh Steelers Week 15 Pick Percent: :green[{pit_week_15_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                sf_week_15_pick_percent = st.slider("San Francisco 49ers Week 15 Pick Percent:", -1, 100) / 100
-                sf_week_15_pick_percent_percent = sf_week_15_pick_percent*100
-                if sf_week_15_pick_percent < 0:
-                    st.write(f"San Francisco 49ers Week 15 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"San Francisco 49ers Week 15 Pick Percent: :green[{sf_week_15_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                sea_week_15_pick_percent = st.slider("Seattle Seahawks Week 15 Pick Percent:", -1, 100) / 100
-                sea_week_15_pick_percent_percent = sea_week_15_pick_percent*100
-                if sea_week_15_pick_percent < 0:
-                    st.write(f"Seattle Seahawks Week 15 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Seattle Seahawks Week 15 Pick Percent: :green[{sea_week_15_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                tb_week_15_pick_percent = st.slider("Tampa Bay Buccaneers Week 15 Pick Percent:", -1, 100) / 100
-                tb_week_15_pick_percent_percent = tb_week_15_pick_percent*100
-                if tb_week_15_pick_percent < 0:
-                    st.write(f"Tampa Bay Buccaneers Week 15 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Tampa Bay Buccaneers Week 15 Pick Percent: :green[{tb_week_15_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                ten_week_15_pick_percent = st.slider("Tennessee Titans Week 15 Pick Percent:", -1, 100) / 100
-                ten_week_15_pick_percent_percent = ten_week_15_pick_percent*100
-                if ten_week_15_pick_percent < 0:
-                    st.write(f"Tennessee Titans Week 15 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Tennessee Titans Week 15 Pick Percent: :green[{ten_week_15_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                was_week_15_pick_percent = st.slider("Washington Commanders Week 15 Pick Percent:", -1, 100) / 100
-                was_week_15_pick_percent_percent = was_week_15_pick_percent*100
-                if was_week_15_pick_percent < 0:
-                    st.write(f"Washington Commanders Week 15 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Washington Commanders Week 15 Pick Percent: :green[{was_week_15_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-            st.write('')
-            st.write('')
-        if starting_week <= 16 and ending_week > 16:
-            week_16_pick_percents = st.checkbox('Add Week 16 Pick Percentages?', help = "Check this box if you want to adjust the estimated pick percentages for each team in week 16.")
-            if week_16_pick_percents:
-                st.write('')
-                st.subheader('Week 16 Estimated Pick Percentages')
-                st.write('')
-                az_week_16_pick_percent = st.slider("Arizona Cardinals Week 16 Pick Percent:", -1, 100) / 100
-                az_week_16_pick_percent_percent = az_week_16_pick_percent*100
-                if az_week_16_pick_percent < 0:
-                    st.write(f"Arizona Cardinals Week 16 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Arizona Cardinals Week 16 Pick Percent: :green[{az_week_16_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                atl_week_16_pick_percent = st.slider("Atlanta Falcons Week 16 Pick Percent:", -1, 100) / 100
-                atl_week_16_pick_percent_percent = atl_week_16_pick_percent*100
-                if atl_week_16_pick_percent < 0:
-                    st.write(f"Atlanta Falcons Week 16 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Atlanta Falcons Week 16 Pick Percent: :green[{atl_week_16_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                bal_week_16_pick_percent = st.slider("Baltimore Ravens Week 16 Pick Percent:", -1, 100) / 100
-                bal_week_16_pick_percent_percent = bal_week_16_pick_percent*100
-                if bal_week_16_pick_percent < 0:
-                    st.write(f"Baltimore Ravens Week 16 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Baltimore Ravenss Week 16 Pick Percent: :green[{bal_week_16_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                buf_week_16_pick_percent = st.slider("Buffalo Bills Week 16 Pick Percent:", -1, 100) / 100
-                buf_week_16_pick_percent_percent = buf_week_16_pick_percent*100
-                if buf_week_16_pick_percent < 0:
-                    st.write(f"Buffalo Bills Week 16 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Buffalo Bills Week 16 Pick Percent: :green[{buf_week_16_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                car_week_16_pick_percent = st.slider("Carolina Panthers Week 16 Pick Percent:", -1, 100) / 100
-                car_week_16_pick_percent_percent = car_week_16_pick_percent*100
-                if car_week_16_pick_percent < 0:
-                    st.write(f"Carolina Panthers Week 16 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Carolina Panthers Week 16 Pick Percent: :green[{car_week_16_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                chi_week_16_pick_percent = st.slider("Chicago Bears Week 16 Pick Percent:", -1, 100) / 100
-                chi_week_16_pick_percent_percent = chi_week_16_pick_percent*100
-                if chi_week_16_pick_percent < 0:
-                    st.write(f"Chicago Bears Week 16 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Chicago Bears Week 16 Pick Percent: :green[{chi_week_16_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                cin_week_16_pick_percent = st.slider("Cincinnati Bengals Week 16 Pick Percent:", -1, 100) / 100
-                cin_week_16_pick_percent_percent = cin_week_16_pick_percent*100
-                if cin_week_16_pick_percent < 0:
-                    st.write(f"Cincinnati Bengals Week 16 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Cincinnati Bengals Week 16 Pick Percent: :green[{cin_week_16_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                cle_week_16_pick_percent = st.slider("Cleveland Browns Week 16 Pick Percent:", -1, 100) / 100
-                cle_week_16_pick_percent_percent = cle_week_16_pick_percent*100
-                if cle_week_16_pick_percent < 0:
-                    st.write(f"Cleveland Browns Week 16 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Cleveland Browns Week 16 Pick Percent: :green[{cle_week_16_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                dal_week_16_pick_percent = st.slider("Dallas Cowboys Week 16 Pick Percent:", -1, 100) / 100
-                dal_week_16_pick_percent_percent = dal_week_16_pick_percent*100
-                if dal_week_16_pick_percent < 0:
-                    st.write(f"Dallas Cowboys Week 16 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Dallas Cowboys Week 16 Pick Percent: :green[{dal_week_16_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                den_week_16_pick_percent = st.slider("Denver Broncos Week 16 Pick Percent:", -1, 100) / 100
-                den_week_16_pick_percent_percent = den_week_16_pick_percent*100
-                if den_week_16_pick_percent < 0:
-                    st.write(f"Denver Broncos Week 16 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Denver Broncos Week 16 Pick Percent: :green[{den_week_16_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                det_week_16_pick_percent = st.slider("Detroit Lions Week 16 Pick Percent:", -1, 100) / 100
-                det_week_16_pick_percent_percent = det_week_16_pick_percent*100
-                if det_week_16_pick_percent < 0:
-                    st.write(f"Detroit Lions Week 16 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Detroit Lions Week 16 Pick Percent: :green[{det_week_16_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                gb_week_16_pick_percent = st.slider("Green Bay Packers Week 16 Pick Percent:", -1, 100) / 100
-                gb_week_16_pick_percent_percent = gb_week_16_pick_percent*100
-                if gb_week_16_pick_percent < 0:
-                    st.write(f"Green Bay Packers Week 16 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Green Bay Packers Week 16 Pick Percent: :green[{gb_week_16_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                hou_week_16_pick_percent = st.slider("Houston Texans Week 16 Pick Percent:", -1, 100) / 100
-                hou_week_16_pick_percent_percent = hou_week_16_pick_percent*100
-                if hou_week_16_pick_percent < 0:
-                    st.write(f"Houston Texans Week 16 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Houston Texans Week 16 Pick Percent: :green[{hou_week_16_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                ind_week_16_pick_percent = st.slider("Indianapoils Colts Week 16 Pick Percent:", -1, 100) / 100
-                ind_week_16_pick_percent_percent = ind_week_16_pick_percent*100
-                if ind_week_16_pick_percent < 0:
-                    st.write(f"Indianapoils Colts Week 16 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Indianapoils Colts Week 16 Pick Percent: :green[{ind_week_16_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                jax_week_16_pick_percent = st.slider("Jacksonville Jaguars Week 16 Pick Percent:", -1, 100) / 100
-                jax_week_16_pick_percent_percent = jax_week_16_pick_percent*100
-                if jax_week_16_pick_percent < 0:
-                    st.write(f"Jacksonville Jaguars Week 16 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Jacksonville Jaguars Week 16 Pick Percent: :green[{jax_week_16_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                kc_week_16_pick_percent = st.slider("Kansas City Chiefs Week 16 Pick Percent:", -1, 100) / 100
-                kc_week_16_pick_percent_percent = kc_week_16_pick_percent*100
-                if kc_week_16_pick_percent < 0:
-                    st.write(f"Kansas City Chiefs Week 16 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Kansas City Chiefs Week 16 Pick Percent: :green[{kc_week_16_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                lv_week_16_pick_percent = st.slider("Las Vegas Raiders Week 16 Pick Percent:", -1, 100) / 100
-                lv_week_16_pick_percent_percent = lv_week_16_pick_percent*100
-                if lv_week_16_pick_percent < 0:
-                    st.write(f"Las Vegas Raiders Week 16 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Las vegas Raiders Week 16 Pick Percent: :green[{lv_week_16_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                lac_week_16_pick_percent = st.slider("Los Angeles Chargers Week 16 Pick Percent:", -1, 100) / 100
-                lac_week_16_pick_percent_percent = lac_week_16_pick_percent*100
-                if lac_week_16_pick_percent < 0:
-                    st.write(f"Los Angeles Chargers Week 16 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Los angeles Chargers Week 16 Pick Percent: :green[{lac_week_16_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                lar_week_16_pick_percent = st.slider("Los Angeles Rams Week 16 Pick Percent:", -1, 100) / 100
-                lar_week_16_pick_percent_percent = lar_week_16_pick_percent*100
-                if lar_week_16_pick_percent < 0:
-                    st.write(f"Los Angeles Rams Week 16 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Los Angeles Rams Week 16 Pick Percent: :green[{lar_week_16_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                mia_week_16_pick_percent = st.slider("Miami Dolphins Week 16 Pick Percent:", -1, 100) / 100
-                mia_week_16_pick_percent_percent = mia_week_16_pick_percent*100
-                if mia_week_16_pick_percent < 0:
-                    st.write(f"Miami Dolphins Week 16 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Miami Dolphins Week 16 Pick Percent: :green[{mia_week_16_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                min_week_16_pick_percent = st.slider("Minnesota Vikings Week 16 Pick Percent:", -1, 100) / 100
-                min_week_16_pick_percent_percent = min_week_16_pick_percent*100
-                if min_week_16_pick_percent < 0:
-                    st.write(f"Minnesota Vikings Week 16 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Minnesota Vikings Week 16 Pick Percent: :green[{min_week_16_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                ne_week_16_pick_percent = st.slider("New England Patriots Week 16 Pick Percent:", -1, 100) / 100
-                ne_week_16_pick_percent_percent = ne_week_16_pick_percent*100
-                if ne_week_16_pick_percent < 0:
-                    st.write(f"New England Patriots Week 16 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"New England Patriots Week 16 Pick Percent: :green[{ne_week_16_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                no_week_16_pick_percent = st.slider("New Orleans Saints Week 16 Pick Percent:", -1, 100) / 100
-                no_week_16_pick_percent_percent = no_week_16_pick_percent*100
-                if no_week_16_pick_percent < 0:
-                    st.write(f"New Orleans Saints Week 16 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"New Orleans Saints Week 16 Pick Percent: :green[{no_week_16_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                nyg_week_16_pick_percent = st.slider("New York Giants Week 16 Pick Percent:", -1, 100) / 100
-                nyg_week_16_pick_percent_percent = nyg_week_16_pick_percent*100
-                if nyg_week_16_pick_percent < 0:
-                    st.write(f"New York Giants Week 16 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"New York Giants Week 16 Pick Percent: :green[{nyg_week_16_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                nyj_week_16_pick_percent = st.slider("New York Jets Week 16 Pick Percent:", -1, 100) / 100
-                nyj_week_16_pick_percent_percent = nyj_week_16_pick_percent*100
-                if nyj_week_16_pick_percent < 0:
-                    st.write(f"New York Jets Week 16 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"New York Jets Week 16 Pick Percent: :green[{nyj_week_16_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                phi_week_16_pick_percent = st.slider("Philadelphia Eagles Week 16 Pick Percent:", -1, 100) / 100
-                phi_week_16_pick_percent_percent = phi_week_16_pick_percent*100
-                if phi_week_16_pick_percent < 0:
-                    st.write(f"Philadelphia Eagles Week 16 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Philadelphia Eagles Week 16 Pick Percent: :green[{phi_week_16_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                pit_week_16_pick_percent = st.slider("Pittsburgh Steelers Week 16 Pick Percent:", -1, 100) / 100
-                pit_week_16_pick_percent_percent = pit_week_16_pick_percent*100
-                if pit_week_16_pick_percent < 0:
-                    st.write(f"Pittsburgh Steelers Week 16 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Pittsburgh Steelers Week 16 Pick Percent: :green[{pit_week_16_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                sf_week_16_pick_percent = st.slider("San Francisco 49ers Week 16 Pick Percent:", -1, 100) / 100
-                sf_week_16_pick_percent_percent = sf_week_16_pick_percent*100
-                if sf_week_16_pick_percent < 0:
-                    st.write(f"San Francisco 49ers Week 16 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"San Francisco 49ers Week 16 Pick Percent: :green[{sf_week_16_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                sea_week_16_pick_percent = st.slider("Seattle Seahawks Week 16 Pick Percent:", -1, 100) / 100
-                sea_week_16_pick_percent_percent = sea_week_16_pick_percent*100
-                if sea_week_16_pick_percent < 0:
-                    st.write(f"Seattle Seahawks Week 16 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Seattle Seahawks Week 16 Pick Percent: :green[{sea_week_16_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                tb_week_16_pick_percent = st.slider("Tampa Bay Buccaneers Week 16 Pick Percent:", -1, 100) / 100
-                tb_week_16_pick_percent_percent = tb_week_16_pick_percent*100
-                if tb_week_16_pick_percent < 0:
-                    st.write(f"Tampa Bay Buccaneers Week 16 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Tampa Bay Buccaneers Week 16 Pick Percent: :green[{tb_week_16_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                ten_week_16_pick_percent = st.slider("Tennessee Titans Week 16 Pick Percent:", -1, 100) / 100
-                ten_week_16_pick_percent_percent = ten_week_16_pick_percent*100
-                if ten_week_16_pick_percent < 0:
-                    st.write(f"Tennessee Titans Week 16 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Tennessee Titans Week 16 Pick Percent: :green[{ten_week_16_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                was_week_16_pick_percent = st.slider("Washington Commanders Week 16 Pick Percent:", -1, 100) / 100
-                was_week_16_pick_percent_percent = was_week_16_pick_percent*100
-                if was_week_16_pick_percent < 0:
-                    st.write(f"Washington Commanders Week 16 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Washington Commanders Week 16 Pick Percent: :green[{was_week_16_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-            st.write('')
-            st.write('')
-        if starting_week <= 17 and ending_week > 17:
-            week_17_pick_percents = st.checkbox('Add Week 17 Pick Percentages?', help = "Check this box if you want to adjust the estimated pick percentages for each team in week 17.")
-            if week_17_pick_percents:
-                st.write('')
-                st.subheader('Week 17 Estimated Pick Percentages')
-                st.write('')
-                az_week_17_pick_percent = st.slider("Arizona Cardinals Week 17 Pick Percent:", -1, 100) / 100
-                az_week_17_pick_percent_percent = az_week_17_pick_percent*100
-                if az_week_17_pick_percent < 0:
-                    st.write(f"Arizona Cardinals Week 17 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Arizona Cardinals Week 17 Pick Percent: :green[{az_week_17_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                atl_week_17_pick_percent = st.slider("Atlanta Falcons Week 17 Pick Percent:", -1, 100) / 100
-                atl_week_17_pick_percent_percent = atl_week_17_pick_percent*100
-                if atl_week_17_pick_percent < 0:
-                    st.write(f"Atlanta Falcons Week 17 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Atlanta Falcons Week 17 Pick Percent: :green[{atl_week_17_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                bal_week_17_pick_percent = st.slider("Baltimore Ravens Week 17 Pick Percent:", -1, 100) / 100
-                bal_week_17_pick_percent_percent = bal_week_17_pick_percent*100
-                if bal_week_17_pick_percent < 0:
-                    st.write(f"Baltimore Ravens Week 17 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Baltimore Ravenss Week 17 Pick Percent: :green[{bal_week_17_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                buf_week_17_pick_percent = st.slider("Buffalo Bills Week 17 Pick Percent:", -1, 100) / 100
-                buf_week_17_pick_percent_percent = buf_week_17_pick_percent*100
-                if buf_week_17_pick_percent < 0:
-                    st.write(f"Buffalo Bills Week 17 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Buffalo Bills Week 17 Pick Percent: :green[{buf_week_17_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                car_week_17_pick_percent = st.slider("Carolina Panthers Week 17 Pick Percent:", -1, 100) / 100
-                car_week_17_pick_percent_percent = car_week_17_pick_percent*100
-                if car_week_17_pick_percent < 0:
-                    st.write(f"Carolina Panthers Week 17 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Carolina Panthers Week 17 Pick Percent: :green[{car_week_17_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                chi_week_17_pick_percent = st.slider("Chicago Bears Week 17 Pick Percent:", -1, 100) / 100
-                chi_week_17_pick_percent_percent = chi_week_17_pick_percent*100
-                if chi_week_17_pick_percent < 0:
-                    st.write(f"Chicago Bears Week 17 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Chicago Bears Week 17 Pick Percent: :green[{chi_week_17_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                cin_week_17_pick_percent = st.slider("Cincinnati Bengals Week 17 Pick Percent:", -1, 100) / 100
-                cin_week_17_pick_percent_percent = cin_week_17_pick_percent*100
-                if cin_week_17_pick_percent < 0:
-                    st.write(f"Cincinnati Bengals Week 17 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Cincinnati Bengals Week 17 Pick Percent: :green[{cin_week_17_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                cle_week_17_pick_percent = st.slider("Cleveland Browns Week 17 Pick Percent:", -1, 100) / 100
-                cle_week_17_pick_percent_percent = cle_week_17_pick_percent*100
-                if cle_week_17_pick_percent < 0:
-                    st.write(f"Cleveland Browns Week 17 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Cleveland Browns Week 17 Pick Percent: :green[{cle_week_17_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                dal_week_17_pick_percent = st.slider("Dallas Cowboys Week 17 Pick Percent:", -1, 100) / 100
-                dal_week_17_pick_percent_percent = dal_week_17_pick_percent*100
-                if dal_week_17_pick_percent < 0:
-                    st.write(f"Dallas Cowboys Week 17 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Dallas Cowboys Week 17 Pick Percent: :green[{dal_week_17_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                den_week_17_pick_percent = st.slider("Denver Broncos Week 17 Pick Percent:", -1, 100) / 100
-                den_week_17_pick_percent_percent = den_week_17_pick_percent*100
-                if den_week_17_pick_percent < 0:
-                    st.write(f"Denver Broncos Week 17 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Denver Broncos Week 17 Pick Percent: :green[{den_week_17_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                det_week_17_pick_percent = st.slider("Detroit Lions Week 17 Pick Percent:", -1, 100) / 100
-                det_week_17_pick_percent_percent = det_week_17_pick_percent*100
-                if det_week_17_pick_percent < 0:
-                    st.write(f"Detroit Lions Week 17 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Detroit Lions Week 17 Pick Percent: :green[{det_week_17_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                gb_week_17_pick_percent = st.slider("Green Bay Packers Week 17 Pick Percent:", -1, 100) / 100
-                gb_week_17_pick_percent_percent = gb_week_17_pick_percent*100
-                if gb_week_17_pick_percent < 0:
-                    st.write(f"Green Bay Packers Week 17 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Green Bay Packers Week 17 Pick Percent: :green[{gb_week_17_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                hou_week_17_pick_percent = st.slider("Houston Texans Week 17 Pick Percent:", -1, 100) / 100
-                hou_week_17_pick_percent_percent = hou_week_17_pick_percent*100
-                if hou_week_17_pick_percent < 0:
-                    st.write(f"Houston Texans Week 17 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Houston Texans Week 17 Pick Percent: :green[{hou_week_17_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                ind_week_17_pick_percent = st.slider("Indianapoils Colts Week 17 Pick Percent:", -1, 100) / 100
-                ind_week_17_pick_percent_percent = ind_week_17_pick_percent*100
-                if ind_week_17_pick_percent < 0:
-                    st.write(f"Indianapoils Colts Week 17 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Indianapoils Colts Week 17 Pick Percent: :green[{ind_week_17_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                jax_week_17_pick_percent = st.slider("Jacksonville Jaguars Week 17 Pick Percent:", -1, 100) / 100
-                jax_week_17_pick_percent_percent = jax_week_17_pick_percent*100
-                if jax_week_17_pick_percent < 0:
-                    st.write(f"Jacksonville Jaguars Week 17 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Jacksonville Jaguars Week 17 Pick Percent: :green[{jax_week_17_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                kc_week_17_pick_percent = st.slider("Kansas City Chiefs Week 17 Pick Percent:", -1, 100) / 100
-                kc_week_17_pick_percent_percent = kc_week_17_pick_percent*100
-                if kc_week_17_pick_percent < 0:
-                    st.write(f"Kansas City Chiefs Week 17 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Kansas City Chiefs Week 17 Pick Percent: :green[{kc_week_17_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                lv_week_17_pick_percent = st.slider("Las Vegas Raiders Week 17 Pick Percent:", -1, 100) / 100
-                lv_week_17_pick_percent_percent = lv_week_17_pick_percent*100
-                if lv_week_17_pick_percent < 0:
-                    st.write(f"Las Vegas Raiders Week 17 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Las vegas Raiders Week 17 Pick Percent: :green[{lv_week_17_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                lac_week_17_pick_percent = st.slider("Los Angeles Chargers Week 17 Pick Percent:", -1, 100) / 100
-                lac_week_17_pick_percent_percent = lac_week_17_pick_percent*100
-                if lac_week_17_pick_percent < 0:
-                    st.write(f"Los Angeles Chargers Week 17 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Los angeles Chargers Week 17 Pick Percent: :green[{lac_week_17_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                lar_week_17_pick_percent = st.slider("Los Angeles Rams Week 17 Pick Percent:", -1, 100) / 100
-                lar_week_17_pick_percent_percent = lar_week_17_pick_percent*100
-                if lar_week_17_pick_percent < 0:
-                    st.write(f"Los Angeles Rams Week 17 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Los Angeles Rams Week 17 Pick Percent: :green[{lar_week_17_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                mia_week_17_pick_percent = st.slider("Miami Dolphins Week 17 Pick Percent:", -1, 100) / 100
-                mia_week_17_pick_percent_percent = mia_week_17_pick_percent*100
-                if mia_week_17_pick_percent < 0:
-                    st.write(f"Miami Dolphins Week 17 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Miami Dolphins Week 17 Pick Percent: :green[{mia_week_17_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                min_week_17_pick_percent = st.slider("Minnesota Vikings Week 17 Pick Percent:", -1, 100) / 100
-                min_week_17_pick_percent_percent = min_week_17_pick_percent*100
-                if min_week_17_pick_percent < 0:
-                    st.write(f"Minnesota Vikings Week 17 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Minnesota Vikings Week 17 Pick Percent: :green[{min_week_17_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                ne_week_17_pick_percent = st.slider("New England Patriots Week 17 Pick Percent:", -1, 100) / 100
-                ne_week_17_pick_percent_percent = ne_week_17_pick_percent*100
-                if ne_week_17_pick_percent < 0:
-                    st.write(f"New England Patriots Week 17 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"New England Patriots Week 17 Pick Percent: :green[{ne_week_17_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                no_week_17_pick_percent = st.slider("New Orleans Saints Week 17 Pick Percent:", -1, 100) / 100
-                no_week_17_pick_percent_percent = no_week_17_pick_percent*100
-                if no_week_17_pick_percent < 0:
-                    st.write(f"New Orleans Saints Week 17 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"New Orleans Saints Week 17 Pick Percent: :green[{no_week_17_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                nyg_week_17_pick_percent = st.slider("New York Giants Week 17 Pick Percent:", -1, 100) / 100
-                nyg_week_17_pick_percent_percent = nyg_week_17_pick_percent*100
-                if nyg_week_17_pick_percent < 0:
-                    st.write(f"New York Giants Week 17 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"New York Giants Week 17 Pick Percent: :green[{nyg_week_17_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                nyj_week_17_pick_percent = st.slider("New York Jets Week 17 Pick Percent:", -1, 100) / 100
-                nyj_week_17_pick_percent_percent = nyj_week_17_pick_percent*100
-                if nyj_week_17_pick_percent < 0:
-                    st.write(f"New York Jets Week 17 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"New York Jets Week 17 Pick Percent: :green[{nyj_week_17_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                phi_week_17_pick_percent = st.slider("Philadelphia Eagles Week 17 Pick Percent:", -1, 100) / 100
-                phi_week_17_pick_percent_percent = phi_week_17_pick_percent*100
-                if phi_week_17_pick_percent < 0:
-                    st.write(f"Philadelphia Eagles Week 17 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Philadelphia Eagles Week 17 Pick Percent: :green[{phi_week_17_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                pit_week_17_pick_percent = st.slider("Pittsburgh Steelers Week 17 Pick Percent:", -1, 100) / 100
-                pit_week_17_pick_percent_percent = pit_week_17_pick_percent*100
-                if pit_week_17_pick_percent < 0:
-                    st.write(f"Pittsburgh Steelers Week 17 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Pittsburgh Steelers Week 17 Pick Percent: :green[{pit_week_17_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                sf_week_17_pick_percent = st.slider("San Francisco 49ers Week 17 Pick Percent:", -1, 100) / 100
-                sf_week_17_pick_percent_percent = sf_week_17_pick_percent*100
-                if sf_week_17_pick_percent < 0:
-                    st.write(f"San Francisco 49ers Week 17 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"San Francisco 49ers Week 17 Pick Percent: :green[{sf_week_17_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                sea_week_17_pick_percent = st.slider("Seattle Seahawks Week 17 Pick Percent:", -1, 100) / 100
-                sea_week_17_pick_percent_percent = sea_week_17_pick_percent*100
-                if sea_week_17_pick_percent < 0:
-                    st.write(f"Seattle Seahawks Week 17 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Seattle Seahawks Week 17 Pick Percent: :green[{sea_week_17_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                tb_week_17_pick_percent = st.slider("Tampa Bay Buccaneers Week 17 Pick Percent:", -1, 100) / 100
-                tb_week_17_pick_percent_percent = tb_week_17_pick_percent*100
-                if tb_week_17_pick_percent < 0:
-                    st.write(f"Tampa Bay Buccaneers Week 17 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Tampa Bay Buccaneers Week 17 Pick Percent: :green[{tb_week_17_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                ten_week_17_pick_percent = st.slider("Tennessee Titans Week 17 Pick Percent:", -1, 100) / 100
-                ten_week_17_pick_percent_percent = ten_week_17_pick_percent*100
-                if ten_week_17_pick_percent < 0:
-                    st.write(f"Tennessee Titans Week 17 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Tennessee Titans Week 17 Pick Percent: :green[{ten_week_17_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                was_week_17_pick_percent = st.slider("Washington Commanders Week 17 Pick Percent:", -1, 100) / 100
-                was_week_17_pick_percent_percent = was_week_17_pick_percent*100
-                if was_week_17_pick_percent < 0:
-                    st.write(f"Washington Commanders Week 17 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Washington Commanders Week 17 Pick Percent: :green[{was_week_17_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-            st.write('')
-            st.write('')
-        if starting_week <= 18 and ending_week > 18:
-            week_18_pick_percents = st.checkbox('Add Week 18 (Christmas Week if in Circa Survivor Contest) Pick Percentages?', help = "Check this box if you want to adjust the estimated pick percentages for each team in week 18. (Christmas Week if in Circa Survivor Contest)")
-            if week_18_pick_percents:
-                st.write('')
-                st.subheader('Week 18 Estimated Pick Percentages')
-                st.write('')
-                az_week_18_pick_percent = st.slider("Arizona Cardinals Week 18 Pick Percent:", -1, 100) / 100
-                az_week_18_pick_percent_percent = az_week_18_pick_percent*100
-                if az_week_18_pick_percent < 0:
-                    st.write(f"Arizona Cardinals Week 18 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Arizona Cardinals Week 18 Pick Percent: :green[{az_week_18_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                atl_week_18_pick_percent = st.slider("Atlanta Falcons Week 18 Pick Percent:", -1, 100) / 100
-                atl_week_18_pick_percent_percent = atl_week_18_pick_percent*100
-                if atl_week_18_pick_percent < 0:
-                    st.write(f"Atlanta Falcons Week 18 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Atlanta Falcons Week 18 Pick Percent: :green[{atl_week_18_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                bal_week_18_pick_percent = st.slider("Baltimore Ravens Week 18 Pick Percent:", -1, 100) / 100
-                bal_week_18_pick_percent_percent = bal_week_18_pick_percent*100
-                if bal_week_18_pick_percent < 0:
-                    st.write(f"Baltimore Ravens Week 18 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Baltimore Ravenss Week 18 Pick Percent: :green[{bal_week_18_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                buf_week_18_pick_percent = st.slider("Buffalo Bills Week 18 Pick Percent:", -1, 100) / 100
-                buf_week_18_pick_percent_percent = buf_week_18_pick_percent*100
-                if buf_week_18_pick_percent < 0:
-                    st.write(f"Buffalo Bills Week 18 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Buffalo Bills Week 18 Pick Percent: :green[{buf_week_18_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                car_week_18_pick_percent = st.slider("Carolina Panthers Week 18 Pick Percent:", -1, 100) / 100
-                car_week_18_pick_percent_percent = car_week_18_pick_percent*100
-                if car_week_18_pick_percent < 0:
-                    st.write(f"Carolina Panthers Week 18 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Carolina Panthers Week 18 Pick Percent: :green[{car_week_18_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                chi_week_18_pick_percent = st.slider("Chicago Bears Week 18 Pick Percent:", -1, 100) / 100
-                chi_week_18_pick_percent_percent = chi_week_18_pick_percent*100
-                if chi_week_18_pick_percent < 0:
-                    st.write(f"Chicago Bears Week 18 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Chicago Bears Week 18 Pick Percent: :green[{chi_week_18_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                cin_week_18_pick_percent = st.slider("Cincinnati Bengals Week 18 Pick Percent:", -1, 100) / 100
-                cin_week_18_pick_percent_percent = cin_week_18_pick_percent*100
-                if cin_week_18_pick_percent < 0:
-                    st.write(f"Cincinnati Bengals Week 18 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Cincinnati Bengals Week 18 Pick Percent: :green[{cin_week_18_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                cle_week_18_pick_percent = st.slider("Cleveland Browns Week 18 Pick Percent:", -1, 100) / 100
-                cle_week_18_pick_percent_percent = cle_week_18_pick_percent*100
-                if cle_week_18_pick_percent < 0:
-                    st.write(f"Cleveland Browns Week 18 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Cleveland Browns Week 18 Pick Percent: :green[{cle_week_18_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                dal_week_18_pick_percent = st.slider("Dallas Cowboys Week 18 Pick Percent:", -1, 100) / 100
-                dal_week_18_pick_percent_percent = dal_week_18_pick_percent*100
-                if dal_week_18_pick_percent < 0:
-                    st.write(f"Dallas Cowboys Week 18 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Dallas Cowboys Week 18 Pick Percent: :green[{dal_week_18_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                den_week_18_pick_percent = st.slider("Denver Broncos Week 18 Pick Percent:", -1, 100) / 100
-                den_week_18_pick_percent_percent = den_week_18_pick_percent*100
-                if den_week_18_pick_percent < 0:
-                    st.write(f"Denver Broncos Week 18 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Denver Broncos Week 18 Pick Percent: :green[{den_week_18_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                det_week_18_pick_percent = st.slider("Detroit Lions Week 18 Pick Percent:", -1, 100) / 100
-                det_week_18_pick_percent_percent = det_week_18_pick_percent*100
-                if det_week_18_pick_percent < 0:
-                    st.write(f"Detroit Lions Week 18 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Detroit Lions Week 18 Pick Percent: :green[{det_week_18_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                gb_week_18_pick_percent = st.slider("Green Bay Packers Week 18 Pick Percent:", -1, 100) / 100
-                gb_week_18_pick_percent_percent = gb_week_18_pick_percent*100
-                if gb_week_18_pick_percent < 0:
-                    st.write(f"Green Bay Packers Week 18 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Green Bay Packers Week 18 Pick Percent: :green[{gb_week_18_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                hou_week_18_pick_percent = st.slider("Houston Texans Week 18 Pick Percent:", -1, 100) / 100
-                hou_week_18_pick_percent_percent = hou_week_18_pick_percent*100
-                if hou_week_18_pick_percent < 0:
-                    st.write(f"Houston Texans Week 18 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Houston Texans Week 18 Pick Percent: :green[{hou_week_18_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                ind_week_18_pick_percent = st.slider("Indianapoils Colts Week 18 Pick Percent:", -1, 100) / 100
-                ind_week_18_pick_percent_percent = ind_week_18_pick_percent*100
-                if ind_week_18_pick_percent < 0:
-                    st.write(f"Indianapoils Colts Week 18 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Indianapoils Colts Week 18 Pick Percent: :green[{ind_week_18_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                jax_week_18_pick_percent = st.slider("Jacksonville Jaguars Week 18 Pick Percent:", -1, 100) / 100
-                jax_week_18_pick_percent_percent = jax_week_18_pick_percent*100
-                if jax_week_18_pick_percent < 0:
-                    st.write(f"Jacksonville Jaguars Week 18 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Jacksonville Jaguars Week 18 Pick Percent: :green[{jax_week_18_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                kc_week_18_pick_percent = st.slider("Kansas City Chiefs Week 18 Pick Percent:", -1, 100) / 100
-                kc_week_18_pick_percent_percent = kc_week_18_pick_percent*100
-                if kc_week_18_pick_percent < 0:
-                    st.write(f"Kansas City Chiefs Week 18 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Kansas City Chiefs Week 18 Pick Percent: :green[{kc_week_18_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                lv_week_18_pick_percent = st.slider("Las Vegas Raiders Week 18 Pick Percent:", -1, 100) / 100
-                lv_week_18_pick_percent_percent = lv_week_18_pick_percent*100
-                if lv_week_18_pick_percent < 0:
-                    st.write(f"Las Vegas Raiders Week 18 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Las vegas Raiders Week 18 Pick Percent: :green[{lv_week_18_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                lac_week_18_pick_percent = st.slider("Los Angeles Chargers Week 18 Pick Percent:", -1, 100) / 100
-                lac_week_18_pick_percent_percent = lac_week_18_pick_percent*100
-                if lac_week_18_pick_percent < 0:
-                    st.write(f"Los Angeles Chargers Week 18 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Los angeles Chargers Week 18 Pick Percent: :green[{lac_week_18_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                lar_week_18_pick_percent = st.slider("Los Angeles Rams Week 18 Pick Percent:", -1, 100) / 100
-                lar_week_18_pick_percent_percent = lar_week_18_pick_percent*100
-                if lar_week_18_pick_percent < 0:
-                    st.write(f"Los Angeles Rams Week 18 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Los Angeles Rams Week 18 Pick Percent: :green[{lar_week_18_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                mia_week_18_pick_percent = st.slider("Miami Dolphins Week 18 Pick Percent:", -1, 100) / 100
-                mia_week_18_pick_percent_percent = mia_week_18_pick_percent*100
-                if mia_week_18_pick_percent < 0:
-                    st.write(f"Miami Dolphins Week 18 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Miami Dolphins Week 18 Pick Percent: :green[{mia_week_18_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                min_week_18_pick_percent = st.slider("Minnesota Vikings Week 18 Pick Percent:", -1, 100) / 100
-                min_week_18_pick_percent_percent = min_week_18_pick_percent*100
-                if min_week_18_pick_percent < 0:
-                    st.write(f"Minnesota Vikings Week 18 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Minnesota Vikings Week 18 Pick Percent: :green[{min_week_18_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                ne_week_18_pick_percent = st.slider("New England Patriots Week 18 Pick Percent:", -1, 100) / 100
-                ne_week_18_pick_percent_percent = ne_week_18_pick_percent*100
-                if ne_week_18_pick_percent < 0:
-                    st.write(f"New England Patriots Week 18 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"New England Patriots Week 18 Pick Percent: :green[{ne_week_18_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                no_week_18_pick_percent = st.slider("New Orleans Saints Week 18 Pick Percent:", -1, 100) / 100
-                no_week_18_pick_percent_percent = no_week_18_pick_percent*100
-                if no_week_18_pick_percent < 0:
-                    st.write(f"New Orleans Saints Week 18 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"New Orleans Saints Week 18 Pick Percent: :green[{no_week_18_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                nyg_week_18_pick_percent = st.slider("New York Giants Week 18 Pick Percent:", -1, 100) / 100
-                nyg_week_18_pick_percent_percent = nyg_week_18_pick_percent*100
-                if nyg_week_18_pick_percent < 0:
-                    st.write(f"New York Giants Week 18 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"New York Giants Week 18 Pick Percent: :green[{nyg_week_18_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                nyj_week_18_pick_percent = st.slider("New York Jets Week 18 Pick Percent:", -1, 100) / 100
-                nyj_week_18_pick_percent_percent = nyj_week_18_pick_percent*100
-                if nyj_week_18_pick_percent < 0:
-                    st.write(f"New York Jets Week 18 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"New York Jets Week 18 Pick Percent: :green[{nyj_week_18_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                phi_week_18_pick_percent = st.slider("Philadelphia Eagles Week 18 Pick Percent:", -1, 100) / 100
-                phi_week_18_pick_percent_percent = phi_week_18_pick_percent*100
-                if phi_week_18_pick_percent < 0:
-                    st.write(f"Philadelphia Eagles Week 18 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Philadelphia Eagles Week 18 Pick Percent: :green[{phi_week_18_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                pit_week_18_pick_percent = st.slider("Pittsburgh Steelers Week 18 Pick Percent:", -1, 100) / 100
-                pit_week_18_pick_percent_percent = pit_week_18_pick_percent*100
-                if pit_week_18_pick_percent < 0:
-                    st.write(f"Pittsburgh Steelers Week 18 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Pittsburgh Steelers Week 18 Pick Percent: :green[{pit_week_18_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                sf_week_18_pick_percent = st.slider("San Francisco 49ers Week 18 Pick Percent:", -1, 100) / 100
-                sf_week_18_pick_percent_percent = sf_week_18_pick_percent*100
-                if sf_week_18_pick_percent < 0:
-                    st.write(f"San Francisco 49ers Week 18 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"San Francisco 49ers Week 18 Pick Percent: :green[{sf_week_18_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                sea_week_18_pick_percent = st.slider("Seattle Seahawks Week 18 Pick Percent:", -1, 100) / 100
-                sea_week_18_pick_percent_percent = sea_week_18_pick_percent*100
-                if sea_week_18_pick_percent < 0:
-                    st.write(f"Seattle Seahawks Week 18 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Seattle Seahawks Week 18 Pick Percent: :green[{sea_week_18_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                tb_week_18_pick_percent = st.slider("Tampa Bay Buccaneers Week 18 Pick Percent:", -1, 100) / 100
-                tb_week_18_pick_percent_percent = tb_week_18_pick_percent*100
-                if tb_week_18_pick_percent < 0:
-                    st.write(f"Tampa Bay Buccaneers Week 18 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Tampa Bay Buccaneers Week 18 Pick Percent: :green[{tb_week_18_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                ten_week_18_pick_percent = st.slider("Tennessee Titans Week 18 Pick Percent:", -1, 100) / 100
-                ten_week_18_pick_percent_percent = ten_week_18_pick_percent*100
-                if ten_week_18_pick_percent < 0:
-                    st.write(f"Tennessee Titans Week 18 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Tennessee Titans Week 18 Pick Percent: :green[{ten_week_18_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-        	    
-                was_week_18_pick_percent = st.slider("Washington Commanders Week 18 Pick Percent:", -1, 100) / 100
-                was_week_18_pick_percent_percent = was_week_18_pick_percent*100
-                if was_week_18_pick_percent < 0:
-                    st.write(f"Washington Commanders Week 18 Pick Percent: :red[Automatically Calculated]")
-                else:
-                    st.write(f"Washington Commanders Week 18 Pick Percent: :green[{was_week_18_pick_percent_percent}%]")
-                st.write("")
-                st.write("")
-            st.write('')
-            st.write('')
-        if selected_contest == 'Circa':
-            if starting_week <= 19 and ending_week > 19:
-                week_19_pick_percents = st.checkbox('Add Week 19 Pick Percentages?', help = "Check this box if you want to adjust the estimated pick percentages for each team in week 19.")
-                if week_19_pick_percents:
-                    st.write('')
-                    st.subheader('Week 19 Estimated Pick Percentages')
-                    st.write('')
-                    az_week_19_pick_percent = st.slider("Arizona Cardinals Week 19 Pick Percent:", -1, 100) / 100
-                    az_week_19_pick_percent_percent = az_week_19_pick_percent*100
-                    if az_week_19_pick_percent < 0:
-                        st.write(f"Arizona Cardinals Week 19 Pick Percent: :red[Automatically Calculated]")
-                    else:
-                        st.write(f"Arizona Cardinals Week 19 Pick Percent: :green[{az_week_19_pick_percent_percent}%]")
-                    st.write("")
-                    st.write("")
-            	    
-                    atl_week_19_pick_percent = st.slider("Atlanta Falcons Week 19 Pick Percent:", -1, 100) / 100
-                    atl_week_19_pick_percent_percent = atl_week_19_pick_percent*100
-                    if atl_week_19_pick_percent < 0:
-                        st.write(f"Atlanta Falcons Week 19 Pick Percent: :red[Automatically Calculated]")
-                    else:
-                        st.write(f"Atlanta Falcons Week 19 Pick Percent: :green[{atl_week_19_pick_percent_percent}%]")
-                    st.write("")
-                    st.write("")
-            	    
-                    bal_week_19_pick_percent = st.slider("Baltimore Ravens Week 19 Pick Percent:", -1, 100) / 100
-                    bal_week_19_pick_percent_percent = bal_week_19_pick_percent*100
-                    if bal_week_19_pick_percent < 0:
-                        st.write(f"Baltimore Ravens Week 19 Pick Percent: :red[Automatically Calculated]")
-                    else:
-                        st.write(f"Baltimore Ravenss Week 19 Pick Percent: :green[{bal_week_19_pick_percent_percent}%]")
-                    st.write("")
-                    st.write("")
-            	    
-                    buf_week_19_pick_percent = st.slider("Buffalo Bills Week 19 Pick Percent:", -1, 100) / 100
-                    buf_week_19_pick_percent_percent = buf_week_19_pick_percent*100
-                    if buf_week_19_pick_percent < 0:
-                        st.write(f"Buffalo Bills Week 19 Pick Percent: :red[Automatically Calculated]")
-                    else:
-                        st.write(f"Buffalo Bills Week 19 Pick Percent: :green[{buf_week_19_pick_percent_percent}%]")
-                    st.write("")
-                    st.write("")
-            	    
-                    car_week_19_pick_percent = st.slider("Carolina Panthers Week 19 Pick Percent:", -1, 100) / 100
-                    car_week_19_pick_percent_percent = car_week_19_pick_percent*100
-                    if car_week_19_pick_percent < 0:
-                        st.write(f"Carolina Panthers Week 19 Pick Percent: :red[Automatically Calculated]")
-                    else:
-                        st.write(f"Carolina Panthers Week 19 Pick Percent: :green[{car_week_19_pick_percent_percent}%]")
-                    st.write("")
-                    st.write("")
-            	    
-                    chi_week_19_pick_percent = st.slider("Chicago Bears Week 19 Pick Percent:", -1, 100) / 100
-                    chi_week_19_pick_percent_percent = chi_week_19_pick_percent*100
-                    if chi_week_19_pick_percent < 0:
-                        st.write(f"Chicago Bears Week 19 Pick Percent: :red[Automatically Calculated]")
-                    else:
-                        st.write(f"Chicago Bears Week 19 Pick Percent: :green[{chi_week_19_pick_percent_percent}%]")
-                    st.write("")
-                    st.write("")
-            	    
-                    cin_week_19_pick_percent = st.slider("Cincinnati Bengals Week 19 Pick Percent:", -1, 100) / 100
-                    cin_week_19_pick_percent_percent = cin_week_19_pick_percent*100
-                    if cin_week_19_pick_percent < 0:
-                        st.write(f"Cincinnati Bengals Week 19 Pick Percent: :red[Automatically Calculated]")
-                    else:
-                        st.write(f"Cincinnati Bengals Week 19 Pick Percent: :green[{cin_week_19_pick_percent_percent}%]")
-                    st.write("")
-                    st.write("")
-            	    
-                    cle_week_19_pick_percent = st.slider("Cleveland Browns Week 19 Pick Percent:", -1, 100) / 100
-                    cle_week_19_pick_percent_percent = cle_week_19_pick_percent*100
-                    if cle_week_19_pick_percent < 0:
-                        st.write(f"Cleveland Browns Week 19 Pick Percent: :red[Automatically Calculated]")
-                    else:
-                        st.write(f"Cleveland Browns Week 19 Pick Percent: :green[{cle_week_19_pick_percent_percent}%]")
-                    st.write("")
-                    st.write("")
-            	    
-                    dal_week_19_pick_percent = st.slider("Dallas Cowboys Week 19 Pick Percent:", -1, 100) / 100
-                    dal_week_19_pick_percent_percent = dal_week_19_pick_percent*100
-                    if dal_week_19_pick_percent < 0:
-                        st.write(f"Dallas Cowboys Week 19 Pick Percent: :red[Automatically Calculated]")
-                    else:
-                        st.write(f"Dallas Cowboys Week 19 Pick Percent: :green[{dal_week_19_pick_percent_percent}%]")
-                    st.write("")
-                    st.write("")
-            	    
-                    den_week_19_pick_percent = st.slider("Denver Broncos Week 19 Pick Percent:", -1, 100) / 100
-                    den_week_19_pick_percent_percent = den_week_19_pick_percent*100
-                    if den_week_19_pick_percent < 0:
-                        st.write(f"Denver Broncos Week 19 Pick Percent: :red[Automatically Calculated]")
-                    else:
-                        st.write(f"Denver Broncos Week 19 Pick Percent: :green[{den_week_19_pick_percent_percent}%]")
-                    st.write("")
-                    st.write("")
-            	    
-                    det_week_19_pick_percent = st.slider("Detroit Lions Week 19 Pick Percent:", -1, 100) / 100
-                    det_week_19_pick_percent_percent = det_week_19_pick_percent*100
-                    if det_week_19_pick_percent < 0:
-                        st.write(f"Detroit Lions Week 19 Pick Percent: :red[Automatically Calculated]")
-                    else:
-                        st.write(f"Detroit Lions Week 19 Pick Percent: :green[{det_week_19_pick_percent_percent}%]")
-                    st.write("")
-                    st.write("")
-            	    
-                    gb_week_19_pick_percent = st.slider("Green Bay Packers Week 19 Pick Percent:", -1, 100) / 100
-                    gb_week_19_pick_percent_percent = gb_week_19_pick_percent*100
-                    if gb_week_19_pick_percent < 0:
-                        st.write(f"Green Bay Packers Week 19 Pick Percent: :red[Automatically Calculated]")
-                    else:
-                        st.write(f"Green Bay Packers Week 19 Pick Percent: :green[{gb_week_19_pick_percent_percent}%]")
-                    st.write("")
-                    st.write("")
-            	    
-                    hou_week_19_pick_percent = st.slider("Houston Texans Week 19 Pick Percent:", -1, 100) / 100
-                    hou_week_19_pick_percent_percent = hou_week_19_pick_percent*100
-                    if hou_week_19_pick_percent < 0:
-                        st.write(f"Houston Texans Week 19 Pick Percent: :red[Automatically Calculated]")
-                    else:
-                        st.write(f"Houston Texans Week 19 Pick Percent: :green[{hou_week_19_pick_percent_percent}%]")
-                    st.write("")
-                    st.write("")
-            	    
-                    ind_week_19_pick_percent = st.slider("Indianapoils Colts Week 19 Pick Percent:", -1, 100) / 100
-                    ind_week_19_pick_percent_percent = ind_week_19_pick_percent*100
-                    if ind_week_19_pick_percent < 0:
-                        st.write(f"Indianapoils Colts Week 19 Pick Percent: :red[Automatically Calculated]")
-                    else:
-                        st.write(f"Indianapoils Colts Week 19 Pick Percent: :green[{ind_week_19_pick_percent_percent}%]")
-                    st.write("")
-                    st.write("")
-            	    
-                    jax_week_19_pick_percent = st.slider("Jacksonville Jaguars Week 19 Pick Percent:", -1, 100) / 100
-                    jax_week_19_pick_percent_percent = jax_week_19_pick_percent*100
-                    if jax_week_19_pick_percent < 0:
-                        st.write(f"Jacksonville Jaguars Week 19 Pick Percent: :red[Automatically Calculated]")
-                    else:
-                        st.write(f"Jacksonville Jaguars Week 19 Pick Percent: :green[{jax_week_19_pick_percent_percent}%]")
-                    st.write("")
-                    st.write("")
-            	    
-                    kc_week_19_pick_percent = st.slider("Kansas City Chiefs Week 19 Pick Percent:", -1, 100) / 100
-                    kc_week_19_pick_percent_percent = kc_week_19_pick_percent*100
-                    if kc_week_19_pick_percent < 0:
-                        st.write(f"Kansas City Chiefs Week 19 Pick Percent: :red[Automatically Calculated]")
-                    else:
-                        st.write(f"Kansas City Chiefs Week 19 Pick Percent: :green[{kc_week_19_pick_percent_percent}%]")
-                    st.write("")
-                    st.write("")
-            	    
-                    lv_week_19_pick_percent = st.slider("Las Vegas Raiders Week 19 Pick Percent:", -1, 100) / 100
-                    lv_week_19_pick_percent_percent = lv_week_19_pick_percent*100
-                    if lv_week_19_pick_percent < 0:
-                        st.write(f"Las Vegas Raiders Week 19 Pick Percent: :red[Automatically Calculated]")
-                    else:
-                        st.write(f"Las vegas Raiders Week 19 Pick Percent: :green[{lv_week_19_pick_percent_percent}%]")
-                    st.write("")
-                    st.write("")
-            	    
-                    lac_week_19_pick_percent = st.slider("Los Angeles Chargers Week 19 Pick Percent:", -1, 100) / 100
-                    lac_week_19_pick_percent_percent = lac_week_19_pick_percent*100
-                    if lac_week_19_pick_percent < 0:
-                        st.write(f"Los Angeles Chargers Week 19 Pick Percent: :red[Automatically Calculated]")
-                    else:
-                        st.write(f"Los angeles Chargers Week 19 Pick Percent: :green[{lac_week_19_pick_percent_percent}%]")
-                    st.write("")
-                    st.write("")
-            	    
-                    lar_week_19_pick_percent = st.slider("Los Angeles Rams Week 19 Pick Percent:", -1, 100) / 100
-                    lar_week_19_pick_percent_percent = lar_week_19_pick_percent*100
-                    if lar_week_19_pick_percent < 0:
-                        st.write(f"Los Angeles Rams Week 19 Pick Percent: :red[Automatically Calculated]")
-                    else:
-                        st.write(f"Los Angeles Rams Week 19 Pick Percent: :green[{lar_week_19_pick_percent_percent}%]")
-                    st.write("")
-                    st.write("")
-            	    
-                    mia_week_19_pick_percent = st.slider("Miami Dolphins Week 19 Pick Percent:", -1, 100) / 100
-                    mia_week_19_pick_percent_percent = mia_week_19_pick_percent*100
-                    if mia_week_19_pick_percent < 0:
-                        st.write(f"Miami Dolphins Week 19 Pick Percent: :red[Automatically Calculated]")
-                    else:
-                        st.write(f"Miami Dolphins Week 19 Pick Percent: :green[{mia_week_19_pick_percent_percent}%]")
-                    st.write("")
-                    st.write("")
-            	    
-                    min_week_19_pick_percent = st.slider("Minnesota Vikings Week 19 Pick Percent:", -1, 100) / 100
-                    min_week_19_pick_percent_percent = min_week_19_pick_percent*100
-                    if min_week_19_pick_percent < 0:
-                        st.write(f"Minnesota Vikings Week 19 Pick Percent: :red[Automatically Calculated]")
-                    else:
-                        st.write(f"Minnesota Vikings Week 19 Pick Percent: :green[{min_week_19_pick_percent_percent}%]")
-                    st.write("")
-                    st.write("")
-            	    
-                    ne_week_19_pick_percent = st.slider("New England Patriots Week 19 Pick Percent:", -1, 100) / 100
-                    ne_week_19_pick_percent_percent = ne_week_19_pick_percent*100
-                    if ne_week_19_pick_percent < 0:
-                        st.write(f"New England Patriots Week 19 Pick Percent: :red[Automatically Calculated]")
-                    else:
-                        st.write(f"New England Patriots Week 19 Pick Percent: :green[{ne_week_19_pick_percent_percent}%]")
-                    st.write("")
-                    st.write("")
-            	    
-                    no_week_19_pick_percent = st.slider("New Orleans Saints Week 19 Pick Percent:", -1, 100) / 100
-                    no_week_19_pick_percent_percent = no_week_19_pick_percent*100
-                    if no_week_19_pick_percent < 0:
-                        st.write(f"New Orleans Saints Week 19 Pick Percent: :red[Automatically Calculated]")
-                    else:
-                        st.write(f"New Orleans Saints Week 19 Pick Percent: :green[{no_week_19_pick_percent_percent}%]")
-                    st.write("")
-                    st.write("")
-            	    
-                    nyg_week_19_pick_percent = st.slider("New York Giants Week 19 Pick Percent:", -1, 100) / 100
-                    nyg_week_19_pick_percent_percent = nyg_week_19_pick_percent*100
-                    if nyg_week_19_pick_percent < 0:
-                        st.write(f"New York Giants Week 19 Pick Percent: :red[Automatically Calculated]")
-                    else:
-                        st.write(f"New York Giants Week 19 Pick Percent: :green[{nyg_week_19_pick_percent_percent}%]")
-                    st.write("")
-                    st.write("")
-            	    
-                    nyj_week_19_pick_percent = st.slider("New York Jets Week 19 Pick Percent:", -1, 100) / 100
-                    nyj_week_19_pick_percent_percent = nyj_week_19_pick_percent*100
-                    if nyj_week_19_pick_percent < 0:
-                        st.write(f"New York Jets Week 19 Pick Percent: :red[Automatically Calculated]")
-                    else:
-                        st.write(f"New York Jets Week 19 Pick Percent: :green[{nyj_week_19_pick_percent_percent}%]")
-                    st.write("")
-                    st.write("")
-            	    
-                    phi_week_19_pick_percent = st.slider("Philadelphia Eagles Week 19 Pick Percent:", -1, 100) / 100
-                    phi_week_19_pick_percent_percent = phi_week_19_pick_percent*100
-                    if phi_week_19_pick_percent < 0:
-                        st.write(f"Philadelphia Eagles Week 19 Pick Percent: :red[Automatically Calculated]")
-                    else:
-                        st.write(f"Philadelphia Eagles Week 19 Pick Percent: :green[{phi_week_19_pick_percent_percent}%]")
-                    st.write("")
-                    st.write("")
-            	    
-                    pit_week_19_pick_percent = st.slider("Pittsburgh Steelers Week 19 Pick Percent:", -1, 100) / 100
-                    pit_week_19_pick_percent_percent = pit_week_19_pick_percent*100
-                    if pit_week_19_pick_percent < 0:
-                        st.write(f"Pittsburgh Steelers Week 19 Pick Percent: :red[Automatically Calculated]")
-                    else:
-                        st.write(f"Pittsburgh Steelers Week 19 Pick Percent: :green[{pit_week_19_pick_percent_percent}%]")
-                    st.write("")
-                    st.write("")
-            	    
-                    sf_week_19_pick_percent = st.slider("San Francisco 49ers Week 19 Pick Percent:", -1, 100) / 100
-                    sf_week_19_pick_percent_percent = sf_week_19_pick_percent*100
-                    if sf_week_19_pick_percent < 0:
-                        st.write(f"San Francisco 49ers Week 19 Pick Percent: :red[Automatically Calculated]")
-                    else:
-                        st.write(f"San Francisco 49ers Week 19 Pick Percent: :green[{sf_week_19_pick_percent_percent}%]")
-                    st.write("")
-                    st.write("")
-            	    
-                    sea_week_19_pick_percent = st.slider("Seattle Seahawks Week 19 Pick Percent:", -1, 100) / 100
-                    sea_week_19_pick_percent_percent = sea_week_19_pick_percent*100
-                    if sea_week_19_pick_percent < 0:
-                        st.write(f"Seattle Seahawks Week 19 Pick Percent: :red[Automatically Calculated]")
-                    else:
-                        st.write(f"Seattle Seahawks Week 19 Pick Percent: :green[{sea_week_19_pick_percent_percent}%]")
-                    st.write("")
-                    st.write("")
-            	    
-                    tb_week_19_pick_percent = st.slider("Tampa Bay Buccaneers Week 19 Pick Percent:", -1, 100) / 100
-                    tb_week_19_pick_percent_percent = tb_week_19_pick_percent*100
-                    if tb_week_19_pick_percent < 0:
-                        st.write(f"Tampa Bay Buccaneers Week 19 Pick Percent: :red[Automatically Calculated]")
-                    else:
-                        st.write(f"Tampa Bay Buccaneers Week 19 Pick Percent: :green[{tb_week_19_pick_percent_percent}%]")
-                    st.write("")
-                    st.write("")
-            	    
-                    ten_week_19_pick_percent = st.slider("Tennessee Titans Week 19 Pick Percent:", -1, 100) / 100
-                    ten_week_19_pick_percent_percent = ten_week_19_pick_percent*100
-                    if ten_week_19_pick_percent < 0:
-                        st.write(f"Tennessee Titans Week 19 Pick Percent: :red[Automatically Calculated]")
-                    else:
-                        st.write(f"Tennessee Titans Week 19 Pick Percent: :green[{ten_week_19_pick_percent_percent}%]")
-                    st.write("")
-                    st.write("")
-            	    
-                    was_week_19_pick_percent = st.slider("Washington Commanders Week 19 Pick Percent:", -1, 100) / 100
-                    was_week_19_pick_percent_percent = was_week_19_pick_percent*100
-                    if was_week_19_pick_percent < 0:
-                        st.write(f"Washington Commanders Week 19 Pick Percent: :red[Automatically Calculated]")
-                    else:
-                        st.write(f"Washington Commanders Week 19 Pick Percent: :green[{was_week_19_pick_percent_percent}%]")
-                    st.write("")
-                    st.write("")
-                st.write('')
-                st.write('')
-        if selected_contest == 'Circa':
-            if starting_week <= 20 and ending_week > 20:
-                week_20_pick_percents = st.checkbox('Add Week 20 Pick Percentages?', help = "Check this box if you want to adjust the estimated pick percentages for each team in week 20.")
-                if week_20_pick_percents:
-                    st.write('')
-                    st.subheader('Week 20 Estimated Pick Percentages')
-                    st.write('')
-                    az_week_20_pick_percent = st.slider("Arizona Cardinals Week 20 Pick Percent:", -1, 100) / 100
-                    az_week_20_pick_percent_percent = az_week_20_pick_percent*100
-                    if az_week_20_pick_percent < 0:
-                        st.write(f"Arizona Cardinals Week 20 Pick Percent: :red[Automatically Calculated]")
-                    else:
-                        st.write(f"Arizona Cardinals Week 20 Pick Percent: :green[{az_week_20_pick_percent_percent}%]")
-                    st.write("")
-                    st.write("")
-            	    
-                    atl_week_20_pick_percent = st.slider("Atlanta Falcons Week 20 Pick Percent:", -1, 100) / 100
-                    atl_week_20_pick_percent_percent = atl_week_20_pick_percent*100
-                    if atl_week_20_pick_percent < 0:
-                        st.write(f"Atlanta Falcons Week 20 Pick Percent: :red[Automatically Calculated]")
-                    else:
-                        st.write(f"Atlanta Falcons Week 20 Pick Percent: :green[{atl_week_20_pick_percent_percent}%]")
-                    st.write("")
-                    st.write("")
-            	    
-                    bal_week_20_pick_percent = st.slider("Baltimore Ravens Week 20 Pick Percent:", -1, 100) / 100
-                    bal_week_20_pick_percent_percent = bal_week_20_pick_percent*100
-                    if bal_week_20_pick_percent < 0:
-                        st.write(f"Baltimore Ravens Week 20 Pick Percent: :red[Automatically Calculated]")
-                    else:
-                        st.write(f"Baltimore Ravenss Week 20 Pick Percent: :green[{bal_week_20_pick_percent_percent}%]")
-                    st.write("")
-                    st.write("")
-            	    
-                    buf_week_20_pick_percent = st.slider("Buffalo Bills Week 20 Pick Percent:", -1, 100) / 100
-                    buf_week_20_pick_percent_percent = buf_week_20_pick_percent*100
-                    if buf_week_20_pick_percent < 0:
-                        st.write(f"Buffalo Bills Week 20 Pick Percent: :red[Automatically Calculated]")
-                    else:
-                        st.write(f"Buffalo Bills Week 20 Pick Percent: :green[{buf_week_20_pick_percent_percent}%]")
-                    st.write("")
-                    st.write("")
-            	    
-                    car_week_20_pick_percent = st.slider("Carolina Panthers Week 20 Pick Percent:", -1, 100) / 100
-                    car_week_20_pick_percent_percent = car_week_20_pick_percent*100
-                    if car_week_20_pick_percent < 0:
-                        st.write(f"Carolina Panthers Week 20 Pick Percent: :red[Automatically Calculated]")
-                    else:
-                        st.write(f"Carolina Panthers Week 20 Pick Percent: :green[{car_week_20_pick_percent_percent}%]")
-                    st.write("")
-                    st.write("")
-            	    
-                    chi_week_20_pick_percent = st.slider("Chicago Bears Week 20 Pick Percent:", -1, 100) / 100
-                    chi_week_20_pick_percent_percent = chi_week_20_pick_percent*100
-                    if chi_week_20_pick_percent < 0:
-                        st.write(f"Chicago Bears Week 20 Pick Percent: :red[Automatically Calculated]")
-                    else:
-                        st.write(f"Chicago Bears Week 20 Pick Percent: :green[{chi_week_20_pick_percent_percent}%]")
-                    st.write("")
-                    st.write("")
-            	    
-                    cin_week_20_pick_percent = st.slider("Cincinnati Bengals Week 20 Pick Percent:", -1, 100) / 100
-                    cin_week_20_pick_percent_percent = cin_week_20_pick_percent*100
-                    if cin_week_20_pick_percent < 0:
-                        st.write(f"Cincinnati Bengals Week 20 Pick Percent: :red[Automatically Calculated]")
-                    else:
-                        st.write(f"Cincinnati Bengals Week 20 Pick Percent: :green[{cin_week_20_pick_percent_percent}%]")
-                    st.write("")
-                    st.write("")
-            	    
-                    cle_week_20_pick_percent = st.slider("Cleveland Browns Week 20 Pick Percent:", -1, 100) / 100
-                    cle_week_20_pick_percent_percent = cle_week_20_pick_percent*100
-                    if cle_week_20_pick_percent < 0:
-                        st.write(f"Cleveland Browns Week 20 Pick Percent: :red[Automatically Calculated]")
-                    else:
-                        st.write(f"Cleveland Browns Week 20 Pick Percent: :green[{cle_week_20_pick_percent_percent}%]")
-                    st.write("")
-                    st.write("")
-            	    
-                    dal_week_20_pick_percent = st.slider("Dallas Cowboys Week 20 Pick Percent:", -1, 100) / 100
-                    dal_week_20_pick_percent_percent = dal_week_20_pick_percent*100
-                    if dal_week_20_pick_percent < 0:
-                        st.write(f"Dallas Cowboys Week 20 Pick Percent: :red[Automatically Calculated]")
-                    else:
-                        st.write(f"Dallas Cowboys Week 20 Pick Percent: :green[{dal_week_20_pick_percent_percent}%]")
-                    st.write("")
-                    st.write("")
-            	    
-                    den_week_20_pick_percent = st.slider("Denver Broncos Week 20 Pick Percent:", -1, 100) / 100
-                    den_week_20_pick_percent_percent = den_week_20_pick_percent*100
-                    if den_week_20_pick_percent < 0:
-                        st.write(f"Denver Broncos Week 20 Pick Percent: :red[Automatically Calculated]")
-                    else:
-                        st.write(f"Denver Broncos Week 20 Pick Percent: :green[{den_week_20_pick_percent_percent}%]")
-                    st.write("")
-                    st.write("")
-            	    
-                    det_week_20_pick_percent = st.slider("Detroit Lions Week 20 Pick Percent:", -1, 100) / 100
-                    det_week_20_pick_percent_percent = det_week_20_pick_percent*100
-                    if det_week_20_pick_percent < 0:
-                        st.write(f"Detroit Lions Week 20 Pick Percent: :red[Automatically Calculated]")
-                    else:
-                        st.write(f"Detroit Lions Week 20 Pick Percent: :green[{det_week_20_pick_percent_percent}%]")
-                    st.write("")
-                    st.write("")
-            	    
-                    gb_week_20_pick_percent = st.slider("Green Bay Packers Week 20 Pick Percent:", -1, 100) / 100
-                    gb_week_20_pick_percent_percent = gb_week_20_pick_percent*100
-                    if gb_week_20_pick_percent < 0:
-                        st.write(f"Green Bay Packers Week 20 Pick Percent: :red[Automatically Calculated]")
-                    else:
-                        st.write(f"Green Bay Packers Week 20 Pick Percent: :green[{gb_week_20_pick_percent_percent}%]")
-                    st.write("")
-                    st.write("")
-            	    
-                    hou_week_20_pick_percent = st.slider("Houston Texans Week 20 Pick Percent:", -1, 100) / 100
-                    hou_week_20_pick_percent_percent = hou_week_20_pick_percent*100
-                    if hou_week_20_pick_percent < 0:
-                        st.write(f"Houston Texans Week 20 Pick Percent: :red[Automatically Calculated]")
-                    else:
-                        st.write(f"Houston Texans Week 20 Pick Percent: :green[{hou_week_20_pick_percent_percent}%]")
-                    st.write("")
-                    st.write("")
-            	    
-                    ind_week_20_pick_percent = st.slider("Indianapoils Colts Week 20 Pick Percent:", -1, 100) / 100
-                    ind_week_20_pick_percent_percent = ind_week_20_pick_percent*100
-                    if ind_week_20_pick_percent < 0:
-                        st.write(f"Indianapoils Colts Week 20 Pick Percent: :red[Automatically Calculated]")
-                    else:
-                        st.write(f"Indianapoils Colts Week 20 Pick Percent: :green[{ind_week_20_pick_percent_percent}%]")
-                    st.write("")
-                    st.write("")
-            	    
-                    jax_week_20_pick_percent = st.slider("Jacksonville Jaguars Week 20 Pick Percent:", -1, 100) / 100
-                    jax_week_20_pick_percent_percent = jax_week_20_pick_percent*100
-                    if jax_week_20_pick_percent < 0:
-                        st.write(f"Jacksonville Jaguars Week 20 Pick Percent: :red[Automatically Calculated]")
-                    else:
-                        st.write(f"Jacksonville Jaguars Week 20 Pick Percent: :green[{jax_week_20_pick_percent_percent}%]")
-                    st.write("")
-                    st.write("")
-            	    
-                    kc_week_20_pick_percent = st.slider("Kansas City Chiefs Week 20 Pick Percent:", -1, 100) / 100
-                    kc_week_20_pick_percent_percent = kc_week_20_pick_percent*100
-                    if kc_week_20_pick_percent < 0:
-                        st.write(f"Kansas City Chiefs Week 20 Pick Percent: :red[Automatically Calculated]")
-                    else:
-                        st.write(f"Kansas City Chiefs Week 20 Pick Percent: :green[{kc_week_20_pick_percent_percent}%]")
-                    st.write("")
-                    st.write("")
-            	    
-                    lv_week_20_pick_percent = st.slider("Las Vegas Raiders Week 20 Pick Percent:", -1, 100) / 100
-                    lv_week_20_pick_percent_percent = lv_week_20_pick_percent*100
-                    if lv_week_20_pick_percent < 0:
-                        st.write(f"Las Vegas Raiders Week 20 Pick Percent: :red[Automatically Calculated]")
-                    else:
-                        st.write(f"Las vegas Raiders Week 20 Pick Percent: :green[{lv_week_20_pick_percent_percent}%]")
-                    st.write("")
-                    st.write("")
-            	    
-                    lac_week_20_pick_percent = st.slider("Los Angeles Chargers Week 20 Pick Percent:", -1, 100) / 100
-                    lac_week_20_pick_percent_percent = lac_week_20_pick_percent*100
-                    if lac_week_20_pick_percent < 0:
-                        st.write(f"Los Angeles Chargers Week 20 Pick Percent: :red[Automatically Calculated]")
-                    else:
-                        st.write(f"Los angeles Chargers Week 20 Pick Percent: :green[{lac_week_20_pick_percent_percent}%]")
-                    st.write("")
-                    st.write("")
-            	    
-                    lar_week_20_pick_percent = st.slider("Los Angeles Rams Week 20 Pick Percent:", -1, 100) / 100
-                    lar_week_20_pick_percent_percent = lar_week_20_pick_percent*100
-                    if lar_week_20_pick_percent < 0:
-                        st.write(f"Los Angeles Rams Week 20 Pick Percent: :red[Automatically Calculated]")
-                    else:
-                        st.write(f"Los Angeles Rams Week 20 Pick Percent: :green[{lar_week_20_pick_percent_percent}%]")
-                    st.write("")
-                    st.write("")
-            	    
-                    mia_week_20_pick_percent = st.slider("Miami Dolphins Week 20 Pick Percent:", -1, 100) / 100
-                    mia_week_20_pick_percent_percent = mia_week_20_pick_percent*100
-                    if mia_week_20_pick_percent < 0:
-                        st.write(f"Miami Dolphins Week 20 Pick Percent: :red[Automatically Calculated]")
-                    else:
-                        st.write(f"Miami Dolphins Week 20 Pick Percent: :green[{mia_week_20_pick_percent_percent}%]")
-                    st.write("")
-                    st.write("")
-            	    
-                    min_week_20_pick_percent = st.slider("Minnesota Vikings Week 20 Pick Percent:", -1, 100) / 100
-                    min_week_20_pick_percent_percent = min_week_20_pick_percent*100
-                    if min_week_20_pick_percent < 0:
-                        st.write(f"Minnesota Vikings Week 20 Pick Percent: :red[Automatically Calculated]")
-                    else:
-                        st.write(f"Minnesota Vikings Week 20 Pick Percent: :green[{min_week_20_pick_percent_percent}%]")
-                    st.write("")
-                    st.write("")
-            	    
-                    ne_week_20_pick_percent = st.slider("New England Patriots Week 20 Pick Percent:", -1, 100) / 100
-                    ne_week_20_pick_percent_percent = ne_week_20_pick_percent*100
-                    if ne_week_20_pick_percent < 0:
-                        st.write(f"New England Patriots Week 20 Pick Percent: :red[Automatically Calculated]")
-                    else:
-                        st.write(f"New England Patriots Week 20 Pick Percent: :green[{ne_week_20_pick_percent_percent}%]")
-                    st.write("")
-                    st.write("")
-            	    
-                    no_week_20_pick_percent = st.slider("New Orleans Saints Week 20 Pick Percent:", -1, 100) / 100
-                    no_week_20_pick_percent_percent = no_week_20_pick_percent*100
-                    if no_week_20_pick_percent < 0:
-                        st.write(f"New Orleans Saints Week 20 Pick Percent: :red[Automatically Calculated]")
-                    else:
-                        st.write(f"New Orleans Saints Week 20 Pick Percent: :green[{no_week_20_pick_percent_percent}%]")
-                    st.write("")
-                    st.write("")
-            	    
-                    nyg_week_20_pick_percent = st.slider("New York Giants Week 20 Pick Percent:", -1, 100) / 100
-                    nyg_week_20_pick_percent_percent = nyg_week_20_pick_percent*100
-                    if nyg_week_20_pick_percent < 0:
-                        st.write(f"New York Giants Week 20 Pick Percent: :red[Automatically Calculated]")
-                    else:
-                        st.write(f"New York Giants Week 20 Pick Percent: :green[{nyg_week_20_pick_percent_percent}%]")
-                    st.write("")
-                    st.write("")
-            	    
-                    nyj_week_20_pick_percent = st.slider("New York Jets Week 20 Pick Percent:", -1, 100) / 100
-                    nyj_week_20_pick_percent_percent = nyj_week_20_pick_percent*100
-                    if nyj_week_20_pick_percent < 0:
-                        st.write(f"New York Jets Week 20 Pick Percent: :red[Automatically Calculated]")
-                    else:
-                        st.write(f"New York Jets Week 20 Pick Percent: :green[{nyj_week_20_pick_percent_percent}%]")
-                    st.write("")
-                    st.write("")
-            	    
-                    phi_week_20_pick_percent = st.slider("Philadelphia Eagles Week 20 Pick Percent:", -1, 100) / 100
-                    phi_week_20_pick_percent_percent = phi_week_20_pick_percent*100
-                    if phi_week_20_pick_percent < 0:
-                        st.write(f"Philadelphia Eagles Week 20 Pick Percent: :red[Automatically Calculated]")
-                    else:
-                        st.write(f"Philadelphia Eagles Week 20 Pick Percent: :green[{phi_week_20_pick_percent_percent}%]")
-                    st.write("")
-                    st.write("")
-            	    
-                    pit_week_20_pick_percent = st.slider("Pittsburgh Steelers Week 20 Pick Percent:", -1, 100) / 100
-                    pit_week_20_pick_percent_percent = pit_week_20_pick_percent*100
-                    if pit_week_20_pick_percent < 0:
-                        st.write(f"Pittsburgh Steelers Week 20 Pick Percent: :red[Automatically Calculated]")
-                    else:
-                        st.write(f"Pittsburgh Steelers Week 20 Pick Percent: :green[{pit_week_20_pick_percent_percent}%]")
-                    st.write("")
-                    st.write("")
-            	    
-                    sf_week_20_pick_percent = st.slider("San Francisco 49ers Week 20 Pick Percent:", -1, 100) / 100
-                    sf_week_20_pick_percent_percent = sf_week_20_pick_percent*100
-                    if sf_week_20_pick_percent < 0:
-                        st.write(f"San Francisco 49ers Week 20 Pick Percent: :red[Automatically Calculated]")
-                    else:
-                        st.write(f"San Francisco 49ers Week 20 Pick Percent: :green[{sf_week_20_pick_percent_percent}%]")
-                    st.write("")
-                    st.write("")
-            	    
-                    sea_week_20_pick_percent = st.slider("Seattle Seahawks Week 20 Pick Percent:", -1, 100) / 100
-                    sea_week_20_pick_percent_percent = sea_week_20_pick_percent*100
-                    if sea_week_20_pick_percent < 0:
-                        st.write(f"Seattle Seahawks Week 20 Pick Percent: :red[Automatically Calculated]")
-                    else:
-                        st.write(f"Seattle Seahawks Week 20 Pick Percent: :green[{sea_week_20_pick_percent_percent}%]")
-                    st.write("")
-                    st.write("")
-            	    
-                    tb_week_20_pick_percent = st.slider("Tampa Bay Buccaneers Week 20 Pick Percent:", -1, 100) / 100
-                    tb_week_20_pick_percent_percent = tb_week_20_pick_percent*100
-                    if tb_week_20_pick_percent < 0:
-                        st.write(f"Tampa Bay Buccaneers Week 20 Pick Percent: :red[Automatically Calculated]")
-                    else:
-                        st.write(f"Tampa Bay Buccaneers Week 20 Pick Percent: :green[{tb_week_20_pick_percent_percent}%]")
-                    st.write("")
-                    st.write("")
-            	    
-                    ten_week_20_pick_percent = st.slider("Tennessee Titans Week 20 Pick Percent:", -1, 100) / 100
-                    ten_week_20_pick_percent_percent = ten_week_20_pick_percent*100
-                    if ten_week_20_pick_percent < 0:
-                        st.write(f"Tennessee Titans Week 20 Pick Percent: :red[Automatically Calculated]")
-                    else:
-                        st.write(f"Tennessee Titans Week 20 Pick Percent: :green[{ten_week_20_pick_percent_percent}%]")
-                    st.write("")
-                    st.write("")
-            	    
-                    was_week_20_pick_percent = st.slider("Washington Commanders Week 20 Pick Percent:", -1, 100) / 100
-                    was_week_20_pick_percent_percent = was_week_20_pick_percent*100
-                    if was_week_20_pick_percent < 0:
-                        st.write(f"Washington Commanders Week 20 Pick Percent: :red[Automatically Calculated]")
-                    else:
-                        st.write(f"Washington Commanders Week 20 Pick Percent: :green[{was_week_20_pick_percent_percent}%]")
-                    st.write("")
-                    st.write("")
-    	
-    
-    dk_pick_percentages = {
-        'Arizona Cardinals': [az_week_1_pick_percent, az_week_2_pick_percent, az_week_3_pick_percent, az_week_4_pick_percent, az_week_5_pick_percent, az_week_6_pick_percent, az_week_7_pick_percent, az_week_8_pick_percent, az_week_9_pick_percent, az_week_10_pick_percent, az_week_11_pick_percent, az_week_12_pick_percent, az_week_13_pick_percent, az_week_14_pick_percent, az_week_15_pick_percent, az_week_16_pick_percent, az_week_17_pick_percent, az_week_18_pick_percent],
-        'Atlanta Falcons': [atl_week_1_pick_percent, atl_week_2_pick_percent, atl_week_3_pick_percent, atl_week_4_pick_percent, atl_week_5_pick_percent, atl_week_6_pick_percent, atl_week_7_pick_percent, atl_week_8_pick_percent, atl_week_9_pick_percent, atl_week_10_pick_percent, atl_week_11_pick_percent, atl_week_12_pick_percent, atl_week_13_pick_percent, atl_week_14_pick_percent, atl_week_15_pick_percent, atl_week_16_pick_percent, atl_week_17_pick_percent, atl_week_18_pick_percent],
-        'Baltimore Ravens': [bal_week_1_pick_percent, bal_week_2_pick_percent, bal_week_3_pick_percent, bal_week_4_pick_percent, bal_week_5_pick_percent, bal_week_6_pick_percent, bal_week_7_pick_percent, bal_week_8_pick_percent, bal_week_9_pick_percent, bal_week_10_pick_percent, bal_week_11_pick_percent, bal_week_12_pick_percent, bal_week_13_pick_percent, bal_week_14_pick_percent, bal_week_15_pick_percent, bal_week_16_pick_percent, bal_week_17_pick_percent, bal_week_18_pick_percent],
-        'Buffalo Bills': [buf_week_1_pick_percent, buf_week_2_pick_percent, buf_week_3_pick_percent, buf_week_4_pick_percent, buf_week_5_pick_percent, buf_week_6_pick_percent, buf_week_7_pick_percent, buf_week_8_pick_percent, buf_week_9_pick_percent, buf_week_10_pick_percent, buf_week_11_pick_percent, buf_week_12_pick_percent, buf_week_13_pick_percent, buf_week_14_pick_percent, buf_week_15_pick_percent, buf_week_16_pick_percent, buf_week_17_pick_percent, buf_week_18_pick_percent],
-        'Carolina Panthers': [car_week_1_pick_percent, car_week_2_pick_percent, car_week_3_pick_percent, car_week_4_pick_percent, car_week_5_pick_percent, car_week_6_pick_percent, car_week_7_pick_percent, car_week_8_pick_percent, car_week_9_pick_percent, car_week_10_pick_percent, car_week_11_pick_percent, car_week_12_pick_percent, car_week_13_pick_percent, car_week_14_pick_percent, car_week_15_pick_percent, car_week_16_pick_percent, car_week_17_pick_percent, car_week_18_pick_percent],
-        'Chicago Bears': [chi_week_1_pick_percent, chi_week_2_pick_percent, chi_week_3_pick_percent, chi_week_4_pick_percent, chi_week_5_pick_percent, chi_week_6_pick_percent, chi_week_7_pick_percent, chi_week_8_pick_percent, chi_week_9_pick_percent, chi_week_10_pick_percent, chi_week_11_pick_percent, chi_week_12_pick_percent, chi_week_13_pick_percent, chi_week_14_pick_percent, chi_week_15_pick_percent, chi_week_16_pick_percent, chi_week_17_pick_percent, chi_week_18_pick_percent],
-        'Cincinnati Bengals': [cin_week_1_pick_percent, cin_week_2_pick_percent, cin_week_3_pick_percent, cin_week_4_pick_percent, cin_week_5_pick_percent, cin_week_6_pick_percent, cin_week_7_pick_percent, cin_week_8_pick_percent, cin_week_9_pick_percent, cin_week_10_pick_percent, cin_week_11_pick_percent, cin_week_12_pick_percent, cin_week_13_pick_percent, cin_week_14_pick_percent, cin_week_15_pick_percent, cin_week_16_pick_percent, cin_week_17_pick_percent, cin_week_18_pick_percent],
-        'Cleveland Browns': [cle_week_1_pick_percent, cle_week_2_pick_percent, cle_week_3_pick_percent, cle_week_4_pick_percent, cle_week_5_pick_percent, cle_week_6_pick_percent, cle_week_7_pick_percent, cle_week_8_pick_percent, cle_week_9_pick_percent, cle_week_10_pick_percent, cle_week_11_pick_percent, cle_week_12_pick_percent, cle_week_13_pick_percent, cle_week_14_pick_percent, cle_week_15_pick_percent, cle_week_16_pick_percent, cle_week_17_pick_percent, cle_week_18_pick_percent],
-        'Dallas Cowboys': [dal_week_1_pick_percent, dal_week_2_pick_percent, dal_week_3_pick_percent, dal_week_4_pick_percent, dal_week_5_pick_percent, dal_week_6_pick_percent, dal_week_7_pick_percent, dal_week_8_pick_percent, dal_week_9_pick_percent, dal_week_10_pick_percent, dal_week_11_pick_percent, dal_week_12_pick_percent, dal_week_13_pick_percent, dal_week_14_pick_percent, dal_week_15_pick_percent, dal_week_16_pick_percent, dal_week_17_pick_percent, dal_week_18_pick_percent],
-        'Denver Broncos': [den_week_1_pick_percent, den_week_2_pick_percent, den_week_3_pick_percent, den_week_4_pick_percent, den_week_5_pick_percent, den_week_6_pick_percent, den_week_7_pick_percent, den_week_8_pick_percent, den_week_9_pick_percent, den_week_10_pick_percent, den_week_11_pick_percent, den_week_12_pick_percent, den_week_13_pick_percent, den_week_14_pick_percent, den_week_15_pick_percent, den_week_16_pick_percent, den_week_17_pick_percent, den_week_18_pick_percent],
-        'Detroit Lions': [det_week_1_pick_percent, det_week_2_pick_percent, det_week_3_pick_percent, det_week_4_pick_percent, det_week_5_pick_percent, det_week_6_pick_percent, det_week_7_pick_percent, det_week_8_pick_percent, det_week_9_pick_percent, det_week_10_pick_percent, det_week_11_pick_percent, det_week_12_pick_percent, det_week_13_pick_percent, det_week_14_pick_percent, det_week_15_pick_percent, det_week_16_pick_percent, det_week_17_pick_percent, det_week_18_pick_percent],
-        'Green Bay Packers': [gb_week_1_pick_percent, gb_week_2_pick_percent, gb_week_3_pick_percent, gb_week_4_pick_percent, gb_week_5_pick_percent, gb_week_6_pick_percent, gb_week_7_pick_percent, gb_week_8_pick_percent, gb_week_9_pick_percent, gb_week_10_pick_percent, gb_week_11_pick_percent, gb_week_12_pick_percent, gb_week_13_pick_percent, gb_week_14_pick_percent, gb_week_15_pick_percent, gb_week_16_pick_percent, gb_week_17_pick_percent, gb_week_18_pick_percent],
-        'Houston Texans': [hou_week_1_pick_percent, hou_week_2_pick_percent, hou_week_3_pick_percent, hou_week_4_pick_percent, hou_week_5_pick_percent, hou_week_6_pick_percent, hou_week_7_pick_percent, hou_week_8_pick_percent, hou_week_9_pick_percent, hou_week_10_pick_percent, hou_week_11_pick_percent, hou_week_12_pick_percent, hou_week_13_pick_percent, hou_week_14_pick_percent, hou_week_15_pick_percent, hou_week_16_pick_percent, hou_week_17_pick_percent, hou_week_18_pick_percent],
-        'Indianapolis Colts': [ind_week_1_pick_percent, ind_week_2_pick_percent, ind_week_3_pick_percent, ind_week_4_pick_percent, ind_week_5_pick_percent, ind_week_6_pick_percent, ind_week_7_pick_percent, ind_week_8_pick_percent, ind_week_9_pick_percent, ind_week_10_pick_percent, ind_week_11_pick_percent, ind_week_12_pick_percent, ind_week_13_pick_percent, ind_week_14_pick_percent, ind_week_15_pick_percent, ind_week_16_pick_percent, ind_week_17_pick_percent, ind_week_18_pick_percent],
-        'Jacksonville Jaguars': [jax_week_1_pick_percent, jax_week_2_pick_percent, jax_week_3_pick_percent, jax_week_4_pick_percent, jax_week_5_pick_percent, jax_week_6_pick_percent, jax_week_7_pick_percent, jax_week_8_pick_percent, jax_week_9_pick_percent, jax_week_10_pick_percent, jax_week_11_pick_percent, jax_week_12_pick_percent, jax_week_13_pick_percent, jax_week_14_pick_percent, jax_week_15_pick_percent, jax_week_16_pick_percent, jax_week_17_pick_percent, jax_week_18_pick_percent],
-        'Kansas City Chiefs': [kc_week_1_pick_percent, kc_week_2_pick_percent, kc_week_3_pick_percent, kc_week_4_pick_percent, kc_week_5_pick_percent, kc_week_6_pick_percent, kc_week_7_pick_percent, kc_week_8_pick_percent, kc_week_9_pick_percent, kc_week_10_pick_percent, kc_week_11_pick_percent, kc_week_12_pick_percent, kc_week_13_pick_percent, kc_week_14_pick_percent, kc_week_15_pick_percent, kc_week_16_pick_percent, kc_week_17_pick_percent, kc_week_18_pick_percent],
-        'Las Vegas Raiders': [lv_week_1_pick_percent, lv_week_2_pick_percent, lv_week_3_pick_percent, lv_week_4_pick_percent, lv_week_5_pick_percent, lv_week_6_pick_percent, lv_week_7_pick_percent, lv_week_8_pick_percent, lv_week_9_pick_percent, lv_week_10_pick_percent, lv_week_11_pick_percent, lv_week_12_pick_percent, lv_week_13_pick_percent, lv_week_14_pick_percent, lv_week_15_pick_percent, lv_week_16_pick_percent, lv_week_17_pick_percent, lv_week_18_pick_percent],
-        'Los Angeles Chargers': [lac_week_1_pick_percent, lac_week_2_pick_percent, lac_week_3_pick_percent, lac_week_4_pick_percent, lac_week_5_pick_percent, lac_week_6_pick_percent, lac_week_7_pick_percent, lac_week_8_pick_percent, lac_week_9_pick_percent, lac_week_10_pick_percent, lac_week_11_pick_percent, lac_week_12_pick_percent, lac_week_13_pick_percent, lac_week_14_pick_percent, lac_week_15_pick_percent, lac_week_16_pick_percent, lac_week_17_pick_percent, lac_week_18_pick_percent],
-        'Los Angeles Rams': [lar_week_1_pick_percent, lar_week_2_pick_percent, lar_week_3_pick_percent, lar_week_4_pick_percent, lar_week_5_pick_percent, lar_week_6_pick_percent, lar_week_7_pick_percent, lar_week_8_pick_percent, lar_week_9_pick_percent, lar_week_10_pick_percent, lar_week_11_pick_percent, lar_week_12_pick_percent, lar_week_13_pick_percent, lar_week_14_pick_percent, lar_week_15_pick_percent, lar_week_16_pick_percent, lar_week_17_pick_percent, lar_week_18_pick_percent],
-        'Miami Dolphins': [mia_week_1_pick_percent, mia_week_2_pick_percent, mia_week_3_pick_percent, mia_week_4_pick_percent, mia_week_5_pick_percent, mia_week_6_pick_percent, mia_week_7_pick_percent, mia_week_8_pick_percent, mia_week_9_pick_percent, mia_week_10_pick_percent, mia_week_11_pick_percent, mia_week_12_pick_percent, mia_week_13_pick_percent, mia_week_14_pick_percent, mia_week_15_pick_percent, mia_week_16_pick_percent, mia_week_17_pick_percent, mia_week_18_pick_percent],
-        'Minnesota Vikings': [min_week_1_pick_percent, min_week_2_pick_percent, min_week_3_pick_percent, min_week_4_pick_percent, min_week_5_pick_percent, min_week_6_pick_percent, min_week_7_pick_percent, min_week_8_pick_percent, min_week_9_pick_percent, min_week_10_pick_percent, min_week_11_pick_percent, min_week_12_pick_percent, min_week_13_pick_percent, min_week_14_pick_percent, min_week_15_pick_percent, min_week_16_pick_percent, min_week_17_pick_percent, min_week_18_pick_percent],
-        'New England Patriots': [ne_week_1_pick_percent, ne_week_2_pick_percent, ne_week_3_pick_percent, ne_week_4_pick_percent, ne_week_5_pick_percent, ne_week_6_pick_percent, ne_week_7_pick_percent, ne_week_8_pick_percent, ne_week_9_pick_percent, ne_week_10_pick_percent, ne_week_11_pick_percent, ne_week_12_pick_percent, ne_week_13_pick_percent, ne_week_14_pick_percent, ne_week_15_pick_percent, ne_week_16_pick_percent, ne_week_17_pick_percent, ne_week_18_pick_percent],
-        'New Orleans Saints': [no_week_1_pick_percent, no_week_2_pick_percent, no_week_3_pick_percent, no_week_4_pick_percent, no_week_5_pick_percent, no_week_6_pick_percent, no_week_7_pick_percent, no_week_8_pick_percent, no_week_9_pick_percent, no_week_10_pick_percent, no_week_11_pick_percent, no_week_12_pick_percent, no_week_13_pick_percent, no_week_14_pick_percent, no_week_15_pick_percent, no_week_16_pick_percent, no_week_17_pick_percent, no_week_18_pick_percent],
-        'New York Giants': [nyg_week_1_pick_percent, nyg_week_2_pick_percent, nyg_week_3_pick_percent, nyg_week_4_pick_percent, nyg_week_5_pick_percent, nyg_week_6_pick_percent, nyg_week_7_pick_percent, nyg_week_8_pick_percent, nyg_week_9_pick_percent, nyg_week_10_pick_percent, nyg_week_11_pick_percent, nyg_week_12_pick_percent, nyg_week_13_pick_percent, nyg_week_14_pick_percent, nyg_week_15_pick_percent, nyg_week_16_pick_percent, nyg_week_17_pick_percent, nyg_week_18_pick_percent],
-        'New York Jets': [nyj_week_1_pick_percent, nyj_week_2_pick_percent, nyj_week_3_pick_percent, nyj_week_4_pick_percent, nyj_week_5_pick_percent, nyj_week_6_pick_percent, nyj_week_7_pick_percent, nyj_week_8_pick_percent, nyj_week_9_pick_percent, nyj_week_10_pick_percent, nyj_week_11_pick_percent, nyj_week_12_pick_percent, nyj_week_13_pick_percent, nyj_week_14_pick_percent, nyj_week_15_pick_percent, nyj_week_16_pick_percent, nyj_week_17_pick_percent, nyj_week_18_pick_percent],
-        'Philadelphia Eagles': [phi_week_1_pick_percent, phi_week_2_pick_percent, phi_week_3_pick_percent, phi_week_4_pick_percent, phi_week_5_pick_percent, phi_week_6_pick_percent, phi_week_7_pick_percent, phi_week_8_pick_percent, phi_week_9_pick_percent, phi_week_10_pick_percent, phi_week_11_pick_percent, phi_week_12_pick_percent, phi_week_13_pick_percent, phi_week_14_pick_percent, phi_week_15_pick_percent, phi_week_16_pick_percent, phi_week_17_pick_percent, phi_week_18_pick_percent],
-        'Pittsburgh Steelers': [pit_week_1_pick_percent, pit_week_2_pick_percent, pit_week_3_pick_percent, pit_week_4_pick_percent, pit_week_5_pick_percent, pit_week_6_pick_percent, pit_week_7_pick_percent, pit_week_8_pick_percent, pit_week_9_pick_percent, pit_week_10_pick_percent, pit_week_11_pick_percent, pit_week_12_pick_percent, pit_week_13_pick_percent, pit_week_14_pick_percent, pit_week_15_pick_percent, pit_week_16_pick_percent, pit_week_17_pick_percent, pit_week_18_pick_percent],
-        'San Francisco 49ers': [sf_week_1_pick_percent, sf_week_2_pick_percent, sf_week_3_pick_percent, sf_week_4_pick_percent, sf_week_5_pick_percent, sf_week_6_pick_percent, sf_week_7_pick_percent, sf_week_8_pick_percent, sf_week_9_pick_percent, sf_week_10_pick_percent, sf_week_11_pick_percent, sf_week_12_pick_percent, sf_week_13_pick_percent, sf_week_14_pick_percent, sf_week_15_pick_percent, sf_week_16_pick_percent, sf_week_17_pick_percent, sf_week_18_pick_percent],
-        'Seattle Seahawks': [sea_week_1_pick_percent, sea_week_2_pick_percent, sea_week_3_pick_percent, sea_week_4_pick_percent, sea_week_5_pick_percent, sea_week_6_pick_percent, sea_week_7_pick_percent, sea_week_8_pick_percent, sea_week_9_pick_percent, sea_week_10_pick_percent, sea_week_11_pick_percent, sea_week_12_pick_percent, sea_week_13_pick_percent, sea_week_14_pick_percent, sea_week_15_pick_percent, sea_week_16_pick_percent, sea_week_17_pick_percent, sea_week_18_pick_percent],
-        'Tampa Bay Buccaneers': [tb_week_1_pick_percent, tb_week_2_pick_percent, tb_week_3_pick_percent, tb_week_4_pick_percent, tb_week_5_pick_percent, tb_week_6_pick_percent, tb_week_7_pick_percent, tb_week_8_pick_percent, tb_week_9_pick_percent, tb_week_10_pick_percent, tb_week_11_pick_percent, tb_week_12_pick_percent, tb_week_13_pick_percent, tb_week_14_pick_percent, tb_week_15_pick_percent, tb_week_16_pick_percent, tb_week_17_pick_percent, tb_week_18_pick_percent],
-        'Tennessee Titans': [ten_week_1_pick_percent, ten_week_2_pick_percent, ten_week_3_pick_percent, ten_week_4_pick_percent, ten_week_5_pick_percent, ten_week_6_pick_percent, ten_week_7_pick_percent, ten_week_8_pick_percent, ten_week_9_pick_percent, ten_week_10_pick_percent, ten_week_11_pick_percent, ten_week_12_pick_percent, ten_week_13_pick_percent, ten_week_14_pick_percent, ten_week_15_pick_percent, ten_week_16_pick_percent, ten_week_17_pick_percent, ten_week_18_pick_percent],
-         'Washington Commanders': [was_week_1_pick_percent, was_week_2_pick_percent, was_week_3_pick_percent, was_week_4_pick_percent, was_week_5_pick_percent, was_week_6_pick_percent, was_week_7_pick_percent, was_week_8_pick_percent, was_week_9_pick_percent, was_week_10_pick_percent, was_week_11_pick_percent, was_week_12_pick_percent, was_week_13_pick_percent, was_week_14_pick_percent, was_week_15_pick_percent, was_week_16_pick_percent, was_week_17_pick_percent, was_week_18_pick_percent]
-    }
-    splash_pick_percentages = {
-        'Arizona Cardinals': [az_week_1_pick_percent, az_week_2_pick_percent, az_week_3_pick_percent, az_week_4_pick_percent, az_week_5_pick_percent, az_week_6_pick_percent, az_week_7_pick_percent, az_week_8_pick_percent, az_week_9_pick_percent, az_week_10_pick_percent, az_week_11_pick_percent, az_week_12_pick_percent, az_week_13_pick_percent, az_week_14_pick_percent, az_week_15_pick_percent, az_week_16_pick_percent, az_week_17_pick_percent, az_week_18_pick_percent],
-        'Atlanta Falcons': [atl_week_1_pick_percent, atl_week_2_pick_percent, atl_week_3_pick_percent, atl_week_4_pick_percent, atl_week_5_pick_percent, atl_week_6_pick_percent, atl_week_7_pick_percent, atl_week_8_pick_percent, atl_week_9_pick_percent, atl_week_10_pick_percent, atl_week_11_pick_percent, atl_week_12_pick_percent, atl_week_13_pick_percent, atl_week_14_pick_percent, atl_week_15_pick_percent, atl_week_16_pick_percent, atl_week_17_pick_percent, atl_week_18_pick_percent],
-        'Baltimore Ravens': [bal_week_1_pick_percent, bal_week_2_pick_percent, bal_week_3_pick_percent, bal_week_4_pick_percent, bal_week_5_pick_percent, bal_week_6_pick_percent, bal_week_7_pick_percent, bal_week_8_pick_percent, bal_week_9_pick_percent, bal_week_10_pick_percent, bal_week_11_pick_percent, bal_week_12_pick_percent, bal_week_13_pick_percent, bal_week_14_pick_percent, bal_week_15_pick_percent, bal_week_16_pick_percent, bal_week_17_pick_percent, bal_week_18_pick_percent],
-        'Buffalo Bills': [buf_week_1_pick_percent, buf_week_2_pick_percent, buf_week_3_pick_percent, buf_week_4_pick_percent, buf_week_5_pick_percent, buf_week_6_pick_percent, buf_week_7_pick_percent, buf_week_8_pick_percent, buf_week_9_pick_percent, buf_week_10_pick_percent, buf_week_11_pick_percent, buf_week_12_pick_percent, buf_week_13_pick_percent, buf_week_14_pick_percent, buf_week_15_pick_percent, buf_week_16_pick_percent, buf_week_17_pick_percent, buf_week_18_pick_percent],
-        'Carolina Panthers': [car_week_1_pick_percent, car_week_2_pick_percent, car_week_3_pick_percent, car_week_4_pick_percent, car_week_5_pick_percent, car_week_6_pick_percent, car_week_7_pick_percent, car_week_8_pick_percent, car_week_9_pick_percent, car_week_10_pick_percent, car_week_11_pick_percent, car_week_12_pick_percent, car_week_13_pick_percent, car_week_14_pick_percent, car_week_15_pick_percent, car_week_16_pick_percent, car_week_17_pick_percent, car_week_18_pick_percent],
-        'Chicago Bears': [chi_week_1_pick_percent, chi_week_2_pick_percent, chi_week_3_pick_percent, chi_week_4_pick_percent, chi_week_5_pick_percent, chi_week_6_pick_percent, chi_week_7_pick_percent, chi_week_8_pick_percent, chi_week_9_pick_percent, chi_week_10_pick_percent, chi_week_11_pick_percent, chi_week_12_pick_percent, chi_week_13_pick_percent, chi_week_14_pick_percent, chi_week_15_pick_percent, chi_week_16_pick_percent, chi_week_17_pick_percent, chi_week_18_pick_percent],
-        'Cincinnati Bengals': [cin_week_1_pick_percent, cin_week_2_pick_percent, cin_week_3_pick_percent, cin_week_4_pick_percent, cin_week_5_pick_percent, cin_week_6_pick_percent, cin_week_7_pick_percent, cin_week_8_pick_percent, cin_week_9_pick_percent, cin_week_10_pick_percent, cin_week_11_pick_percent, cin_week_12_pick_percent, cin_week_13_pick_percent, cin_week_14_pick_percent, cin_week_15_pick_percent, cin_week_16_pick_percent, cin_week_17_pick_percent, cin_week_18_pick_percent],
-        'Cleveland Browns': [cle_week_1_pick_percent, cle_week_2_pick_percent, cle_week_3_pick_percent, cle_week_4_pick_percent, cle_week_5_pick_percent, cle_week_6_pick_percent, cle_week_7_pick_percent, cle_week_8_pick_percent, cle_week_9_pick_percent, cle_week_10_pick_percent, cle_week_11_pick_percent, cle_week_12_pick_percent, cle_week_13_pick_percent, cle_week_14_pick_percent, cle_week_15_pick_percent, cle_week_16_pick_percent, cle_week_17_pick_percent, cle_week_18_pick_percent],
-        'Dallas Cowboys': [dal_week_1_pick_percent, dal_week_2_pick_percent, dal_week_3_pick_percent, dal_week_4_pick_percent, dal_week_5_pick_percent, dal_week_6_pick_percent, dal_week_7_pick_percent, dal_week_8_pick_percent, dal_week_9_pick_percent, dal_week_10_pick_percent, dal_week_11_pick_percent, dal_week_12_pick_percent, dal_week_13_pick_percent, dal_week_14_pick_percent, dal_week_15_pick_percent, dal_week_16_pick_percent, dal_week_17_pick_percent, dal_week_18_pick_percent],
-        'Denver Broncos': [den_week_1_pick_percent, den_week_2_pick_percent, den_week_3_pick_percent, den_week_4_pick_percent, den_week_5_pick_percent, den_week_6_pick_percent, den_week_7_pick_percent, den_week_8_pick_percent, den_week_9_pick_percent, den_week_10_pick_percent, den_week_11_pick_percent, den_week_12_pick_percent, den_week_13_pick_percent, den_week_14_pick_percent, den_week_15_pick_percent, den_week_16_pick_percent, den_week_17_pick_percent, den_week_18_pick_percent],
-        'Detroit Lions': [det_week_1_pick_percent, det_week_2_pick_percent, det_week_3_pick_percent, det_week_4_pick_percent, det_week_5_pick_percent, det_week_6_pick_percent, det_week_7_pick_percent, det_week_8_pick_percent, det_week_9_pick_percent, det_week_10_pick_percent, det_week_11_pick_percent, det_week_12_pick_percent, det_week_13_pick_percent, det_week_14_pick_percent, det_week_15_pick_percent, det_week_16_pick_percent, det_week_17_pick_percent, det_week_18_pick_percent],
-        'Green Bay Packers': [gb_week_1_pick_percent, gb_week_2_pick_percent, gb_week_3_pick_percent, gb_week_4_pick_percent, gb_week_5_pick_percent, gb_week_6_pick_percent, gb_week_7_pick_percent, gb_week_8_pick_percent, gb_week_9_pick_percent, gb_week_10_pick_percent, gb_week_11_pick_percent, gb_week_12_pick_percent, gb_week_13_pick_percent, gb_week_14_pick_percent, gb_week_15_pick_percent, gb_week_16_pick_percent, gb_week_17_pick_percent, gb_week_18_pick_percent],
-        'Houston Texans': [hou_week_1_pick_percent, hou_week_2_pick_percent, hou_week_3_pick_percent, hou_week_4_pick_percent, hou_week_5_pick_percent, hou_week_6_pick_percent, hou_week_7_pick_percent, hou_week_8_pick_percent, hou_week_9_pick_percent, hou_week_10_pick_percent, hou_week_11_pick_percent, hou_week_12_pick_percent, hou_week_13_pick_percent, hou_week_14_pick_percent, hou_week_15_pick_percent, hou_week_16_pick_percent, hou_week_17_pick_percent, hou_week_18_pick_percent],
-        'Indianapolis Colts': [ind_week_1_pick_percent, ind_week_2_pick_percent, ind_week_3_pick_percent, ind_week_4_pick_percent, ind_week_5_pick_percent, ind_week_6_pick_percent, ind_week_7_pick_percent, ind_week_8_pick_percent, ind_week_9_pick_percent, ind_week_10_pick_percent, ind_week_11_pick_percent, ind_week_12_pick_percent, ind_week_13_pick_percent, ind_week_14_pick_percent, ind_week_15_pick_percent, ind_week_16_pick_percent, ind_week_17_pick_percent, ind_week_18_pick_percent],
-        'Jacksonville Jaguars': [jax_week_1_pick_percent, jax_week_2_pick_percent, jax_week_3_pick_percent, jax_week_4_pick_percent, jax_week_5_pick_percent, jax_week_6_pick_percent, jax_week_7_pick_percent, jax_week_8_pick_percent, jax_week_9_pick_percent, jax_week_10_pick_percent, jax_week_11_pick_percent, jax_week_12_pick_percent, jax_week_13_pick_percent, jax_week_14_pick_percent, jax_week_15_pick_percent, jax_week_16_pick_percent, jax_week_17_pick_percent, jax_week_18_pick_percent],
-        'Kansas City Chiefs': [kc_week_1_pick_percent, kc_week_2_pick_percent, kc_week_3_pick_percent, kc_week_4_pick_percent, kc_week_5_pick_percent, kc_week_6_pick_percent, kc_week_7_pick_percent, kc_week_8_pick_percent, kc_week_9_pick_percent, kc_week_10_pick_percent, kc_week_11_pick_percent, kc_week_12_pick_percent, kc_week_13_pick_percent, kc_week_14_pick_percent, kc_week_15_pick_percent, kc_week_16_pick_percent, kc_week_17_pick_percent, kc_week_18_pick_percent],
-        'Las Vegas Raiders': [lv_week_1_pick_percent, lv_week_2_pick_percent, lv_week_3_pick_percent, lv_week_4_pick_percent, lv_week_5_pick_percent, lv_week_6_pick_percent, lv_week_7_pick_percent, lv_week_8_pick_percent, lv_week_9_pick_percent, lv_week_10_pick_percent, lv_week_11_pick_percent, lv_week_12_pick_percent, lv_week_13_pick_percent, lv_week_14_pick_percent, lv_week_15_pick_percent, lv_week_16_pick_percent, lv_week_17_pick_percent, lv_week_18_pick_percent],
-        'Los Angeles Chargers': [lac_week_1_pick_percent, lac_week_2_pick_percent, lac_week_3_pick_percent, lac_week_4_pick_percent, lac_week_5_pick_percent, lac_week_6_pick_percent, lac_week_7_pick_percent, lac_week_8_pick_percent, lac_week_9_pick_percent, lac_week_10_pick_percent, lac_week_11_pick_percent, lac_week_12_pick_percent, lac_week_13_pick_percent, lac_week_14_pick_percent, lac_week_15_pick_percent, lac_week_16_pick_percent, lac_week_17_pick_percent, lac_week_18_pick_percent],
-        'Los Angeles Rams': [lar_week_1_pick_percent, lar_week_2_pick_percent, lar_week_3_pick_percent, lar_week_4_pick_percent, lar_week_5_pick_percent, lar_week_6_pick_percent, lar_week_7_pick_percent, lar_week_8_pick_percent, lar_week_9_pick_percent, lar_week_10_pick_percent, lar_week_11_pick_percent, lar_week_12_pick_percent, lar_week_13_pick_percent, lar_week_14_pick_percent, lar_week_15_pick_percent, lar_week_16_pick_percent, lar_week_17_pick_percent, lar_week_18_pick_percent],
-        'Miami Dolphins': [mia_week_1_pick_percent, mia_week_2_pick_percent, mia_week_3_pick_percent, mia_week_4_pick_percent, mia_week_5_pick_percent, mia_week_6_pick_percent, mia_week_7_pick_percent, mia_week_8_pick_percent, mia_week_9_pick_percent, mia_week_10_pick_percent, mia_week_11_pick_percent, mia_week_12_pick_percent, mia_week_13_pick_percent, mia_week_14_pick_percent, mia_week_15_pick_percent, mia_week_16_pick_percent, mia_week_17_pick_percent, mia_week_18_pick_percent],
-        'Minnesota Vikings': [min_week_1_pick_percent, min_week_2_pick_percent, min_week_3_pick_percent, min_week_4_pick_percent, min_week_5_pick_percent, min_week_6_pick_percent, min_week_7_pick_percent, min_week_8_pick_percent, min_week_9_pick_percent, min_week_10_pick_percent, min_week_11_pick_percent, min_week_12_pick_percent, min_week_13_pick_percent, min_week_14_pick_percent, min_week_15_pick_percent, min_week_16_pick_percent, min_week_17_pick_percent, min_week_18_pick_percent],
-        'New England Patriots': [ne_week_1_pick_percent, ne_week_2_pick_percent, ne_week_3_pick_percent, ne_week_4_pick_percent, ne_week_5_pick_percent, ne_week_6_pick_percent, ne_week_7_pick_percent, ne_week_8_pick_percent, ne_week_9_pick_percent, ne_week_10_pick_percent, ne_week_11_pick_percent, ne_week_12_pick_percent, ne_week_13_pick_percent, ne_week_14_pick_percent, ne_week_15_pick_percent, ne_week_16_pick_percent, ne_week_17_pick_percent, ne_week_18_pick_percent],
-        'New Orleans Saints': [no_week_1_pick_percent, no_week_2_pick_percent, no_week_3_pick_percent, no_week_4_pick_percent, no_week_5_pick_percent, no_week_6_pick_percent, no_week_7_pick_percent, no_week_8_pick_percent, no_week_9_pick_percent, no_week_10_pick_percent, no_week_11_pick_percent, no_week_12_pick_percent, no_week_13_pick_percent, no_week_14_pick_percent, no_week_15_pick_percent, no_week_16_pick_percent, no_week_17_pick_percent, no_week_18_pick_percent],
-        'New York Giants': [nyg_week_1_pick_percent, nyg_week_2_pick_percent, nyg_week_3_pick_percent, nyg_week_4_pick_percent, nyg_week_5_pick_percent, nyg_week_6_pick_percent, nyg_week_7_pick_percent, nyg_week_8_pick_percent, nyg_week_9_pick_percent, nyg_week_10_pick_percent, nyg_week_11_pick_percent, nyg_week_12_pick_percent, nyg_week_13_pick_percent, nyg_week_14_pick_percent, nyg_week_15_pick_percent, nyg_week_16_pick_percent, nyg_week_17_pick_percent, nyg_week_18_pick_percent],
-        'New York Jets': [nyj_week_1_pick_percent, nyj_week_2_pick_percent, nyj_week_3_pick_percent, nyj_week_4_pick_percent, nyj_week_5_pick_percent, nyj_week_6_pick_percent, nyj_week_7_pick_percent, nyj_week_8_pick_percent, nyj_week_9_pick_percent, nyj_week_10_pick_percent, nyj_week_11_pick_percent, nyj_week_12_pick_percent, nyj_week_13_pick_percent, nyj_week_14_pick_percent, nyj_week_15_pick_percent, nyj_week_16_pick_percent, nyj_week_17_pick_percent, nyj_week_18_pick_percent],
-        'Philadelphia Eagles': [phi_week_1_pick_percent, phi_week_2_pick_percent, phi_week_3_pick_percent, phi_week_4_pick_percent, phi_week_5_pick_percent, phi_week_6_pick_percent, phi_week_7_pick_percent, phi_week_8_pick_percent, phi_week_9_pick_percent, phi_week_10_pick_percent, phi_week_11_pick_percent, phi_week_12_pick_percent, phi_week_13_pick_percent, phi_week_14_pick_percent, phi_week_15_pick_percent, phi_week_16_pick_percent, phi_week_17_pick_percent, phi_week_18_pick_percent],
-        'Pittsburgh Steelers': [pit_week_1_pick_percent, pit_week_2_pick_percent, pit_week_3_pick_percent, pit_week_4_pick_percent, pit_week_5_pick_percent, pit_week_6_pick_percent, pit_week_7_pick_percent, pit_week_8_pick_percent, pit_week_9_pick_percent, pit_week_10_pick_percent, pit_week_11_pick_percent, pit_week_12_pick_percent, pit_week_13_pick_percent, pit_week_14_pick_percent, pit_week_15_pick_percent, pit_week_16_pick_percent, pit_week_17_pick_percent, pit_week_18_pick_percent],
-        'San Francisco 49ers': [sf_week_1_pick_percent, sf_week_2_pick_percent, sf_week_3_pick_percent, sf_week_4_pick_percent, sf_week_5_pick_percent, sf_week_6_pick_percent, sf_week_7_pick_percent, sf_week_8_pick_percent, sf_week_9_pick_percent, sf_week_10_pick_percent, sf_week_11_pick_percent, sf_week_12_pick_percent, sf_week_13_pick_percent, sf_week_14_pick_percent, sf_week_15_pick_percent, sf_week_16_pick_percent, sf_week_17_pick_percent, sf_week_18_pick_percent],
-        'Seattle Seahawks': [sea_week_1_pick_percent, sea_week_2_pick_percent, sea_week_3_pick_percent, sea_week_4_pick_percent, sea_week_5_pick_percent, sea_week_6_pick_percent, sea_week_7_pick_percent, sea_week_8_pick_percent, sea_week_9_pick_percent, sea_week_10_pick_percent, sea_week_11_pick_percent, sea_week_12_pick_percent, sea_week_13_pick_percent, sea_week_14_pick_percent, sea_week_15_pick_percent, sea_week_16_pick_percent, sea_week_17_pick_percent, sea_week_18_pick_percent],
-        'Tampa Bay Buccaneers': [tb_week_1_pick_percent, tb_week_2_pick_percent, tb_week_3_pick_percent, tb_week_4_pick_percent, tb_week_5_pick_percent, tb_week_6_pick_percent, tb_week_7_pick_percent, tb_week_8_pick_percent, tb_week_9_pick_percent, tb_week_10_pick_percent, tb_week_11_pick_percent, tb_week_12_pick_percent, tb_week_13_pick_percent, tb_week_14_pick_percent, tb_week_15_pick_percent, tb_week_16_pick_percent, tb_week_17_pick_percent, tb_week_18_pick_percent],
-        'Tennessee Titans': [ten_week_1_pick_percent, ten_week_2_pick_percent, ten_week_3_pick_percent, ten_week_4_pick_percent, ten_week_5_pick_percent, ten_week_6_pick_percent, ten_week_7_pick_percent, ten_week_8_pick_percent, ten_week_9_pick_percent, ten_week_10_pick_percent, ten_week_11_pick_percent, ten_week_12_pick_percent, ten_week_13_pick_percent, ten_week_14_pick_percent, ten_week_15_pick_percent, ten_week_16_pick_percent, ten_week_17_pick_percent, ten_week_18_pick_percent],
-         'Washington Commanders': [was_week_1_pick_percent, was_week_2_pick_percent, was_week_3_pick_percent, was_week_4_pick_percent, was_week_5_pick_percent, was_week_6_pick_percent, was_week_7_pick_percent, was_week_8_pick_percent, was_week_9_pick_percent, was_week_10_pick_percent, was_week_11_pick_percent, was_week_12_pick_percent, was_week_13_pick_percent, was_week_14_pick_percent, was_week_15_pick_percent, was_week_16_pick_percent, was_week_17_pick_percent, was_week_18_pick_percent]
-    }  
-    circa_pick_percentages = {
-        'Arizona Cardinals': [az_week_1_pick_percent, az_week_2_pick_percent, az_week_3_pick_percent, az_week_4_pick_percent, az_week_5_pick_percent, az_week_6_pick_percent, az_week_7_pick_percent, az_week_8_pick_percent, az_week_9_pick_percent, az_week_10_pick_percent, az_week_11_pick_percent, az_week_12_pick_percent, az_week_13_pick_percent, az_week_14_pick_percent, az_week_15_pick_percent, az_week_16_pick_percent, az_week_17_pick_percent, az_week_18_pick_percent, az_week_19_pick_percent, az_week_20_pick_percent],
-        'Atlanta Falcons': [atl_week_1_pick_percent, atl_week_2_pick_percent, atl_week_3_pick_percent, atl_week_4_pick_percent, atl_week_5_pick_percent, atl_week_6_pick_percent, atl_week_7_pick_percent, atl_week_8_pick_percent, atl_week_9_pick_percent, atl_week_10_pick_percent, atl_week_11_pick_percent, atl_week_12_pick_percent, atl_week_13_pick_percent, atl_week_14_pick_percent, atl_week_15_pick_percent, atl_week_16_pick_percent, atl_week_17_pick_percent, atl_week_18_pick_percent, atl_week_19_pick_percent, atl_week_20_pick_percent],
-        'Baltimore Ravens': [bal_week_1_pick_percent, bal_week_2_pick_percent, bal_week_3_pick_percent, bal_week_4_pick_percent, bal_week_5_pick_percent, bal_week_6_pick_percent, bal_week_7_pick_percent, bal_week_8_pick_percent, bal_week_9_pick_percent, bal_week_10_pick_percent, bal_week_11_pick_percent, bal_week_12_pick_percent, bal_week_13_pick_percent, bal_week_14_pick_percent, bal_week_15_pick_percent, bal_week_16_pick_percent, bal_week_17_pick_percent, bal_week_18_pick_percent, bal_week_19_pick_percent, bal_week_20_pick_percent],
-        'Buffalo Bills': [buf_week_1_pick_percent, buf_week_2_pick_percent, buf_week_3_pick_percent, buf_week_4_pick_percent, buf_week_5_pick_percent, buf_week_6_pick_percent, buf_week_7_pick_percent, buf_week_8_pick_percent, buf_week_9_pick_percent, buf_week_10_pick_percent, buf_week_11_pick_percent, buf_week_12_pick_percent, buf_week_13_pick_percent, buf_week_14_pick_percent, buf_week_15_pick_percent, buf_week_16_pick_percent, buf_week_17_pick_percent, buf_week_18_pick_percent, buf_week_19_pick_percent, buf_week_20_pick_percent],
-        'Carolina Panthers': [car_week_1_pick_percent, car_week_2_pick_percent, car_week_3_pick_percent, car_week_4_pick_percent, car_week_5_pick_percent, car_week_6_pick_percent, car_week_7_pick_percent, car_week_8_pick_percent, car_week_9_pick_percent, car_week_10_pick_percent, car_week_11_pick_percent, car_week_12_pick_percent, car_week_13_pick_percent, car_week_14_pick_percent, car_week_15_pick_percent, car_week_16_pick_percent, car_week_17_pick_percent, car_week_18_pick_percent, car_week_19_pick_percent, car_week_20_pick_percent],
-        'Chicago Bears': [chi_week_1_pick_percent, chi_week_2_pick_percent, chi_week_3_pick_percent, chi_week_4_pick_percent, chi_week_5_pick_percent, chi_week_6_pick_percent, chi_week_7_pick_percent, chi_week_8_pick_percent, chi_week_9_pick_percent, chi_week_10_pick_percent, chi_week_11_pick_percent, chi_week_12_pick_percent, chi_week_13_pick_percent, chi_week_14_pick_percent, chi_week_15_pick_percent, chi_week_16_pick_percent, chi_week_17_pick_percent, chi_week_18_pick_percent, chi_week_19_pick_percent, chi_week_20_pick_percent],
-        'Cincinnati Bengals': [cin_week_1_pick_percent, cin_week_2_pick_percent, cin_week_3_pick_percent, cin_week_4_pick_percent, cin_week_5_pick_percent, cin_week_6_pick_percent, cin_week_7_pick_percent, cin_week_8_pick_percent, cin_week_9_pick_percent, cin_week_10_pick_percent, cin_week_11_pick_percent, cin_week_12_pick_percent, cin_week_13_pick_percent, cin_week_14_pick_percent, cin_week_15_pick_percent, cin_week_16_pick_percent, cin_week_17_pick_percent, cin_week_18_pick_percent, cin_week_19_pick_percent, cin_week_20_pick_percent],
-        'Cleveland Browns': [cle_week_1_pick_percent, cle_week_2_pick_percent, cle_week_3_pick_percent, cle_week_4_pick_percent, cle_week_5_pick_percent, cle_week_6_pick_percent, cle_week_7_pick_percent, cle_week_8_pick_percent, cle_week_9_pick_percent, cle_week_10_pick_percent, cle_week_11_pick_percent, cle_week_12_pick_percent, cle_week_13_pick_percent, cle_week_14_pick_percent, cle_week_15_pick_percent, cle_week_16_pick_percent, cle_week_17_pick_percent, cle_week_18_pick_percent, cle_week_19_pick_percent, cle_week_20_pick_percent],
-        'Dallas Cowboys': [dal_week_1_pick_percent, dal_week_2_pick_percent, dal_week_3_pick_percent, dal_week_4_pick_percent, dal_week_5_pick_percent, dal_week_6_pick_percent, dal_week_7_pick_percent, dal_week_8_pick_percent, dal_week_9_pick_percent, dal_week_10_pick_percent, dal_week_11_pick_percent, dal_week_12_pick_percent, dal_week_13_pick_percent, dal_week_14_pick_percent, dal_week_15_pick_percent, dal_week_16_pick_percent, dal_week_17_pick_percent, dal_week_18_pick_percent, dal_week_19_pick_percent, dal_week_20_pick_percent],
-        'Denver Broncos': [den_week_1_pick_percent, den_week_2_pick_percent, den_week_3_pick_percent, den_week_4_pick_percent, den_week_5_pick_percent, den_week_6_pick_percent, den_week_7_pick_percent, den_week_8_pick_percent, den_week_9_pick_percent, den_week_10_pick_percent, den_week_11_pick_percent, den_week_12_pick_percent, den_week_13_pick_percent, den_week_14_pick_percent, den_week_15_pick_percent, den_week_16_pick_percent, den_week_17_pick_percent, den_week_18_pick_percent, den_week_19_pick_percent, den_week_20_pick_percent],
-        'Detroit Lions': [det_week_1_pick_percent, det_week_2_pick_percent, det_week_3_pick_percent, det_week_4_pick_percent, det_week_5_pick_percent, det_week_6_pick_percent, det_week_7_pick_percent, det_week_8_pick_percent, det_week_9_pick_percent, det_week_10_pick_percent, det_week_11_pick_percent, det_week_12_pick_percent, det_week_13_pick_percent, det_week_14_pick_percent, det_week_15_pick_percent, det_week_16_pick_percent, det_week_17_pick_percent, det_week_18_pick_percent, det_week_19_pick_percent, det_week_20_pick_percent],
-        'Green Bay Packers': [gb_week_1_pick_percent, gb_week_2_pick_percent, gb_week_3_pick_percent, gb_week_4_pick_percent, gb_week_5_pick_percent, gb_week_6_pick_percent, gb_week_7_pick_percent, gb_week_8_pick_percent, gb_week_9_pick_percent, gb_week_10_pick_percent, gb_week_11_pick_percent, gb_week_12_pick_percent, gb_week_13_pick_percent, gb_week_14_pick_percent, gb_week_15_pick_percent, gb_week_16_pick_percent, gb_week_17_pick_percent, gb_week_18_pick_percent, gb_week_19_pick_percent, gb_week_20_pick_percent],
-        'Houston Texans': [hou_week_1_pick_percent, hou_week_2_pick_percent, hou_week_3_pick_percent, hou_week_4_pick_percent, hou_week_5_pick_percent, hou_week_6_pick_percent, hou_week_7_pick_percent, hou_week_8_pick_percent, hou_week_9_pick_percent, hou_week_10_pick_percent, hou_week_11_pick_percent, hou_week_12_pick_percent, hou_week_13_pick_percent, hou_week_14_pick_percent, hou_week_15_pick_percent, hou_week_16_pick_percent, hou_week_17_pick_percent, hou_week_18_pick_percent, hou_week_19_pick_percent, hou_week_20_pick_percent],
-        'Indianapolis Colts': [ind_week_1_pick_percent, ind_week_2_pick_percent, ind_week_3_pick_percent, ind_week_4_pick_percent, ind_week_5_pick_percent, ind_week_6_pick_percent, ind_week_7_pick_percent, ind_week_8_pick_percent, ind_week_9_pick_percent, ind_week_10_pick_percent, ind_week_11_pick_percent, ind_week_12_pick_percent, ind_week_13_pick_percent, ind_week_14_pick_percent, ind_week_15_pick_percent, ind_week_16_pick_percent, ind_week_17_pick_percent, ind_week_18_pick_percent, ind_week_19_pick_percent, ind_week_20_pick_percent],
-        'Jacksonville Jaguars': [jax_week_1_pick_percent, jax_week_2_pick_percent, jax_week_3_pick_percent, jax_week_4_pick_percent, jax_week_5_pick_percent, jax_week_6_pick_percent, jax_week_7_pick_percent, jax_week_8_pick_percent, jax_week_9_pick_percent, jax_week_10_pick_percent, jax_week_11_pick_percent, jax_week_12_pick_percent, jax_week_13_pick_percent, jax_week_14_pick_percent, jax_week_15_pick_percent, jax_week_16_pick_percent, jax_week_17_pick_percent, jax_week_18_pick_percent, jax_week_19_pick_percent, jax_week_20_pick_percent],
-        'Kansas City Chiefs': [kc_week_1_pick_percent, kc_week_2_pick_percent, kc_week_3_pick_percent, kc_week_4_pick_percent, kc_week_5_pick_percent, kc_week_6_pick_percent, kc_week_7_pick_percent, kc_week_8_pick_percent, kc_week_9_pick_percent, kc_week_10_pick_percent, kc_week_11_pick_percent, kc_week_12_pick_percent, kc_week_13_pick_percent, kc_week_14_pick_percent, kc_week_15_pick_percent, kc_week_16_pick_percent, kc_week_17_pick_percent, kc_week_18_pick_percent, kc_week_19_pick_percent, kc_week_20_pick_percent],
-        'Las Vegas Raiders': [lv_week_1_pick_percent, lv_week_2_pick_percent, lv_week_3_pick_percent, lv_week_4_pick_percent, lv_week_5_pick_percent, lv_week_6_pick_percent, lv_week_7_pick_percent, lv_week_8_pick_percent, lv_week_9_pick_percent, lv_week_10_pick_percent, lv_week_11_pick_percent, lv_week_12_pick_percent, lv_week_13_pick_percent, lv_week_14_pick_percent, lv_week_15_pick_percent, lv_week_16_pick_percent, lv_week_17_pick_percent, lv_week_18_pick_percent, lv_week_19_pick_percent, lv_week_20_pick_percent],
-        'Los Angeles Chargers': [lac_week_1_pick_percent, lac_week_2_pick_percent, lac_week_3_pick_percent, lac_week_4_pick_percent, lac_week_5_pick_percent, lac_week_6_pick_percent, lac_week_7_pick_percent, lac_week_8_pick_percent, lac_week_9_pick_percent, lac_week_10_pick_percent, lac_week_11_pick_percent, lac_week_12_pick_percent, lac_week_13_pick_percent, lac_week_14_pick_percent, lac_week_15_pick_percent, lac_week_16_pick_percent, lac_week_17_pick_percent, lac_week_18_pick_percent, lac_week_19_pick_percent, lac_week_20_pick_percent],
-        'Los Angeles Rams': [lar_week_1_pick_percent, lar_week_2_pick_percent, lar_week_3_pick_percent, lar_week_4_pick_percent, lar_week_5_pick_percent, lar_week_6_pick_percent, lar_week_7_pick_percent, lar_week_8_pick_percent, lar_week_9_pick_percent, lar_week_10_pick_percent, lar_week_11_pick_percent, lar_week_12_pick_percent, lar_week_13_pick_percent, lar_week_14_pick_percent, lar_week_15_pick_percent, lar_week_16_pick_percent, lar_week_17_pick_percent, lar_week_18_pick_percent, lar_week_19_pick_percent, lar_week_20_pick_percent],
-        'Miami Dolphins': [mia_week_1_pick_percent, mia_week_2_pick_percent, mia_week_3_pick_percent, mia_week_4_pick_percent, mia_week_5_pick_percent, mia_week_6_pick_percent, mia_week_7_pick_percent, mia_week_8_pick_percent, mia_week_9_pick_percent, mia_week_10_pick_percent, mia_week_11_pick_percent, mia_week_12_pick_percent, mia_week_13_pick_percent, mia_week_14_pick_percent, mia_week_15_pick_percent, mia_week_16_pick_percent, mia_week_17_pick_percent, mia_week_18_pick_percent, mia_week_19_pick_percent, mia_week_20_pick_percent],
-        'Minnesota Vikings': [min_week_1_pick_percent, min_week_2_pick_percent, min_week_3_pick_percent, min_week_4_pick_percent, min_week_5_pick_percent, min_week_6_pick_percent, min_week_7_pick_percent, min_week_8_pick_percent, min_week_9_pick_percent, min_week_10_pick_percent, min_week_11_pick_percent, min_week_12_pick_percent, min_week_13_pick_percent, min_week_14_pick_percent, min_week_15_pick_percent, min_week_16_pick_percent, min_week_17_pick_percent, min_week_18_pick_percent, min_week_19_pick_percent, min_week_20_pick_percent],
-        'New England Patriots': [ne_week_1_pick_percent, ne_week_2_pick_percent, ne_week_3_pick_percent, ne_week_4_pick_percent, ne_week_5_pick_percent, ne_week_6_pick_percent, ne_week_7_pick_percent, ne_week_8_pick_percent, ne_week_9_pick_percent, ne_week_10_pick_percent, ne_week_11_pick_percent, ne_week_12_pick_percent, ne_week_13_pick_percent, ne_week_14_pick_percent, ne_week_15_pick_percent, ne_week_16_pick_percent, ne_week_17_pick_percent, ne_week_18_pick_percent, ne_week_19_pick_percent, ne_week_20_pick_percent],
-        'New Orleans Saints': [no_week_1_pick_percent, no_week_2_pick_percent, no_week_3_pick_percent, no_week_4_pick_percent, no_week_5_pick_percent, no_week_6_pick_percent, no_week_7_pick_percent, no_week_8_pick_percent, no_week_9_pick_percent, no_week_10_pick_percent, no_week_11_pick_percent, no_week_12_pick_percent, no_week_13_pick_percent, no_week_14_pick_percent, no_week_15_pick_percent, no_week_16_pick_percent, no_week_17_pick_percent, no_week_18_pick_percent, no_week_19_pick_percent, no_week_20_pick_percent],
-        'New York Giants': [nyg_week_1_pick_percent, nyg_week_2_pick_percent, nyg_week_3_pick_percent, nyg_week_4_pick_percent, nyg_week_5_pick_percent, nyg_week_6_pick_percent, nyg_week_7_pick_percent, nyg_week_8_pick_percent, nyg_week_9_pick_percent, nyg_week_10_pick_percent, nyg_week_11_pick_percent, nyg_week_12_pick_percent, nyg_week_13_pick_percent, nyg_week_14_pick_percent, nyg_week_15_pick_percent, nyg_week_16_pick_percent, nyg_week_17_pick_percent, nyg_week_18_pick_percent, nyg_week_19_pick_percent, nyg_week_20_pick_percent],
-        'New York Jets': [nyj_week_1_pick_percent, nyj_week_2_pick_percent, nyj_week_3_pick_percent, nyj_week_4_pick_percent, nyj_week_5_pick_percent, nyj_week_6_pick_percent, nyj_week_7_pick_percent, nyj_week_8_pick_percent, nyj_week_9_pick_percent, nyj_week_10_pick_percent, nyj_week_11_pick_percent, nyj_week_12_pick_percent, nyj_week_13_pick_percent, nyj_week_14_pick_percent, nyj_week_15_pick_percent, nyj_week_16_pick_percent, nyj_week_17_pick_percent, nyj_week_18_pick_percent, nyj_week_19_pick_percent, nyj_week_20_pick_percent],
-        'Philadelphia Eagles': [phi_week_1_pick_percent, phi_week_2_pick_percent, phi_week_3_pick_percent, phi_week_4_pick_percent, phi_week_5_pick_percent, phi_week_6_pick_percent, phi_week_7_pick_percent, phi_week_8_pick_percent, phi_week_9_pick_percent, phi_week_10_pick_percent, phi_week_11_pick_percent, phi_week_12_pick_percent, phi_week_13_pick_percent, phi_week_14_pick_percent, phi_week_15_pick_percent, phi_week_16_pick_percent, phi_week_17_pick_percent, phi_week_18_pick_percent, phi_week_19_pick_percent, phi_week_20_pick_percent],
-        'Pittsburgh Steelers': [pit_week_1_pick_percent, pit_week_2_pick_percent, pit_week_3_pick_percent, pit_week_4_pick_percent, pit_week_5_pick_percent, pit_week_6_pick_percent, pit_week_7_pick_percent, pit_week_8_pick_percent, pit_week_9_pick_percent, pit_week_10_pick_percent, pit_week_11_pick_percent, pit_week_12_pick_percent, pit_week_13_pick_percent, pit_week_14_pick_percent, pit_week_15_pick_percent, pit_week_16_pick_percent, pit_week_17_pick_percent, pit_week_18_pick_percent, pit_week_19_pick_percent, pit_week_20_pick_percent],
-        'San Francisco 49ers': [sf_week_1_pick_percent, sf_week_2_pick_percent, sf_week_3_pick_percent, sf_week_4_pick_percent, sf_week_5_pick_percent, sf_week_6_pick_percent, sf_week_7_pick_percent, sf_week_8_pick_percent, sf_week_9_pick_percent, sf_week_10_pick_percent, sf_week_11_pick_percent, sf_week_12_pick_percent, sf_week_13_pick_percent, sf_week_14_pick_percent, sf_week_15_pick_percent, sf_week_16_pick_percent, sf_week_17_pick_percent, sf_week_18_pick_percent, sf_week_19_pick_percent, sf_week_20_pick_percent],
-        'Seattle Seahawks': [sea_week_1_pick_percent, sea_week_2_pick_percent, sea_week_3_pick_percent, sea_week_4_pick_percent, sea_week_5_pick_percent, sea_week_6_pick_percent, sea_week_7_pick_percent, sea_week_8_pick_percent, sea_week_9_pick_percent, sea_week_10_pick_percent, sea_week_11_pick_percent, sea_week_12_pick_percent, sea_week_13_pick_percent, sea_week_14_pick_percent, sea_week_15_pick_percent, sea_week_16_pick_percent, sea_week_17_pick_percent, sea_week_18_pick_percent, sea_week_19_pick_percent, sea_week_20_pick_percent],
-        'Tampa Bay Buccaneers': [tb_week_1_pick_percent, tb_week_2_pick_percent, tb_week_3_pick_percent, tb_week_4_pick_percent, tb_week_5_pick_percent, tb_week_6_pick_percent, tb_week_7_pick_percent, tb_week_8_pick_percent, tb_week_9_pick_percent, tb_week_10_pick_percent, tb_week_11_pick_percent, tb_week_12_pick_percent, tb_week_13_pick_percent, tb_week_14_pick_percent, tb_week_15_pick_percent, tb_week_16_pick_percent, tb_week_17_pick_percent, tb_week_18_pick_percent, tb_week_19_pick_percent, tb_week_20_pick_percent],
-        'Tennessee Titans': [ten_week_1_pick_percent, ten_week_2_pick_percent, ten_week_3_pick_percent, ten_week_4_pick_percent, ten_week_5_pick_percent, ten_week_6_pick_percent, ten_week_7_pick_percent, ten_week_8_pick_percent, ten_week_9_pick_percent, ten_week_10_pick_percent, ten_week_11_pick_percent, ten_week_12_pick_percent, ten_week_13_pick_percent, ten_week_14_pick_percent, ten_week_15_pick_percent, ten_week_16_pick_percent, ten_week_17_pick_percent, ten_week_18_pick_percent, ten_week_19_pick_percent, ten_week_20_pick_percent],
-        'Washington Commanders': [was_week_1_pick_percent, was_week_2_pick_percent, was_week_3_pick_percent, was_week_4_pick_percent, was_week_5_pick_percent, was_week_6_pick_percent, was_week_7_pick_percent, was_week_8_pick_percent, was_week_9_pick_percent, was_week_10_pick_percent, was_week_11_pick_percent, was_week_12_pick_percent, was_week_13_pick_percent, was_week_14_pick_percent, was_week_15_pick_percent, was_week_16_pick_percent, was_week_17_pick_percent, was_week_18_pick_percent, was_week_19_pick_percent, was_week_20_pick_percent]
-    }
+    st.checkbox(
+        'Add custom estimated pick percentages (Overrides automatic estimation)?',
+        key='custom_pick_percentages_widget',
+        value=st.session_state.current_config['custom_pick_percentages'],
+        on_change=update_config_value,
+        args=('custom_pick_percentages',)
+    )
 
-    
-    st.write('')
-    st.write('')
-    st.write('')
-    
-    use_cached_expected_value = 0
-    use_live_sportsbook_odds = 1
-    
-#    if yes_i_have_customized_rankings:
-#    	st.subheader('Use Saved Expected Value')
-#    	st.write('Warning, this data may not be nup to date.')
-#    	st.write('- Checking this box will ensure the process is fast, (Less than 1 minute, compared to 5-10 mins) and will prevent the risk of crashing')
-#    	st.write('- This will not use your customized rankings in the EV calculation process')
-#    	st.write('- This will NOT have an impact on your customized ranking output, just the EV output')
-#    	st.write('Last Update: :green[01/01/2025]')
-#    	use_cached_expected_value = 1 if st.checkbox('Use Cached Expected Value') else 0
-#    	st.write('')
-#    	st.write('')
-#    	st.write('')
-#    	if use_cached_expected_value == 1:
-#                use_live_sportsbook_odds = 1 if st.checkbox('Use Live Sportsbook Odds to calculate win probability (If Available?') else 0
-#                st.write('')
-#                st.write("If this is checked, we will use odds from DraftKings to determine a team's win probability. For games where live odds from DraftKings are unavailable, we will use your own internal rankings to determine the predicted spread and win probability.")	
-#                st.write('If this is left unchecked, we will use your own internal rankings to determine the predicted spread and win probability for all games.')	
-#    	st.write('')
-#    	st.write('')
-#    	st.write('')
+    if st.session_state.current_config['custom_pick_percentages']:
+        with st.expander("Set Custom Pick Percentages"):
+            st.write("Set pick % (0-100). Use -1 to use automatic estimation for that specific team/week.")
+            start_w = st.session_state.current_config['starting_week']
+            end_w = st.session_state.current_config['ending_week'] # exclusive
+            
+            for week in range(start_w, end_w):
+                # Use a checkbox to optionally show/hide each week's sliders
+                week_key = f"week_{week}"
+                show_week = st.checkbox(f"Adjust Week {week} Pick %?", key=f"show_week_{week}_perc")
+                
+                if show_week:
+                     st.markdown(f"**Week {week} Custom Pick %**")
+                     perc_cols = st.columns(3)
+                     perc_col_idx = 0
+                     for team in nfl_teams:
+                         with perc_cols[perc_col_idx]:
+                             outer_key = 'pick_percentages'
+                             # Ensure week dict exists before accessing team
+                             if week_key not in st.session_state.current_config[outer_key]:
+                                  st.session_state.current_config[outer_key][week_key] = {}
+                             
+                             inner_key = team
+                             widget_key = f"pick_perc_{week_key}_{inner_key}_widget".replace(" ", "_")
+                             
+                             current_val_float = st.session_state.current_config[outer_key].get(week_key, {}).get(inner_key, -1.0)
+                             current_val_int = int(current_val_float * 100)
+
+                             st.slider(
+                                 f"{team} Wk {week} %:",
+                                 min_value=-1,
+                                 max_value=100,
+                                 key=widget_key,
+                                 value=current_val_int,
+                                 on_change=update_pick_percentage, # Use specific updater
+                                 args=(week, inner_key)
+                             )
+                             # Display current setting
+                             display_val = st.session_state.current_config[outer_key].get(week_key, {}).get(inner_key, -1.0)
+                             if display_val < 0:
+                                  st.caption(":red[Auto]")
+                             else:
+                                  st.caption(f":green[{display_val*100:.0f}%]")
+
+                         perc_col_idx = (perc_col_idx + 1) % 3
+                     st.write("---") # Separator between weeks
+    st.write('---')
+
+
+    # --- L. Get Optimized Picks ---
     st.subheader('Get Optimized Survivor Picks')
-    number_of_solutions_options = [
-        1,5,10,25,50,100
-    ]
-
-    st.write('How many solutions would you like from each solver?')
-    number_solutions = st.selectbox('Number of Solutions', options = number_of_solutions_options, help = "How many solutions do you want to produce? We recommend 10.")
-    double_number_solutions = number_solutions * 2
+    number_of_solutions_options = [1, 5, 10, 25, 50, 100]
+    current_num_solutions = st.session_state.current_config['number_solutions']
+    st.selectbox(
+        'Number of Solutions per Method:',
+        options=number_of_solutions_options,
+        key='number_solutions_widget',
+        index=number_of_solutions_options.index(current_num_solutions),
+        on_change=update_config_value,
+        args=('number_solutions',),
+        help="How many top solutions to generate (e.g., 10 EV-based, 10 Ranking-based)."
+    )
 
     with st.expander("More Information"):
-        st.write(f"""This button will find the best picks for each week. It will pump out :green[{double_number_solutions} solutions].
-	\n- The first {number_solutions} solutions will be :red[based purely on EV] that is a complicated formula based on their predicted pick percentage of each team in each week, and each team's chances of winning that week.
+        num_sol_display = st.session_state.current_config['number_solutions']
+        st.write(f"""This button will find the best picks for each week. It will pump out :green[{num_sol_display * 2} solutions].
+	\n- The first {num_sol_display} solutions will be :red[based purely on EV] that is a complicated formula based on their predicted pick percentage of each team in each week, and each team's chances of winning that week.
  	\n- This will use the rankings defined above (or within our system) to determine win probability and thus pick percentage for each team.
-  	\n- The remaining {number_solutions} solutions will be based on the :red[rankings and constraints you provided]. 
+  	\n- The remaining {num_sol_display} solutions will be based on the :red[rankings and constraints you provided]. 
   	\n- This method finds the teams that are just straight up most likely to win. While helpful, thsi does not provide you with much of a competitive advantage.
    	\n- All solutions will abide by the constraints you've provided
    	\n- If you have too many constraints, or the solution is impossible, you will see an error
        	\n- :green[Mathematically, EV is most likely to win. However, using your own rankings has advantages as well, which is why we provide both solutions (Sometimes it's just preposterous to pick the Jets)]
         """)
-    
-    
+
     st.write('')
-    st.write('')
-    schedule_data_retrieved = False #Initialize on first run
-    
-    if st.button("Get Optimized Survivor Picks"):
+    if st.button("🚀 Get Optimized Survivor Picks", type="primary"):
+        # --- Trigger Backend Logic ---
+        st.write("Starting Optimization Process...")
+        
+        # Get all config settings once
+        config = st.session_state.current_config
+        start_w = config['starting_week']
+        end_w = config['ending_week']
+        selected_c = config['selected_contest']
+        use_cache = False 
+        num_sol = config['number_solutions']
+        
+        # --- Run your steps ---
+        
+        # Step 1: Get Schedule
         st.write("Step 1/6: Fetching Schedule Data...")
-        schedule_table, schedule_rows = get_schedule() # Call the function   
-        if schedule_table:
-            st.write("Step 1 Completed: Schedule Data Retrieved!")
-            schedule_data_retrieved = True #Set Flag to True after retrieval
-        else:
-            st.write("Error. Could not find the table.")
-            schedule_data_retrieved = False #Set flag to False on error
-             
-        if schedule_rows:
-            st.write(f"Number of Schedule Rows: {len(schedule_rows)}") #Display row length
-            st.write("Step 2/6: Collecting Travel, Ranking, Odds, and Rest Data...")
-            collect_schedule_travel_ranking_data_df = collect_schedule_travel_ranking_data(pd)
-            st.write("Step 2 Completed: Travel, Ranking, Odds, and Rest Data Retrieved!")
-            st.write("Step 3/6: Predicting Future Pick Percentages of Public...")
-        if use_cached_expected_value == 0:
-            nfl_schedule_pick_percentages_df = get_predicted_pick_percentages(pd)
-            st.write("Step 3 Completed: Public Pick Percentages Predicted")
-            #nfl_schedule_circa_df_2 = manually_adjust_pick_predictions()
-        if use_cached_expected_value == 0:
-            if selected_contest == 'Circa':
-                st.write("Step 3a: Predicting Pick Percentages based on Team Availability...")
-                nfl_schedule_pick_percentages_df = get_predicted_pick_percentages_with_availability(pd)
-        if use_cached_expected_value == 1:
-            nfl_schedule_pick_percentages_df = get_predicted_pick_percentages(pd)
-            if selected_contest == 'Circa':
-                full_df_with_ev = nfl_schedule_pick_percentages_df_circa #pd.read_csv('NFL Schedule with full ev_circa.csv')
-            elif selected_contest == 'Splash Sports':
-                full_df_with_ev = nfl_schedule_pick_percentages_df_splash #pd.read_csv('NFL Schedule with full ev_circa.csv'
-            else:
-                full_df_with_ev = nfl_schedule_pick_percentages_df_dk #pd.read_csv('NFL Schedule with full ev_dk.csv')
-            st.write("Step 3 Completed: Public Pick Percentages Predicted")
-            st.write('- Using Cached Expected Values...')
-        else:
-            st.write("Step 4/6: Calculating Live Expected Value (Will take 5-10 mins)...")
-            with st.spinner('Processing...'):
-                full_df_with_ev = calculate_ev(nfl_schedule_pick_percentages_df, starting_week, ending_week, selected_contest, use_cached_expected_value)
-                st.write("Processing Complete!")
-                #st.dataframe(full_df_with_ev)
-        st.write("Step 4 Completed: Expected Value Calculated")
-        st.subheader('Full Raw Dataset')
-        st.write(full_df_with_ev)
-        st.write('')
-        st.write('')
-        st.subheader('Full Cleaned Dataset')
-        combined_df = reformat_df()
-        st.write(combined_df)
-        st.write('Step 5/6: Calculating Best Combination of Picks Based on EV...')
-        st.write('')
-    
-    
-        ending_week_2 = ending_week - 1	
-        if selected_contest == 'Circa':
-            st.subheader(f':blue[Optimal Picks for Circa: Weeks {starting_week} through {ending_week_2}]')
-            st.write('')
-        elif selected_contest == 'Splash Sports':
-            st.subheader(f':yellow[Optimal Picks for Splash Sports: Weeks {starting_week} through {ending_week_2}]')
-            st.write('')
-        else:
-            st.subheader(f':green[Optimal Picks for Draftkings: Weeks {starting_week} through {ending_week_2}]')
-            st.write('')
-            st.subheader('Expected Value Optimized Picks')
-    
-        get_survivor_picks_based_on_ev()
-        st.write('Step 5 Completed: Top Picks Determined Based on EV')
-        if yes_i_have_customized_rankings:
-            st.write('Step 6/6: Calculating Best Combination of Picks Based on Customized Rankings...')
-            st.write("---------------------------------------------------------------------------------------------------------------")
-            st.write("---------------------------------------------------------------------------------------------------------------")
-            st.write("---------------------------------------------------------------------------------------------------------------")
-            st.subheader('Customized Ranking Optimized Picks')
-            get_survivor_picks_based_on_internal_rankings()
-            st.write('Step 6 Completed: Top Picks Determined Based on Customized Rankings')
-        else:
-            st.write('Step 6/6: Calculating Best Combination of Picks Based on Default Rankings...')
-            st.write("---------------------------------------------------------------------------------------------------------------")
-            st.write("---------------------------------------------------------------------------------------------------------------")
-            st.write("---------------------------------------------------------------------------------------------------------------")
-            st.subheader('Default Ranking Optimized Picks')
-            get_survivor_picks_based_on_internal_rankings()
-            st.write('Step 6 Completed: Top Picks Determined Based on Default Rankings')
-    else:
-        schedule_data_retrieved = False #Set flag to False on error
+        # Pass config for get_schedule as it might need it (though it doesn't currently)
+        schedule_table, schedule_rows = get_schedule(config) 
+        st.write("Step 1 Completed.")
+        
+        # Step 2: Collect Data
+        st.write("Step 2/6: Collecting Travel, Ranking, Odds, Rest Data...")
+        # --- FIX: Pass schedule_rows to this function ---
+        collect_schedule_travel_ranking_data_df = collect_schedule_travel_ranking_data(pd, config, schedule_rows)
+        st.write("Step 2 Completed.")
+
+        # Step 3: Predict Pick % (Preliminary)
+        st.write("Step 3/6: Predicting Pick Percentages & Calculating Availability...")
+        # --- Pass the dataframe from Step 2 into this function ---
+        df_with_availability = get_predicted_pick_percentages(pd, config, collect_schedule_travel_ranking_data_df)
+        st.write("Step 3a Completed (Availability Calculated).")
+        
+        # Step 3b: Predict Pick % (With Availability)
+        st.write("Step 3b/6: Refining Pick Percentages using Availability...")
+        # --- Pass the dataframe from Step 3a into this function ---
+        nfl_schedule_pick_percentages_df = get_predicted_pick_percentages_with_availability(pd, config, df_with_availability)
+        st.write("Step 3b Completed (Final Pick % Predicted).")
+        
+        # Step 4: Calculate EV
+        st.write("Step 4/6: Calculating Live Expected Value...")
+        with st.spinner('Calculating EV... (This may take 5-10 minutes)'):
+            # Pass the dataframe from Step 3 into this function
+            full_df_with_ev = calculate_ev(nfl_schedule_pick_percentages_df, config, use_cache)
+        st.write("Step 4 Completed.")
+        st.dataframe(full_df_with_ev) 
+
+        # Step 4b: Reformat
+        st.write("Reformatting Data for Solver...")
+        reformatted_df = reformat_df(full_df_with_ev, config)
+        st.write("Reformatting Complete.")
+        st.dataframe(reformatted_df)
+        
+        # Step 5 & 6: Run Solvers
+        st.write('Step 5/6: Calculating Best Picks Based on EV...')
+        # --- FIX: Pass reformatted_df to the solver ---
+        get_survivor_picks_based_on_ev(reformatted_df, config, num_sol)
+        st.write('Step 5 Completed.')
+        
+        st.write("---")
+        st.write('Step 6/6: Calculating Best Picks Based on Rankings...')
+        # --- FIX: Pass reformatted_df to the solver ---
+        get_survivor_picks_based_on_internal_rankings(reformatted_df, config, num_sol)
+        st.write('Step 6 Completed.')
+        
+        st.success("Optimization Complete!")
+

@@ -2913,7 +2913,7 @@ def get_survivor_picks_based_on_ev(df, config: dict, num_solutions: int):
                     if df.loc[i, 'Divisional Matchup?'] == 1 and df.loc[i, 'Hypothetical Current Winner Sportsbook Spread'] > -min_away_spread: # Uses sportsbook spread
                         solver.Add(picks[i] == 0)
             if avoid_away_divisional_matchups == 1:
-                if df.loc[i, 'Divisional Matchup?'] == 1 and df.loc[i, 'Away Team 1'] == df.loc[i, 'Hypothetical Current Winner']:
+                if df.loc[i, 'Divisional Matchup?'] == 1 and df.loc[i, 'Team Is Away'] == 'True':
                     solver.Add(picks[i] == 0)
             # Constraints for short rest and 4 games in 17 days (only if team is the Adjusted Current Winner)
             if avoid_away_teams_on_short_rest == 1:

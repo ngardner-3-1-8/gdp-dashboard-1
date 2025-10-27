@@ -2578,6 +2578,8 @@ def reformat_df(df: pd.DataFrame, config: dict):
         'Away Team 4 games in 17 days': '4 Games in 17 Days',
         'Away Team Short Rest': 'Away Team Short Rest',
         'Away Team Moneyline': 'Moneyline Based on Sportsbook Odds',
+		'Away Team Sportsbook Spread': 'Spread Based on Sportsbook Odds',
+        'Internal Away Team Spread': 'Spread Based on Internal Rankings',
         'Favorite': 'Favorite',
         'Underdog': 'Underdog',
         'Adjusted Away Points': 'Adjusted Away Points',
@@ -2641,7 +2643,7 @@ def reformat_df(df: pd.DataFrame, config: dict):
     away_reformatted_df['Team Is Away'] = 'True'
     away_reformatted_df['Same Internal Ranking + Sportsbook Winner'] = away_reformatted_df.apply(lambda row: 'Yes' if (row['Fair Odds Based on Sportsbook Odds'] > 0.5 and row['Fair Odds Based on Internal Rankings'] > 0.5) else 'No', axis=1)
     
-    new_order_away = ['Week', 'Date', 'Time', 'Team', 'Opponent', 'Team Is Away', 'Location', 'Expected EV', 'Moneyline Based on Sportsbook Odds', 'Moneyline Based on Internal Rankings', 'Fair Odds Based on Sportsbook Odds', 'Fair Odds Based on Internal Rankings', 'Preseason Rank', 'Adjusted Preseason Rank', 'Current Rank', 'Adjusted Current Rank', 'Preseason Difference', 'Adjusted Preseason Difference', 'Current Difference', 'Adjusted Current Difference','Expected Pick Percent', 'Expected Availability', 'Future Value', 'Weekly Rest', 'Weekly Rest Advantage', 'Season-Long Rest Advantage', 'Season-Long Rest Advantage Including This Week', 'Travel Advantage', 'Weekly Timezone Difference', 'Previous Opponent', 'Previous Game Location', 'Previous Game Timezone', 'Next Opponent', 'Next Game Location', 'Back to Back Away Games', 'Thursday Night Game', 'Divisional Matchup?', '3 Games in 10 Days', '4 Games in 17 Days', 'Away Team Short Rest', 'Thanksgiving Favorite', 'Christmas Favorite', 'Thanksgiving Underdog', 'Christmas Underdog', 'Total Remaining Entries at Start of Week', 'Expected Picks', 'Expected Survival Rate', 'Expected Contest Elimination Percent', 'Expected Eliminations', 'Expected Survivors', 'Adjusted Current Winner', 'Favorite', 'Underdog', 'Opp Preseason Rank', 'Opp Adjusted Preseason Rank', 'Opp Current Rank', 'Opp Adjusted Current Rank', 'Same Internal Ranking + Sportsbook Winner', 'Same Current and Adjusted Current Winner?', 'Same Adjusted Preseason Winner?', 'ID']
+    new_order_away = ['Week', 'Date', 'Time', 'Team', 'Opponent', 'Team Is Away', 'Location', 'Expected EV', 'Moneyline Based on Sportsbook Odds', 'Moneyline Based on Internal Rankings', 'Spread Based on Sportsbook Odds', 'Spread Based on Internal Rankings', 'Fair Odds Based on Sportsbook Odds', 'Fair Odds Based on Internal Rankings', 'Preseason Rank', 'Adjusted Preseason Rank', 'Current Rank', 'Adjusted Current Rank', 'Preseason Difference', 'Adjusted Preseason Difference', 'Current Difference', 'Adjusted Current Difference','Expected Pick Percent', 'Expected Availability', 'Future Value', 'Weekly Rest', 'Weekly Rest Advantage', 'Season-Long Rest Advantage', 'Season-Long Rest Advantage Including This Week', 'Travel Advantage', 'Weekly Timezone Difference', 'Previous Opponent', 'Previous Game Location', 'Previous Game Timezone', 'Next Opponent', 'Next Game Location', 'Back to Back Away Games', 'Thursday Night Game', 'Divisional Matchup?', '3 Games in 10 Days', '4 Games in 17 Days', 'Away Team Short Rest', 'Thanksgiving Favorite', 'Christmas Favorite', 'Thanksgiving Underdog', 'Christmas Underdog', 'Total Remaining Entries at Start of Week', 'Expected Picks', 'Expected Survival Rate', 'Expected Contest Elimination Percent', 'Expected Eliminations', 'Expected Survivors', 'Adjusted Current Winner', 'Favorite', 'Underdog', 'Opp Preseason Rank', 'Opp Adjusted Preseason Rank', 'Opp Current Rank', 'Opp Adjusted Current Rank', 'Same Internal Ranking + Sportsbook Winner', 'Same Current and Adjusted Current Winner?', 'Same Adjusted Preseason Winner?', 'ID']
     away_reformatted_df = away_reformatted_df.reindex(columns=new_order_away) # Use reindex to handle missing columns gracefully
 
     # --- Home Team Dataframe ---
@@ -2678,6 +2680,8 @@ def reformat_df(df: pd.DataFrame, config: dict):
         'Home Team Moneyline': 'Moneyline Based on Sportsbook Odds',
         'Favorite': 'Favorite',
         'Underdog': 'Underdog',
+		'Home Team Sportsbook Spread': 'Spread Based on Sportsbook Odds',
+        'Internal Home Team Spread': 'Spread Based on Internal Rankings',
         'Adjusted Home Points': 'Adjusted Home Points',
         'Adjusted Away Points': 'Adjusted Away Points',
         'Internal Home Team Moneyline': 'Moneyline Based on Internal Rankings',
@@ -2742,7 +2746,7 @@ def reformat_df(df: pd.DataFrame, config: dict):
     home_reformatted_df['Same Internal Ranking + Sportsbook Winner'] = home_reformatted_df.apply(lambda row: 'Yes' if (row['Fair Odds Based on Sportsbook Odds'] > 0.5 and row['Fair Odds Based on Internal Rankings'] > 0.5) else 'No', axis=1)
     
     
-    new_order_home = ['Week', 'Date', 'Time', 'Team', 'Opponent', 'Team Is Away', 'Location', 'Expected EV', 'Moneyline Based on Sportsbook Odds', 'Moneyline Based on Internal Rankings', 'Fair Odds Based on Sportsbook Odds', 'Fair Odds Based on Internal Rankings', 'Preseason Rank', 'Adjusted Preseason Rank', 'Current Rank', 'Adjusted Current Rank', 'Preseason Difference', 'Adjusted Preseason Difference', 'Current Difference', 'Adjusted Current Difference','Expected Pick Percent', 'Expected Availability', 'Future Value', 'Weekly Rest', 'Weekly Rest Advantage', 'Season-Long Rest Advantage', 'Season-Long Rest Advantage Including This Week', 'Travel Advantage', 'Weekly Timezone Difference', 'Previous Opponent', 'Previous Game Location', 'Previous Game Timezone', 'Next Opponent', 'Next Game Location', 'Back to Back Away Games', 'Thursday Night Game', 'Divisional Matchup?', '3 Games in 10 Days', '4 Games in 17 Days', 'Away Team Short Rest', 'Thanksgiving Favorite', 'Christmas Favorite', 'Thanksgiving Underdog', 'Christmas Underdog','Total Remaining Entries at Start of Week', 'Expected Picks', 'Expected Survival Rate', 'Expected Contest Elimination Percent', 'Expected Eliminations', 'Expected Survivors', 'Adjusted Current Winner', 'Favorite', 'Underdog', 'Opp Preseason Rank', 'Opp Adjusted Preseason Rank', 'Opp Current Rank', 'Opp Adjusted Current Rank', 'Same Internal Ranking + Sportsbook Winner', 'Same Current and Adjusted Current Winner?', 'Same Adjusted Preseason Winner?', 'ID']
+    new_order_home = ['Week', 'Date', 'Time', 'Team', 'Opponent', 'Team Is Away', 'Location', 'Expected EV', 'Moneyline Based on Sportsbook Odds', 'Moneyline Based on Internal Rankings', 'Spread Based on Sportsbook Odds', 'Spread Based on Internal Rankings', 'Fair Odds Based on Sportsbook Odds', 'Fair Odds Based on Internal Rankings', 'Preseason Rank', 'Adjusted Preseason Rank', 'Current Rank', 'Adjusted Current Rank', 'Preseason Difference', 'Adjusted Preseason Difference', 'Current Difference', 'Adjusted Current Difference','Expected Pick Percent', 'Expected Availability', 'Future Value', 'Weekly Rest', 'Weekly Rest Advantage', 'Season-Long Rest Advantage', 'Season-Long Rest Advantage Including This Week', 'Travel Advantage', 'Weekly Timezone Difference', 'Previous Opponent', 'Previous Game Location', 'Previous Game Timezone', 'Next Opponent', 'Next Game Location', 'Back to Back Away Games', 'Thursday Night Game', 'Divisional Matchup?', '3 Games in 10 Days', '4 Games in 17 Days', 'Away Team Short Rest', 'Thanksgiving Favorite', 'Christmas Favorite', 'Thanksgiving Underdog', 'Christmas Underdog','Total Remaining Entries at Start of Week', 'Expected Picks', 'Expected Survival Rate', 'Expected Contest Elimination Percent', 'Expected Eliminations', 'Expected Survivors', 'Adjusted Current Winner', 'Favorite', 'Underdog', 'Opp Preseason Rank', 'Opp Adjusted Preseason Rank', 'Opp Current Rank', 'Opp Adjusted Current Rank', 'Same Internal Ranking + Sportsbook Winner', 'Same Current and Adjusted Current Winner?', 'Same Adjusted Preseason Winner?', 'ID']
     home_reformatted_df = home_reformatted_df.reindex(columns=new_order_home) # Use reindex to handle missing columns gracefully
 
     # --- Combine and Sort ---
@@ -2773,7 +2777,7 @@ def get_survivor_picks_based_on_ev(df, config: dict, num_solutions: int):
     avoid_away_teams_in_close_matchups = config.get('avoid_away_close', False)
     min_away_spread = config.get('min_away_spread', 3.0)
     avoid_close_divisional_matchups = config.get('avoid_close_divisional', False)
-    min_div_spread = config.get('min_div_spread', 7.0)
+    min_div_spread = config.get('min_div_spread', 3.0)
     avoid_away_divisional_matchups = config.get('avoid_away_divisional', False)
     avoid_away_teams_on_short_rest = config.get('avoid_away_short_rest', False)
     avoid_4_games_in_17_days = config.get('avoid_4_in_17', False)
@@ -2796,63 +2800,73 @@ def get_survivor_picks_based_on_ev(df, config: dict, num_solutions: int):
         # Filter out weeks that have already been played and reset index
 
         df = df[(df['Week'] >= starting_week) & (df['Week'] < ending_week)].reset_index(drop=True)
+		# Rename columns from reformatted_df to what the solver logic expects
+        df.rename(columns={
+            "Team": "Hypothetical Current Winner",
+            "Opponent": "Hypothetical Current Loser",
+            "Expected EV": "Hypothetical Current Winner EV",
+            "Adjusted Current Rank": "Hypothetical Current Winner Adjusted Current Rank",
+            "Opp Adjusted Current Rank": "Hypothetical Current Loser Adjusted Current Rank",
+            "Spread Based on Sportsbook Odds": "Hypothetical Current Winner Sportsbook Spread",
+            "Spread Based on Internal Rankings": "Internal Hypothetical Current Winner Spread"
+        }, inplace=True)
         # Filter out already picked teams
         # --- Create home_ev_df ---
-        home_ev_df = df.copy() # Start with a copy to keep all original columns
+#        home_ev_df = df.copy() # Start with a copy to keep all original columns
         
         # Rename columns for home_ev_df
-        home_ev_df.rename(columns={
-            "Home Team": "Hypothetical Current Winner",
-            "Away Team": "Hypothetical Current Loser",
-            "Home Team EV": "Hypothetical Current Winner EV",
-            "Away Team EV": "Hypothetical Current Loser EV",
-            "Away Team Adjusted Current Rank": "Hypothetical Current Loser Adjusted Current Rank",
-            "Home Team Adjusted Current Rank": "Hypothetical Current Winner Adjusted Current Rank",
-            "Home Team Sportsbook Spread": "Hypothetical Current Winner Sportsbook Spread",
-            "Away Team Sportsbook Spread": "Hypothetical Current Loser Sportsbook Spread",
-            "Internal Home Team Spread": "Internal Hypothetical Current Winner Spread",
-            "Internal Away Team Spread": "Internal Hypothetical Current Loser Spread"
-        }, inplace=True)
+#        home_ev_df.rename(columns={
+#            "Home Team": "Hypothetical Current Winner",
+#            "Away Team": "Hypothetical Current Loser",
+#            "Home Team EV": "Hypothetical Current Winner EV",
+#            "Away Team EV": "Hypothetical Current Loser EV",
+#            "Away Team Adjusted Current Rank": "Hypothetical Current Loser Adjusted Current Rank",
+#            "Home Team Adjusted Current Rank": "Hypothetical Current Winner Adjusted Current Rank",
+#            "Home Team Sportsbook Spread": "Hypothetical Current Winner Sportsbook Spread",
+#            "Away Team Sportsbook Spread": "Hypothetical Current Loser Sportsbook Spread",
+#            "Internal Home Team Spread": "Internal Hypothetical Current Winner Spread",
+#            "Internal Away Team Spread": "Internal Hypothetical Current Loser Spread"
+#        }, inplace=True)
         
         # Add "Away Team 1" column
-        home_ev_df["Away Team 1"] = home_ev_df["Hypothetical Current Loser"]
-        home_ev_df["Home Team 1"] = home_ev_df["Hypothetical Current Winner"]
+#        home_ev_df["Away Team 1"] = home_ev_df["Hypothetical Current Loser"]
+#        home_ev_df["Home Team 1"] = home_ev_df["Hypothetical Current Winner"]
         
         # --- Create away_ev_df ---
-        away_ev_df = df.copy() # Start with a copy to keep all original columns
+#        away_ev_df = df.copy() # Start with a copy to keep all original columns
         
         # Rename columns for away_ev_df
-        away_ev_df.rename(columns={
-            "Home Team": "Hypothetical Current Loser",
-            "Away Team": "Hypothetical Current Winner",
-            "Home Team EV": "Hypothetical Current Loser EV",
-            "Away Team EV": "Hypothetical Current Winner EV",
-            "Away Team Adjusted Current Rank": "Hypothetical Current Winner Adjusted Current Rank",
-            "Home Team Adjusted Current Rank": "Hypothetical Current Loser Adjusted Current Rank",
-            "Away Team Sportsbook Spread": "Hypothetical Current Winner Sportsbook Spread" ,
-            "Home Team Sportsbook Spread": "Hypothetical Current Loser Sportsbook Spread",
-            "Internal Away Team Spread": "Internal Hypothetical Current Winner Spread",
-            "Internal Home Team Spread": "Internal Hypothetical Current Loser Spread"
-        }, inplace=True)
+#        away_ev_df.rename(columns={
+#            "Home Team": "Hypothetical Current Loser",
+#            "Away Team": "Hypothetical Current Winner",
+#            "Home Team EV": "Hypothetical Current Loser EV",
+#            "Away Team EV": "Hypothetical Current Winner EV",
+#            "Away Team Adjusted Current Rank": "Hypothetical Current Winner Adjusted Current Rank",
+#            "Home Team Adjusted Current Rank": "Hypothetical Current Loser Adjusted Current Rank",
+#            "Away Team Sportsbook Spread": "Hypothetical Current Winner Sportsbook Spread" ,
+#            "Home Team Sportsbook Spread": "Hypothetical Current Loser Sportsbook Spread",
+#            "Internal Away Team Spread": "Internal Hypothetical Current Winner Spread",
+#            "Internal Home Team Spread": "Internal Hypothetical Current Loser Spread"
+#        }, inplace=True)
         
         # Add "Away Team 1" column
-        away_ev_df["Away Team 1"] = away_ev_df["Hypothetical Current Winner"]
-        away_ev_df["Home Team 1"] = away_ev_df["Hypothetical Current Loser"]
+#        away_ev_df["Away Team 1"] = away_ev_df["Hypothetical Current Winner"]
+#        away_ev_df["Home Team 1"] = away_ev_df["Hypothetical Current Loser"]
         
         # --- Combine the two dataframes ---
-        combined_df = pd.concat([home_ev_df, away_ev_df], ignore_index=True)
-        combined_df = combined_df.sort_values(by='Week_Num')
+#        combined_df = pd.concat([home_ev_df, away_ev_df], ignore_index=True)
+#        combined_df = combined_df.sort_values(by='Week_Num')
         
         # Display the results (optional)
-        print("Original DataFrame (df):")
-        print(df)
-        print("\nHome EV DataFrame (home_ev_df):")
-        print(home_ev_df)
-        print("\nAway EV DataFrame (away_ev_df):")
-        print(away_ev_df)
-        print("\nCombined DataFrame (combined_df):")
-        print(combined_df['Week_Num'])
-        df = combined_df
+#        print("Original DataFrame (df):")
+#        print(df)
+#        print("\nHome EV DataFrame (home_ev_df):")
+#        print(home_ev_df)
+#        print("\nAway EV DataFrame (away_ev_df):")
+#        print(away_ev_df)
+#        print("\nCombined DataFrame (combined_df):")
+#        print(combined_df['Week_Num'])
+#        df = combined_df
         df = df[~df['Hypothetical Current Winner'].isin(picked_teams)].reset_index(drop=True)
         #print(df)
         # Create the solver
@@ -2888,15 +2902,15 @@ def get_survivor_picks_based_on_ev(df, config: dict, num_solutions: int):
                         solver.Add(picks[i] == 0)    		
             if avoid_away_teams_in_close_matchups == 1:
                 if favored_qualifier == 'Internal Rankings':
-                    if df.loc[i, 'Away Team 1'] == df.loc[i, 'Hypothetical Current Winner'] and df.loc[i, 'Adjusted Current Difference'] <= min_away_spread and df.loc[i, 'Hypothetical Current Winner Adjusted Current Rank'] > df.loc[i, 'Hypothetical Current Loser Adjusted Current Rank']:
+                    if df.loc[i, 'Team Is Away'] == 'True' and df.loc[i, 'Adjusted Current Difference'] <= min_away_spread and df.loc[i, 'Hypothetical Current Winner Adjusted Current Rank'] > df.loc[i, 'Hypothetical Current Loser Adjusted Current Rank']:
                         solver.Add(picks[i] == 0)
                 else:
-                    if df.loc[i, 'Away Team 1'] == df.loc[i, 'Hypothetical Current Winner'] and df.loc[i, 'Adjusted Spread'] <= min_away_spread and df.loc[i, 'Hypothetical Current Winner Sportsbook Spread'] < df.loc[i, 'Hypothetical Current Loser Sportsbook Spread']:
+                    if df.loc[i, 'Team Is Away'] == 'True' and df.loc[i, 'Adjusted Spread'] <= min_away_spread and df.loc[i, 'Hypothetical Current Winner Sportsbook Spread'] < df.loc[i, 'Hypothetical Current Loser Sportsbook Spread']:
                         solver.Add(picks[i] == 0) 
             #if df.loc[i, 'Away Team'] == df.loc[i, 'Adjusted Current Winner'] and df.loc[i, 'Divisional Matchup?'] == 'Divisional':
                 #solver.Add(picks[i] == 0)
             if avoid_back_to_back_away == 1:
-                if df.loc[i, 'Away Team 1'] == df.loc[i, 'Hypothetical Current Winner'] and df.loc[i, 'Back to Back Away Games'] == 'True':
+                if df.loc[i, 'Team Is Away'] == 'True' and df.loc[i, 'Back to Back Away Games'] == 'True':
                     solver.Add(picks[i] == 0)
 
             # If 'Divisional Matchup?' is "Divisional", can only pick if 'Adjusted Current Difference' > 10

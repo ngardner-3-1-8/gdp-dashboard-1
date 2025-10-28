@@ -4783,7 +4783,20 @@ else:
         st.write("Reformatting Complete.")
         st.dataframe(reformatted_df)
         st.write(reformatted_df.columns.tolist())
+        st.write("--- Column Name Diagnostic ---")
+        for col in reformatted_df.columns.tolist():
+            st.code(f"Column: {col!r} | Length: {len(col)}")
         
+        # 2. Automatically clean all column names (Recommended Fix)
+        # This removes leading/trailing spaces and replaces any double spaces with a single space.
+        reformatted_df.columns = reformatted_df.columns.str.strip().str.replace('  ', ' ')
+        st.write("Columns cleaned and stripped.")
+        
+        # 3. Re-print the cleaned columns (for verification)
+        for col in reformatted_df.columns.tolist():
+            st.code(f"Column: {col!r} | Length: {len(col)}")
+        
+        st.write("----------------------------")
         # Step 5 & 6: Run Solvers
         st.write('Step 5/6: Calculating Best Picks Based on EV...')
         # --- FIX: Pass reformatted_df to the solver ---

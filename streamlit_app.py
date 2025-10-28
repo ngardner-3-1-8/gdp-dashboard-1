@@ -3106,7 +3106,7 @@ def get_survivor_picks_based_on_ev(df, config: dict, num_solutions: int):
                     cumulative_rest = df.loc[i, 'Season-Long Rest Advantage']
                     cumulative_rest_advantage = df.loc[i, 'Season-Long Rest Advantage Including This Week']
                     travel_advantage = df.loc[i, 'Travel Advantage']
-                    back_to_back_away_games = 'True' if df.loc[i, 'Team is Away'] == 'True' and df.loc[i, 'Back to Back Away Games'] == 'True' else 'False'
+                    back_to_back_away_games = 'True' if df.loc[i, 'Team Is Away'] == 'True' and df.loc[i, 'Back to Back Away Games'] == 'True' else 'False'
                     thursday_night_game = 'Thursday Night Game' if df.loc[i, "Thursday Night Game"] == 'True' else 'Sunday/Monday Game'
                     international_game = 'International Game' if df.loc[i, 'Location'] == 'London, UK' else 'Domestic Game'
                     previous_opponent = df.loc[i, 'Previous Opponent']
@@ -3117,7 +3117,7 @@ def get_survivor_picks_based_on_ev(df, config: dict, num_solutions: int):
                     internal_ranking_fair_odds = df.loc[i, 'Fair Odds Based on Internal Rankings']
                     future_value = df.loc[i, 'Future Value']
                     sportbook_moneyline = df.loc[i, 'Moneyline Based on Sportsbook Odds']
-                    internal_moneyline = df.loc[i, 'Moneylinbe Based on Internal Rankings']
+                    internal_moneyline = df.loc[i, 'Moneyline Based on Internal Rankings']
                     contest_selections = df.loc[i, 'Expected Picks']
                     survival_rate = df.loc[i, 'Expected Survival Rate']
                     elimination_percent = df.loc[i, 'Expected Elimination Percent']

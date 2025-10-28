@@ -1,4 +1,4 @@
-import streamlit as st
+ntimport streamlit as st
 import requests
 from bs4 import BeautifulSoup
 import pandas as pd
@@ -2547,7 +2547,7 @@ def reformat_df(df: pd.DataFrame, config: dict):
     df['ID'] = df.index + 1
     
     # --- Away Team Dataframe ---
-    away_reformatted_df = df[['Week_x', 'Date', 'Time', 'Away Team', 'Home Team', 'Away Team Weekly Rest', 'Weekly Away Rest Advantage', 'Away Cumulative Rest Advantage', 'Away Team Current Week Cumulative Rest Advantage', 'Actual Stadium', 'Back to Back Away Games', 'Away Team Previous Opponent', 'Away Team Previous Location', 'Away Previous Game Actual Stadium TimeZone','Away Weekly Timezone Difference', 'Away Team Next Opponent', 'Away Team Next Location', 'Away Travel Advantage', 'Away Timezone Change', 'Away Team Preseason Rank','Away Team Adjusted Preseason Rank', 'Away Team Current Rank', 'Away Team Adjusted Current Rank', 'Thursday Night Game', 'Divisional Matchup?', 'Away Team 3 games in 10 days', 'Away Team 4 games in 17 days', 'Away Team Short Rest', 'Away Team Moneyline', 'Favorite', 'Underdog', 'Adjusted Away Points', 'Adjusted Home Points', 'Internal Away Team Moneyline', 'Away Team Implied Odds to Win', 'Internal Away Team Implied Odds to Win', 'Away Team Fair Odds', 'Internal Away Team Fair Odds', 'Away Team Star Rating', 'Away Team Thanksgiving Favorite', 'Away Team Christmas Favorite', 'Away Team Thanksgiving Underdog', 'Away Team Christmas Underdog', 'Away Team Expected Availability','Away Pick %', 'Away Team EV', 'Total Remaining Entries at Start of Week', 'Away Expected Survival Rate', 'Away Expected Elimination Percent', 'Expected Away Team Picks', 'Expected Away Team Eliminations', 'Expected Away Team Survivors', 'Same Winner?', 'Same Current and Adjusted Current Winner?', 'Same Adjusted Preseason Winner?', 'Adjusted Current Winner', 'Adjusted Current Difference', 'Home Team Preseason Rank', 'Home Team Adjusted Preseason Rank', 'Home Team Current Rank', 'Home Team Adjusted Current Rank', 'ID']]
+    away_reformatted_df = df[['Week_x', 'Date', 'Time', 'Away Team', 'Home Team','Internal Away Team Spread', 'Away Team Sportsbook Spread' 'Away Team Weekly Rest', 'Weekly Away Rest Advantage', 'Away Cumulative Rest Advantage', 'Away Team Current Week Cumulative Rest Advantage', 'Actual Stadium', 'Back to Back Away Games', 'Away Team Previous Opponent', 'Away Team Previous Location', 'Away Previous Game Actual Stadium TimeZone','Away Weekly Timezone Difference', 'Away Team Next Opponent', 'Away Team Next Location', 'Away Travel Advantage', 'Away Timezone Change', 'Away Team Preseason Rank','Away Team Adjusted Preseason Rank', 'Away Team Current Rank', 'Away Team Adjusted Current Rank', 'Thursday Night Game', 'Divisional Matchup?', 'Away Team 3 games in 10 days', 'Away Team 4 games in 17 days', 'Away Team Short Rest', 'Away Team Moneyline', 'Favorite', 'Underdog', 'Adjusted Away Points', 'Adjusted Home Points', 'Internal Away Team Moneyline', 'Away Team Implied Odds to Win', 'Internal Away Team Implied Odds to Win', 'Away Team Fair Odds', 'Internal Away Team Fair Odds', 'Away Team Star Rating', 'Away Team Thanksgiving Favorite', 'Away Team Christmas Favorite', 'Away Team Thanksgiving Underdog', 'Away Team Christmas Underdog', 'Away Team Expected Availability','Away Pick %', 'Away Team EV', 'Total Remaining Entries at Start of Week', 'Away Expected Survival Rate', 'Away Expected Elimination Percent', 'Expected Away Team Picks', 'Expected Away Team Eliminations', 'Expected Away Team Survivors', 'Same Winner?', 'Same Current and Adjusted Current Winner?', 'Same Adjusted Preseason Winner?', 'Adjusted Current Winner', 'Adjusted Current Difference', 'Home Team Preseason Rank', 'Home Team Adjusted Preseason Rank', 'Home Team Current Rank', 'Home Team Adjusted Current Rank', 'ID', 'No Live Odds Available - Internal Rankings Used for Moneyline Calculation']]
     
     new_column_names_away = {
         'Week_x': 'Week',
@@ -2612,7 +2612,8 @@ def reformat_df(df: pd.DataFrame, config: dict):
         'Home Team Preseason Rank': 'Opp Preseason Rank',
         'Home Team Adjusted Preseason Rank': 'Opp Adjusted Preseason Rank',
         'Home Team Current Rank': 'Opp Current Rank',
-        'Home Team Adjusted Current Rank': 'Opp Adjusted Current Rank'
+        'Home Team Adjusted Current Rank': 'Opp Adjusted Current Rank',
+		'No Live Odds Available - Internal Rankings Used for Moneyline Calculation': 'No Live Odds Available - Internal Rankings Used for Moneyline Calculation'
     }
     away_reformatted_df = away_reformatted_df.rename(columns=new_column_names_away)
 
@@ -2644,11 +2645,11 @@ def reformat_df(df: pd.DataFrame, config: dict):
     away_reformatted_df['Team Is Away'] = 'True'
     away_reformatted_df['Same Internal Ranking + Sportsbook Winner'] = away_reformatted_df.apply(lambda row: 'Yes' if (row['Fair Odds Based on Sportsbook Odds'] > 0.5 and row['Fair Odds Based on Internal Rankings'] > 0.5) else 'No', axis=1)
     
-    new_order_away = ['Week', 'Date', 'Time', 'Team', 'Opponent', 'Team Is Away', 'Location', 'Expected EV', 'Moneyline Based on Sportsbook Odds', 'Moneyline Based on Internal Rankings', 'Spread Based on Sportsbook Odds', 'Spread Based on Internal Rankings', 'Fair Odds Based on Sportsbook Odds', 'Fair Odds Based on Internal Rankings', 'Preseason Rank', 'Adjusted Preseason Rank', 'Current Rank', 'Adjusted Current Rank', 'Preseason Difference', 'Adjusted Preseason Difference', 'Current Difference', 'Adjusted Current Difference','Expected Pick Percent', 'Expected Availability', 'Future Value', 'Weekly Rest', 'Weekly Rest Advantage', 'Season-Long Rest Advantage', 'Season-Long Rest Advantage Including This Week', 'Travel Advantage', 'Weekly Timezone Difference', 'Previous Opponent', 'Previous Game Location', 'Previous Game Timezone', 'Next Opponent', 'Next Game Location', 'Back to Back Away Games', 'Thursday Night Game', 'Divisional Matchup?', '3 Games in 10 Days', '4 Games in 17 Days', 'Away Team Short Rest', 'Thanksgiving Favorite', 'Christmas Favorite', 'Thanksgiving Underdog', 'Christmas Underdog', 'Total Remaining Entries at Start of Week', 'Expected Picks', 'Expected Survival Rate', 'Expected Contest Elimination Percent', 'Expected Eliminations', 'Expected Survivors', 'Adjusted Current Winner', 'Favorite', 'Underdog', 'Opp Preseason Rank', 'Opp Adjusted Preseason Rank', 'Opp Current Rank', 'Opp Adjusted Current Rank', 'Same Internal Ranking + Sportsbook Winner', 'Same Current and Adjusted Current Winner?', 'Same Adjusted Preseason Winner?', 'ID']
+    new_order_away = ['Week', 'Date', 'Time', 'Team', 'Opponent', 'Team Is Away', 'Location', 'Expected EV', 'Moneyline Based on Sportsbook Odds', 'Moneyline Based on Internal Rankings', 'Spread Based on Sportsbook Odds', 'Spread Based on Internal Rankings', 'Fair Odds Based on Sportsbook Odds', 'Fair Odds Based on Internal Rankings', 'Preseason Rank', 'Adjusted Preseason Rank', 'Current Rank', 'Adjusted Current Rank', 'Preseason Difference', 'Adjusted Preseason Difference', 'Current Difference', 'Adjusted Current Difference','Expected Pick Percent', 'Expected Availability', 'Future Value', 'Weekly Rest', 'Weekly Rest Advantage', 'Season-Long Rest Advantage', 'Season-Long Rest Advantage Including This Week', 'Travel Advantage', 'Weekly Timezone Difference', 'Previous Opponent', 'Previous Game Location', 'Previous Game Timezone', 'Next Opponent', 'Next Game Location', 'Back to Back Away Games', 'Thursday Night Game', 'Divisional Matchup?', '3 Games in 10 Days', '4 Games in 17 Days', 'Away Team Short Rest', 'Thanksgiving Favorite', 'Christmas Favorite', 'Thanksgiving Underdog', 'Christmas Underdog', 'Total Remaining Entries at Start of Week', 'Expected Picks', 'Expected Survival Rate', 'Expected Contest Elimination Percent', 'Expected Eliminations', 'Expected Survivors', 'Adjusted Current Winner', 'Favorite', 'Underdog', 'Opp Preseason Rank', 'Opp Adjusted Preseason Rank', 'Opp Current Rank', 'Opp Adjusted Current Rank', 'Same Internal Ranking + Sportsbook Winner', 'Same Current and Adjusted Current Winner?', 'Same Adjusted Preseason Winner?', 'ID', 'No Live Odds Available - Internal Rankings Used for Moneyline Calculation']
     away_reformatted_df = away_reformatted_df.reindex(columns=new_order_away) # Use reindex to handle missing columns gracefully
 
     # --- Home Team Dataframe ---
-    home_reformatted_df = df[['Week_x', 'Date', 'Time', 'Home Team', 'Away Team', 'Home Team Weekly Rest', 'Weekly Home Rest Advantage', 'Home Cumulative Rest Advantage', 'Home Team Current Week Cumulative Rest Advantage', 'Actual Stadium', 'Back to Back Away Games', 'Home Team Previous Opponent', 'Home Team Previous Location', 'Home Previous Game Actual Stadium TimeZone','Home Weekly Timezone Difference', 'Home Team Next Opponent', 'Home Team Next Location', 'Home Travel Advantage', 'Home Timezone Change', 'Home Team Preseason Rank', 'Home Team Adjusted Preseason Rank', 'Home Team Current Rank', 'Home Team Adjusted Current Rank', 'Thursday Night Game', 'Divisional Matchup?', 'Home Team 3 games in 10 days', 'Home Team 4 games in 17 days', 'Away Team Short Rest', 'Home Team Moneyline', 'Favorite', 'Underdog', 'Adjusted Home Points', 'Adjusted Away Points', 'Internal Home Team Moneyline', 'Home team Implied Odds to Win', 'Internal Home team Implied Odds to Win', 'Home Team Fair Odds', 'Internal Home Team Fair Odds', 'Home Team Star Rating', 'Home Team Thanksgiving Favorite', 'Home Team Christmas Favorite', 'Home Team Thanksgiving Underdog', 'Home Team Christmas Underdog', 'Home Team Expected Availability','Home Pick %', 'Home Team EV', 'Total Remaining Entries at Start of Week', 'Home Expected Survival Rate', 'Home Expected Elimination Percent', 'Expected Home Team Picks', 'Expected Home Team Eliminations', 'Expected Home Team Survivors', 'Same Winner?', 'Same Current and Adjusted Current Winner?', 'Same Adjusted Preseason Winner?', 'Adjusted Current Winner', 'Adjusted Current Difference', 'Away Team Preseason Rank', 'Away Team Adjusted Preseason Rank', 'Away Team Current Rank', 'Away Team Adjusted Current Rank', 'ID']]
+    home_reformatted_df = df[['Week_x', 'Date', 'Time', 'Home Team', 'Away Team', 'Home Team Weekly Rest','Home Team Sportsbook Spread', 'Internal Home Team Spread', 'Weekly Home Rest Advantage', 'Home Cumulative Rest Advantage', 'Home Team Current Week Cumulative Rest Advantage', 'Actual Stadium', 'Back to Back Away Games', 'Home Team Previous Opponent', 'Home Team Previous Location', 'Home Previous Game Actual Stadium TimeZone','Home Weekly Timezone Difference', 'Home Team Next Opponent', 'Home Team Next Location', 'Home Travel Advantage', 'Home Timezone Change', 'Home Team Preseason Rank', 'Home Team Adjusted Preseason Rank', 'Home Team Current Rank', 'Home Team Adjusted Current Rank', 'Thursday Night Game', 'Divisional Matchup?', 'Home Team 3 games in 10 days', 'Home Team 4 games in 17 days', 'Away Team Short Rest', 'Home Team Moneyline', 'Favorite', 'Underdog', 'Adjusted Home Points', 'Adjusted Away Points', 'Internal Home Team Moneyline', 'Home team Implied Odds to Win', 'Internal Home team Implied Odds to Win', 'Home Team Fair Odds', 'Internal Home Team Fair Odds', 'Home Team Star Rating', 'Home Team Thanksgiving Favorite', 'Home Team Christmas Favorite', 'Home Team Thanksgiving Underdog', 'Home Team Christmas Underdog', 'Home Team Expected Availability','Home Pick %', 'Home Team EV', 'Total Remaining Entries at Start of Week', 'Home Expected Survival Rate', 'Home Expected Elimination Percent', 'Expected Home Team Picks', 'Expected Home Team Eliminations', 'Expected Home Team Survivors', 'Same Winner?', 'Same Current and Adjusted Current Winner?', 'Same Adjusted Preseason Winner?', 'Adjusted Current Winner', 'Adjusted Current Difference', 'Away Team Preseason Rank', 'Away Team Adjusted Preseason Rank', 'Away Team Current Rank', 'Away Team Adjusted Current Rank', 'ID', 'No Live Odds Available - Internal Rankings Used for Moneyline Calculation']]
 
     new_column_names_home = {
         'Week_x': 'Week',
@@ -2713,7 +2714,8 @@ def reformat_df(df: pd.DataFrame, config: dict):
         'Away Team Preseason Rank': 'Opp Preseason Rank',
         'Away Team Adjusted Preseason Rank': 'Opp Adjusted Preseason Rank',
         'Away Team Current Rank': 'Opp Current Rank',
-        'Away Team Adjusted Current Rank': 'Opp Adjusted Current Rank'
+        'Away Team Adjusted Current Rank': 'Opp Adjusted Current Rank',
+		'No Live Odds Available - Internal Rankings Used for Moneyline Calculation': 'No Live Odds Available - Internal Rankings Used for Moneyline Calculation'
     }
     home_reformatted_df = home_reformatted_df.rename(columns=new_column_names_home)
 
@@ -2748,7 +2750,7 @@ def reformat_df(df: pd.DataFrame, config: dict):
     home_reformatted_df['Same Internal Ranking + Sportsbook Winner'] = home_reformatted_df.apply(lambda row: 'Yes' if (row['Fair Odds Based on Sportsbook Odds'] > 0.5 and row['Fair Odds Based on Internal Rankings'] > 0.5) else 'No', axis=1)
     
     
-    new_order_home = ['Week', 'Date', 'Time', 'Team', 'Opponent', 'Team Is Away', 'Location', 'Expected EV', 'Moneyline Based on Sportsbook Odds', 'Moneyline Based on Internal Rankings', 'Spread Based on Sportsbook Odds', 'Spread Based on Internal Rankings', 'Fair Odds Based on Sportsbook Odds', 'Fair Odds Based on Internal Rankings', 'Preseason Rank', 'Adjusted Preseason Rank', 'Current Rank', 'Adjusted Current Rank', 'Preseason Difference', 'Adjusted Preseason Difference', 'Current Difference', 'Adjusted Current Difference','Expected Pick Percent', 'Expected Availability', 'Future Value', 'Weekly Rest', 'Weekly Rest Advantage', 'Season-Long Rest Advantage', 'Season-Long Rest Advantage Including This Week', 'Travel Advantage', 'Weekly Timezone Difference', 'Previous Opponent', 'Previous Game Location', 'Previous Game Timezone', 'Next Opponent', 'Next Game Location', 'Back to Back Away Games', 'Thursday Night Game', 'Divisional Matchup?', '3 Games in 10 Days', '4 Games in 17 Days', 'Away Team Short Rest', 'Thanksgiving Favorite', 'Christmas Favorite', 'Thanksgiving Underdog', 'Christmas Underdog','Total Remaining Entries at Start of Week', 'Expected Picks', 'Expected Survival Rate', 'Expected Contest Elimination Percent', 'Expected Eliminations', 'Expected Survivors', 'Adjusted Current Winner', 'Favorite', 'Underdog', 'Opp Preseason Rank', 'Opp Adjusted Preseason Rank', 'Opp Current Rank', 'Opp Adjusted Current Rank', 'Same Internal Ranking + Sportsbook Winner', 'Same Current and Adjusted Current Winner?', 'Same Adjusted Preseason Winner?', 'ID']
+    new_order_home = ['Week', 'Date', 'Time', 'Team', 'Opponent', 'Team Is Away', 'Location', 'Expected EV', 'Moneyline Based on Sportsbook Odds', 'Moneyline Based on Internal Rankings', 'Spread Based on Sportsbook Odds', 'Spread Based on Internal Rankings', 'Fair Odds Based on Sportsbook Odds', 'Fair Odds Based on Internal Rankings', 'Preseason Rank', 'Adjusted Preseason Rank', 'Current Rank', 'Adjusted Current Rank', 'Preseason Difference', 'Adjusted Preseason Difference', 'Current Difference', 'Adjusted Current Difference','Expected Pick Percent', 'Expected Availability', 'Future Value', 'Weekly Rest', 'Weekly Rest Advantage', 'Season-Long Rest Advantage', 'Season-Long Rest Advantage Including This Week', 'Travel Advantage', 'Weekly Timezone Difference', 'Previous Opponent', 'Previous Game Location', 'Previous Game Timezone', 'Next Opponent', 'Next Game Location', 'Back to Back Away Games', 'Thursday Night Game', 'Divisional Matchup?', '3 Games in 10 Days', '4 Games in 17 Days', 'Away Team Short Rest', 'Thanksgiving Favorite', 'Christmas Favorite', 'Thanksgiving Underdog', 'Christmas Underdog','Total Remaining Entries at Start of Week', 'Expected Picks', 'Expected Survival Rate', 'Expected Contest Elimination Percent', 'Expected Eliminations', 'Expected Survivors', 'Adjusted Current Winner', 'Favorite', 'Underdog', 'Opp Preseason Rank', 'Opp Adjusted Preseason Rank', 'Opp Current Rank', 'Opp Adjusted Current Rank', 'Same Internal Ranking + Sportsbook Winner', 'Same Current and Adjusted Current Winner?', 'Same Adjusted Preseason Winner?', 'ID', 'No Live Odds Available - Internal Rankings Used for Moneyline Calculation']
     home_reformatted_df = home_reformatted_df.reindex(columns=new_order_home) # Use reindex to handle missing columns gracefully
 
     # --- Combine and Sort ---
@@ -3095,7 +3097,7 @@ def get_survivor_picks_based_on_ev(df, config: dict, num_solutions: int):
                     pick = df.loc[i,'Hypothetical Current Winner']
                     opponent = df.loc[i,'Hypothetical Current Loser']
                     win_odds = round(df.loc[i, 'Fair Odds Based on Sportsbook Odds'], 2)
-                    pick_percent = round(df.loc[i, 'Expected Pick %'], 2)
+                    pick_percent = round(df.loc[i, 'Expected Pick Percent'], 2)
                     expected_availability = round(df.loc[i, 'Expected Availability'], 2)
                     divisional_game = 'Divisional' if df.loc[i, 'Divisional Matchup?'] == 1 else ''
                     home_team = 'Home Team' if df.loc[i, 'Team Is Away'] == 'False' else 'Away Team'
@@ -3112,29 +3114,29 @@ def get_survivor_picks_based_on_ev(df, config: dict, num_solutions: int):
                     next_opponent = df.loc[i, 'Next Opponent']
                     next_game_location = df.loc[i, 'Next Game Location']
 					
-                    internal_ranking_fair_odds = df.loc[i, 'Internal Home Team Fair Odds'] if df.loc[i, 'Hypothetical Current Winner'] == df.loc[i, 'Home Team 1'] else df.loc[i, 'Internal Away Team Fair Odds']
-                    future_value = df.loc[i, 'Home Team Star Rating'] if df.loc[i, 'Hypothetical Current Winner'] == df.loc[i, 'Home Team 1'] else df.loc[i, 'Away Team Star Rating']
-                    sportbook_moneyline = df.loc[i, 'Home Team Moneyline'] if df.loc[i, 'Hypothetical Current Winner'] == df.loc[i, 'Home Team 1'] else df.loc[i, 'Away Team Moneyline']
-                    internal_moneyline = df.loc[i, 'Internal Home Team Moneyline'] if df.loc[i, 'Hypothetical Current Winner'] == df.loc[i, 'Home Team 1'] else df.loc[i, 'Internal Away Team Moneyline']
-                    contest_selections = df.loc[i, 'Expected Home Team Picks'] if df.loc[i, 'Hypothetical Current Winner'] == df.loc[i, 'Home Team 1'] else df.loc[i, 'Expected Away Team Picks']
-                    survival_rate = df.loc[i, 'Home Expected Survival Rate'] if df.loc[i, 'Hypothetical Current Winner'] == df.loc[i, 'Home Team 1'] else df.loc[i, 'Away Expected Survival Rate']
-                    elimination_percent = df.loc[i, 'Home Expected Elimination Percent'] if df.loc[i, 'Hypothetical Current Winner'] == df.loc[i, 'Home Team 1'] else df.loc[i, 'Away Expected Elimination Percent']
-                    survivors = df.loc[i, 'Expected Home Team Survivors'] if df.loc[i, 'Hypothetical Current Winner'] == df.loc[i, 'Home Team 1'] else df.loc[i, 'Expected Away Team Survivors']
-                    eliminations = df.loc[i, 'Expected Home Team Eliminations'] if df.loc[i, 'Hypothetical Current Winner'] == df.loc[i, 'Home Team 1'] else df.loc[i, 'Expected Away Team Eliminations']
-                    preseason_rank = df.loc[i, 'Home Team Preseason Rank'] if df.loc[i, 'Hypothetical Current Winner'] == df.loc[i, 'Home Team 1'] else df.loc[i, 'Away Team Preseason Rank']
-                    adjusted_preseason_rank = df.loc[i, 'Home Team Adjusted Preseason Rank'] if df.loc[i, 'Hypothetical Current Winner'] == df.loc[i, 'Home Team 1'] else df.loc[i, 'Away Team Adjusted Preseason Rank']
-                    current_rank = df.loc[i, 'Home Team Current Rank'] if df.loc[i, 'Hypothetical Current Winner'] == df.loc[i, 'Home Team 1'] else df.loc[i, 'Away Team Current Rank']
-                    adjusted_current_rank = df.loc[i, 'Hypothetical Current Winner Adjusted Current Rank']
-                    away_team_short_rest = 'True' if df.loc[i, 'Hypothetical Current Winner'] == df.loc[i, 'Away Team 1'] and df.loc[i, 'Away Team Short Rest'] == 'True' else 'False'
-                    three_games_in_10_days = df.loc[i, 'Home Team 3 games in 10 days'] if df.loc[i, 'Hypothetical Current Winner'] == df.loc[i, 'Home Team 1'] else df.loc[i, 'Away Team 3 games in 10 days']
-                    four_games_in_17_days = df.loc[i, 'Home Team 4 games in 17 days'] if df.loc[i, 'Hypothetical Current Winner'] == df.loc[i, 'Home Team 1'] else df.loc[i, 'Away Team Fair Odds']
-                    thanksgiving_favorite = df.loc[i, 'Home Team Thanksgiving Favorite'] if df.loc[i, 'Hypothetical Current Winner'] == df.loc[i, 'Home Team 1'] else df.loc[i, 'Away Team Thanksgiving Favorite']
-                    christmas_favorite = df.loc[i, 'Home Team Christmas Favorite'] if df.loc[i, 'Hypothetical Current Winner'] == df.loc[i, 'Home Team 1'] else df.loc[i, 'Away Team Christmas Favorite']
-                    thanksgiving_underdog = df.loc[i, 'Home Team Thanksgiving Underdog'] if df.loc[i, 'Hypothetical Current Winner'] == df.loc[i, 'Home Team 1'] else df.loc[i, 'Away Team Thanksgiving Underdog']
-                    christmas_underdog = df.loc[i, 'Home Team Christmas Underdog'] if df.loc[i, 'Hypothetical Current Winner'] == df.loc[i, 'Home Team 1'] else df.loc[i, 'Away Team Christmas Underdog']
+                    internal_ranking_fair_odds = df.loc[i, 'Fair Odds Based on Internal Rankings']
+                    future_value = df.loc[i, 'Future Value']
+                    sportbook_moneyline = df.loc[i, 'Moneyline Based on Sportsbook Odds']
+                    internal_moneyline = df.loc[i, 'Moneylinbe Based on Internal Rankings']
+                    contest_selections = df.loc[i, 'Expected Picks']
+                    survival_rate = df.loc[i, 'Expected Survival Rate']
+                    elimination_percent = df.loc[i, 'Expected Elimination Percent']
+                    survivors = df.loc[i, 'Expected Survivors']
+                    eliminations = df.loc[i, 'Expected Eliminations']
+                    preseason_rank = df.loc[i, 'Preseason Rank']
+                    adjusted_preseason_rank = df.loc[i, 'Adjusted Preseason Rank']
+                    current_rank = df.loc[i, 'Current Rank']
+                    adjusted_current_rank = df.loc[i, 'Adjusted Current Rank']
+                    away_team_short_rest = df.loc[i, 'Away Team Short Rest']
+                    three_games_in_10_days = df.loc[i, '3 games in 10 days']
+                    four_games_in_17_days = df.loc[i, '4 games in 17 days']
+                    thanksgiving_favorite = df.loc[i, 'Thanksgiving Favorite']
+                    christmas_favorite = df.loc[i, 'Christmas Favorite']
+                    thanksgiving_underdog = df.loc[i, 'Thanksgiving Underdog']
+                    christmas_underdog = df.loc[i, 'Christmas Underdog']
                     live_odds_unavailable = df.loc[i, 'No Live Odds Available - Internal Rankings Used for Moneyline Calculation']
-                    live_odds_spread = df.loc[i, 'Hypothetical Current Winner Sportsbook Spread']
-                    internal_spread = df.loc[i, 'Internal Hypothetical Current Winner Spread']
+                    live_odds_spread = df.loc[i, 'Spread Based on Sportsbook Odds']
+                    internal_spread = df.loc[i, 'Spread Based on Internal Rankings']
                     
 
                     # Get differences

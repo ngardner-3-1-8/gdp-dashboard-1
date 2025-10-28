@@ -3120,7 +3120,7 @@ def get_survivor_picks_based_on_ev(df, config: dict, num_solutions: int):
                     internal_moneyline = df.loc[i, 'Moneyline Based on Internal Rankings']
                     contest_selections = df.loc[i, 'Expected Picks']
                     survival_rate = df.loc[i, 'Expected Survival Rate']
-                    elimination_percent = df.loc[i, 'Expected Elimination Percent']
+                    elimination_percent = df.loc[i, 'Expected Contest Elimination Percent']
                     survivors = df.loc[i, 'Expected Survivors']
                     eliminations = df.loc[i, 'Expected Eliminations']
                     preseason_rank = df.loc[i, 'Preseason Rank']

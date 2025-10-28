@@ -4782,7 +4782,7 @@ else:
         reformatted_df = reformat_df(full_df_with_ev, config)
         st.write("Reformatting Complete.")
         st.dataframe(reformatted_df)
-		st.write(reformatted_df.columns.tolist())
+        st.write(reformatted_df.columns.tolist())
         
         # Step 5 & 6: Run Solvers
         st.write('Step 5/6: Calculating Best Picks Based on EV...')

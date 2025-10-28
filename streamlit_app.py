@@ -4784,17 +4784,24 @@ else:
         st.dataframe(reformatted_df)
         st.write(reformatted_df.columns.tolist())
         st.write("--- Column Name Diagnostic ---")
-        for col in reformatted_df.columns.tolist():
-            st.code(f"Column: {col!r} | Length: {len(col)}")
+        def clean_column_name(col_name):
+            """
+            Strips leading/trailing whitespace, replaces non-breaking spaces (\xa0),
+            and normalizes all internal whitespace to a single standard space.
+            """
+            # 1. Replace common non-breaking space with a standard space
+            cleaned = col_name.replace('\xa0', ' ')
+            # 2. Use a regular expression to replace multiple spaces/tabs with a single space
+            import re
+            cleaned = re.sub(r'\s+', ' ', cleaned)
+            # 3. Final strip of leading/trailing standard spaces
+            return cleaned.strip()
         
-        # 2. Automatically clean all column names (Recommended Fix)
-        # This removes leading/trailing spaces and replaces any double spaces with a single space.
-        reformatted_df.columns = reformatted_df.columns.str.strip().str.replace('  ', ' ')
-        st.write("Columns cleaned and stripped.")
+        # Apply the cleaning function to all column names
+        reformatted_df.columns = [clean_column_name(col) for col in reformatted_df.columns]
         
-        # 3. Re-print the cleaned columns (for verification)
-        for col in reformatted_df.columns.tolist():
-            st.code(f"Column: {col!r} | Length: {len(col)}")
+        st.write("✅ Column names aggressively cleaned for hidden Unicode characters.")
+        st.dataframe(reformatted_df)
         
         st.write("----------------------------")
         # Step 5 & 6: Run Solvers

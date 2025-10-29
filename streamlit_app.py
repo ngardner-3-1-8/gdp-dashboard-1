@@ -4621,10 +4621,10 @@ else:
         st.write("Step 3a Completed (Availability Calculated).")
         
         # Step 3b: Predict Pick % (With Availability)
-        st.write("Step 3b/6: Refining Pick Percentages using Availability...")
+#        st.write("Step 3b/6: Refining Pick Percentages using Availability...")
         # --- Pass the dataframe from Step 3a into this function ---
-        nfl_schedule_pick_percentages_df = get_predicted_pick_percentages_with_availability(pd, config, df_with_availability)
-        st.write("Step 3b Completed (Final Pick % Predicted).")
+#        nfl_schedule_pick_percentages_df = get_predicted_pick_percentages_with_availability(pd, config, df_with_availability)
+#        st.write("Step 3b Completed (Final Pick % Predicted).")
         
         # Step 4: Calculate EV
         st.write("Step 4/6: Calculating Live Expected Value...")

@@ -2887,7 +2887,7 @@ def get_survivor_picks_based_on_ev(df, config: dict, num_solutions: int):
                     solver.Add(picks[i] == 0)
             if avoid_cumulative_rest_disadvantage == 1:
                 is_away = df.loc[i, 'Team Is Away'] == 'True'
-                rest_adv = df.loc[i, 'Season Long Rest Including This Week']
+                rest_adv = df.loc[i, 'Season-Long Rest Advantage Including This Week']
                 if is_away and rest_adv < -10:
                     solver.Add(picks[i] == 0)
                 elif (not is_away) and rest_adv < -5: # Team is Home
@@ -3375,7 +3375,7 @@ def get_survivor_picks_based_on_internal_rankings(df, config: dict, num_solution
                     solver.Add(picks[i] == 0)
             if avoid_cumulative_rest_disadvantage == 1:
                 is_away = df.loc[i, 'Team Is Away'] == 'True'
-                rest_adv = df.loc[i, 'Season Long Rest Including This Week']
+                rest_adv = df.loc[i, 'Season-Long Rest Advantage Including This Week']
                 if is_away and rest_adv < -10:
                     solver.Add(picks[i] == 0)
                 elif (not is_away) and rest_adv < -5: # Team is Home

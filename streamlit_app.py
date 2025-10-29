@@ -3126,7 +3126,7 @@ def get_survivor_picks_based_on_ev(df, config: dict, num_solutions: int):
                     preseason_rank = df.loc[i, 'Preseason Rank']
                     adjusted_preseason_rank = df.loc[i, 'Adjusted Preseason Rank']
                     current_rank = df.loc[i, 'Current Rank']
-                    adjusted_current_rank = df.loc[i, 'Adjusted Current Rank']
+                    adjusted_current_rank = df.loc[i, 'Current Rank']
                     away_team_short_rest = df.loc[i, 'Away Team Short Rest']
                     three_games_in_10_days = df.loc[i, '3 Games in 10 Days']
                     four_games_in_17_days = df.loc[i, '4 games in 17 days']

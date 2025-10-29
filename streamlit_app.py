@@ -4252,8 +4252,8 @@ else:
 
             st.slider(
                 f"{team}:",
-                min_value=-.01,
-                max_value=100,
+                min_value= -1,
+                max_value= 100,
                 key=widget_key,
                 value=current_val_int,
                 on_change=update_nested_value,

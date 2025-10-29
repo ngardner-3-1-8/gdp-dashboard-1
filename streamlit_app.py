@@ -2816,62 +2816,6 @@ def get_survivor_picks_based_on_ev(df, config: dict, num_solutions: int):
 			"Adjusted Current Difference": "Adjusted Current Difference"
         }, inplace=True)
         # Filter out already picked teams
-        # --- Create home_ev_df ---
-#        home_ev_df = df.copy() # Start with a copy to keep all original columns
-        
-        # Rename columns for home_ev_df
-#        home_ev_df.rename(columns={
-#            "Home Team": "Hypothetical Current Winner",
-#            "Away Team": "Hypothetical Current Loser",
-#            "Home Team EV": "Hypothetical Current Winner EV",
-#            "Away Team EV": "Hypothetical Current Loser EV",
-#            "Away Team Adjusted Current Rank": "Hypothetical Current Loser Adjusted Current Rank",
-#            "Home Team Adjusted Current Rank": "Hypothetical Current Winner Adjusted Current Rank",
-#            "Home Team Sportsbook Spread": "Hypothetical Current Winner Sportsbook Spread",
-#            "Away Team Sportsbook Spread": "Hypothetical Current Loser Sportsbook Spread",
-#            "Internal Home Team Spread": "Internal Hypothetical Current Winner Spread",
-#            "Internal Away Team Spread": "Internal Hypothetical Current Loser Spread"
-#        }, inplace=True)
-        
-        # Add "Away Team 1" column
-#        home_ev_df["Away Team 1"] = home_ev_df["Hypothetical Current Loser"]
-#        home_ev_df["Home Team 1"] = home_ev_df["Hypothetical Current Winner"]
-        
-        # --- Create away_ev_df ---
-#        away_ev_df = df.copy() # Start with a copy to keep all original columns
-        
-        # Rename columns for away_ev_df
-#        away_ev_df.rename(columns={
-#            "Home Team": "Hypothetical Current Loser",
-#            "Away Team": "Hypothetical Current Winner",
-#            "Home Team EV": "Hypothetical Current Loser EV",
-#            "Away Team EV": "Hypothetical Current Winner EV",
-#            "Away Team Adjusted Current Rank": "Hypothetical Current Winner Adjusted Current Rank",
-#            "Home Team Adjusted Current Rank": "Hypothetical Current Loser Adjusted Current Rank",
-#            "Away Team Sportsbook Spread": "Hypothetical Current Winner Sportsbook Spread" ,
-#            "Home Team Sportsbook Spread": "Hypothetical Current Loser Sportsbook Spread",
-#            "Internal Away Team Spread": "Internal Hypothetical Current Winner Spread",
-#            "Internal Home Team Spread": "Internal Hypothetical Current Loser Spread"
-#        }, inplace=True)
-        
-        # Add "Away Team 1" column
-#        away_ev_df["Away Team 1"] = away_ev_df["Hypothetical Current Winner"]
-#        away_ev_df["Home Team 1"] = away_ev_df["Hypothetical Current Loser"]
-        
-        # --- Combine the two dataframes ---
-#        combined_df = pd.concat([home_ev_df, away_ev_df], ignore_index=True)
-#        combined_df = combined_df.sort_values(by='Week_Num')
-        
-        # Display the results (optional)
-#        print("Original DataFrame (df):")
-#        print(df)
-#        print("\nHome EV DataFrame (home_ev_df):")
-#        print(home_ev_df)
-#        print("\nAway EV DataFrame (away_ev_df):")
-#        print(away_ev_df)
-#        print("\nCombined DataFrame (combined_df):")
-#        print(combined_df['Week_Num'])
-#        df = combined_df
         df = df[~df['Hypothetical Current Winner'].isin(picked_teams)].reset_index(drop=True)
         #print(df)
         # Create the solver
@@ -3331,7 +3275,7 @@ def get_survivor_picks_based_on_internal_rankings(df, config: dict, num_solution
     avoid_away_teams_in_close_matchups = config.get('avoid_away_close', False)
     min_away_spread = config.get('min_away_spread', 3.0)
     avoid_close_divisional_matchups = config.get('avoid_close_divisional', False)
-    min_div_spread = config.get('min_div_spread', 7.0)
+    min_div_spread = config.get('min_div_spread', 3.0)
     avoid_away_divisional_matchups = config.get('avoid_away_divisional', False)
     avoid_away_teams_on_short_rest = config.get('avoid_away_short_rest', False)
     avoid_4_games_in_17_days = config.get('avoid_4_in_17', False)
@@ -3346,91 +3290,21 @@ def get_survivor_picks_based_on_internal_rankings(df, config: dict, num_solution
     # --- END BLOCK ---
     for iteration in range(num_solutions):
 
-        #Number of weeks that have already been played
-        #weeks_completed = starting_week -1
-
-        # Teams already picked - Team name in quotes and separated by commas
-
-        # Filter out weeks that have already been played and reset index
-
-        df = df[(df['Week_Num'] >= starting_week) & (df['Week_Num'] < ending_week)].reset_index(drop=True)
+        df = df[(df['Week'] >= starting_week) & (df['Week'] < ending_week)].reset_index(drop=True)
+		# Rename columns from reformatted_df to what the solver logic expects
+        df.rename(columns={
+            "Team": "Hypothetical Current Winner",
+            "Opponent": "Hypothetical Current Loser",
+            "Expected EV": "Hypothetical Current Winner EV",
+            "Adjusted Current Rank": "Hypothetical Current Winner Adjusted Current Rank",
+            "Opp Adjusted Current Rank": "Hypothetical Current Loser Adjusted Current Rank",
+            "Spread Based on Sportsbook Odds": "Hypothetical Current Winner Sportsbook Spread",
+            "Spread Based on Internal Rankings": "Internal Hypothetical Current Winner Spread",
+			"Adjusted Current Difference": "Adjusted Current Difference"
+        }, inplace=True)
         # Filter out already picked teams
-        # --- Create home_ev_df ---
-        home_ev_df = df.copy() # Start with a copy to keep all original columns
-        
-        # Rename columns for home_ev_df
-        home_ev_df.rename(columns={
-            "Home Team": "Hypothetical Current Winner",
-            "Away Team": "Hypothetical Current Loser",
-            "Home Team EV": "Hypothetical Current Winner EV",
-            "Away Team EV": "Hypothetical Current Loser EV",
-            "Away Team Adjusted Current Rank": "Hypothetical Current Loser Adjusted Current Rank",
-            "Home Team Adjusted Current Rank": "Hypothetical Current Winner Adjusted Current Rank",
-            "Home Team Preseason Rank": "Hypothetical Current Winner Preseason Rank",
-            "Away Team Preseason Rank": "Hypothetical Current Loser Preseason Rank",
-            "Home Team Adjusted Preseason Rank": "Hypothetical Current Winner Adjusted Preseason Rank",
-            "Away Team Adjusted Preseason Rank": "Hypothetical Current Loser Adjusted Preseason Rank",
-            "Home Team Current Rank": "Hypothetical Current Winner Current Rank",
-            "Away Team Current Rank": "Hypothetical Current Loser Current Rank",
-            "Home Team Sportsbook Spread": "Hypothetical Current Winner Sportsbook Spread" ,
-            "Away Team Sportsbook Spread": "Hypothetical Current Loser Sportsbook Spread",
-            "Internal Home Team Spread": "Internal Hypothetical Current Winner Spread",
-            "Internal Away Team Spread": "Internal Hypothetical Current Loser Spread"
-        }, inplace=True)
-        
-        # Add "Away Team 1" column
-        home_ev_df["Away Team 1"] = home_ev_df["Hypothetical Current Loser"]
-        home_ev_df["Home Team 1"] = home_ev_df["Hypothetical Current Winner"]
-        
-        # --- Create away_ev_df ---
-        away_ev_df = df.copy() # Start with a copy to keep all original columns
-        
-        # Rename columns for away_ev_df
-        away_ev_df.rename(columns={
-            "Home Team": "Hypothetical Current Loser",
-            "Away Team": "Hypothetical Current Winner",
-            "Home Team EV": "Hypothetical Current Loser EV",
-            "Away Team EV": "Hypothetical Current Winner EV",
-            "Away Team Adjusted Current Rank": "Hypothetical Current Winner Adjusted Current Rank",
-            "Home Team Adjusted Current Rank": "Hypothetical Current Loser Adjusted Current Rank",
-            "Away Team Preseason Rank": "Hypothetical Current Winner Preseason Rank",
-            "Home Team Preseason Rank": "Hypothetical Current Loser Preseason Rank",
-            "Away Team Adjusted Preseason Rank": "Hypothetical Current Winner Adjusted Preseason Rank",
-            "Home Team Adjusted Preseason Rank": "Hypothetical Current Loser Adjusted Preseason Rank",
-            "Away Team Current Rank": "Hypothetical Current Winner Current Rank",
-            "Home Team Current Rank": "Hypothetical Current Loser Current Rank",
-            "Away Team Sportsbook Spread": "Hypothetical Current Winner Sportsbook Spread",
-            "Home Team Sportsbook Spread": "Hypothetical Current Loser Sportsbook Spread",
-            "Internal Away Team Spread": "Internal Hypothetical Current Winner Spread",
-            "Internal Home Team Spread": "Internal Hypothetical Current Loser Spread"
-        }, inplace=True)
-        
-        # Add "Away Team 1" column
-        away_ev_df["Away Team 1"] = away_ev_df["Hypothetical Current Winner"]
-        away_ev_df["Home Team 1"] = away_ev_df["Hypothetical Current Loser"]
-        
-        # --- Combine the two dataframes ---
-        combined_df = pd.concat([home_ev_df, away_ev_df], ignore_index=True)
-        combined_df = combined_df.sort_values(by='Week_Num')
-        
-        # Display the results (optional)
-        print("Original DataFrame (df):")
-        print(df)
-        print("\nHome EV DataFrame (home_ev_df):")
-        print(home_ev_df)
-        print("\nAway EV DataFrame (away_ev_df):")
-        print(away_ev_df)
-        print("\nCombined DataFrame (combined_df):")
-        print(combined_df['Week_Num'])
-        df = combined_df
-        df['Hypothetical Winner Preseason Difference'] = df['Hypothetical Current Winner Preseason Rank'] - df['Hypothetical Current Loser Preseason Rank']	
-        df['Hypothetical Winner Adjusted Preseason Difference'] = df['Hypothetical Current Winner Adjusted Preseason Rank'] - df['Hypothetical Current Loser Adjusted Preseason Rank']
-        df['Hypothetical Winner Current Difference'] = df['Hypothetical Current Winner Current Rank'] - df['Hypothetical Current Loser Current Rank']	
-        df['Hypothetical Winner Adjusted Current Difference'] = df['Hypothetical Current Winner Adjusted Current Rank'] - df['Hypothetical Current Loser Adjusted Current Rank']	
 
-    
         df = df[~df['Hypothetical Current Winner'].isin(picked_teams)].reset_index(drop=True)
-
         #print(df)
         # Create the solver
         solver = pywraplp.Solver.CreateSolver('SCIP')
@@ -3439,88 +3313,73 @@ def get_survivor_picks_based_on_internal_rankings(df, config: dict, num_solution
         picks = {}
         for i in range(len(df)):
             picks[i] = solver.IntVar(0, 1, 'pick_%i' % i)
-
         
-        for team, req_week in required_teams:
-            if req_week > 0:
-                # Find the index of the game where 'team' plays in 'req_week'
-                # The '&' operator here applies the condition for matching both team and week
-                required_game_indices = df[
-                    (df['Hypothetical Current Winner'] == team) & 
-                    (df['Week_Num'] == req_week)
-                ].index.tolist()
-                
-                # Add the DataFrame index numbers (i) to the set
-                required_pick_indices.update(required_game_indices)
-
         # Add the constraints
         for i in range(len(df)):
-            if i in required_pick_indices:
-                continue # Skip all general constraints below for this game
+            # Can only pick an away team if 'Adjusted Current Difference' > 10
             if pick_must_be_favored:
                 if favored_qualifier == 'Internal Rankings':
                     if df.loc[i, 'Hypothetical Current Winner'] != df.loc[i, 'Adjusted Current Winner']:
                         solver.Add(picks[i] == 0)
                 else:
                     if df.loc[i, 'Hypothetical Current Winner'] != df.loc[i, 'Favorite']:
-                        solver.Add(picks[i] == 0)
+                        solver.Add(picks[i] == 0)    		
             if avoid_away_teams_in_close_matchups == 1:
                 if favored_qualifier == 'Internal Rankings':
-                    if df.loc[i, 'Away Team 1'] == df.loc[i, 'Hypothetical Current Winner'] and df.loc[i, 'Adjusted Current Difference'] <= min_away_spread and df.loc[i, 'Hypothetical Current Winner Adjusted Current Rank'] > df.loc[i, 'Hypothetical Current Loser Adjusted Current Rank']:
+                    # Check if team is away AND the absolute spread (based on internal ranks) is <= min
+                    if df.loc[i, 'Team Is Away'] == 'True' and df.loc[i, 'Adjusted Current Difference'] <= min_away_spread:
                         solver.Add(picks[i] == 0)
-                else:
-                    if df.loc[i, 'Away Team 1'] == df.loc[i, 'Hypothetical Current Winner'] and df.loc[i, 'Adjusted Spread'] <= min_away_spread and df.loc[i, 'Hypothetical Current Winner Sportsbook Spread'] < df.loc[i, 'Hypothetical Current Loser Sportsbook Spread']:
-                        solver.Add(picks[i] == 0) 
+                else: 
+                    if df.loc[i, 'Team Is Away'] == 'True' and df.loc[i, 'Hypothetical Current Winner Sportsbook Spread'] > -min_away_spread: # Uses sportsbook spread
+                        solver.Add(picks[i] == 0)
+            #if df.loc[i, 'Away Team'] == df.loc[i, 'Adjusted Current Winner'] and df.loc[i, 'Divisional Matchup?'] == 'Divisional':
+                #solver.Add(picks[i] == 0)
+            if avoid_back_to_back_away == 1:
+                if df.loc[i, 'Team Is Away'] == 'True' and df.loc[i, 'Back to Back Away Games'] == 'True':
+                    solver.Add(picks[i] == 0)
 
             # If 'Divisional Matchup?' is "Divisional", can only pick if 'Adjusted Current Difference' > 10
             if avoid_close_divisional_matchups == 1:
                 if favored_qualifier == 'Internal Rankings':
-                    if df.loc[i, 'Divisional Matchup?'] == 1 and df.loc[i, 'Adjusted Current Difference'] <= min_div_spread and df.loc[i, 'Hypothetical Current Winner Adjusted Current Rank'] > df.loc[i, 'Hypothetical Current Loser Adjusted Current Rank']:
+                    if df.loc[i, 'Divisional Matchup?'] == 1 and df.loc[i, 'Adjusted Current Difference'] <= min_away_spread:
                         solver.Add(picks[i] == 0)
-                else:
-                    if df.loc[i, 'Divisional Matchup?'] == 1 and df.loc[i, 'Adjusted Spread'] <= min_div_spread and df.loc[i, 'Hypothetical Current Winner Sportsbook Spread'] < df.loc[i, 'Hypothetical Current Loser Sportsbook Spread']:
-                        solver.Add(picks[i] == 0) 
-            # If 'Divisional Matchup?' is "Divisional", can only pick if 'Adjusted Current Difference' > 10
+                else: 
+                    if df.loc[i, 'Divisional Matchup?'] == 1 and df.loc[i, 'Hypothetical Current Winner Sportsbook Spread'] > -min_away_spread: # Uses sportsbook spread
+                        solver.Add(picks[i] == 0)
             if avoid_away_divisional_matchups == 1:
-                if df.loc[i, 'Divisional Matchup?'] == 1 and df.loc[i, 'Away Team 1'] == df.loc[i, 'Hypothetical Current Winner']:
-                    solver.Add(picks[i] == 0)			
+                if df.loc[i, 'Divisional Matchup?'] == 1 and df.loc[i, 'Team Is Away'] == 'True':
+                    solver.Add(picks[i] == 0)
             # Constraints for short rest and 4 games in 17 days (only if team is the Adjusted Current Winner)
             if avoid_away_teams_on_short_rest == 1:
-                if df.loc[i, 'Away Team Short Rest'] == 'Yes' and df.loc[i, 'Away Team 1'] == df.loc[i, 'Hypothetical Current Winner']:
+                if df.loc[i, 'Away Team Short Rest'] == 'Yes':
                     solver.Add(picks[i] == 0)
             if avoid_4_games_in_17_days == 1:
-                if df.loc[i, 'Home Team 4 games in 17 days'] == 'Yes' and df.loc[i, 'Home Team 1'] == df.loc[i, 'Hypothetical Current Winner'] and df.loc[i, 'Away Team 4 games in 17 days'] == 'No':
-                    solver.Add(picks[i] == 0)
-                if df.loc[i, 'Away Team 4 games in 17 days'] == 'Yes' and df.loc[i, 'Away Team 1'] == df.loc[i, 'Hypothetical Current Winner'] and df.loc[i, 'Home Team 4 games in 17 days'] == 'No':
+                if df.loc[i, '4 Games in 17 Days'] == 'Yes':
                     solver.Add(picks[i] == 0)
             if avoid_3_games_in_10_days == 1:
-                if df.loc[i, 'Home Team 3 games in 10 days'] == 'Yes' and df.loc[i, 'Home Team 1'] == df.loc[i, 'Hypothetical Current Winner'] and df.loc[i, 'Away Team 3 games in 10 days'] == 'No':
-                    solver.Add(picks[i] == 0)
-                if df.loc[i, 'Away Team 3 games in 10 days'] == 'Yes' and df.loc[i, 'Away Team 1'] == df.loc[i, 'Hypothetical Current Winner'] and df.loc[i, 'Home Team 3 games in 10 days'] == 'No':
+                if df.loc[i, '3 Games in 10 Days'] == 'Yes':
                     solver.Add(picks[i] == 0)
             if avoid_international_game == 1:    
-                if df.loc[i, 'Actual Stadium'] == 'London, UK' and df.loc[i, 'Home Team 1'] == df.loc[i, 'Hypothetical Current Winner']:
-                    solver.Add(picks[i] == 0)
-                if df.loc[i, 'Actual Stadium'] == 'London, UK' and df.loc[i, 'Away Team 1'] == df.loc[i, 'Hypothetical Current Winner']:
+                if df.loc[i, 'Location'] == 'London, UK':
                     solver.Add(picks[i] == 0)
             if avoid_thursday_night == 1:
                 if df.loc[i, 'Thursday Night Game'] == 'True':
                     solver.Add(picks[i] == 0)
             if avoid_away_thursday_night == 1:
-                if df.loc[i, 'Thursday Night Game'] == 'True' and df.loc[i, 'Away Team 1'] == df.loc[i, 'Hypothetical Current Winner']:
+                if df.loc[i, 'Thursday Night Game'] == 'True' and df.loc[i, 'Team Is Away'] == 'True':
                     solver.Add(picks[i] == 0)
             if avoid_teams_with_weekly_rest_disadvantage == 1:
-                if df.loc[i, 'Home Team Weekly Rest'] < df.loc [i, 'Away Team Weekly Rest'] and df.loc[i, 'Home Team 1'] == df.loc[i, 'Hypothetical Current Winner']:
-                    solver.Add(picks[i] == 0)
-                if df.loc[i, 'Away Team Weekly Rest'] < df.loc [i, 'Home Team Weekly Rest'] and df.loc[i, 'Away Team 1'] == df.loc[i, 'Hypothetical Current Winner']:
+                if df.loc[i, 'Weekly Rest Advantage'] < 0:
                     solver.Add(picks[i] == 0)
             if avoid_cumulative_rest_disadvantage == 1:
-                if df.loc[i, 'Away Team Current Week Cumulative Rest Advantage'] < -10 and df.loc[i, 'Away Team 1'] == df.loc[i, 'Hypothetical Current Winner']:
+                is_away = df.loc[i, 'Team Is Away'] == 'True'
+                rest_adv = df.loc[i, 'Season Long Rest Including This Week']
+                if is_away and rest_adv < -10:
                     solver.Add(picks[i] == 0)
-                if df.loc[i, 'Home Team Current Week Cumulative Rest Advantage'] < -5 and df.loc[i, 'Home Team 1'] == df.loc[i, 'Hypothetical Current Winner']:
-                    solver.Add(picks[i] == 0)
+                elif (not is_away) and rest_adv < -5: # Team is Home
+                    solver.Add(picks[i] == 0)    
             if avoid_away_teams_with_travel_disadvantage == 1:
-                if df.loc[i, 'Away Travel Advantage'] < -850 and df.loc[i, 'Away Team 1'] == df.loc[i, 'Hypothetical Current Winner']:
+                if df.loc[i, 'Team Is Away'] == 'True' and df.loc[i, 'Travel Advantage'] < -850:
                     solver.Add(picks[i] == 0)
 
 
@@ -3528,7 +3387,7 @@ def get_survivor_picks_based_on_internal_rankings(df, config: dict, num_solution
             prohibited_weeks_dict = config['prohibited_weeks']
             team_name = df.loc[i, 'Hypothetical Current Winner']
             if team_name in prohibited_weeks_dict:
-                if df.loc[i, 'Week_Num'] in prohibited_weeks_dict[team_name]:
+                if df.loc[i, 'Week'] in prohibited_weeks_dict[team_name]:
                     solver.Add(picks[i] == 0)
 
 
@@ -3542,7 +3401,7 @@ def get_survivor_picks_based_on_internal_rankings(df, config: dict, num_solution
                 # Find all matching game indices for this team/week
                 required_game_indices = df[
                     (df['Hypothetical Current Winner'] == team) & 
-                    (df['Week_Num'] == req_week)
+                    (df['Week'] == req_week)
                 ].index.tolist()
         
                 if required_game_indices:
@@ -3550,10 +3409,9 @@ def get_survivor_picks_based_on_internal_rankings(df, config: dict, num_solution
                     solver.Add(picks[required_game_indices[0]] == 1)
 
         
-        # Add the constraints
-        for week in df['Week_Num'].unique():
+        for week in df['Week'].unique():
             # Filter picks for the current week
-            weekly_picks = [picks[i] for i in range(len(df)) if df.loc[i, 'Week_Num'] == week]
+            weekly_picks = [picks[i] for i in range(len(df)) if df.loc[i, 'Week'] == week]
 
             if selected_contest == "Splash Sports" and week in week_requiring_two_selections:
                 # For Splash Sports and later weeks, two teams must be selected
@@ -3567,42 +3425,6 @@ def get_survivor_picks_based_on_internal_rankings(df, config: dict, num_solution
             solver.Add(solver.Sum([picks[i] for i in range(len(df)) if df.loc[i, 'Hypothetical Current Winner'] == team]) <= 1)
 
         
-
-
-        # Dynamically create the forbidden solution list
-        forbidden_solutions_1 = []
-        if iteration > 0:
-            for previous_iteration in range(iteration):
-                if selected_contest == 'Circa':
-                    previous_picks_df = pd.read_csv(f"circa_picks_ir_subset_{previous_iteration + 1}.csv")
-                elif selected_contest == 'Splash Sports':
-                    previous_picks_df = pd.read_csv(f"splash_picks_ir_subset_{previous_iteration + 1}.csv")
-                else:
-                    previous_picks_df = pd.read_csv(f"dk_picks_ir_subset_{previous_iteration + 1}.csv")
-
-                # Group picks by week for the forbidden solution
-                forbidden_solution_by_week = previous_picks_df.groupby('Week')['Pick'].apply(list).to_dict()
-                forbidden_solutions_1.append(forbidden_solution_by_week)
-
-        # Add constraints for all forbidden solutions
-        for forbidden_solution_dict in forbidden_solutions_1:
-            # Create a list of the picked variables from the previous solution
-            forbidden_pick_variables = []
-
-            # Iterate through each week and its corresponding forbidden picks
-            for week, picks_in_week in forbidden_solution_dict.items():
-                # Find all rows in the current DataFrame for this specific week
-                weekly_rows = df[df['Week'] == week]
-
-                # Check if any of these rows match a forbidden pick from that week
-                for _, row in weekly_rows.iterrows():
-                    if row['Hypothetical Current Winner'] in picks_in_week: # The 'Favorite' column is what you're using to identify the pick
-                        # Get the index of this row
-                        pick_index = row.name
-                        forbidden_pick_variables.append(picks[pick_index])
-
-            # The constraint now ensures that at least one of the forbidden picks is not selected
-            solver.Add(solver.Sum([1 - v for v in forbidden_pick_variables]) >= 1)
         def create_simple_ev_dataframe(summarized_picks_df, favored_qualifier):
             """
             Creates a DataFrame with one row per week, summarizing picks and their metrics.
@@ -3630,10 +3452,46 @@ def get_survivor_picks_based_on_internal_rankings(df, config: dict, num_solution
             ).reset_index()
         
             return simple_ev_df
+
+        # Dynamically create the forbidden solution list
+        forbidden_solutions_1 = []
+        if iteration > 0:
+            for previous_iteration in range(iteration):
+                if selected_contest == 'Circa':
+                    previous_picks_df = pd.read_csv(f"circa_picks_ev_subset_{previous_iteration + 1}.csv")
+                elif selected_contest == 'Splash Sports':
+                    previous_picks_df = pd.read_csv(f"splash_picks_ev_subset_{previous_iteration + 1}.csv")
+                else:
+                    previous_picks_df = pd.read_csv(f"dk_picks_ev_subset_{previous_iteration + 1}.csv")
+
+                # Group picks by week for the forbidden solution
+                forbidden_solution_by_week = previous_picks_df.groupby('Week')['Pick'].apply(list).to_dict()
+                forbidden_solutions_1.append(forbidden_solution_by_week) 
+        # Add constraints for all forbidden solutions
+        for forbidden_solution_dict in forbidden_solutions_1:
+            # Create a list of the picked variables from the previous solution
+            forbidden_pick_variables = []
+
+            # Iterate through each week and its corresponding forbidden picks
+            for week, picks_in_week in forbidden_solution_dict.items():
+                # Find all rows in the current DataFrame for this specific week
+                weekly_rows = df[df['Week'] == week]
+
+                # Check if any of these rows match a forbidden pick from that week
+                for _, row in weekly_rows.iterrows():
+                    if row['Hypothetical Current Winner'] in picks_in_week: # The 'Favorite' column is what you're using to identify the pick
+                        # Get the index of this row
+                        pick_index = row.name
+                        forbidden_pick_variables.append(picks[pick_index])
+
+            # The constraint now ensures that at least one of the forbidden picks is not selected
+            solver.Add(solver.Sum([1 - v for v in forbidden_pick_variables]) >= 1)
+
+
         
 
         # Objective: maximize the sum of Adjusted Current Difference of each game picked
-        solver.Minimize(solver.Sum([picks[i] * df.loc[i, 'Hypothetical Current Winner Sportsbook Spread'] for i in range(len(df))]))
+        solver.Maximize(solver.Sum([picks[i] * df.loc[i, 'Hypothetical Current Winner EV'] for i in range(len(df))]))
 
 
 
@@ -3642,7 +3500,7 @@ def get_survivor_picks_based_on_internal_rankings(df, config: dict, num_solution
 
         if status == pywraplp.Solver.OPTIMAL:
             st.write('')
-            st.write(f'**Solution Based on Internal Rankings: {iteration + 1}**')
+            st.write(f'**Solution Based on EV: {iteration + 1}**')
 
             st.write('Solution found!')
             st.write('Objective value =', solver.Objective().Value())
@@ -3666,59 +3524,58 @@ def get_survivor_picks_based_on_internal_rankings(df, config: dict, num_solution
 
                     week = df.loc[i, 'Week']
                     date = df.loc[i, 'Date']
-                    date = pd.to_datetime(date, format='%b %d, %Y')
                     time = df.loc[i, 'Time']
-                    location = df.loc[i, 'Actual Stadium']
+                    location = df.loc[i, 'Location']
                     pick = df.loc[i,'Hypothetical Current Winner']
-                    opponent = df.loc[i, 'Hypothetical Current Loser']
-                    win_odds = round(df.loc[i, 'Home Team Fair Odds'] if df.loc[i, 'Hypothetical Current Winner'] == df.loc[i, 'Home Team 1'] else df.loc[i, 'Away Team Fair Odds'], 2)
-                    pick_percent = round(df.loc[i, 'Home Pick %'] if df.loc[i, 'Hypothetical Current Winner'] == df.loc[i, 'Home Team 1'] else df.loc[i, 'Away Pick %'], 2)
-                    expected_availability = round(df.loc[i, 'Home Team Expected Availability'] if df.loc[i, 'Hypothetical Current Winner'] == df.loc[i, 'Home Team 1'] else df.loc[i, 'Away Team Expected Availability'], 2)
-                    divisional_game = 'Divisional' if df.loc[i, 'Divisional Matchup Boolean'] else ''
-                    home_team = 'Home Team' if df.loc[i, 'Hypothetical Current Winner'] == df.loc[i, 'Home Team 1'] else 'Away Team'
-                    weekly_rest = df.loc[i, 'Home Team Weekly Rest'] if df.loc[i, 'Hypothetical Current Winner'] == df.loc[i, 'Home Team 1'] else df.loc[i, 'Away Team Weekly Rest']
-                    weekly_rest_advantage = df.loc[i, 'Weekly Home Rest Advantage'] if df.loc[i, 'Hypothetical Current Winner'] == df.loc[i, 'Home Team 1'] else df.loc[i, 'Weekly Away Rest Advantage']
-                    cumulative_rest = df.loc[i, 'Home Cumulative Rest Advantage'] if df.loc[i, 'Hypothetical Current Winner'] == df.loc[i, 'Home Team 1'] else df.loc[i, 'Away Cumulative Rest Advantage']
-                    cumulative_rest_advantage = df.loc[i, 'Home Team Current Week Cumulative Rest Advantage'] if df.loc[i, 'Hypothetical Current Winner'] == df.loc[i, 'Home Team 1'] else df.loc[i, 'Away Team Current Week Cumulative Rest Advantage']
-                    travel_advantage = df.loc[i, 'Home Travel Advantage'] if df.loc[i, 'Hypothetical Current Winner'] == df.loc[i, 'Home Team 1'] else df.loc[i, 'Away Travel Advantage']
-                    back_to_back_away_games = 'True' if df.loc[i, 'Hypothetical Current Winner'] == df.loc[i, 'Away Team 1'] and df.loc[i, 'Back to Back Away Games'] == 'True' else 'False'
+                    opponent = df.loc[i,'Hypothetical Current Loser']
+                    win_odds = round(df.loc[i, 'Fair Odds Based on Sportsbook Odds'], 2)
+                    pick_percent = round(df.loc[i, 'Expected Pick Percent'], 2)
+                    expected_availability = round(df.loc[i, 'Expected Availability'], 2)
+                    divisional_game = 'Divisional' if df.loc[i, 'Divisional Matchup?'] == 1 else ''
+                    home_team = 'Home Team' if df.loc[i, 'Team Is Away'] == 'False' else 'Away Team'
+                    weekly_rest = df.loc[i, 'Weekly Rest']
+                    weekly_rest_advantage = df.loc[i, 'Weekly Rest Advantage']
+                    cumulative_rest = df.loc[i, 'Season-Long Rest Advantage']
+                    cumulative_rest_advantage = df.loc[i, 'Season-Long Rest Advantage Including This Week']
+                    travel_advantage = df.loc[i, 'Travel Advantage']
+                    back_to_back_away_games = 'True' if df.loc[i, 'Team Is Away'] == 'True' and df.loc[i, 'Back to Back Away Games'] == 'True' else 'False'
                     thursday_night_game = 'Thursday Night Game' if df.loc[i, "Thursday Night Game"] == 'True' else 'Sunday/Monday Game'
-                    international_game = 'International Game' if df.loc[i, 'Actual Stadium'] == 'London, UK' else 'Domestic Game'
-                    previous_opponent = df.loc[i, 'Home Team Previous Opponent'] if df.loc[i, 'Hypothetical Current Winner'] == df.loc[i, 'Home Team 1'] else df.loc[i, 'Away Team Previous Opponent']
-                    previous_game_location = df.loc[i, 'Home Team Previous Location'] if df.loc[i, 'Hypothetical Current Winner'] == df.loc[i, 'Home Team 1'] else df.loc[i, 'Away Team Previous Location']
-                    next_opponent = df.loc[i, 'Home Team Next Opponent'] if df.loc[i, 'Hypothetical Current Winner'] == df.loc[i, 'Home Team 1'] else df.loc[i, 'Away Team Next Opponent']
-                    next_game_location = df.loc[i, 'Home Team Next Location'] if df.loc[i, 'Hypothetical Current Winner'] == df.loc[i, 'Home Team 1'] else df.loc[i, 'Away Team Next Location']
-
-                    internal_ranking_fair_odds = df.loc[i, 'Internal Home Team Fair Odds'] if df.loc[i, 'Hypothetical Current Winner'] == df.loc[i, 'Home Team 1'] else df.loc[i, 'Internal Away Team Fair Odds']
-                    future_value = df.loc[i, 'Home Team Star Rating'] if df.loc[i, 'Hypothetical Current Winner'] == df.loc[i, 'Home Team 1'] else df.loc[i, 'Away Team Star Rating']
-                    sportbook_moneyline = df.loc[i, 'Home Team Moneyline'] if df.loc[i, 'Hypothetical Current Winner'] == df.loc[i, 'Home Team 1'] else df.loc[i, 'Away Team Moneyline']
-                    internal_moneyline = df.loc[i, 'Internal Home Team Moneyline'] if df.loc[i, 'Hypothetical Current Winner'] == df.loc[i, 'Home Team 1'] else df.loc[i, 'Internal Away Team Moneyline']
-                    contest_selections = df.loc[i, 'Expected Home Team Picks'] if df.loc[i, 'Hypothetical Current Winner'] == df.loc[i, 'Home Team 1'] else df.loc[i, 'Expected Away Team Picks']
-                    survival_rate = df.loc[i, 'Home Expected Survival Rate'] if df.loc[i, 'Hypothetical Current Winner'] == df.loc[i, 'Home Team 1'] else df.loc[i, 'Away Expected Survival Rate']
-                    elimination_percent = df.loc[i, 'Home Expected Elimination Percent'] if df.loc[i, 'Hypothetical Current Winner'] == df.loc[i, 'Home Team 1'] else df.loc[i, 'Away Expected Elimination Percent']
-                    survivors = df.loc[i, 'Expected Home Team Survivors'] if df.loc[i, 'Hypothetical Current Winner'] == df.loc[i, 'Home Team 1'] else df.loc[i, 'Expected Away Team Survivors']
-                    eliminations = df.loc[i, 'Expected Home Team Eliminations'] if df.loc[i, 'Hypothetical Current Winner'] == df.loc[i, 'Home Team 1'] else df.loc[i, 'Expected Away Team Eliminations']
-                    preseason_rank = df.loc[i, 'Hypothetical Current Winner Preseason Rank']
-                    adjusted_preseason_rank = df.loc[i, 'Hypothetical Current Winner Adjusted Preseason Rank']
-                    current_rank = df.loc[i, 'Hypothetical Current Winner Current Rank']
+                    international_game = 'International Game' if df.loc[i, 'Location'] == 'London, UK' else 'Domestic Game'
+                    previous_opponent = df.loc[i, 'Previous Opponent']
+                    previous_game_location = df.loc[i, 'Previous Game Location']
+                    next_opponent = df.loc[i, 'Next Opponent']
+                    next_game_location = df.loc[i, 'Next Game Location']
+					
+                    internal_ranking_fair_odds = df.loc[i, 'Fair Odds Based on Internal Rankings']
+                    future_value = df.loc[i, 'Future Value']
+                    sportbook_moneyline = df.loc[i, 'Moneyline Based on Sportsbook Odds']
+                    internal_moneyline = df.loc[i, 'Moneyline Based on Internal Rankings']
+                    contest_selections = df.loc[i, 'Expected Picks']
+                    survival_rate = df.loc[i, 'Expected Survival Rate']
+                    elimination_percent = df.loc[i, 'Expected Contest Elimination Percent']
+                    survivors = df.loc[i, 'Expected Survivors']
+                    eliminations = df.loc[i, 'Expected Eliminations']
+                    preseason_rank = df.loc[i, 'Preseason Rank']
+                    adjusted_preseason_rank = df.loc[i, 'Adjusted Preseason Rank']
+                    current_rank = df.loc[i, 'Current Rank']
                     adjusted_current_rank = df.loc[i, 'Hypothetical Current Winner Adjusted Current Rank']
-                    away_team_short_rest = 'True' if df.loc[i, 'Hypothetical Current Winner'] == df.loc[i, 'Away Team 1'] and df.loc[i, 'Away Team Short Rest'] == 'True' else 'False'
-                    three_games_in_10_days = df.loc[i, 'Home Team 3 games in 10 days'] if df.loc[i, 'Hypothetical Current Winner'] == df.loc[i, 'Home Team 1'] else df.loc[i, 'Away Team 3 games in 10 days']
-                    four_games_in_17_days = df.loc[i, 'Home Team 4 games in 17 days'] if df.loc[i, 'Hypothetical Current Winner'] == df.loc[i, 'Home Team 1'] else df.loc[i, 'Away Team Fair Odds']
-                    thanksgiving_favorite = df.loc[i, 'Home Team Thanksgiving Favorite'] if df.loc[i, 'Hypothetical Current Winner'] == df.loc[i, 'Home Team 1'] else df.loc[i, 'Away Team Thanksgiving Favorite']
-                    christmas_favorite = df.loc[i, 'Home Team Christmas Favorite'] if df.loc[i, 'Hypothetical Current Winner'] == df.loc[i, 'Home Team 1'] else df.loc[i, 'Away Team Christmas Favorite']
-                    thanksgiving_underdog = df.loc[i, 'Home Team Thanksgiving Underdog'] if df.loc[i, 'Hypothetical Current Winner'] == df.loc[i, 'Home Team 1'] else df.loc[i, 'Away Team Thanksgiving Underdog']
-                    christmas_underdog = df.loc[i, 'Home Team Christmas Underdog'] if df.loc[i, 'Hypothetical Current Winner'] == df.loc[i, 'Home Team 1'] else df.loc[i, 'Away Team Christmas Underdog']
+                    away_team_short_rest = df.loc[i, 'Away Team Short Rest']
+                    three_games_in_10_days = df.loc[i, '3 Games in 10 Days']
+                    four_games_in_17_days = df.loc[i, '4 Games in 17 Days']
+                    thanksgiving_favorite = df.loc[i, 'Thanksgiving Favorite']
+                    christmas_favorite = df.loc[i, 'Christmas Favorite']
+                    thanksgiving_underdog = df.loc[i, 'Thanksgiving Underdog']
+                    christmas_underdog = df.loc[i, 'Christmas Underdog']
                     live_odds_unavailable = df.loc[i, 'No Live Odds Available - Internal Rankings Used for Moneyline Calculation']
                     live_odds_spread = df.loc[i, 'Hypothetical Current Winner Sportsbook Spread']
                     internal_spread = df.loc[i, 'Internal Hypothetical Current Winner Spread']
                     
 
                     # Get differences
-                    preseason_difference = df.loc[i, 'Hypothetical Winner Preseason Difference']
-                    adjusted_preseason_difference = df.loc[i, 'Hypothetical Winner Adjusted Preseason Difference']
-                    current_difference = df.loc[i, 'Hypothetical Winner Current Difference']
-                    adjusted_current_difference = df.loc[i, 'Hypothetical Winner Adjusted Current Difference']
+                    preseason_difference = df.loc[i, 'Preseason Difference']
+                    adjusted_preseason_difference = df.loc[i, 'Adjusted Preseason Difference']
+                    current_difference = df.loc[i, 'Current Difference']
+                    adjusted_current_difference = df.loc[i, 'Adjusted Current Difference']
                     # Calculate EV for this game
                     ev = df.loc[i, 'Hypothetical Current Winner EV']
 
@@ -4782,28 +4639,7 @@ else:
         reformatted_df = reformat_df(full_df_with_ev, config)
         st.write("Reformatting Complete.")
         st.dataframe(reformatted_df)
-        st.write(reformatted_df.columns.tolist())
-        st.write("--- Column Name Diagnostic ---")
-        def clean_column_name(col_name):
-            """
-            Strips leading/trailing whitespace, replaces non-breaking spaces (\xa0),
-            and normalizes all internal whitespace to a single standard space.
-            """
-            # 1. Replace common non-breaking space with a standard space
-            cleaned = col_name.replace('\xa0', ' ')
-            # 2. Use a regular expression to replace multiple spaces/tabs with a single space
-            import re
-            cleaned = re.sub(r'\s+', ' ', cleaned)
-            # 3. Final strip of leading/trailing standard spaces
-            return cleaned.strip()
-        
-        # Apply the cleaning function to all column names
-        reformatted_df.columns = [clean_column_name(col) for col in reformatted_df.columns]
-        
-        st.write("✅ Column names aggressively cleaned for hidden Unicode characters.")
-        st.dataframe(reformatted_df)
-        
-        st.write("----------------------------")
+
         # Step 5 & 6: Run Solvers
         st.write('Step 5/6: Calculating Best Picks Based on EV...')
         # --- FIX: Pass reformatted_df to the solver ---

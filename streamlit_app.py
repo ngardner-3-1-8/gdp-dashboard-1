@@ -4381,58 +4381,37 @@ else:
         args=('custom_rankings',)
     )
 
-    # --- Replace the show-week checkbox + sliders with an expander-per-week to avoid duplicate keys ---
-    if st.session_state.current_config['custom_pick_percentages']:
-        with st.expander("Set Custom Pick Percentages"):
-            st.write("Set pick % (0-100). Use -1 to use automatic estimation for that specific team/week.")
-            start_w = st.session_state.current_config['starting_week']
-            end_w = st.session_state.current_config['ending_week']  # exclusive
-    
-            for week in range(start_w, end_w):
-                week_key = f"week_{week}"
-                # Use an expander per week (unique key per week to avoid duplicate element keys)
-                expander_key = f"custom_pick_week_{week}_expander"
-                with st.expander(f"Week {week} Custom Pick %", expanded=False, key=expander_key):
-                    st.markdown(f"**Week {week} Custom Pick %**")
-                    perc_cols = st.columns(3)
-                    perc_col_idx = 0
-    
-                    for team in nfl_teams:
-                        with perc_cols[perc_col_idx]:
-                            outer_key = 'pick_percentages'
-                            # Ensure week dict exists before accessing team
-                            if week_key not in st.session_state.current_config[outer_key]:
-                                st.session_state.current_config[outer_key][week_key] = {}
-    
-                            inner_key = team
-                            widget_key = f"pick_perc_{week_key}_{inner_key}_widget".replace(" ", "_")
-    
-                            current_val_float = st.session_state.current_config[outer_key].get(week_key, {}).get(inner_key, -1.0)
-                            # Map sentinel (<0) to slider -1, otherwise convert to 0..100 integer
-                            if current_val_float is None or current_val_float < 0:
-                                current_val_int = -1
-                            else:
-                                current_val_int = int(current_val_float * 100)
-    
-                            st.slider(
-                                f"{team} Wk {week} %:",
-                                min_value=-1,
-                                max_value=100,
-                                key=widget_key,
-                                value=current_val_int,
-                                on_change=update_pick_percentage,
-                                args=(week, inner_key)
-                            )
-                            # Display current setting
-                            display_val = st.session_state.current_config[outer_key].get(week_key, {}).get(inner_key, -1.0)
-                            if display_val < 0:
-                                st.caption(":red[Auto]")
-                            else:
-                                st.caption(f":green[{display_val*100:.0f}%]")
-    
-                        perc_col_idx = (perc_col_idx + 1) % 3
-    
-                    st.write("---")  # Separator between weeks
+    if st.session_state.current_config['custom_rankings']:
+        with st.expander("Set Custom Team Rankings"):
+            st.write("Ranking = Expected points vs. average team on neutral field. Select 'Default' to use default.")
+            team_rankings_options = ["Default"] + [i / 2.0 for i in range(-30, 31)] # -15 to 15 in 0.5 steps
+
+            rank_cols = st.columns(3)
+            rank_col_idx = 0
+            for team in nfl_teams:
+                 with rank_cols[rank_col_idx]:
+                    outer_key = 'team_rankings'
+                    inner_key = team
+                    widget_key = f"{outer_key}_{inner_key}_widget".replace(" ", "_")
+                    current_val = st.session_state.current_config[outer_key].get(inner_key, 'Default')
+                    
+                    # Ensure value is valid
+                    if current_val not in team_rankings_options:
+                        current_val = 'Default'
+
+                    st.selectbox(
+                        f"{team} Rank:",
+                        options=team_rankings_options,
+                        key=widget_key,
+                        index=team_rankings_options.index(current_val),
+                        on_change=update_nested_value,
+                        args=(outer_key, inner_key)
+                    )
+                    # Display the effective rank
+                    effective_rank = current_val if current_val != 'Default' else DEFAULT_RANKS.get(team, 0)
+                    st.caption(f"Effective: :green[{effective_rank}]")
+
+                 rank_col_idx = (rank_col_idx + 1) % 3
     st.write('---')
 
     # --- I. Pick Must Be Favored ---

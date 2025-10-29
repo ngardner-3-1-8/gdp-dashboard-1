@@ -3491,9 +3491,8 @@ def get_survivor_picks_based_on_internal_rankings(df, config: dict, num_solution
 
 
         
-
         # Objective: maximize the sum of Adjusted Current Difference of each game picked
-        solver.Maximize(solver.Sum([picks[i] * df.loc[i, 'Hypothetical Current Winner EV'] for i in range(len(df))]))
+        solver.Minimize(solver.Sum([picks[i] * df.loc[i, 'Hypothetical Current Winner Sportsbook Spread'] for i in range(len(df))]))
 
 
 
@@ -3716,7 +3715,7 @@ def get_survivor_picks_based_on_internal_rankings(df, config: dict, num_solution
             st.write('Current Difference:', sum_current_difference)
             st.write(f'Adjusted Current Difference: {sum_adjusted_current_difference}')
             st.write('Total Internal Spread: ', sum_internal_spread)
-            st.write(f'Total Sportsbook Spread: , :blue[{sum_sportsbook_spread}]')
+            st.write(f'Total Sportsbook Spread: :blue[{sum_sportsbook_spread}]')
             
         else:
             st.write('No solution found. Consider using fewer constraints. Or you may just be fucked')

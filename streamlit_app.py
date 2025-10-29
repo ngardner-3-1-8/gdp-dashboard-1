@@ -2958,7 +2958,7 @@ def get_survivor_picks_based_on_ev(df, config: dict, num_solutions: int):
                 odds_col = 'Fair Odds Based on Sportsbook Odds'
         
             # Group the DataFrame by week and aggregate the desired metrics
-            simple_ev_df = summarized_picks_df.groupby('Week').agg(
+            simple_ev_df = summarized_picks_df.groupby('Week_Num').agg(
                 Picks=('Pick', lambda x: x.tolist()),
                 Survival_Rate=(odds_col, 'prod'),
                 Pick_Percentage=('Expected Pick Percent', 'prod'),
@@ -3502,7 +3502,7 @@ def get_survivor_picks_based_on_internal_rankings(df, config: dict, num_solution
 
         if status == pywraplp.Solver.OPTIMAL:
             st.write('')
-            st.write(f'**Solution Based on EV: {iteration + 1}**')
+            st.write(f'**Solution Based on Internal Rankings: {iteration + 1}**')
 
             st.write('Solution found!')
             st.write('Objective value =', solver.Objective().Value())

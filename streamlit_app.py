@@ -3292,7 +3292,7 @@ def get_survivor_picks_based_on_internal_rankings(df, config: dict, num_solution
     # --- END BLOCK ---
     for iteration in range(num_solutions):
 
-        df = df[(df['Week'] >= starting_week) & (df['Week'] < ending_week)].reset_index(drop=True)
+        df = df[(df['Week_Num'] >= starting_week) & (df['Week_Num'] < ending_week)].reset_index(drop=True)
 		# Rename columns from reformatted_df to what the solver logic expects
         df.rename(columns={
             "Team": "Hypothetical Current Winner",

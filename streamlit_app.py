@@ -2958,7 +2958,7 @@ def get_survivor_picks_based_on_ev(df, config: dict, num_solutions: int):
                 odds_col = 'Fair Odds Based on Sportsbook Odds'
         
             # Group the DataFrame by week and aggregate the desired metrics
-            simple_ev_df = summarized_picks_df.groupby('Week_Num').agg(
+            simple_ev_df = summarized_picks_df.groupby('Week').agg(
                 Picks=('Pick', lambda x: x.tolist()),
                 Survival_Rate=(odds_col, 'prod'),
                 Pick_Percentage=('Expected Pick Percent', 'prod'),
@@ -3036,7 +3036,7 @@ def get_survivor_picks_based_on_ev(df, config: dict, num_solutions: int):
                 if picks[i].solution_value() > 0:
                     # Determine if it's a divisional game and if the picked team is the home team
 
-                    week = df.loc[i, 'Week']
+                    week = df.loc[i, 'Week_Num']
                     date = df.loc[i, 'Date']
                     time = df.loc[i, 'Time']
                     location = df.loc[i, 'Location']
@@ -3524,7 +3524,7 @@ def get_survivor_picks_based_on_internal_rankings(df, config: dict, num_solution
                 if picks[i].solution_value() > 0:
                     # Determine if it's a divisional game and if the picked team is the home team
 
-                    week = df.loc[i, 'Week']
+                    week = df.loc[i, 'Week_Num']
                     date = df.loc[i, 'Date']
                     time = df.loc[i, 'Time']
                     location = df.loc[i, 'Location']

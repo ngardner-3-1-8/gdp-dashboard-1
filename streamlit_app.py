@@ -2989,7 +2989,7 @@ def get_survivor_picks_based_on_ev(df, config: dict, num_solutions: int):
             # Iterate through each week and its corresponding forbidden picks
             for week, picks_in_week in forbidden_solution_dict.items():
                 # Find all rows in the current DataFrame for this specific week
-                weekly_rows = df[df['Week'] == week]
+                weekly_rows = df[df['Week_Num'] == week]
 
                 # Check if any of these rows match a forbidden pick from that week
                 for _, row in weekly_rows.iterrows():
@@ -3477,7 +3477,7 @@ def get_survivor_picks_based_on_internal_rankings(df, config: dict, num_solution
             # Iterate through each week and its corresponding forbidden picks
             for week, picks_in_week in forbidden_solution_dict.items():
                 # Find all rows in the current DataFrame for this specific week
-                weekly_rows = df[df['Week'] == week]
+                weekly_rows = df[df['Week_Num'] == week]
 
                 # Check if any of these rows match a forbidden pick from that week
                 for _, row in weekly_rows.iterrows():

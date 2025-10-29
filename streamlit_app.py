@@ -3094,7 +3094,7 @@ def get_survivor_picks_based_on_ev(df, config: dict, num_solutions: int):
                     ev = df.loc[i, 'Hypothetical Current Winner EV']
 
 
-                    print('Week %i: Pick %s %s %s (%i, %i, %i, %i, %.4f)' % (df.loc[i, 'Week'], df.loc[i, 'Hypothetical Current Winner'], divisional_game, home_team,
+                    print('Week %i: Pick %s %s %s (%i, %i, %i, %i, %.4f)' % (df.loc[i, 'Week_Num'], df.loc[i, 'Hypothetical Current Winner'], divisional_game, home_team,
                                                                        preseason_difference, adjusted_preseason_difference,
                                                                        current_difference, adjusted_current_difference, ev))
                     if selected_contest == 'Circa':
@@ -3582,7 +3582,7 @@ def get_survivor_picks_based_on_internal_rankings(df, config: dict, num_solution
                     ev = df.loc[i, 'Hypothetical Current Winner EV']
 
 
-                    print('Week %i: Pick %s %s %s (%i, %i, %i, %i, %.4f)' % (df.loc[i, 'Week'], df.loc[i, 'Hypothetical Current Winner'], divisional_game, home_team,
+                    print('Week %i: Pick %s %s %s (%i, %i, %i, %i, %.4f)' % (df.loc[i, 'Week_Num'], df.loc[i, 'Hypothetical Current Winner'], divisional_game, home_team,
                                                                        preseason_difference, adjusted_preseason_difference,
                                                                        current_difference, adjusted_current_difference, ev))
                     if selected_contest == 'Circa':

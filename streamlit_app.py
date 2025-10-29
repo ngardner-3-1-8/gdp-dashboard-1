@@ -3135,7 +3135,7 @@ def get_survivor_picks_based_on_ev(df, config: dict, num_solutions: int):
                     thanksgiving_underdog = df.loc[i, 'Thanksgiving Underdog']
                     christmas_underdog = df.loc[i, 'Christmas Underdog']
                     live_odds_unavailable = df.loc[i, 'No Live Odds Available - Internal Rankings Used for Moneyline Calculation']
-                    live_odds_spread = df.loc[i, 'HypotheticalWinner Current Sportsbook Spread']
+                    live_odds_spread = df.loc[i, 'Hypothetical Winner Current Sportsbook Spread']
                     internal_spread = df.loc[i, 'Internal Hypothetical Current Winner Spread']
                     
 

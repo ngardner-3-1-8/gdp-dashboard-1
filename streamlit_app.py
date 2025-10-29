@@ -4260,7 +4260,7 @@ else:
     st.write(f"Entered: {st.session_state.current_config['current_week_entries']}")
     st.write('---')
 
-	config = st.session_state.current_config # Use the latest config after user input
+    config = st.session_state.current_config # Use the latest config after user input
     PICKS_FILE_PATH = '2025_survivor_picks.csv'
     
     current_entries_value = config.get('current_week_entries')

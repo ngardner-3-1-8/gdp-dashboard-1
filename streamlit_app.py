@@ -28,6 +28,9 @@ import os
 import json
 import sqlite3
 
+
+
+
 # --------------------------------------------------------------------------
 # --- 1. DEFAULT TEAM RANKS (Baseline) ---
 # Used if the user selects 'Default' in the UI for their current rank setting.
@@ -3895,6 +3898,30 @@ def update_pick_percentage(week, team_name):
 
 st.set_page_config(layout="wide") # Use wide layout
 
+
+def calculate_alive_entries(file_path: str) -> int:
+    try:
+        # 1. Read the CSV file into a pandas DataFrame
+        df = pd.read_csv(file_path)
+
+        # 2. Dynamically identify the final column (which holds the status)
+        # This works because you stated the status is always in the last column.
+        status_column_name = df.columns[-1]
+
+        # 3. Filter the DataFrame and count the entries where the status is 'ALIVE'
+        alive_entries_count = (df[status_column_name] == 'ALIVE').sum()
+
+        return alive_entries_count
+
+    except FileNotFoundError:
+        st.error(f"Error: The file '{file_path}' was not found.")
+        return 0
+    except Exception as e:
+        st.error(f"An error occurred while processing the file: {e}")
+        return 0
+
+
+
 # --- Authentication ---
 def login_screen():
     st.image(LOGO_PATH, width=200) # Smaller logo for login
@@ -4232,6 +4259,29 @@ else:
     )
     st.write(f"Entered: {st.session_state.current_config['current_week_entries']}")
     st.write('---')
+
+	config = st.session_state.current_config # Use the latest config after user input
+    PICKS_FILE_PATH = '2025_survivor_picks.csv'
+    
+    current_entries_value = config.get('current_week_entries')
+    
+    # Only execute if Contest is 'Circa' AND user has left the value as the sentinel '-1'
+    if config.get('selected_contest') == 'Circa' and current_entries_value == -1:
+        
+        st.subheader("Circa Entry Count Override")
+        
+        # 1. Run the dynamic calculation
+        alive_count = calculate_alive_entries(PICKS_FILE_PATH)
+        
+        # 2. Overwrite the -1 flag in the config with the calculated value
+        config['current_week_entries'] = alive_count
+        
+        # 3. Display confirmation and the calculated value
+        st.success(f"CSV lookup successful! **Total ALIVE Circa Entries: {alive_count}**")
+        st.caption("The entered value of -1 has been automatically replaced for calculations.")
+    elif config.get('selected_contest') == 'Circa' and current_entries_value > 0:
+        # Optional: Confirm the manually entered number when it's Circa
+        st.info(f"Using manually entered Circa entries: **{current_entries_value}**.")
 
 
     # --- E. Current Week Team Availability ---

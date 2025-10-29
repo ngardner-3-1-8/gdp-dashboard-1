@@ -3126,7 +3126,7 @@ def get_survivor_picks_based_on_ev(df, config: dict, num_solutions: int):
                     preseason_rank = df.loc[i, 'Preseason Rank']
                     adjusted_preseason_rank = df.loc[i, 'Adjusted Preseason Rank']
                     current_rank = df.loc[i, 'Current Rank']
-#                    adjusted_current_rank = df.loc[i, 'Current Rank']
+                    adjusted_current_rank = df.loc[i, 'Hypothetical Current Winner Adsjusted Current Rank']
                     away_team_short_rest = df.loc[i, 'Away Team Short Rest']
                     three_games_in_10_days = df.loc[i, '3 Games in 10 Days']
                     four_games_in_17_days = df.loc[i, '4 Games in 17 Days']
@@ -3135,8 +3135,8 @@ def get_survivor_picks_based_on_ev(df, config: dict, num_solutions: int):
                     thanksgiving_underdog = df.loc[i, 'Thanksgiving Underdog']
                     christmas_underdog = df.loc[i, 'Christmas Underdog']
                     live_odds_unavailable = df.loc[i, 'No Live Odds Available - Internal Rankings Used for Moneyline Calculation']
-                    live_odds_spread = df.loc[i, 'Spread Based on Sportsbook Odds']
-                    internal_spread = df.loc[i, 'Spread Based on Internal Rankings']
+                    live_odds_spread = df.loc[i, 'HypotheticalWinner Current Sportsbook Spread']
+                    internal_spread = df.loc[i, 'Internal Hypothetical Current Winner Spread']
                     
 
                     # Get differences

@@ -4246,14 +4246,19 @@ else:
             inner_key = team
             widget_key = f"{outer_key}_{inner_key}_widget".replace(" ", "_")
             
-            # Get current value, handle potential float issues from JSON load
+            # Get current value, handle potential float issues from JSON load.
+            # The config stores availability as a float in [-1.0, 1.0], where -1.0 means "Auto".
             current_val_float = st.session_state.current_config[outer_key].get(inner_key, -1.0)
-            current_val_int = int(current_val_float * 100) # Convert to integer for slider
+            # If it's the sentinel (-1.0) treat the slider initial integer value as -1 (not -100).
+            if current_val_float is None or current_val_float < 0:
+                current_val_int = -1
+            else:
+                current_val_int = int(current_val_float * 100)  # Convert to integer for slider (0..100)
 
             st.slider(
                 f"{team}:",
-                min_value= -1,
-                max_value= 100,
+                min_value=-1,
+                max_value=100,
                 key=widget_key,
                 value=current_val_int,
                 on_change=update_nested_value,
@@ -4266,7 +4271,7 @@ else:
             else:
                  st.caption(f":green[{display_val*100:.0f}%]")
 
-        col_idx = (col_idx + 1) % num_cols # Cycle through columns
+        col_idx = (col_idx + 1) % num_cols  # Cycle through columns
 
     st.write('---')
 

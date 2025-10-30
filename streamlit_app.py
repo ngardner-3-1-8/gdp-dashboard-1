@@ -4305,14 +4305,14 @@ else:
         config['current_week_entries'] = alive_count
         
         # 3. Display confirmation and the calculated value
-		st.write(f"Entered: -1")
+        st.write(f"Entered: -1")
         st.success(f"Automatically Calculated:! **Total ALIVE Circa Entries: {alive_count}**")
         st.caption("The entered value of -1 has been automatically replaced for calculations.")
     elif config.get('selected_contest') == 'Circa' and current_entries_value > 0:
         # Optional: Confirm the manually entered number when it's Circa
         st.info(f"Using manually entered Circa entries: **{current_entries_value}**.")
-	else:
-		st.write(f"Using default value for {config.get('selected_contest')}")
+    else:
+        st.write(f"Using default value for {config.get('selected_contest')}")
 
 
     # --- E. Current Week Team Availability ---

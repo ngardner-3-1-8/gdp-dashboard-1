@@ -4228,8 +4228,6 @@ else:
 	        )
         # Display helper text based on subcontest
         subcontest = st.session_state.current_config['subcontest']
-        config = st.session_state.current_config
-		weeks_requiring_two_picks = config.get('weeks_two_picks')
 		
         if subcontest == "The Big Splash ($150 Entry)":
             st.write("Weeks requiring double picks in The Big Splash Survivor Contest: :green[11, 12, 13, 14, 15, 16, 17, 18]")

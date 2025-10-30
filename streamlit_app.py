@@ -37,6 +37,7 @@ splash_ship_it_nation_total_entries = 10114
 splash_high_roller_total_entries = 1004
 splash_rotowire_total_entries = 9048
 splash_walkers_25_total_entries = 36501
+splash_bloody_total_entries = 5000
 dk_total_entries = 20000
 
 # --------------------------------------------------------------------------

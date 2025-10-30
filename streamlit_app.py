@@ -4138,7 +4138,7 @@ else:
             args=('subcontest',),
             help=subcontest_help_text
         )
-		subcontest = st.session_state.current_config['subcontest']
+        subcontest = st.session_state.current_config['subcontest']
 		if subcontest != "Week 9 Bloody Survivor ($100 Entry)":
 	        st.multiselect(
 	            "Which weeks do you need to select two teams?:",

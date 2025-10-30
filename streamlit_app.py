@@ -1660,7 +1660,7 @@ def get_predicted_pick_percentages(pd, config: dict, schedule_df: pd.DataFrame):
                 default_entries = splash_high_roller_total_entries
             elif subcontest == "Week 9 Bloody Survivor ($100 Entry)":
                 default_entries = splash_bloody_total_entries
-			else:
+            else:
 				default_entries = 20000
         else: # DraftKings
              default_entries = 20000 # Example

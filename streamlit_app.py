@@ -2984,9 +2984,7 @@ def get_survivor_picks_based_on_ev(df, config: dict, num_solutions: int):
             if selected_contest == "Splash Sports" and subcontest != "Week 9 Bloody Survivor ($100 Entry)" and week in week_requiring_two_selections:
                 # For Splash Sports and later weeks, two teams must be selected
                 solver.Add(solver.Sum(weekly_picks) == 2)
-            elif selected_contest == "Splash Sports" and subcontest == "Week 9 Bloody Survivor ($100 Entry)" and week in week_
-			
-			requiring_three_selections:
+            elif selected_contest == "Splash Sports" and subcontest == "Week 9 Bloody Survivor ($100 Entry)" and week in week_requiring_three_selections:
                 # For Splash Sports and later weeks, two teams must be selected
                 solver.Add(solver.Sum(weekly_picks) == 3)
             else:

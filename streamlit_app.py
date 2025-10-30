@@ -4175,7 +4175,7 @@ else:
             st.write("Weeks requiring double picks in the Ship It Nation Survivor Contest: :green[12, 13, 14, 15, 16, 17, 18]")
         elif subcontest == "High Roller ($1000 Entry)":
             st.write("Weeks requiring double picks in the High Roller Survivor Contest: :green[None]")
-        elif subcontest == "Week 9 Bloody Survivor ($100 Entry)"
+        elif subcontest == "Week 9 Bloody Survivor ($100 Entry)":
             st.write("Weeks requiring :red[TRIPLE] picks in the Bloody Survivor Contest: :green[9, 10, 11, 12, 13, 14, 15, 16, 17, 18]")
 
     st.write('---')

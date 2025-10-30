@@ -1413,6 +1413,7 @@ def get_predicted_pick_percentages(pd, config: dict, schedule_df: pd.DataFrame):
     starting_week = config['starting_week']
     current_week_entries = config['current_week_entries']
     week_requiring_two_selections = config.get('weeks_two_picks', [])
+    week_requiring_three_selections = config.get('weeks_three_picks', [])	
     team_availability = config.get('team_availabilities', {})
     custom_pick_percentages = config.get('pick_percentages', {})
     # Load your historical data (replace 'historical_pick_data_FV_circa.csv' with your actual file path)
@@ -1670,6 +1671,8 @@ def get_predicted_pick_percentages(pd, config: dict, schedule_df: pd.DataFrame):
     # Create the boolean mask once, as it's used twice
     multiplier_mask = (selected_contest == 'Splash Sports') & \
                   (nfl_schedule_df['Week'].isin(week_requiring_two_selections))
+    multiplier_mask = (selected_contest == 'Splash Sports') & \
+                  (nfl_schedule_df['Week'].isin(week_requiring_three_selections))
 	
     nfl_schedule_df['Home Expected Survival Rate'] = nfl_schedule_df['Home Team Fair Odds'] * nfl_schedule_df['Home Pick %']
     nfl_schedule_df.loc[multiplier_mask, 'Home Expected Survival Rate'] *= 0.65
@@ -3467,10 +3470,10 @@ def get_survivor_picks_based_on_internal_rankings(df, config: dict, num_solution
             # Filter picks for the current week
             weekly_picks = [picks[i] for i in range(len(df)) if df.loc[i, 'Week'] == week]
 
-            if selected_contest == "Splash Sports" and week in week_requiring_two_selections:
+            if selected_contest == "Splash Sports" and subcontest != "Week 9 Bloody Survivor ($100 Entry)" and week in week_requiring_two_selections:
                 # For Splash Sports and later weeks, two teams must be selected
                 solver.Add(solver.Sum(weekly_picks) == 2)
-            elif selected_contest == "Splash Sports" and week in week_requiring_three_selections:
+            elif selected_contest == "Splash Sports" and subcontest == "Week 9 Bloody Survivor ($100 Entry)" and week in week_requiring_three_selections:
                 # For Splash Sports and later weeks, two teams must be selected
                 solver.Add(solver.Sum(weekly_picks) == 3)
             else:

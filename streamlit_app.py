@@ -2955,7 +2955,7 @@ def get_survivor_picks_based_on_ev(df, config: dict, num_solutions: int):
             prohibited_weeks_dict = config['prohibited_weeks']
             team_name = df.loc[i, 'Hypothetical Current Winner']
             if team_name in prohibited_weeks_dict:
-                if df.loc[i, 'Week'] in prohibited_weeks_dict[team_name]:
+                if df.loc[i, 'Week_Num'] in prohibited_weeks_dict[team_name]:
                     solver.Add(picks[i] == 0)
 
 
@@ -2969,7 +2969,7 @@ def get_survivor_picks_based_on_ev(df, config: dict, num_solutions: int):
                 # Find all matching game indices for this team/week
                 required_game_indices = df[
                     (df['Hypothetical Current Winner'] == team) & 
-                    (df['Week'] == req_week)
+                    (df['Week_Num'] == req_week)
                 ].index.tolist()
         
                 if required_game_indices:
@@ -2977,7 +2977,7 @@ def get_survivor_picks_based_on_ev(df, config: dict, num_solutions: int):
                     solver.Add(picks[required_game_indices[0]] == 1)
 
         
-        for week in df['Week'].unique():
+        for week in df['Week_Num'].unique():
             # Filter picks for the current week
             weekly_picks = [picks[i] for i in range(len(df)) if df.loc[i, 'Week'] == week]
 
@@ -3448,7 +3448,7 @@ def get_survivor_picks_based_on_internal_rankings(df, config: dict, num_solution
             prohibited_weeks_dict = config['prohibited_weeks']
             team_name = df.loc[i, 'Hypothetical Current Winner']
             if team_name in prohibited_weeks_dict:
-                if df.loc[i, 'Week'] in prohibited_weeks_dict[team_name]:
+                if df.loc[i, 'Week_Num'] in prohibited_weeks_dict[team_name]:
                     solver.Add(picks[i] == 0)
 
 
@@ -3462,7 +3462,7 @@ def get_survivor_picks_based_on_internal_rankings(df, config: dict, num_solution
                 # Find all matching game indices for this team/week
                 required_game_indices = df[
                     (df['Hypothetical Current Winner'] == team) & 
-                    (df['Week'] == req_week)
+                    (df['Week_Num'] == req_week)
                 ].index.tolist()
         
                 if required_game_indices:
@@ -3470,7 +3470,7 @@ def get_survivor_picks_based_on_internal_rankings(df, config: dict, num_solution
                     solver.Add(picks[required_game_indices[0]] == 1)
 
         
-        for week in df['Week'].unique():
+        for week in df['Week_Num'].unique():
             # Filter picks for the current week
             weekly_picks = [picks[i] for i in range(len(df)) if df.loc[i, 'Week'] == week]
 

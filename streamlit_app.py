@@ -4188,7 +4188,7 @@ else:
             args=('subcontest',),
             help=subcontest_help_text
         )
-		double_contests = ["The Big Splash ($150 Entry)", "4 for 4 ($50 Entry)", "Free RotoWire (Free Entry)", "For the Fans ($40 Entry)", "Walker's Ultimate Survivor ($25 Entry)", "Ship It Nation ($25 Entry)", "High Roller ($1000 Entry)"]
+        double_contests = ["The Big Splash ($150 Entry)", "4 for 4 ($50 Entry)", "Free RotoWire (Free Entry)", "For the Fans ($40 Entry)", "Walker's Ultimate Survivor ($25 Entry)", "Ship It Nation ($25 Entry)", "High Roller ($1000 Entry)"]
         subcontest = st.session_state.current_config['subcontest']
 #        if subcontest != st.session_state.last_selected_subcontest:
         if st.session_state.current_config['subcontest'] == "The Big Splash ($150 Entry)":

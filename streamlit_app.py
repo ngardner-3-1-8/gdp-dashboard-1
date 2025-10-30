@@ -4054,8 +4054,6 @@ else:
         st.session_state.config_status = ""
     if 'selected_config_to_load' not in st.session_state:
         st.session_state.selected_config_to_load = None
-    if 'last_selected_subcontest' not in st.session_state:
-        st.session_state.last_selected_subcontest = st.session_state.current_config['subcontest']
 
 
     # --- Sidebar ---

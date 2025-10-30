@@ -4149,7 +4149,7 @@ else:
 	            args=('weeks_two_picks',),
 	            help=two_team_selections_help_text
 	        )
-		else:
+        else:
 	        st.multiselect(
 	            "Which weeks do you need to select three teams?:",
 	            options=range(1, 19),

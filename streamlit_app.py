@@ -1670,15 +1670,19 @@ def get_predicted_pick_percentages(pd, config: dict, schedule_df: pd.DataFrame):
 
     # Create the boolean mask once, as it's used twice
     multiplier_mask = (selected_contest == 'Splash Sports') & \
-                  (nfl_schedule_df['Week'].isin(week_requiring_two_selections))
-    multiplier_mask = (selected_contest == 'Splash Sports') & \
-                  (nfl_schedule_df['Week'].isin(week_requiring_three_selections))
+                  (nfl_schedule_df['Week'].isin(week_requiring_two_selections)) & \
+	              (subcontest != "Week 9 Bloody Survivor ($100 Entry)")
+    multiplier_mask_3 = (selected_contest == 'Splash Sports') & \
+                  (nfl_schedule_df['Week'].isin(week_requiring_three_selections)) & \
+	              (subcontest == "Week 9 Bloody Survivor ($100 Entry)")
 	
     nfl_schedule_df['Home Expected Survival Rate'] = nfl_schedule_df['Home Team Fair Odds'] * nfl_schedule_df['Home Pick %']
     nfl_schedule_df.loc[multiplier_mask, 'Home Expected Survival Rate'] *= 0.65
+	nfl_schedule_df.loc[multiplier_mask_3, 'Home Expected Survival Rate'] *= 0.35
     nfl_schedule_df['Home Expected Elimination Percent'] = nfl_schedule_df['Home Pick %'] - nfl_schedule_df['Home Expected Survival Rate']
     nfl_schedule_df['Away Expected Survival Rate'] = nfl_schedule_df['Away Team Fair Odds'] * nfl_schedule_df['Away Pick %']
     nfl_schedule_df.loc[multiplier_mask, 'Away Expected Survival Rate'] *= 0.65
+    nfl_schedule_df.loc[multiplier_mask_3, 'Away Expected Survival Rate'] *= 0.35
     nfl_schedule_df['Away Expected Elimination Percent'] = nfl_schedule_df['Away Pick %'] - nfl_schedule_df['Away Expected Survival Rate']
     nfl_schedule_df['Expected Eliminated Entry Percent From Game'] = nfl_schedule_df['Home Expected Elimination Percent'] + nfl_schedule_df['Away Expected Elimination Percent']
 
@@ -2980,7 +2984,9 @@ def get_survivor_picks_based_on_ev(df, config: dict, num_solutions: int):
             if selected_contest == "Splash Sports" and subcontest != "Week 9 Bloody Survivor ($100 Entry)" and week in week_requiring_two_selections:
                 # For Splash Sports and later weeks, two teams must be selected
                 solver.Add(solver.Sum(weekly_picks) == 2)
-            elif selected_contest == "Splash Sports" and subcontest == "Week 9 Bloody Survivor ($100 Entry)" and week in week_requiring_three_selections:
+            elif selected_contest == "Splash Sports" and subcontest == "Week 9 Bloody Survivor ($100 Entry)" and week in week_
+			
+			requiring_three_selections:
                 # For Splash Sports and later weeks, two teams must be selected
                 solver.Add(solver.Sum(weekly_picks) == 3)
             else:
@@ -4040,6 +4046,23 @@ else:
             'number_solutions': 10,
             # Add placeholders for other sections if needed
         }
+        if st.session_state.current_config['selected_contest'] == 'Splash Sports':
+            if st.session_state.current_config['subcontest'] == "The Big Splash ($150 Entry)":
+                'weeks_two_picks' = [11, 12, 13, 14, 15, 16, 17, 18]
+            elif st.session_state.current_config['subcontest'] == "4 for 4 ($50 Entry)":
+                'weeks_two_picks' = [11, 12, 13, 14, 15, 16, 17, 18]
+            elif st.session_state.current_config['subcontest'] == "Free RotoWire (Free Entry)":
+                'weeks_two_picks' = []
+            elif st.session_state.current_config['subcontest'] == "For the Fans ($40 Entry)":
+                'weeks_two_picks' = [14, 15, 16, 17, 18]
+            elif st.session_state.current_config['subcontest'] == "Walker's Ultimate Survivor ($25 Entry)":
+                'weeks_two_picks' = [6, 12, 13, 14, 15, 16, 17, 18]
+            elif st.session_state.current_config['subcontest'] == "Ship It Nation ($25 Entry)":
+                'weeks_two_picks' = [12, 13, 14, 15, 16, 17, 18]
+            elif st.session_state.current_config['subcontest'] == "High Roller ($1000 Entry)":
+                'weeks_two_picks' = []
+            elif st.session_state.current_config['subcontest'] == "Week 9 Bloody Survivor ($100 Entry)":
+                'weeks_three_picks' = [9, 10, 11, 12, 13, 14, 15, 16, 17, 18]
         # Dynamically set ending week based on default contest
         if st.session_state.current_config['selected_contest'] != 'Circa':
             st.session_state.current_config['ending_week'] = 19

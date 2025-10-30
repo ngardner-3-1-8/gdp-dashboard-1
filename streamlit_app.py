@@ -1429,8 +1429,8 @@ def get_predicted_pick_percentages(pd, config: dict, schedule_df: pd.DataFrame):
     df['Pick %'].fillna(0.0, inplace=True)
 
     #print(df)
-	X = df[['Win %', 'Future Value (Stars)', 'Date', 'Away Team', 'Divisional Matchup?']]
-	y = df['Pick %']
+    X = df[['Win %', 'Future Value (Stars)', 'Date', 'Away Team', 'Divisional Matchup?']]
+    y = df['Pick %']
 
     # Split data into training and testing sets
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)

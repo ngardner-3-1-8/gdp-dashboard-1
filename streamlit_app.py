@@ -4188,6 +4188,7 @@ else:
             args=('subcontest',),
             help=subcontest_help_text
         )
+		double_contests = ["The Big Splash ($150 Entry)", "4 for 4 ($50 Entry)", "Free RotoWire (Free Entry)", "For the Fans ($40 Entry)", "Walker's Ultimate Survivor ($25 Entry)", "Ship It Nation ($25 Entry)", "High Roller ($1000 Entry)"]
         subcontest = st.session_state.current_config['subcontest']
 #        if subcontest != st.session_state.last_selected_subcontest:
         if st.session_state.current_config['subcontest'] == "The Big Splash ($150 Entry)":
@@ -4206,7 +4207,7 @@ else:
             st.session_state.current_config['weeks_two_picks'] = []
         elif st.session_state.current_config['subcontest'] == "Week 9 Bloody Survivor ($100 Entry)":
             st.session_state.current_config['weeks_three_picks'] = [9, 10, 11, 12, 13, 14, 15, 16, 17, 18]
-        if subcontest != "Week 9 Bloody Survivor ($100 Entry)":
+        if subcontest in double_contests:
             st.multiselect(
 	            "Which weeks do you need to select two teams?:",
 	            options=range(1, 19),

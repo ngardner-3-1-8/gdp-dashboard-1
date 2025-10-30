@@ -4215,6 +4215,7 @@ else:
             st.write("Weeks requiring double picks in the High Roller Survivor Contest: :green[None]")
         elif subcontest == "Week 9 Bloody Survivor ($100 Entry)":
             st.write("Weeks requiring :red[TRIPLE] picks in the Bloody Survivor Contest: :green[9, 10, 11, 12, 13, 14, 15, 16, 17, 18]")
+            st.write(st.session_state.current_config['weeks_three_picks'])
 
     st.write('---')
 

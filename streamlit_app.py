@@ -2805,8 +2805,8 @@ def reformat_df(df: pd.DataFrame, config: dict):
     combined_df = combined_df.sort_values(by=['ID', 'Team Is Away'], ascending=True)
 
     # --- Final Step: Use the 'selected_contest' variable ---
-    if selected_contest != 'Circa':
-        combined_df = combined_df.drop(columns=['Thanksgiving Favorite', 'Christmas Favorite', 'Thanksgiving Underdog', 'Christmas Underdog'])
+#    if selected_contest != 'Circa':
+#        combined_df = combined_df.drop(columns=['Thanksgiving Favorite', 'Christmas Favorite', 'Thanksgiving Underdog', 'Christmas Underdog'])
     
     return combined_df
 

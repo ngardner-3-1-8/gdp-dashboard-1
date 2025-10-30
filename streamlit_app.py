@@ -4187,6 +4187,23 @@ else:
             help=subcontest_help_text
         )
         subcontest = st.session_state.current_config['subcontest']
+        if st.session_state.current_config['selected_contest'] == 'Splash Sports':
+            if st.session_state.current_config['subcontest'] == "The Big Splash ($150 Entry)":
+                st.session_state.current_config['weeks_two_picks'] = [11, 12, 13, 14, 15, 16, 17, 18]
+            elif st.session_state.current_config['subcontest'] == "4 for 4 ($50 Entry)":
+                st.session_state.current_config['weeks_two_picks'] = [11, 12, 13, 14, 15, 16, 17, 18]
+            elif st.session_state.current_config['subcontest'] == "Free RotoWire (Free Entry)":
+                st.session_state.current_config['weeks_two_picks'] = []
+            elif st.session_state.current_config['subcontest'] == "For the Fans ($40 Entry)":
+                st.session_state.current_config['weeks_two_picks'] = [14, 15, 16, 17, 18]
+            elif st.session_state.current_config['subcontest'] == "Walker's Ultimate Survivor ($25 Entry)":
+                st.session_state.current_config['weeks_two_picks'] = [6, 12, 13, 14, 15, 16, 17, 18]
+            elif st.session_state.current_config['subcontest'] == "Ship It Nation ($25 Entry)":
+                st.session_state.current_config['weeks_two_picks'] = [12, 13, 14, 15, 16, 17, 18]
+            elif st.session_state.current_config['subcontest'] == "High Roller ($1000 Entry)":
+                st.session_state.current_config['weeks_two_picks'] = []
+            elif st.session_state.current_config['subcontest'] == "Week 9 Bloody Survivor ($100 Entry)":
+                st.session_state.current_config['weeks_three_picks'] = [9, 10, 11, 12, 13, 14, 15, 16, 17, 18]
         if subcontest != "Week 9 Bloody Survivor ($100 Entry)":
             st.multiselect(
 	            "Which weeks do you need to select two teams?:",
@@ -4210,23 +4227,6 @@ else:
         # Display helper text based on subcontest
         subcontest = st.session_state.current_config['subcontest']
 
-        if st.session_state.current_config['selected_contest'] == 'Splash Sports':
-            if st.session_state.current_config['subcontest'] == "The Big Splash ($150 Entry)":
-                st.session_state.current_config['weeks_two_picks'] = [11, 12, 13, 14, 15, 16, 17, 18]
-            elif st.session_state.current_config['subcontest'] == "4 for 4 ($50 Entry)":
-                st.session_state.current_config['weeks_two_picks'] = [11, 12, 13, 14, 15, 16, 17, 18]
-            elif st.session_state.current_config['subcontest'] == "Free RotoWire (Free Entry)":
-                st.session_state.current_config['weeks_two_picks'] = []
-            elif st.session_state.current_config['subcontest'] == "For the Fans ($40 Entry)":
-                st.session_state.current_config['weeks_two_picks'] = [14, 15, 16, 17, 18]
-            elif st.session_state.current_config['subcontest'] == "Walker's Ultimate Survivor ($25 Entry)":
-                st.session_state.current_config['weeks_two_picks'] = [6, 12, 13, 14, 15, 16, 17, 18]
-            elif st.session_state.current_config['subcontest'] == "Ship It Nation ($25 Entry)":
-                st.session_state.current_config['weeks_two_picks'] = [12, 13, 14, 15, 16, 17, 18]
-            elif st.session_state.current_config['subcontest'] == "High Roller ($1000 Entry)":
-                st.session_state.current_config['weeks_two_picks'] = []
-            elif st.session_state.current_config['subcontest'] == "Week 9 Bloody Survivor ($100 Entry)":
-                st.session_state.current_config['weeks_three_picks'] = [9, 10, 11, 12, 13, 14, 15, 16, 17, 18]
         if subcontest == "The Big Splash ($150 Entry)":
             st.write("Weeks requiring double picks in The Big Splash Survivor Contest: :green[11, 12, 13, 14, 15, 16, 17, 18]")
             st.write(f"System is defaulting to require double picks in the following weeks: {st.session_state.current_config['weeks_two_picks']}")

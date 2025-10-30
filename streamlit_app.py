@@ -1408,7 +1408,7 @@ def collect_schedule_travel_ranking_data(pd, config: dict, schedule_rows):
 def get_predicted_pick_percentages(pd, config: dict, schedule_df: pd.DataFrame):
     # Add these definitions near the top of the function
     selected_contest = config['selected_contest']
-	subcontest = config['subcontest']
+    subcontest = config['subcontest']
     starting_week = config['starting_week']
     current_week_entries = config['current_week_entries']
     week_requiring_two_selections = config.get('weeks_two_picks', [])

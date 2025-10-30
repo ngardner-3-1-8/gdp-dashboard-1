@@ -2820,6 +2820,7 @@ def get_survivor_picks_based_on_ev(df, config: dict, num_solutions: int):
     required_weeks_dict = config['required_weeks']
     prohibited_weeks_dict = config['prohibited_weeks']
     selected_contest = config['selected_contest']
+    subcontest = config['subcontest']
     week_requiring_two_selections = config.get('weeks_two_picks', [])
     week_requiring_three_selections = config.get('weeks_three_picks', [])
     favored_qualifier = config.get('favored_qualifier', 'Live Sportsbook Odds (If Available)')
@@ -2973,10 +2974,10 @@ def get_survivor_picks_based_on_ev(df, config: dict, num_solutions: int):
             # Filter picks for the current week
             weekly_picks = [picks[i] for i in range(len(df)) if df.loc[i, 'Week'] == week]
 
-            if selected_contest == "Splash Sports" and week in week_requiring_two_selections:
+            if selected_contest == "Splash Sports" and subcontest != "Week 9 Bloody Survivor ($100 Entry)" and week in week_requiring_two_selections:
                 # For Splash Sports and later weeks, two teams must be selected
                 solver.Add(solver.Sum(weekly_picks) == 2)
-            elif selected_contest == "Splash Sports" and week in week_requiring_three_selections:
+            elif selected_contest == "Splash Sports" and subcontest == "Week 9 Bloody Survivor ($100 Entry)" and week in week_requiring_three_selections:
                 # For Splash Sports and later weeks, two teams must be selected
                 solver.Add(solver.Sum(weekly_picks) == 3)
             else:
@@ -3318,6 +3319,7 @@ def get_survivor_picks_based_on_internal_rankings(df, config: dict, num_solution
     required_weeks_dict = config['required_weeks']
     prohibited_weeks_dict = config['prohibited_weeks']
     selected_contest = config['selected_contest']
+    subcontest = config['subcontest']
     week_requiring_two_selections = config.get('weeks_two_picks', [])
     week_requiring_three_selections = config.get('weeks_three_picks', [])
     favored_qualifier = config.get('favored_qualifier', 'Live Sportsbook Odds (If Available)')

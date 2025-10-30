@@ -37,6 +37,7 @@ splash_ship_it_nation_total_entries = 10114
 splash_high_roller_total_entries = 1004
 splash_rotowire_total_entries = 9048
 splash_walkers_25_total_entries = 36501
+dk_total_entries = 20000
 
 # --------------------------------------------------------------------------
 # --- 1. DEFAULT TEAM RANKS (Baseline) ---
@@ -1407,6 +1408,7 @@ def collect_schedule_travel_ranking_data(pd, config: dict, schedule_rows):
 def get_predicted_pick_percentages(pd, config: dict, schedule_df: pd.DataFrame):
     # Add these definitions near the top of the function
     selected_contest = config['selected_contest']
+	subcontest = config['subcontest']
     starting_week = config['starting_week']
     current_week_entries = config['current_week_entries']
     week_requiring_two_selections = config.get('weeks_two_picks', [])
@@ -1640,9 +1642,26 @@ def get_predicted_pick_percentages(pd, config: dict, schedule_df: pd.DataFrame):
     else:
         # Handle the -1 (auto-estimate) case based on contest
         if selected_contest == 'Circa':
-             default_entries = 18000 # Example
+            default_entries = circa_total_entries # Example
         elif selected_contest == 'Splash Sports':
-             default_entries = 5000 # Example
+            if subcontest == "The Big Splash ($150 Entry)":
+                default_entries = splash_big_splash_total_entries
+            elif subcontest == "4 for 4 ($50 Entry)":
+                default_entries = splash_4_for_4_total_entries
+            elif subcontest == "Free RotoWire (Free Entry)":
+                default_entries = splash_rotowire_total_entries
+            elif subcontest == "For the Fans ($40 Entry)":
+                default_entries = splash_for_the_fans_total_entries
+            elif subcontest == "Walker's Ultimate Survivor ($25 Entry)":
+                default_entries = splash_walkers_25_total_entries
+            elif subcontest == "Ship It Nation ($25 Entry)":
+                default_entries = splash_ship_it_nation_total_entries
+            elif subcontest == "High Roller ($1000 Entry)":
+                default_entries = splash_high_roller_total_entries
+            elif subcontest == "Week 9 Bloody Survivor ($100 Entry)":
+                default_entries = splash_bloody_total_entries
+			else:
+				default_entries = 20000
         else: # DraftKings
              default_entries = 20000 # Example
         nfl_schedule_df.loc[nfl_schedule_df['Week'] == starting_week, 'Total Remaining Entries at Start of Week'] = default_entries
@@ -1676,6 +1695,24 @@ def get_predicted_pick_percentages(pd, config: dict, schedule_df: pd.DataFrame):
     if selected_contest == 'Circa':
         nfl_schedule_df['Entry Remaining Percent'] = nfl_schedule_df['Total Remaining Entries at Start of Week'] / circa_total_entries
     elif selected_contest == 'Splash Sports':
+        if subcontest == "The Big Splash ($150 Entry)":
+            splash_total_entries = splash_big_splash_total_entries
+        elif subcontest == "4 for 4 ($50 Entry)":
+            splash_total_entries = splash_4_for_4_total_entries
+        elif subcontest == "Free RotoWire (Free Entry)":
+            splash_total_entries = splash_rotowire_total_entries
+        elif subcontest == "For the Fans ($40 Entry)":
+            splash_total_entries = splash_for_the_fans_total_entries
+        elif subcontest == "Walker's Ultimate Survivor ($25 Entry)":
+            splash_total_entries = splash_walkers_25_total_entries
+        elif subcontest == "Ship It Nation ($25 Entry)":
+            splash_total_entries = splash_ship_it_nation_total_entries
+        elif subcontest == "High Roller ($1000 Entry)":
+            splash_total_entries = splash_high_roller_total_entries
+        elif subcontest == "Week 9 Bloody Survivor ($100 Entry)":
+            splash_total_entries = splash_bloody_total_entries
+        else:
+            splash_total_entries = 20000
         nfl_schedule_df['Entry Remaining Percent'] = nfl_schedule_df['Total Remaining Entries at Start of Week'] / splash_total_entries
     else:
         nfl_schedule_df['Entry Remaining Percent'] = nfl_schedule_df['Total Remaining Entries at Start of Week'] / dk_total_entries

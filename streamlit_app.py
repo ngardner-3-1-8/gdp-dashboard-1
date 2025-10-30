@@ -1678,7 +1678,7 @@ def get_predicted_pick_percentages(pd, config: dict, schedule_df: pd.DataFrame):
 	
     nfl_schedule_df['Home Expected Survival Rate'] = nfl_schedule_df['Home Team Fair Odds'] * nfl_schedule_df['Home Pick %']
     nfl_schedule_df.loc[multiplier_mask, 'Home Expected Survival Rate'] *= 0.65
-	nfl_schedule_df.loc[multiplier_mask_3, 'Home Expected Survival Rate'] *= 0.35
+    nfl_schedule_df.loc[multiplier_mask_3, 'Home Expected Survival Rate'] *= 0.35
     nfl_schedule_df['Home Expected Elimination Percent'] = nfl_schedule_df['Home Pick %'] - nfl_schedule_df['Home Expected Survival Rate']
     nfl_schedule_df['Away Expected Survival Rate'] = nfl_schedule_df['Away Team Fair Odds'] * nfl_schedule_df['Away Pick %']
     nfl_schedule_df.loc[multiplier_mask, 'Away Expected Survival Rate'] *= 0.65

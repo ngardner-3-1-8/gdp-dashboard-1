@@ -29,7 +29,14 @@ import json
 import sqlite3
 
 
-
+circa_total_entries = 18714
+splash_big_splash_total_entries = 16337
+splash_4_for_4_total_entries = 10000
+splash_for_the_fans_total_entries = 8382
+splash_ship_it_nation_total_entries = 10114
+splash_high_roller_total_entries = 1004
+splash_rotowire_total_entries = 9048
+splash_walkers_25_total_entries = 36501
 
 # --------------------------------------------------------------------------
 # --- 1. DEFAULT TEAM RANKS (Baseline) ---
@@ -1399,9 +1406,6 @@ def collect_schedule_travel_ranking_data(pd, config: dict, schedule_rows):
 		
 def get_predicted_pick_percentages(pd, config: dict, schedule_df: pd.DataFrame):
     # Add these definitions near the top of the function
-    circa_total_entries = 20000 # Or your default
-    splash_total_entries = 5000 # Or your default
-    dk_total_entries = 25000 # Or your default
     selected_contest = config['selected_contest']
     starting_week = config['starting_week']
     current_week_entries = config['current_week_entries']
@@ -1425,9 +1429,8 @@ def get_predicted_pick_percentages(pd, config: dict, schedule_df: pd.DataFrame):
     df['Pick %'].fillna(0.0, inplace=True)
 
     #print(df)
-    # Split data into input features (X) and target variable (y)
-    X = df[['Win %', 'Future Value (Stars)', 'Date', 'Away Team', 'Divisional Matchup?']]
-    y = df['Pick %']
+	X = df[['Win %', 'Future Value (Stars)', 'Date', 'Away Team', 'Divisional Matchup?']]
+	y = df['Pick %']
 
     # Split data into training and testing sets
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
@@ -1909,6 +1912,7 @@ def get_predicted_pick_percentages_with_availability(pd, config: dict, schedule_
     starting_week = config['starting_week']
     current_week_entries = config['current_week_entries']
     week_requiring_two_selections = config.get('weeks_two_picks', [])
+    week_requiring_three_selections = config.get('weeks_three_picks', [])
     team_availability = config.get('team_availabilities', {})
     if selected_contest == 'Circa':
         df = pd.read_csv('Circa_historical_data.csv')
@@ -2779,6 +2783,7 @@ def get_survivor_picks_based_on_ev(df, config: dict, num_solutions: int):
     prohibited_weeks_dict = config['prohibited_weeks']
     selected_contest = config['selected_contest']
     week_requiring_two_selections = config.get('weeks_two_picks', [])
+    week_requiring_three_selections = config.get('weeks_three_picks', [])
     favored_qualifier = config.get('favored_qualifier', 'Live Sportsbook Odds (If Available)')
     
     # Get all constraints
@@ -2933,6 +2938,9 @@ def get_survivor_picks_based_on_ev(df, config: dict, num_solutions: int):
             if selected_contest == "Splash Sports" and week in week_requiring_two_selections:
                 # For Splash Sports and later weeks, two teams must be selected
                 solver.Add(solver.Sum(weekly_picks) == 2)
+            elif selected_contest == "Splash Sports" and week in week_requiring_three_selections:
+                # For Splash Sports and later weeks, two teams must be selected
+                solver.Add(solver.Sum(weekly_picks) == 3)
             else:
                 # For other contests or earlier weeks, one team per week
                 solver.Add(solver.Sum(weekly_picks) == 1)
@@ -3273,6 +3281,7 @@ def get_survivor_picks_based_on_internal_rankings(df, config: dict, num_solution
     prohibited_weeks_dict = config['prohibited_weeks']
     selected_contest = config['selected_contest']
     week_requiring_two_selections = config.get('weeks_two_picks', [])
+    week_requiring_three_selections = config.get('weeks_three_picks', [])
     favored_qualifier = config.get('favored_qualifier', 'Live Sportsbook Odds (If Available)')
     
     # Get all constraints
@@ -3421,6 +3430,9 @@ def get_survivor_picks_based_on_internal_rankings(df, config: dict, num_solution
             if selected_contest == "Splash Sports" and week in week_requiring_two_selections:
                 # For Splash Sports and later weeks, two teams must be selected
                 solver.Add(solver.Sum(weekly_picks) == 2)
+            elif selected_contest == "Splash Sports" and week in week_requiring_three_selections:
+                # For Splash Sports and later weeks, two teams must be selected
+                solver.Add(solver.Sum(weekly_picks) == 3)
             else:
                 # For other contests or earlier weeks, one team per week
                 solver.Add(solver.Sum(weekly_picks) == 1)
@@ -3770,11 +3782,11 @@ nfl_teams = [
 ]
 
 # Contest Options
-contest_options = ["Circa", "DraftKings", "Splash Sports"]
+contest_options = ["Circa", "Splash Sports", "Other"]
 subcontest_options = [
     "The Big Splash ($150 Entry)", "High Roller ($1000 Entry)", "Free RotoWire (Free Entry)",
     "4 for 4 ($50 Entry)", "For the Fans ($40 Entry)", "Walker's Ultimate Survivor ($25 Entry)",
-    "Ship It Nation ($25 Entry)"
+    "Ship It Nation ($25 Entry)", "Week 9 Bloody Survivor ($100 Entry)"
 ]
 
 # --- 2. Database Functions (Using JSON) ---
@@ -3945,6 +3957,7 @@ else:
             'selected_contest': "Circa",
             'subcontest': "The Big Splash ($150 Entry)",
             'weeks_two_picks': [],
+			'weeks_three_picks': [],
             'has_picked_teams': False,
             'prohibited_picks': [],
             'choose_weeks': False,
@@ -3965,7 +3978,7 @@ else:
             # Simple constraint flags (can use 0/1 or False/True)
             'avoid_away_short_rest': False,
             'avoid_close_divisional': False,
-            'min_div_spread': 7.0,
+            'min_div_spread': 3.0,
             'avoid_away_divisional': False,
             'avoid_3_in_10': False,
             'avoid_4_in_17': False,
@@ -4109,6 +4122,12 @@ else:
     \n- Because it varies, we want to give you the option to select which week this applies to you. Plus, it gives you more flexibility to play around with the tool. 
     
     """
+
+        three_team_selections_help_text = f"""
+    \nIn Splash Sports, some rare survivor contests have a unique requirement: You must select :red[three] teams per week in select weeks.
+    \n- Because it varies, we want to give you the option to select which week(s) this applies to you. Plus, it gives you more flexibility to play around with the tool. 
+    
+    """
         st.write('')
         st.selectbox(
             'Choose Specific Contest from Splash Sports:',
@@ -4119,15 +4138,27 @@ else:
             args=('subcontest',),
             help=subcontest_help_text
         )
-        st.multiselect(
-            "Which weeks do you need to select two teams?:",
-            options=range(1, 19),
-            key='weeks_two_picks_widget',
-            default=st.session_state.current_config['weeks_two_picks'],
-            on_change=update_config_value,
-            args=('weeks_two_picks',),
-            help=two_team_selections_help_text
-        )
+		subcontest = st.session_state.current_config['subcontest']
+		if subcontest != "Week 9 Bloody Survivor ($100 Entry)":
+	        st.multiselect(
+	            "Which weeks do you need to select two teams?:",
+	            options=range(1, 19),
+	            key='weeks_two_picks_widget',
+	            default=st.session_state.current_config['weeks_two_picks'],
+	            on_change=update_config_value,
+	            args=('weeks_two_picks',),
+	            help=two_team_selections_help_text
+	        )
+		else:
+	        st.multiselect(
+	            "Which weeks do you need to select three teams?:",
+	            options=range(1, 19),
+	            key='weeks_three_picks_widget',
+	            default=st.session_state.current_config['weeks_three_picks'],
+	            on_change=update_config_value,
+	            args=('weeks_three_picks',),
+	            help=three_team_selections_help_text
+	        )
         # Display helper text based on subcontest
         subcontest = st.session_state.current_config['subcontest']
         if subcontest == "The Big Splash ($150 Entry)":
@@ -4144,6 +4175,8 @@ else:
             st.write("Weeks requiring double picks in the Ship It Nation Survivor Contest: :green[12, 13, 14, 15, 16, 17, 18]")
         elif subcontest == "High Roller ($1000 Entry)":
             st.write("Weeks requiring double picks in the High Roller Survivor Contest: :green[None]")
+		elif subcontest == "Week 9 Bloody Survivor ($100 Entry)"
+			st.write("Weeks requiring :red[TRIPLE] picks in the Bloody Survivor Contest: :green[9, 10, 11, 12, 13, 14, 15, 16, 17, 18]")
 
     st.write('---')
 
@@ -4257,31 +4290,29 @@ else:
         args=('current_week_entries',),
         help=current_week_entries_help_text
     )
-    st.write(f"Entered: {st.session_state.current_config['current_week_entries']}")
-    st.write('---')
 
     config = st.session_state.current_config # Use the latest config after user input
-    PICKS_FILE_PATH = '2025_survivor_picks.csv'
-    
+    current_year_pick_data = '2025_survivor_picks.csv'
     current_entries_value = config.get('current_week_entries')
-    
+    if current_entries_value != -1:
+        st.write(f"Entered: {current_entries_value}")
+        st.write('---')
     # Only execute if Contest is 'Circa' AND user has left the value as the sentinel '-1'
-    if config.get('selected_contest') == 'Circa' and current_entries_value == -1:
-        
-        st.subheader("Circa Entry Count Override")
-        
+    elif config.get('selected_contest') == 'Circa' and current_entries_value == -1:       
         # 1. Run the dynamic calculation
-        alive_count = calculate_alive_entries(PICKS_FILE_PATH)
-        
+        alive_count = calculate_alive_entries(current_year_pick_data)
         # 2. Overwrite the -1 flag in the config with the calculated value
         config['current_week_entries'] = alive_count
         
         # 3. Display confirmation and the calculated value
-        st.success(f"CSV lookup successful! **Total ALIVE Circa Entries: {alive_count}**")
+		st.write(f"Entered: -1")
+        st.success(f"Automatically Calculated:! **Total ALIVE Circa Entries: {alive_count}**")
         st.caption("The entered value of -1 has been automatically replaced for calculations.")
     elif config.get('selected_contest') == 'Circa' and current_entries_value > 0:
         # Optional: Confirm the manually entered number when it's Circa
         st.info(f"Using manually entered Circa entries: **{current_entries_value}**.")
+	else:
+		st.write(f"Using default value for {config.get('selected_contest')}")
 
 
     # --- E. Current Week Team Availability ---

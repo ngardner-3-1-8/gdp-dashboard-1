@@ -4044,23 +4044,7 @@ else:
             'number_solutions': 10,
             # Add placeholders for other sections if needed
         }
-        if st.session_state.current_config['selected_contest'] == 'Splash Sports':
-            if st.session_state.current_config['subcontest'] == "The Big Splash ($150 Entry)":
-                st.session_state.current_config['weeks_two_picks'] = [11, 12, 13, 14, 15, 16, 17, 18]
-            elif st.session_state.current_config['subcontest'] == "4 for 4 ($50 Entry)":
-                st.session_state.current_config['weeks_two_picks'] = [11, 12, 13, 14, 15, 16, 17, 18]
-            elif st.session_state.current_config['subcontest'] == "Free RotoWire (Free Entry)":
-                st.session_state.current_config['weeks_two_picks'] = []
-            elif st.session_state.current_config['subcontest'] == "For the Fans ($40 Entry)":
-                st.session_state.current_config['weeks_two_picks'] = [14, 15, 16, 17, 18]
-            elif st.session_state.current_config['subcontest'] == "Walker's Ultimate Survivor ($25 Entry)":
-                st.session_state.current_config['weeks_two_picks'] = [6, 12, 13, 14, 15, 16, 17, 18]
-            elif st.session_state.current_config['subcontest'] == "Ship It Nation ($25 Entry)":
-                st.session_state.current_config['weeks_two_picks'] = [12, 13, 14, 15, 16, 17, 18]
-            elif st.session_state.current_config['subcontest'] == "High Roller ($1000 Entry)":
-                st.session_state.current_config['weeks_two_picks'] = []
-            elif st.session_state.current_config['subcontest'] == "Week 9 Bloody Survivor ($100 Entry)":
-                st.session_state.current_config['weeks_three_picks'] = [9, 10, 11, 12, 13, 14, 15, 16, 17, 18]
+
         # Dynamically set ending week based on default contest
         if st.session_state.current_config['selected_contest'] != 'Circa':
             st.session_state.current_config['ending_week'] = 19
@@ -4225,23 +4209,48 @@ else:
 	        )
         # Display helper text based on subcontest
         subcontest = st.session_state.current_config['subcontest']
+
+	    if st.session_state.current_config['selected_contest'] == 'Splash Sports':
+            if st.session_state.current_config['subcontest'] == "The Big Splash ($150 Entry)":
+                st.session_state.current_config['weeks_two_picks'] = [11, 12, 13, 14, 15, 16, 17, 18]
+            elif st.session_state.current_config['subcontest'] == "4 for 4 ($50 Entry)":
+                st.session_state.current_config['weeks_two_picks'] = [11, 12, 13, 14, 15, 16, 17, 18]
+            elif st.session_state.current_config['subcontest'] == "Free RotoWire (Free Entry)":
+                st.session_state.current_config['weeks_two_picks'] = []
+            elif st.session_state.current_config['subcontest'] == "For the Fans ($40 Entry)":
+                st.session_state.current_config['weeks_two_picks'] = [14, 15, 16, 17, 18]
+            elif st.session_state.current_config['subcontest'] == "Walker's Ultimate Survivor ($25 Entry)":
+                st.session_state.current_config['weeks_two_picks'] = [6, 12, 13, 14, 15, 16, 17, 18]
+            elif st.session_state.current_config['subcontest'] == "Ship It Nation ($25 Entry)":
+                st.session_state.current_config['weeks_two_picks'] = [12, 13, 14, 15, 16, 17, 18]
+            elif st.session_state.current_config['subcontest'] == "High Roller ($1000 Entry)":
+                st.session_state.current_config['weeks_two_picks'] = []
+            elif st.session_state.current_config['subcontest'] == "Week 9 Bloody Survivor ($100 Entry)":
+                st.session_state.current_config['weeks_three_picks'] = [9, 10, 11, 12, 13, 14, 15, 16, 17, 18]
         if subcontest == "The Big Splash ($150 Entry)":
             st.write("Weeks requiring double picks in The Big Splash Survivor Contest: :green[11, 12, 13, 14, 15, 16, 17, 18]")
+            st.write(f"System is defaulting to require double picks in the following weeks: {st.session_state.current_config['weeks_two_picks']}")
         elif subcontest == "4 for 4 ($50 Entry)":
             st.write("Weeks requiring double picks in the 4 for 4 Survivor Contest: :green[11, 12, 13, 14, 15, 16, 17, 18]")
+            st.write(f"System is defaulting to require double picks in the following weeks: {st.session_state.current_config['weeks_two_picks']}")
         elif subcontest == "Free RotoWire (Free Entry)":
             st.write("Weeks requiring double picks in the Free RotoWire Survivor Contest: :green[None]")
+            st.write(f"System is defaulting to require double picks in the following weeks: None")
         elif subcontest == "For the Fans ($40 Entry)":
             st.write("Weeks requiring double picks in the For the Fan Survivor Contest: :green[14, 15, 16, 17, 18]")
+            st.write(f"System is defaulting to require double picks in the following weeks: {st.session_state.current_config['weeks_two_picks']}")
         elif subcontest == "Walker's Ultimate Survivor ($25 Entry)":
             st.write("Weeks requiring double picks in Walker's Ultimate Survivor Survivor Contest: :green[6, 12, 13, 14, 15, 16, 17, 18]")
+            st.write(f"System is defaulting to require double picks in the following weeks: {st.session_state.current_config['weeks_two_picks']}")
         elif subcontest == "Ship It Nation ($25 Entry)":
             st.write("Weeks requiring double picks in the Ship It Nation Survivor Contest: :green[12, 13, 14, 15, 16, 17, 18]")
+            st.write(f"System is defaulting to require double picks in the following weeks: {st.session_state.current_config['weeks_two_picks']}")
         elif subcontest == "High Roller ($1000 Entry)":
             st.write("Weeks requiring double picks in the High Roller Survivor Contest: :green[None]")
+            st.write(f"System is defaulting to require double picks in the following weeks: {st.session_state.current_config['weeks_two_picks']}")
         elif subcontest == "Week 9 Bloody Survivor ($100 Entry)":
             st.write("Weeks requiring :red[TRIPLE] picks in the Bloody Survivor Contest: :green[9, 10, 11, 12, 13, 14, 15, 16, 17, 18]")
-            st.write(st.session_state.current_config['weeks_three_picks'])
+            st.write(f"System is defaulting to require triple picks in the following weeks: {st.session_state.current_config['weeks_three_picks']}")
 
     st.write('---')
 

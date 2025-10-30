@@ -2978,7 +2978,6 @@ def get_survivor_picks_based_on_ev(df, config: dict, num_solutions: int):
 
         
         for week in df['Week_Num'].unique():
-            st.write(f"DEBUG: {week}")
             # Filter picks for the current week
             weekly_picks = [picks[i] for i in range(len(df)) if df.loc[i, 'Week_Num'] == week]
 

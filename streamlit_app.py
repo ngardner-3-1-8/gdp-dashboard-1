@@ -2978,9 +2978,9 @@ def get_survivor_picks_based_on_ev(df, config: dict, num_solutions: int):
 
         
         for week in df['Week_Num'].unique():
-            st.write(f"DEBUG: {df['Week_Num']}")
+            st.write(f"DEBUG: {week}")
             # Filter picks for the current week
-            weekly_picks = [picks[i] for i in range(len(df)) if df.loc[i, 'Week'] == week]
+            weekly_picks = [picks[i] for i in range(len(df)) if df.loc[i, 'Week_Num'] == week]
 
             if selected_contest == "Splash Sports" and subcontest != "Week 9 Bloody Survivor ($100 Entry)" and week in week_requiring_two_selections:
                 # For Splash Sports and later weeks, two teams must be selected
@@ -3473,7 +3473,7 @@ def get_survivor_picks_based_on_internal_rankings(df, config: dict, num_solution
         
         for week in df['Week_Num'].unique():
             # Filter picks for the current week
-            weekly_picks = [picks[i] for i in range(len(df)) if df.loc[i, 'Week'] == week]
+            weekly_picks = [picks[i] for i in range(len(df)) if df.loc[i, 'Week_Num'] == week]
 
             if selected_contest == "Splash Sports" and subcontest != "Week 9 Bloody Survivor ($100 Entry)" and week in week_requiring_two_selections:
                 # For Splash Sports and later weeks, two teams must be selected

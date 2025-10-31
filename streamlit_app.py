@@ -3906,12 +3906,32 @@ def get_all_configs(user_id: str):
     return [c[0] for c in configs]
 
 
-
+# Assuming this is your general update function
 def update_config_value(key):
-    """Generic callback to update a top-level key in current_config from a widget's session state key."""
-    widget_key = key + "_widget"
-    if widget_key in st.session_state:
-        st.session_state.current_config[key] = st.session_state[widget_key]
+    # Get the value from the corresponding widget
+    value = st.session_state[f'{key}_widget'] 
+    # Update the config dict
+    st.session_state.current_config[key] = value
+
+    # ADD THIS CONDITIONAL LOGIC
+    if key == 'subcontest':
+        subcontest_name = value
+        if subcontest_name == "The Big Splash ($150 Entry)":
+            st.session_state.current_config['weeks_two_picks'] = [11, 12, 13, 14, 15, 16, 17, 18]
+        elif subcontest_name == "4 for 4 ($50 Entry)":
+            st.session_state.current_config['weeks_two_picks'] = [11, 12, 13, 14, 15, 16, 17, 18]
+        elif subcontest_name == "Free RotoWire (Free Entry)":
+            st.session_state.current_config['weeks_two_picks'] = []
+        elif subcontest_name == "For the Fans ($40 Entry)":
+            st.session_state.current_config['weeks_two_picks'] = [14, 15, 16, 17, 18]
+        elif subcontest_name == "Walker's Ultimate Survivor ($25 Entry)":
+            st.session_state.current_config['weeks_two_picks'] = [6, 12, 13, 14, 15, 16, 17, 18]
+        elif subcontest_name == "Ship It Nation ($25 Entry)":
+            st.session_state.current_config['weeks_two_picks'] = [12, 13, 14, 15, 16, 17, 18]
+        elif subcontest_name == "High Roller ($1000 Entry)":
+            st.session_state.current_config['weeks_two_picks'] = []
+        elif subcontest_name == "Week 9 Bloody Survivor ($100 Entry)":
+            st.session_state.current_config['weeks_three_picks'] = [9, 10, 11, 12, 13, 14, 15, 16, 17, 18]
 
 # --- Replace the existing update_nested_value with this updated version ---
 def update_nested_value(outer_key, inner_key):
@@ -3978,7 +3998,6 @@ def calculate_alive_entries(file_path: str) -> int:
     except Exception as e:
         st.error(f"An error occurred while processing the file: {e}")
         return 0
-
 
 
 # --- Authentication ---
@@ -4048,23 +4067,6 @@ else:
         # Dynamically set ending week based on default contest
         if st.session_state.current_config['selected_contest'] != 'Circa':
             st.session_state.current_config['ending_week'] = 19
-    subcontest = st.session_state.current_config['subcontest']
-    if st.session_state.current_config['subcontest'] == "The Big Splash ($150 Entry)":
-        st.session_state.current_config['weeks_two_picks'] = [11, 12, 13, 14, 15, 16, 17, 18]
-    elif st.session_state.current_config['subcontest'] == "4 for 4 ($50 Entry)":
-        st.session_state.current_config['weeks_two_picks'] = [11, 12, 13, 14, 15, 16, 17, 18]
-    elif st.session_state.current_config['subcontest'] == "Free RotoWire (Free Entry)":
-        st.session_state.current_config['weeks_two_picks'] = []
-    elif st.session_state.current_config['subcontest'] == "For the Fans ($40 Entry)":
-        st.session_state.current_config['weeks_two_picks'] = [14, 15, 16, 17, 18]
-    elif st.session_state.current_config['subcontest'] == "Walker's Ultimate Survivor ($25 Entry)":
-        st.session_state.current_config['weeks_two_picks'] = [6, 12, 13, 14, 15, 16, 17, 18]
-    elif st.session_state.current_config['subcontest'] == "Ship It Nation ($25 Entry)":
-        st.session_state.current_config['weeks_two_picks'] = [12, 13, 14, 15, 16, 17, 18]
-    elif st.session_state.current_config['subcontest'] == "High Roller ($1000 Entry)":
-        st.session_state.current_config['weeks_two_picks'] = []
-    elif st.session_state.current_config['subcontest'] == "Week 9 Bloody Survivor ($100 Entry)":
-        st.session_state.current_config['weeks_three_picks'] = [9, 10, 11, 12, 13, 14, 15, 16, 17, 18]
 
     # --- Initialize other session state variables ---
     if 'config_status' not in st.session_state:

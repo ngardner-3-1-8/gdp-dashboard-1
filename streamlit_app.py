@@ -4401,7 +4401,7 @@ else:
             key='use_live_data_widget',
             value=st.session_state.current_config['use_live_data'],
             on_change=update_config_value,
-            args=('use_live_data',)
+            args=('use_live_data',) 
         )
     st.checkbox(
         "Provide your own estimates for this week's availability for each team?",

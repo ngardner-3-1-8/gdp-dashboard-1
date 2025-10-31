@@ -4085,6 +4085,7 @@ else:
 
         # Load
         saved_configs = get_all_configs(CURRENT_USER_ID)
+		st.write(saved_configs)
         if saved_configs:
             st.selectbox(
                 "Load Configuration:",
@@ -4130,7 +4131,7 @@ else:
 
 
     # --- Main Page Content ---
-    st.image(LOGO_PATH, width=150)
+    st.image(LOGO_PATH, width=300)
     st.title("NFL Survivor Optimization")
     st.subheader("The best NFL Survivor Contest optimizer")
 
@@ -4203,6 +4204,7 @@ else:
             args=('subcontest',),
             help=subcontest_help_text
         )
+		st.write(st.session_state.current_config['weeks_two_picks'])
         subcontest = st.session_state.current_config['subcontest']
         if subcontest != "Week 9 Bloody Survivor ($100 Entry)":
             st.multiselect(

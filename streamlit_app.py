@@ -4049,7 +4049,6 @@ else:
         if st.session_state.current_config['selected_contest'] != 'Circa':
             st.session_state.current_config['ending_week'] = 19
         subcontest = st.session_state.current_config['subcontest']
-#        if subcontest != st.session_state.last_selected_subcontest:
         if st.session_state.current_config['subcontest'] == "The Big Splash ($150 Entry)":
             st.session_state.current_config['weeks_two_picks'] = [11, 12, 13, 14, 15, 16, 17, 18]
         elif st.session_state.current_config['subcontest'] == "4 for 4 ($50 Entry)":

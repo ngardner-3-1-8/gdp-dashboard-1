@@ -4207,9 +4207,9 @@ else:
         
         subcontest = st.session_state.current_config['subcontest']
         if subcontest != "Week 9 Bloody Survivor ($100 Entry)":
+            st.write(st.session_state.current_config['weeks_two_picks'])
             st.multiselect(
 	            "Which weeks do you need to select two teams?:",
-                st.write(st.session_state.current_config['weeks_two_picks'])
 	            options=range(1, 19),
 	            key='weeks_two_picks_widget',
 	            default=st.session_state.current_config['weeks_two_picks'],

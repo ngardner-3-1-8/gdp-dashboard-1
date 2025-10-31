@@ -4204,7 +4204,7 @@ else:
             args=('subcontest',),
             help=subcontest_help_text
         )
-		st.write(st.session_state.current_config['weeks_two_picks'])
+        st.write(st.session_state.current_config['weeks_two_picks'])
         subcontest = st.session_state.current_config['subcontest']
         if subcontest != "Week 9 Bloody Survivor ($100 Entry)":
             st.multiselect(

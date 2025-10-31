@@ -4085,7 +4085,7 @@ else:
 
         # Load
         saved_configs = get_all_configs(CURRENT_USER_ID)
-		st.write(saved_configs)
+        st.write(saved_configs)
         if saved_configs:
             st.selectbox(
                 "Load Configuration:",

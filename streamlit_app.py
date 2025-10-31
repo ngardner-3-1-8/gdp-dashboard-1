@@ -3831,7 +3831,7 @@ nfl_teams = [
 # Contest Options
 contest_options = ["Circa", "Splash Sports", "Other"]
 subcontest_options = [
-    "The Big Splash ($150 Entry)", "High Roller ($1000 Entry)", "Free RotoWire (Free Entry)",
+    "", "The Big Splash ($150 Entry)", "High Roller ($1000 Entry)", "Free RotoWire (Free Entry)",
     "4 for 4 ($50 Entry)", "For the Fans ($40 Entry)", "Walker's Ultimate Survivor ($25 Entry)",
     "Ship It Nation ($25 Entry)", "Week 9 Bloody Survivor ($100 Entry)"
 ]

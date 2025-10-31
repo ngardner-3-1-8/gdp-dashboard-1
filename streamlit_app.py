@@ -401,11 +401,11 @@ def collect_schedule_travel_ranking_data(pd, config: dict, schedule_rows):
             if away_team in last_game:
                 away_rest_days = (last_date - last_game[away_team]).days
             else:
-                away_rest_days = 'NA'
+                away_rest_days = 0
             if home_team in last_game:
                 home_rest_days = (last_date - last_game[home_team]).days
             else:
-                home_rest_days = 'NA'   
+                home_rest_days = 0   
             # Calculate rest advantage for both teams and add it to cols_text
             if isinstance(away_rest_days, int) and isinstance(home_rest_days, int):
                 away_advantage = away_rest_days - home_rest_days

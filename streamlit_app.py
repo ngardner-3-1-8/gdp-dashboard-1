@@ -4021,7 +4021,7 @@ else:
         # Define ALL default values for a new user session
         st.session_state.current_config = {
             'selected_contest': "Circa",
-            'subcontest': "The Big Splash ($150 Entry)",
+            'subcontest': "",
             'weeks_two_picks': [],
 			'weeks_three_picks': [],
             'has_picked_teams': False,

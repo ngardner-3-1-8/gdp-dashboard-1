@@ -751,8 +751,8 @@ def collect_schedule_travel_ranking_data(pd, config: dict, schedule_rows):
 
 
     # Convert 'NA' to NaN
-    df['Away Team Weekly Rest'] = df['Away Team Weekly Rest'].replace('NA', pd.NA)
-    df['Home Team Weekly Rest'] = df['Home Team Weekly Rest'].replace('NA', pd.NA)
+    df['Away Team Weekly Rest'] = df['Away Team Weekly Rest'].replace('NA', 0)
+    df['Home Team Weekly Rest'] = df['Home Team Weekly Rest'].replace('NA', 0)
 
     # Convert to integers
     df['Away Team Weekly Rest'] = pd.to_numeric(df['Away Team Weekly Rest'], errors='coerce')

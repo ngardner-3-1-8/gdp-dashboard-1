@@ -4403,13 +4403,15 @@ else:
             on_change=update_config_value,
             args=('use_live_data',) 
         )
-    st.checkbox(
-        "Provide your own estimates for this week's availability for each team?",
-        key='provide_availability_widget',
-        value=st.session_state.current_config['provide_availability'],
-        on_change=update_config_value,
-        args=('provide_availability',)
-    )
+
+    if st.session_state.current_config['use_live_data'] == False:
+        st.checkbox(
+            "Provide your own estimates for this week's availability for each team?",
+            key='provide_availability_widget',
+            value=st.session_state.current_config['provide_availability'],
+            on_change=update_config_value,
+            args=('provide_availability',)
+        )
 
     if st.session_state.current_config['provide_availability']:
         st.write("Set availability % (0-100). Use -1 to estimate automatically.")

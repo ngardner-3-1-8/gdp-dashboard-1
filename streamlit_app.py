@@ -4032,6 +4032,7 @@ else:
             'current_week_entries': -1,
             'use_live_data': False,
             'team_availabilities': {team: -1.0 for team in nfl_teams},
+            'provide_availability': False,
             'require_team': False,
             'required_weeks': {team: 0 for team in nfl_teams},
             'prohibit_teams': False,
@@ -4041,7 +4042,6 @@ else:
             'must_be_favored': False,
             'favored_qualifier': 'Live Sportsbook Odds (If Available)',
             'add_constraints': False,
-            # Simple constraint flags (can use 0/1 or False/True)
             'avoid_away_short_rest': False,
             'avoid_close_divisional': False,
             'min_div_spread': 3.0,
@@ -4403,46 +4403,54 @@ else:
             on_change=update_config_value,
             args=('use_live_data',)
         )
+    st.checkbox(
+        "Provide your own estimates for this week's availability for each team?",
+        key='provide_availability_widget',
+        value=st.session_state.current_config['provide_availability'],
+        on_change=update_config_value,
+        args=('provide_availability',)
+    )
 
-    st.write("Set availability % (0-100). Use -1 to estimate automatically.")
+    if st.session_state.current_config['provide_availability']:
+        st.write("Set availability % (0-100). Use -1 to estimate automatically.")
+        
+        # Use columns for better layout
+        num_cols = 2
+        cols = st.columns(num_cols)
+        col_idx = 0
     
-    # Use columns for better layout
-    num_cols = 3
-    cols = st.columns(num_cols)
-    col_idx = 0
-
-    for team in nfl_teams:
-        with cols[col_idx]:
-            outer_key = 'team_availabilities'
-            inner_key = team
-            widget_key = f"{outer_key}_{inner_key}_widget".replace(" ", "_")
-            
-            # Get current value, handle potential float issues from JSON load.
-            # The config stores availability as a float in [-1.0, 1.0], where -1.0 means "Auto".
-            current_val_float = st.session_state.current_config[outer_key].get(inner_key, -1.0)
-            # If it's the sentinel (<0) treat the slider initial integer value as -1 (not -100).
-            if current_val_float is None or current_val_float < 0:
-                current_val_int = -1
-            else:
-                current_val_int = int(current_val_float * 100)  # Convert to integer for slider (0..100)
-    
-            st.slider(
-                f"{team}:",
-                min_value=-1,
-                max_value=100,
-                key=widget_key,
-                value=current_val_int,
-                on_change=update_nested_value,
-                args=(outer_key, inner_key)
-            )
-            # Display current setting from the dictionary
-            display_val = st.session_state.current_config[outer_key].get(inner_key, -1.0)
-            if display_val < 0:
-                 st.caption(":red[Auto]")
-            else:
-                 st.caption(f":green[{display_val*100:.0f}%]")
-    
-        col_idx = (col_idx + 1) % num_cols  # Cycle through columns
+        for team in nfl_teams:
+            with cols[col_idx]:
+                outer_key = 'team_availabilities'
+                inner_key = team
+                widget_key = f"{outer_key}_{inner_key}_widget".replace(" ", "_")
+                
+                # Get current value, handle potential float issues from JSON load.
+                # The config stores availability as a float in [-1.0, 1.0], where -1.0 means "Auto".
+                current_val_float = st.session_state.current_config[outer_key].get(inner_key, -1.0)
+                # If it's the sentinel (<0) treat the slider initial integer value as -1 (not -100).
+                if current_val_float is None or current_val_float < 0:
+                    current_val_int = -1
+                else:
+                    current_val_int = int(current_val_float * 100)  # Convert to integer for slider (0..100)
+        
+                st.slider(
+                    f"{team}:",
+                    min_value=-1,
+                    max_value=100,
+                    key=widget_key,
+                    value=current_val_int,
+                    on_change=update_nested_value,
+                    args=(outer_key, inner_key)
+                )
+                # Display current setting from the dictionary
+                display_val = st.session_state.current_config[outer_key].get(inner_key, -1.0)
+                if display_val < 0:
+                     st.caption(":red[Auto]")
+                else:
+                     st.caption(f":green[{display_val*100:.0f}%]")
+        
+            col_idx = (col_idx + 1) % num_cols  # Cycle through columns
 
     # --- F. Required Team Picks ---
     st.subheader('Required Weekly Picks')

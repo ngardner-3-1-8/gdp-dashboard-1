@@ -4028,7 +4028,7 @@ def calculate_historical_pick_counts(file_path: str) -> Dict[str, int]:
         # Check if there are any pick columns to process
         if len(df.columns) <= 2:
             # Only 'EntryName' and Status column exist, meaning no picks yet.
-            print("No pick columns found in the file.")
+            st.write("No pick columns found in the file.")
             return {}
 
         # The pick columns are all columns from the second (index 1) up to, but not including, the last column.

@@ -3998,6 +3998,62 @@ def calculate_alive_entries(file_path: str) -> int:
     except Exception as e:
         st.error(f"An error occurred while processing the file: {e}")
         return 0
+import pandas as pd
+from typing import Dict
+
+import pandas as pd
+from typing import Dict
+
+def calculate_historical_pick_counts(file_path: str) -> Dict[str, int]:
+    """
+    Reads the contest entries file and calculates the total number of times each
+    team has been picked across all 'Week_X' columns.
+
+    Args:
+        file_path: The path to the CSV file (DB_FILE).
+
+    Returns:
+        A dictionary where keys are team names (e.g., 'BEARS PK') and values are
+        the total number of times they were picked historically.
+        Returns an empty dictionary on error.
+    """
+    try:
+        # 1. Read the CSV file into a pandas DataFrame
+        df = pd.read_csv(file_path)
+
+        # 2. Identify the pick columns (all columns except the first and the last)
+        # The columns are: EntryName, Week_1, Week_2, ..., Week_N (Status)
+        # We want to aggregate Weeks 1, 2, 3, etc.
+        
+        # Check if there are any pick columns to process
+        if len(df.columns) <= 2:
+            # Only 'EntryName' and Status column exist, meaning no picks yet.
+            print("No pick columns found in the file.")
+            return {}
+
+        # The pick columns are all columns from the second (index 1) up to, but not including, the last column.
+        # df.columns[1:-1] selects all 'Week_X' columns.
+        pick_columns = df.columns[1:-1]
+        
+        # 3. Stack the relevant columns to put all picks into a single column
+        # This converts the wide format (Week_1, Week_2...) into a long format.
+        # .stack() effectively treats the entire block of selected columns as one long list of picks.
+        all_picks_series = df[pick_columns].stack(dropna=True)
+
+        # 4. Count the occurrences of each team pick across the entire series
+        # The result is a pandas Series where the index is the team name and the value is the total count.
+        historical_pick_counts = all_picks_series.value_counts()
+
+        # 5. Convert the pandas Series to a dictionary for return
+        return historical_pick_counts.to_dict()
+
+    except FileNotFoundError:
+        print(f"Error: The file '{file_path}' was not found.")
+        return {}
+    except Exception as e:
+        print(f"An error occurred while processing the file: {e}")
+        return {}
+
 
 
 # --- Authentication ---
@@ -4412,6 +4468,9 @@ else:
             on_change=update_config_value,
             args=('provide_availability',)
         )
+    else: 
+        historical_picks = calculate_historical_pick_counts(DB_FILE)
+        print(historical_picks)
 
     if st.session_state.current_config['provide_availability']:
         st.write("Set availability % (0-100). Use -1 to estimate automatically.")

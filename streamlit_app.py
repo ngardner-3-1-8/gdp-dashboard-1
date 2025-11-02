@@ -4008,17 +4008,13 @@ def calculate_historical_pick_percentages(file_path: str) -> Dict[str, float]:
     Reads the contest entries file and calculates pick percentages for alive entries.
     """
     # --- CRITICAL FIX for CParserError ---
-    try:
-        df = pd.read_csv(
-            file_path,
-            sep=',',
-            header=0,              # Explicitly use the first line as the header
-            engine='python',       # Use the Python engine, which is more robust for tricky files
-            on_bad_lines='skip'    # Skips lines that have too many fields (due to commas in EntryName)
-        )
-    except Exception as e:
-        print(f"FATAL ERROR: Could not read CSV file '{file_path}'. Error: {e}")
-        return {}
+    df = pd.read_csv(
+        file_path,
+        sep=',',
+        header=0,              # Explicitly use the first line as the header
+        engine='python',       # Use the Python engine, which is more robust for tricky files
+        on_bad_lines='skip'    # Skips lines that have too many fields (due to commas in EntryName)
+    )
     # -------------------------------------
 
     # Assuming the last column is the status column (e.g., Week_9)

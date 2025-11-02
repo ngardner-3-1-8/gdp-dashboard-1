@@ -4467,7 +4467,7 @@ else:
             args=('provide_availability',)
         )
     else: 
-        historical_picks = calculate_historical_pick_percentages(DB_FILE)
+        historical_picks = calculate_historical_pick_percentages("2025_survivor_picks.csv")
         st.write(historical_picks)
 
     if st.session_state.current_config['provide_availability']:

@@ -4000,9 +4000,6 @@ def calculate_alive_entries(file_path: str) -> int:
         st.error(f"An error occurred while processing the file: {e}")
         return 0
 
-import pandas as pd
-from typing import Dict
-
 def calculate_historical_pick_percentages(file_path: str) -> Dict[str, int]:
     """
     Reads the contest entries file and calculates pick percentages for alive entries.

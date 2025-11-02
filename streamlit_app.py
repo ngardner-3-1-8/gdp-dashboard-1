@@ -4017,7 +4017,7 @@ def calculate_historical_pick_percentages(file_path: str) -> Dict[str, float]:
     try:
         # 1. Read the CSV file into a pandas DataFrame
         df = pd.read_csv(file_path)
-
+        st.write(df)
         # 2. Identify the pick columns and status column
         if len(df.columns) <= 2:
             print("No pick columns found in the file.")

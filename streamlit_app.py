@@ -4033,7 +4033,11 @@ def calculate_historical_pick_counts(file_path: str) -> Dict[str, int]:
 
         # The pick columns are all columns from the second (index 1) up to, but not including, the last column.
         # df.columns[1:-1] selects all 'Week_X' columns.
-        pick_columns = df.columns[1:-1]
+        status_column_name = df.columns[-1]
+        pick_columns = df.columns[1:-2]
+        st.write(status_column_name)
+        st.write(pick_columns)
+
         
         # 3. Stack the relevant columns to put all picks into a single column
         # This converts the wide format (Week_1, Week_2...) into a long format.

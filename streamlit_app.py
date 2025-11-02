@@ -27,6 +27,7 @@ import undetected_chromedriver as uc
 import os
 import json
 import sqlite3
+from typing import Dict
 
 
 circa_total_entries = 18714

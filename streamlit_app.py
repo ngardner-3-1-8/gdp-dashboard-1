@@ -4074,7 +4074,7 @@ def calculate_historical_pick_percentages(file_path: str) -> Dict[str, float]:
         
         # Subtract from 1 to get the percentage of remaining entries *not* having picked the team
         historical_pick_percentages = round((1.0 - pick_proportions), 4)
-		st.write(historical_pick_percentages)
+        st.write(historical_pick_percentages)
 
         # 6. Convert the pandas Series to a dictionary for return
         return historical_pick_percentages.to_dict()

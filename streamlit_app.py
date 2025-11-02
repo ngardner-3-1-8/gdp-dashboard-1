@@ -4003,7 +4003,7 @@ def calculate_alive_entries(file_path: str) -> int:
 import pandas as pd
 from typing import Dict
 
-def calculate_historical_pick_percentages(file_path: str) -> Dict[str, float]:
+def calculate_historical_pick_percentages(file_path: str) -> Dict[str, int]:
     """
     Reads the contest entries file and calculates pick percentages for alive entries.
     """

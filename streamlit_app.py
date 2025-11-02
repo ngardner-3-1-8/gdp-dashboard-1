@@ -4005,58 +4005,84 @@ from typing import Dict
 import pandas as pd
 from typing import Dict
 
-def calculate_historical_pick_counts(file_path: str) -> Dict[str, int]:
+import pandas as pd
+from typing import Dict
+
+def calculate_historical_pick_percentages(file_path: str) -> Dict[str, float]:
     """
-    Reads the contest entries file and calculates the total number of times each
-    team has been picked across all 'Week_X' columns.
+    Reads the contest entries file, filters for 'ALIVE' entries, and calculates
+    the percentage of *remaining* entries that *have NOT* picked each team
+    across all 'Week_X' columns by summing counts from each week separately.
 
     Args:
         file_path: The path to the CSV file (DB_FILE).
 
     Returns:
         A dictionary where keys are team names (e.g., 'BEARS PK') and values are
-        the total number of times they were picked historically.
+        the calculated float percentage (1 - (Pick Count / Total Alive Entries)).
         Returns an empty dictionary on error.
     """
     try:
         # 1. Read the CSV file into a pandas DataFrame
         df = pd.read_csv(file_path)
 
-        # 2. Identify the pick columns (all columns except the first and the last)
-        # The columns are: EntryName, Week_1, Week_2, ..., Week_N (Status)
-        # We want to aggregate Weeks 1, 2, 3, etc.
-        
-        # Check if there are any pick columns to process
+        # 2. Identify the pick columns and status column
         if len(df.columns) <= 2:
-            # Only 'EntryName' and Status column exist, meaning no picks yet.
-            st.write("No pick columns found in the file.")
+            print("No pick columns found in the file.")
             return {}
 
-        # The pick columns are all columns from the second (index 1) up to, but not including, the last column.
-        # df.columns[1:-1] selects all 'Week_X' columns.
         status_column_name = df.columns[-1]
-        pick_columns = df.columns[1:-2]
-        st.write(status_column_name)
-        st.write(pick_columns)
-
+        pick_columns = df.columns[1:-1]
         
-        # 3. Stack the relevant columns to put all picks into a single column
-        # This converts the wide format (Week_1, Week_2...) into a long format.
-        # .stack() effectively treats the entire block of selected columns as one long list of picks.
-        all_picks_series = df[pick_columns].stack(dropna=True)
+        # 3. Filter the DataFrame to only include 'ALIVE' entries
+        df_alive = df[df[status_column_name] == 'ALIVE']
+        
+        # Calculate the total number of alive entries (the denominator)
+        total_alive_entries = len(df_alive)
+        print(total_alive_entries)
 
-        # 4. Count the occurrences of each team pick across the entire series
-        # The result is a pandas Series where the index is the team name and the value is the total count.
-        historical_pick_counts = all_picks_series.value_counts()
+        if total_alive_entries == 0:
+            print("No 'ALIVE' entries found to process.")
+            return {}
 
-        # 5. Convert the pandas Series to a dictionary for return
-        return historical_pick_counts.to_dict()
+        # 4. Calculate pick counts by summing weekly counts
+        # Initialize a Series to hold the total counts
+        total_pick_counts = pd.Series(dtype=int)
+
+        print(f"Processing {len(pick_columns)} pick columns...")
+
+        # Loop through each 'Week_X' column individually
+        for column in pick_columns:
+            # Get the picks for the current week from ALIVE entries
+            weekly_picks = df_alive[column].dropna()
+            
+            # CRITICAL FIX: Ensure only string (team names) picks are counted.
+            # This prevents non-string values like False/True/numbers from causing errors.
+            valid_weekly_picks = weekly_picks[weekly_picks.apply(lambda x: isinstance(x, str))]
+            
+            # Count the occurrences for this week
+            weekly_counts = valid_weekly_picks.value_counts()
+            
+            # Add the current week's counts to the running total
+            # .add(..., fill_value=0) ensures teams not picked this week are still tracked with a count of 0
+            total_pick_counts = total_pick_counts.add(weekly_counts, fill_value=0)
+
+        # 5. Calculate the desired percentage for each team
+        
+        # Ensure the total_pick_counts is a float for division
+        pick_proportions = total_pick_counts.astype(float) / total_alive_entries
+        
+        # Subtract from 1 to get the percentage of remaining entries *not* having picked the team
+        historical_pick_percentages = round((1.0 - pick_proportions), 4)
+
+        # 6. Convert the pandas Series to a dictionary for return
+        return historical_pick_percentages.to_dict()
 
     except FileNotFoundError:
         print(f"Error: The file '{file_path}' was not found.")
         return {}
     except Exception as e:
-        print(f"An error occurred while processing the file: {e}")
+        print(f"An error occurred while processing the file. The original error was: {e}")
         return {}
 
 
@@ -4474,7 +4500,7 @@ else:
             args=('provide_availability',)
         )
     else: 
-        historical_picks = calculate_historical_pick_counts(DB_FILE)
+        historical_picks = calculate_historical_pick_percentages(DB_FILE)
         st.write(historical_picks)
 
     if st.session_state.current_config['provide_availability']:

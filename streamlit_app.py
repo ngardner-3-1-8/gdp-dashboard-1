@@ -4470,7 +4470,7 @@ else:
         )
     else: 
         historical_picks = calculate_historical_pick_counts(DB_FILE)
-        print(historical_picks)
+        st.write(historical_picks)
 
     if st.session_state.current_config['provide_availability']:
         st.write("Set availability % (0-100). Use -1 to estimate automatically.")

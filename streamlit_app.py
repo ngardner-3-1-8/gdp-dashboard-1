@@ -3999,14 +3999,6 @@ def calculate_alive_entries(file_path: str) -> int:
     except Exception as e:
         st.error(f"An error occurred while processing the file: {e}")
         return 0
-import pandas as pd
-from typing import Dict
-
-import pandas as pd
-from typing import Dict
-
-import pandas as pd
-from typing import Dict
 
 def calculate_historical_pick_percentages(file_path: str) -> Dict[str, float]:
     """
@@ -4074,7 +4066,6 @@ def calculate_historical_pick_percentages(file_path: str) -> Dict[str, float]:
         
         # Subtract from 1 to get the percentage of remaining entries *not* having picked the team
         historical_pick_percentages = round((1.0 - pick_proportions), 4)
-        st.write(historical_pick_percentages)
 
         # 6. Convert the pandas Series to a dictionary for return
         return historical_pick_percentages.to_dict()

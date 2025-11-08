@@ -12,3 +12,5 @@ Authlib
 datetime
 selenium
 undetected-chromedriver
+polars
+nflreadpy

@@ -5220,11 +5220,18 @@ else:
                 inner_key = team_abbr # IMPORTANT: Use the abbreviation here
                 widget_key = f"{outer_key}_{inner_key}_widget".replace(" ", "_")
                 
-                # Get current value from the config (it is now the live value if auto)
-                current_val_float = st.session_state.current_config[outer_key].get(inner_key, -1.0)
+                # --- FIX APPLIED HERE ---
+                # Get current value from the config 
+                current_val_raw = st.session_state.current_config[outer_key].get(inner_key, -1.0)
+                
+                # CRITICAL FIX: Ensure the value is a float before comparison
+                try:
+                    current_val_float = float(current_val_raw)
+                except (ValueError, TypeError):
+                    current_val_float = -1.0 
                 
                 # Convert float value (-1.0 to 1.0) to integer slider value (-1 to 100)
-                if current_val_float is None or current_val_float < 0:
+                if current_val_float < 0: # Comparison now safe
                     current_val_int = -1
                 else:
                     current_val_int = int(current_val_float * 100) # Convert to integer for slider (0..100)
@@ -5239,15 +5246,22 @@ else:
                     args=(outer_key, inner_key)
                 )
                 
+                # --- FIX APPLIED HERE ---
                 # Display current setting from the dictionary
-                display_val = st.session_state.current_config[outer_key].get(inner_key, -1.0)
-                if display_val < 0:
+                display_val_raw = st.session_state.current_config[outer_key].get(inner_key, -1.0)
+
+                # CRITICAL FIX: Ensure the value is a float before comparison/display formatting
+                try:
+                    display_val = float(display_val_raw)
+                except (ValueError, TypeError):
+                    display_val = -1.0 
+
+                if display_val < 0: # Comparison now safe
                      st.caption(":red[Auto]")
                 else:
                      st.caption(f":green[{display_val*100:.0f}%]")
     
             col_idx = (col_idx + 1) % num_cols
-
     if st.session_state.current_config['provide_availability']:
         st.write("Set availability % (0-100). Use -1 to estimate automatically.")
         

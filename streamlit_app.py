@@ -4855,7 +4855,7 @@ else:
             'ending_week': 21, # Default to Circa max
             'current_week_entries': -1,
             'use_live_data': False,
-            'team_availabilities': {abbr: -1.0 for abbr in team_abbreviations},
+            'team_availabilities': {team: -1.0 for team in nfl_teams},
             'provide_availability': False,
             'require_team': False,
             'required_weeks': {team: 0 for team in nfl_teams},

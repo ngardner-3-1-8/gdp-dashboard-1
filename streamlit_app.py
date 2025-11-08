@@ -4780,6 +4780,44 @@ def calculate_team_availability(historical_data_path, picks_data_path, config):
     df_availability['Availability_Percent_Float'] = pd.to_numeric(df_availability['Availability_Percent'], errors='coerce')
     df_availability = df_availability.sort_values(by='Availability_Percent_Float', ascending=False).drop(columns=['Availability_Percent_Float'])
 
+    # Map team abbreviations to full names
+    abbreviations_to_full_name = {
+        "ARI": "Arizona Cardinals",
+        "ATL": "Atlanta Falcons",
+        "BAL": "Baltimore Ravens",
+        "BUF": "Buffalo Bills",
+        "CAR": "Carolina Panthers",
+        "CHI": "Chicago Bears",
+        "CIN": "Cincinnati Bengals",
+        "CLE": "Cleveland Browns",
+        "DAL": "Dallas Cowboys",
+        "DEN": "Denver Broncos",
+        "DET": "Detroit Lions",
+        "GB": "Green Bay Packers",
+        "HOU": "Houston Texans",
+        "IND": "Indianapolis Colts",
+        "JAX": "Jacksonville Jaguars",
+        "KC": "Kansas City Chiefs",
+        "LV": "Las Vegas Raiders",
+        "LAC": "Los Angeles Chargers",
+        "LAR": "Los Angeles Rams",
+        "MIA": "Miami Dolphins",
+        "MIN": "Minnesota Vikings",
+        "NE": "New England Patriots",
+        "NO": "New Orleans Saints",
+        "NYG": "New York Giants",
+        "NYJ": "New York Jets",
+        "PHI": "Philadelphia Eagles",
+        "PIT": "Pittsburgh Steelers",
+        "SF": "San Francisco 49ers",
+        "SEA": "Seattle Seahawks",
+        "TB": "Tampa Bay Buccaneers",
+        "TEN": "Tennessee Titans",
+        "WAS": "Washington Commanders"
+    }
+    
+    df_availability['Team'] = df_availability['Team'].map(abbreviations_to_full_name)
+
     print("\n--- Availability Calculation Complete ---")
     return df_availability
 

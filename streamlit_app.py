@@ -2288,48 +2288,53 @@ def get_predicted_pick_percentages(pd, config: dict, schedule_df: pd.DataFrame):
     nfl_schedule_df['Home Team Expected Availability'] = 1.0
     nfl_schedule_df['Away Team Expected Availability'] = 1.0
 
-    # Helper mapping for conversion utility (Abbreviation to Full Name)
-    TEAM_ABBR_TO_NAME = {abbr: name for name, abbr in TEAM_NAME_TO_ABBR.items()}
+    def get_expected_availability(team_abbr, availability_dict):
+        # Map team abbreviations to full names
+        team_name_map = {
+            "ARI": "Arizona Cardinals",
+            "ATL": "Atlanta Falcons",
+            "BAL": "Baltimore Ravens",
+            "BUF": "Buffalo Bills",
+            "CAR": "Carolina Panthers",
+            "CHI": "Chicago Bears",
+            "CIN": "Cincinnati Bengals",
+            "CLE": "Cleveland Browns",
+            "DAL": "Dallas Cowboys",
+            "DEN": "Denver Broncos",
+            "DET": "Detroit Lions",
+            "GB": "Green Bay Packers",
+            "HOU": "Houston Texans",
+            "IND": "Indianapolis Colts",
+            "JAX": "Jacksonville Jaguars",
+            "KC": "Kansas City Chiefs",
+            "LV": "Las Vegas Raiders",
+            "LAC": "Los Angeles Chargers",
+            "LAR": "Los Angeles Rams",
+            "MIA": "Miami Dolphins",
+            "MIN": "Minnesota Vikings",
+            "NE": "New England Patriots",
+            "NO": "New Orleans Saints",
+            "NYG": "New York Giants",
+            "NYJ": "New York Jets",
+            "PHI": "Philadelphia Eagles",
+            "PIT": "Pittsburgh Steelers",
+            "SF": "San Francisco 49ers",
+            "SEA": "Seattle Seahawks",
+            "TB": "Tampa Bay Buccaneers",
+            "TEN": "Tennessee Titans",
+            "WAS": "Washington Commanders"
+        }
     
+        # Convert abbreviation to full name
+        team_full_name = team_name_map.get(team_abbr, team_abbr)
     
-    def convert_availability_to_full_names(abbr_availability_dict, abbr_to_name_map):
-        """
-        Converts a dictionary keyed by team abbreviations into one keyed by
-        full team names, using the provided abbreviation-to-name mapping.
-        """
-        name_availability_dict = {}
-        for abbr, availability_value in abbr_availability_dict.items():
-            full_name = abbr_to_name_map.get(abbr)
-            if full_name:
-                name_availability_dict[full_name] = availability_value
-            else:
-                # Handle cases where an abbreviation might be present but not in the map
-                print(f"Warning: Abbreviation '{abbr}' not found in mapping.")
-                
-        return name_availability_dict
+        # Get availability from dictionary using full name
+        availability = availability_dict.get(team_full_name)
     
-    
-    def get_expected_availability(full_team_name, availability_dict):
-        """
-        Retrieves the expected availability using the full team name.
-        
-        Args:
-            full_team_name (str): The full name of the team (e.g., "Dallas Cowboys").
-            availability_dict (dict): A dictionary keyed by full team names, with 
-                                      availability values (0.0 to 1.0) or -1.0 
-                                      (indicating user selection of default/max).
-                                      
-        Returns:
-            float: The team's availability (defaults to 1.0 if selected as -1 or missing).
-        """
-        # 1. Look up using the full team name
-        availability = availability_dict.get(full_team_name)
-        
         st.write("AVAILABILITY DICTIONARY")
         st.write(availability_dict)
-        
-        # 2. Check if the value is -1 (from the Streamlit slider) OR None (if team is missing)
-        # We maintain the check for <= -.01 to align with your original logic for Streamlit slider defaults.
+    
+        # Handle missing or invalid values
         if availability is None or availability <= -0.01:
             return 1.0
         else:

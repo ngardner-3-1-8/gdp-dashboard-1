@@ -1906,6 +1906,8 @@ def get_predicted_pick_percentages(pd, config: dict, schedule_df: pd.DataFrame):
         df = pd.read_csv('DK_historical_data.csv')
     else:
         df = pd.read_csv('DK_historical_data.csv')
+    if df['Week'].dtype == 'object':
+        df['Week'] = df['Week'].str.extract(r'(\d+)').astype(int)
     df.rename(columns={"Week": "Date"}, inplace=True)
     df['Pick %'].fillna(0.0, inplace=True)
     

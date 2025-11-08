@@ -4595,7 +4595,7 @@ def calculate_alive_entries(file_path: str, config: dict) -> int:
     status_column_name = df['Total_Wins']
 
     # 3. Filter the DataFrame and count the entries where the status is 'ALIVE'
-    alive_entries_count = status_column_name >= (start_w - 1).sum()
+    alive_entries_count = (df['Total Wins'] >= (start_w - 1)).sum()
 
     return alive_entries_count
 

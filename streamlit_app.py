@@ -1906,8 +1906,7 @@ def get_predicted_pick_percentages(pd, config: dict, schedule_df: pd.DataFrame):
         df = pd.read_csv('DK_historical_data.csv')
     else:
         df = pd.read_csv('DK_historical_data.csv')
-    if df['Week'].dtype == 'object':
-        df['Week'] = df['Week'].str.extract(r'(\d+)').astype(int)
+
     df.rename(columns={"Week": "Date"}, inplace=True)
     df['Pick %'].fillna(0.0, inplace=True)
     
@@ -1979,14 +1978,13 @@ def get_predicted_pick_percentages(pd, config: dict, schedule_df: pd.DataFrame):
                         'Home Team Fair Odds', 'Away Team Star Rating', 'Home Team Star Rating', 'Divisional Matchup Boolean', 'Away Team Thanksgiving Favorite', 'Home Team Thanksgiving Favorite', 'Away Team Christmas Favorite', 'Home Team Christmas Favorite', 'Away Team Public Pick %', 'Home Team Public Pick %']
     
     new_df = new_df[selected_columns]
-    
     # ... (Your week filtering code) ...
     if new_df['Week'].dtype == 'object':
-        new_df['Week_Number'] = new_df['Week'].str.split(' ').str[1].astype(int)
+        new_df['Week'] = new_df['Week'].str.split(' ').str[1].astype(int)
     else:
-        new_df['Week_Number'] = new_df['Week']
-    new_df = new_df[new_df['Week_Number'] >= starting_week]
-    new_df = new_df.drop(columns=['Week_Number'])
+        new_df['Week'] = new_df['Week']
+    new_df = new_df[new_df['Week'] >= starting_week]
+    new_df = new_df.drop(columns=['Week'])
 
     # --- NEW: Check if public pick data is available for this week's predictions ---
     # We check one column; you said it's all-or-nothing for a week.

@@ -1811,46 +1811,41 @@ def collect_schedule_travel_ranking_data(pd, config: dict, schedule_rows):
         'row' is a row from week_df.
         'team_type' is either 'home' or 'away'.
         """
-        try:
-            # 1. Get week number (e.g., "Week 10" -> 10)
-            week_num = int(row["Week_x"].replace("Week ", ""))
-            
-            # 2. Get the full team name and identify if we seek a home or away team
-            if team_type == 'home':
-                team_name = row["Home Team"]
-                is_away_flag = 0 # The 'Away Team' flag in public_pick_df should be 0
-            elif team_type == 'away':
-                team_name = row["Away Team"]
-                is_away_flag = 1 # The 'Away Team' flag in public_pick_df should be 1
-            else:
-                return np.nan # Invalid team_type
-    
-            # 3. Convert the full team name ("Carolina Panthers") to its abbreviation ("CAR")
-            team_abbr = team_name_to_abbr_map.get(team_name)
-            
-            if not team_abbr:
-                # print(f"Warning: Could not find abbreviation for {team_name}")
-                return np.nan # Team name not in our map
-    
-            # 4. Find the matching row in public_pick_df
-            # We filter by the integer week, the team abbreviation, and the home/away flag
-            match = public_pick_df[
-                (public_pick_df["Week"] == week_num) &
-                (public_pick_df["Team"] == team_abbr) &
-                (public_pick_df["Away Team"] == is_away_flag)
-            ]
-    
-            # 5. Return the value if found, otherwise return NaN
-            if not match.empty:
-                # .values[0] gets the first (and should be only) matching value
-                return match["Public Pick %"].values[0]
-            else:
-                # No match found in public_pick_df for this team/week
-                return np.nan
-    
-        except Exception as e:
-            # Catch any errors (like failed int conversion)
-            # print(f"Error processing row: {e}")
+        
+        # 1. Get week number (e.g., "Week 10" -> 10)
+        week_num = row["Week_Num"]
+        
+        # 2. Get the full team name and identify if we seek a home or away team
+        if team_type == 'home':
+            team_name = row["Home Team"]
+            is_away_flag = 0 # The 'Away Team' flag in public_pick_df should be 0
+        elif team_type == 'away':
+            team_name = row["Away Team"]
+            is_away_flag = 1 # The 'Away Team' flag in public_pick_df should be 1
+        else:
+            return np.nan # Invalid team_type
+
+        # 3. Convert the full team name ("Carolina Panthers") to its abbreviation ("CAR")
+        team_abbr = team_name_to_abbr_map.get(team_name)
+        
+        if not team_abbr:
+            # print(f"Warning: Could not find abbreviation for {team_name}")
+            return np.nan # Team name not in our map
+
+        # 4. Find the matching row in public_pick_df
+        # We filter by the integer week, the team abbreviation, and the home/away flag
+        match = public_pick_df[
+            (public_pick_df["Week"] == week_num) &
+            (public_pick_df["Team"] == team_abbr) &
+            (public_pick_df["Away Team"] == is_away_flag)
+        ]
+
+        # 5. Return the value if found, otherwise return NaN
+        if not match.empty:
+            # .values[0] gets the first (and should be only) matching value
+            return match["Public Pick %"].values[0]
+        else:
+            # No match found in public_pick_df for this team/week
             return np.nan
     
     # --- Apply the function to your week_df ---

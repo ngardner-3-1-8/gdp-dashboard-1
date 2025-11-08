@@ -4646,7 +4646,7 @@ def calculate_team_availability(historical_data_path, picks_data_path, config):
     
     print("df_picks successfully updated to use 'JAX' for all weekly columns.")
     # --- 2. Determine the Target Week (W_next) and Last Completed Week (W_max) ---
-    
+    st.write(df_picks)    
     # W_next is the week we are calculating availability FOR (start_w)
     W_next = start_w
     

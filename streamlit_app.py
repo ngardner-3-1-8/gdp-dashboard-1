@@ -5239,8 +5239,6 @@ else:
         # CONVERSION FIX: Use the correct column name 'Availability_Percent'
         live_availability_data = team_availability_df['Availability_Percent'].to_dict() 
         show_live_data = True
-        st.write("live_availability_data")
-        st.write(live_availability_data)
         # 3. Inject Live Data into Session State for "Auto" teams
         # This ensures that when the user toggles to 'provide_availability', 
         # the sliders are initialized with the live data unless they were previously overridden.
@@ -5266,7 +5264,7 @@ else:
     
     # Display the calculated live data and the checkbox for override
     if show_live_data:
-        st.subheader(f"Week {current_start_week} Team Availability (Live)")
+        st.write(f"**Week {current_start_week} Team Availability (Live)**")
         # We display the *calculated* DataFrame here, which shows the source of the data
         st.dataframe(team_availability_df)
         

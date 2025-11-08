@@ -2069,9 +2069,9 @@ def get_predicted_pick_percentages(pd, config: dict, schedule_df: pd.DataFrame):
     
     # --- Re-add columns for concatenation ---
     # (This part is to match your original column_order, you can adjust)
-    away_df['Pick %'] = away_df['Pick %'].fillna(None)
+    away_df['Pick %'] = away_df['Pick %'].fillna(value=None)
     away_df['EV'] = None
-    home_df['Pick %'] = home_df['Pick %'].fillna(None)
+    home_df['Pick %'] = home_df['Pick %'].fillna(value=None)
     home_df['EV'] = None
     
     pick_predictions_df = pd.concat([away_df, home_df], ignore_index=True)

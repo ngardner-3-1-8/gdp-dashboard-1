@@ -4586,77 +4586,132 @@ def update_pick_percentage(week, team_name):
 st.set_page_config(layout="wide") # Use wide layout
 
 
-def calculate_alive_entries(file_path: str) -> int:
-    try:
-        # 1. Read the CSV file into a pandas DataFrame
-        df = pd.read_csv(file_path)
-
-        # 2. Dynamically identify the final column (which holds the status)
-        # This works because you stated the status is always in the last column.
-        status_column_name = df.columns[-1]
-
-        # 3. Filter the DataFrame and count the entries where the status is 'ALIVE'
-        alive_entries_count = (df[status_column_name] == 'ALIVE').sum()
-
-        return alive_entries_count
-
-    except FileNotFoundError:
-        st.error(f"Error: The file '{file_path}' was not found.")
-        return 0
-    except Exception as e:
-        st.error(f"An error occurred while processing the file: {e}")
-        return 0
-
-def calculate_historical_pick_percentages(file_path: str) -> Dict[str, int]:
-    """
-    Reads the contest entries file and calculates pick percentages for alive entries.
-    """
-    # --- CRITICAL FIX for CParserError ---
+def calculate_alive_entries(file_path: str, config: dict) -> int:
+    # 1. Read the CSV file into a pandas DataFrame
     df = pd.read_csv(file_path)
-    # -------------------------------------
+    start_w = config['starting_week']
+    # 2. Dynamically identify the final column (which holds the status)
+    # This works because you stated the status is always in the last column.
+    status_column_name = df['Total_Wins']
 
-    # Assuming the last column is the status column (e.g., Week_9)
-    if df.empty:
-        print("DataFrame is empty after reading the CSV. Check file contents/path.")
-        return {}
+    # 3. Filter the DataFrame and count the entries where the status is 'ALIVE'
+    alive_entries_count = (df[status_column_name] >= (start_w - 1).sum()
 
-    # Standard columns are EntryName, Week_1, ..., Week_N (Status)
-    status_column_name = df.columns[-1]
-    # Pick columns are everything except the first (EntryName) and last (Status)
-    pick_columns = df.columns[1:-1]
+    return alive_entries_count
+
+def calculate_team_availability(historical_data_path, picks_data_path, config)
+    """
+    Calculates the availability of each team for the target week (start_w) in the 
+    Circa Survivor Contest, based on the picks made up to the week prior (W_max).
+
+    Availability is defined as the percentage of currently 'alive' entries 
+    (Total_Wins >= W_max) that have NOT yet used a given team.
+
+    Args:
+        historical_data_path: File path to the Circa historical data (used to find all team names).
+        picks_data_path: File path to the survivor picks history (used to find usage).
+        start_w: The week number for which availability should be calculated (e.g., Week 5).
+
+    Returns:
+        A pandas DataFrame with team, next week, availability percentage, and counts,
+        or None if an error occurs.
+    """
     
-    # Filter the DataFrame to only include 'ALIVE' entries
-    # The 'ALIVE' value is in the last column
-    df_alive = df[df[status_column_name].str.strip() == 'ALIVE']
+    print(f"Loading data from: {historical_data_path} and {picks_data_path}")
+
+    # --- 1. Load Data ---
+
+    df_hist = pd.read_csv(historical_data_path, low_memory=False)
+    df_picks = pd.read_csv(picks_data_path, low_memory=False)
+    start_w = config['starting_week']
+
+    # --- 2. Determine the Target Week (W_next) and Last Completed Week (W_max) ---
     
-    total_alive_entries = len(df_alive)
+    # W_next is the week we are calculating availability FOR (start_w)
+    W_next = start_w
+    
+    # W_max is the last completed week (the last week entries had to survive)
+    if W_next <= 1:
+        # If calculating for Week 1, W_max is 0
+        W_max = 0
+    else:
+        W_max = W_next - 1
+    
+    print(f"\n--- Analysis Parameters ---")
+    print(f"Target availability week (W_next): {W_next} (Source: config['starting_week'])")
+    print(f"Last completed pick week (W_max): {W_max}")
 
-    if total_alive_entries == 0:
-        print("No 'ALIVE' entries found to process.")
-        return {}
+    # Define the columns that represent the picks made up to the last completed week
+    # This list will be empty if W_max is 0
+    pick_cols_theoretical = [f'Week_{i}' for i in range(1, W_max + 1)]
+    
+    # Check for missing pick columns
+    available_pick_cols = [col for col in pick_cols_theoretical if col in df_picks.columns]
 
-    total_pick_counts = pd.Series(dtype=int)
+    if not available_pick_cols and W_max > 0:
+        print("ERROR: Picks data is missing columns for the necessary past weeks.")
+        return None
+    
+    pick_cols_to_use = available_pick_cols 
 
-    # 4. Calculate pick counts by summing weekly counts
-    for column in pick_columns:
-        # Get the picks for the current week from ALIVE entries
-        weekly_picks = df_alive.get(column, pd.Series()).dropna()
+    # --- 3. Filter Alive Entries ---
+    if 'Total_Wins' not in df_picks.columns:
+        print("ERROR: '2025_survivor_picks.csv' must contain a 'Total_Wins' column.")
+        return None
+
+    df_picks['Total_Wins_Numeric'] = pd.to_numeric(df_picks['Total_Wins'], errors='coerce').fillna(0)
+    # Entries are considered 'alive' if Total_Wins >= W_max 
+    df_alive = df_picks[df_picks['Total_Wins_Numeric'] >= W_max].copy()
+
+
+    N_alive = len(df_alive)
+    print(f"Total entries considered alive (Total_Wins >= {W_max}): {N_alive}")
+
+    if N_alive == 0:
+        print("\nNo entries are currently alive. Cannot calculate availability.")
+        return pd.DataFrame({'Team': [], 'Availability_Percent': []})
+
+
+    # --- 4 & 5. Calculate Availability for Each Team ---
+    
+    # Get the unique list of all teams from the historical data
+    all_teams_home = df_hist['Team'].dropna().unique()
+    all_teams_away = df_hist['Opponent'].dropna().unique()
+    all_teams = np.unique(np.concatenate((all_teams_home, all_teams_away)))
+
+    availability_list = []
+
+    for team in all_teams:
+        # Initialize mask for entries that have used this team
+        used_mask = pd.Series(False, index=df_alive.index)
         
-        # Filter for actual picks (strings ending in " PK") and ignore "ELIMINATED"
-        if not weekly_picks.empty:
-            valid_picks = weekly_picks[
-                (weekly_picks.apply(lambda x: isinstance(x, str))) & 
-                (weekly_picks != 'ELIMINATED')
-            ]
-            weekly_counts = valid_picks.value_counts()
-            total_pick_counts = total_pick_counts.add(weekly_counts, fill_value=0)
+        # Only check usage if W_max > 0 (i.e., we are past Week 1)
+        if W_max > 0:
+            for col in pick_cols_to_use:
+                if col in df_alive.columns:
+                    # Use str.strip() to handle potential whitespace in team names/picks
+                    used_mask = used_mask | (df_alive[col].astype(str).str.strip() == str(team).strip())
 
-    # 5. Calculate the desired percentage (1.0 - proportion)
-    pick_proportions = total_pick_counts.astype(float) / total_alive_entries
-    historical_pick_percentages = round((1.0 - pick_proportions), 4)
+        N_used = used_mask.sum()
+        N_available = N_alive - N_used
+        availability_percent = N_available / N_alive
+        
+        availability_list.append({
+            'Team': team,
+            'Availability_Week': W_next,
+            'Entries_Used_Count': N_used,
+            'Entries_Available_Count': N_available,
+            'Total_Alive_Entries': N_alive,
+            'Availability_Percent': f"{availability_percent:.4f}"
+        })
 
-    # 6. Convert the pandas Series to a dictionary for return
-    return historical_pick_percentages.to_dict()
+    # --- 6. Finalize and Return ---
+    df_availability = pd.DataFrame(availability_list)
+    df_availability['Availability_Percent_Float'] = pd.to_numeric(df_availability['Availability_Percent'], errors='coerce')
+    df_availability = df_availability.sort_values(by='Availability_Percent_Float', ascending=False).drop(columns=['Availability_Percent_Float'])
+
+    print("\n--- Availability Calculation Complete ---")
+    return df_availability
 
 
 
@@ -5074,7 +5129,7 @@ else:
             args=('provide_availability',)
         )
     else: 
-        historical_picks = calculate_historical_pick_percentages("2025_survivor_picks.csv")
+        team_availability = calculate_team_availability("Circa_historical_data.csv", "2025_survivor_picks.csv", config)
         st.write(historical_picks)
 
     if st.session_state.current_config['provide_availability']:

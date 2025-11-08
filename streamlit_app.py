@@ -27,8 +27,29 @@ import undetected_chromedriver as uc
 import os
 import json
 import sqlite3
-from typing import Dict
+import polars as pl 
+import nflreadpy as nfl
+import random
+import csv
+from typing import Optional
+from typing import Dict, List, Any
 
+starting_year = 2025 #Can go as far back as 2010 if you need to collect all new data. You shouldn't need to change this though
+current_year = 2025
+current_year_plus_1 = current_year + 1 #current_year + 1
+
+circa_2020_entries = 1373
+circa_2021_entries = 4071
+circa_2022_entries = 6106
+circa_2023_entries = 9234
+circa_2024_entries = 14221
+circa_2025_entries = 18718
+# ==============================================================================
+# SECTION 1: SURVIVORGRID.COM SCRAPING (UNCHANGED - nflreadpy CANNOT DO THIS)
+# ==============================================================================
+
+NUM_WEEKS_TO_KEEP = starting_week - 1
+current_year_plus_1 = current_year + 1 #current_year + 1
 
 circa_total_entries = 18714
 splash_big_splash_total_entries = 16337
@@ -1381,6 +1402,496 @@ def collect_schedule_travel_ranking_data(pd, config: dict, schedule_rows):
 
     # Set values based on 'Divisional Matchup?' column
     consolidated_df.loc[consolidated_df["Divisional Matchup?"] == True, "Divisional Matchup Boolean"] = 1
+
+    def scrape_data(url):
+        response = requests.get(url)
+        soup = BeautifulSoup(response.content, "lxml")
+        table_rows = soup.find_all("tr")
+    
+        data = []
+        for row in table_rows:
+            columns = row.find_all("td")
+            if len(columns) >= 5:
+                # Safely unpack columns, adjusting for potential length differences
+                # EV, win_pct, pick_pct, team, opponent are the first 5 columns we care about
+                if len(columns) < 5: continue # Skip if not enough columns
+    
+                ev, win_pct, pick_pct, team, opponent = columns[:5]
+                rest = columns[5:] # Any columns after opponent
+    
+                # This logic assumes the 'Future Value' is in the last cell of the row
+                future_value_cell = rest[-1] if rest else None
+    
+                if future_value_cell:
+                    # Extract the width value from the style attribute
+                    div_tag = future_value_cell.find("div")
+                    if div_tag and "style" in div_tag.attrs:
+                        style_attr = div_tag["style"]
+                        width_match = re.search(r"width:\s*(\d+)px", style_attr)
+                        if width_match:
+                            width_px = int(width_match.group(1))
+                            star_rating = width_px / 16  # Assuming each star is 16px wide
+                        else:
+                            star_rating = 0
+                    else:
+                        star_rating = 0
+                else:
+                    star_rating = 0  # No "Future Value" column/cell
+    
+                data.append({
+                    "EV": ev.text,
+                    "Win %": win_pct.text,
+                    "Pick %": pick_pct.text,
+                    "Team": team.text,
+                    "Opponent": opponent.text,
+                    "Future Value (Stars)": star_rating
+                })
+    
+        return data
+    
+    
+    # Create an empty list to store data
+    all_data = []
+    
+    # Iterate through desired weeks and years
+    base_url = "https://www.survivorgrid.com/{year}/{week}"
+    # NOTE: The loop runs from 2025 up to (but not including) 2026 for the year.
+    for year in tqdm(range(starting_year, current_year_plus_1), desc="Scraping data"):
+        # The week loop runs from 1 up to (but not including) starting_week (e.g., up to 6)
+        for week in tqdm(range(1, 19), desc=f"Year {year}"):
+            url = base_url.format(year=year, week=week)
+            # print(url) # Uncomment for detailed progress
+            week_data = scrape_data(url)
+            for row in week_data:
+                row["Year"] = year
+                row["Week"] = f"Week {week}"
+                all_data.append(row)
+            time.sleep(2)  # Pause for 2 seconds between requests
+    
+    # Convert the list of dictionaries to a DataFrame
+    public_pick_df = pd.DataFrame(all_data)
+    
+    # Cleanup the scraped data
+    public_pick_df['Team'] = public_pick_df['Team'].str.replace(r'\s\(L\)', '', regex=True)
+    public_pick_df['Team'] = public_pick_df['Team'].str.replace(r'\s\(W\)', '', regex=True)
+    public_pick_df['Opponent'] = public_pick_df['Opponent'].str.replace('@', '', regex=True)
+    public_pick_df['Opponent'] = public_pick_df['Opponent'].str.replace(r'[\t\n\+\-]', '', regex=True)
+    public_pick_df['Opponent'] = (
+        public_pick_df['Opponent']
+        .str.strip() # Strip whitespace
+        .str[:3]      # Get the first 3 characters
+        # Use regex to replace the 3rd character (index 2) with an empty string ('')
+        # if the 3rd character is a digit (\d).
+        .str.replace(r'^(.{2})\d$', r'\1', regex=True)
+    )
+    
+    public_pick_df = public_pick_df[public_pick_df['Opponent'] != 'BYE']
+    
+    public_pick_df = public_pick_df.drop_duplicates()
+    
+    public_pick_df.to_csv("Raw Pick Data.csv", index = False)
+    
+    # ==============================================================================
+    # SECTION 2: API DATA COLLECTION (REPLACED BY nflreadpy)
+    # ==============================================================================
+    
+    print(f"\nFetching NFL schedule and game results using nflreadpy from {starting_year} to {current_year}...")
+    
+    # Load the schedule data.
+    # The object returned here is a Polars DataFrame.
+    schedule_data_pl = nfl.load_schedules(list(range(starting_year, current_year + 1)))
+    # --- Data Processing using POLARS FILTERING ---
+    
+    # Filter 1: Exclude in-season future games (those with game_id ending in _XX)
+    # Use the .filter() method and the Polars `~` (NOT) operator
+    schedule_data_pl = schedule_data_pl.filter(
+        ~pl.col('game_id').str.contains(r'\_[0-9]{2}$')
+    )
+    
+    # Filter 2: Filter only Regular Season games
+    schedule_data_pl = schedule_data_pl.filter(
+        pl.col('game_type') == 'REG'
+    )
+    
+    # CONVERT TO PANDAS DATAFRAME BEFORE PROCEEDING
+    completed_games = schedule_data_pl.to_pandas()
+    
+    
+    # --- Data Processing to Match Your Old API Output Structure (Now back in Pandas) ---
+    
+    # Prepare columns for Winner/Loser determination and abbreviation mapping
+    # This part is now safe because `completed_games` is a Pandas DataFrame
+    completed_games.rename(columns={
+        'gameday': 'Calendar Date',
+        'week': 'Week', 
+        'home_team': 'Home Team',
+        'away_team': 'Away Team',
+        'home_score': 'Home Score',
+        'away_score': 'Away Score'
+    }, inplace=True)
+    
+    # Function to determine winner/loser
+    def determine_result(row):
+        home_score = row['Home Score']
+        away_score = row['Away Score']
+        if home_score > away_score:
+            return row['Home Team'], row['Away Team'], home_score, away_score
+        elif away_score > home_score:
+            return row['Away Team'], row['Home Team'], away_score, home_score
+        else:
+            # Note: nflreadpy data handles ties by having equal scores
+            return 'Tie', 'Tie', home_score, home_score
+    
+    # Apply the function
+    results = completed_games.apply(determine_result, axis=1, result_type='expand')
+    results.columns = ['Winner/tie', 'Loser/tie', 'PtsW', 'PtsL']
+    
+    # Merge the results back
+    df_nflreadpy_schedule = pd.concat([completed_games, results], axis=1)
+    
+    # Select and reorder columns to match your original script's output
+    df_api_schedule = df_nflreadpy_schedule[[
+        'season', 'Week', 'Calendar Date', 'Home Team', 'Away Team', 'Winner/tie', 'Loser/tie', 'PtsW', 'PtsL'
+    ]].copy()
+    
+    # Rename the season column to Year
+    df_api_schedule.rename(columns={'season': 'Year'}, inplace=True)
+    
+    # Drop any rows with NaN in critical columns (e.g., games not fully recorded)
+    df_api_schedule.dropna(subset=['Winner/tie', 'Loser/tie'], inplace=True)
+    
+    # Convert to string and clean up data types
+    df_api_schedule['Week'] = df_api_schedule['Week'].astype(int)
+    
+    df_api_schedule['Calendar Date'] = pd.to_datetime(df_api_schedule['Calendar Date'], errors='coerce')
+    df_api_schedule['Calendar Date'] = df_api_schedule['Calendar Date'].dt.strftime('%Y-%m-%d')
+    
+    historical_away_df = pd.read_csv('Historical Home and Away data.csv')
+    historical_away_df['Calendar Date'] = pd.to_datetime(
+        historical_away_df['Calendar Date'],
+        format='mixed',  # Instructs Pandas to infer the format for each string
+        dayfirst=False,  # Assuming your dates are year-first or month-first
+        errors='coerce'  # Highly recommended: turns unparsable strings into NaT
+    )
+    
+    # Optional: To ensure the time component is consistently 00:00:00 after conversion
+    historical_away_df['Calendar Date'] = historical_away_df['Calendar Date'].dt.normalize()
+    
+    historical_away_df['Calendar Date'] = historical_away_df['Calendar Date'].dt.strftime('%Y-%m-%d')
+    
+    df_api_schedule = pd.concat([historical_away_df, df_api_schedule], ignore_index=True)
+    
+    df_api_schedule['Home Team'] = df_api_schedule['Home Team'].replace('LA', 'LAR')
+    df_api_schedule['Home Team'] = df_api_schedule['Home Team'].replace('WAS', 'WSH')
+    df_api_schedule['Away Team'] = df_api_schedule['Away Team'].replace('LA', 'LAR')
+    df_api_schedule['Away Team'] = df_api_schedule['Away Team'].replace('WAS', 'WSH')
+    
+    df_api_schedule = df_api_schedule.drop_duplicates()
+    
+    df_api_schedule.to_csv("df_api_schedule.csv", index = False)
+    # ==============================================================================
+    # SECTION 3: DATA CLEANING AND MERGE (ADJUSTED FOR nflreadpy COLUMN NAMES)
+    # ==============================================================================
+    
+    # Your 'teams' dictionary for mapping is now **redundant for the schedule data**
+    # since nflreadpy already uses the abbreviations (e.g., ARI, BAL) that your
+    # web-scraped data uses. This simplifies the code significantly!        
+    
+    # Existing cleanup of the scraped data
+    public_pick_df = public_pick_df.replace(r'\u00A0\(W\)', '', regex=True)
+    public_pick_df = public_pick_df.replace(r'\u00A0\(L\)', '', regex=True)
+    public_pick_df = public_pick_df.replace(r'\u00A0\(tie\)', '', regex=True)
+    public_pick_df = public_pick_df.replace(r'\u00A0\(PPD\)', '', regex=True)
+    public_pick_df = public_pick_df.replace('--', '0.0%', regex=True)
+    # Select the desired columns
+    public_pick_df = public_pick_df[['EV', 'Win %', 'Pick %', 'Team', 'Opponent', 'Future Value (Stars)', 'Year', 'Week']]
+    
+    # Convert to numeric
+    public_pick_df['Win %'] = pd.to_numeric(public_pick_df['Win %'].str.rstrip('%')) / 100
+    public_pick_df['Pick %'] = pd.to_numeric(public_pick_df['Pick %'].str.rstrip('%')) / 100
+    public_pick_df['Pick %'].fillna(0.0, inplace=True)
+    public_pick_df['Public Pick %'] = public_pick_df['Pick %']
+    
+    # Convert 'Week' to integer representing the week number
+    public_pick_df['Week'] = public_pick_df['Week'].str.replace('Week ', '').astype(int)
+    # df['Week'] = pd.to_numeric(df['Week']) # This is now redundant after astype(int)
+    
+    # Use your existing 'teams' dictionary for *Division* mapping (still needed)
+    teams2 = {
+        # ... (Keep your original 'teams' dictionary here for Division mapping)
+        'ARI': ['Arizona Cardinals', 'State Farm Stadium', 33.5277, -112.262608, 'America/Denver', 'NFC West'],
+        'ATL': ['Atlanta Falcons', 'Mercedez-Benz Stadium', 33.757614, -84.400972, 'America/New_York', 'NFC South'],
+        'BAL': ['Baltimore Ravens', 'M&T Stadium', 39.277969, -76.622767, 'America/New_York', 'AFC North'],
+        'BUF': ['Buffalo Bills', 'Highmark Stadium', 42.773739, -78.786978, 'America/New_York', 'AFC East'],
+        'CAR': ['Carolina Panthers', 'Bank of America Stadium', 35.225808, -80.852861, 'America/New_York', 'NFC South'],
+        'CHI': ['Chicago Bears', 'Soldier Field', 41.862306, -87.616672, 'America/Chicago', 'NFC North'],
+        'CIN': ['Cincinnati Bengals', 'Paycor Stadium', 39.095442, -84.516039, 'America/New_York', 'AFC North'],
+        'CLE': ['Cleveland Browns', 'Cleveland Browns Stadium', 41.506022, -81.699564, 'America/New_York', 'AFC North'],
+        'DAL': ['Dallas Cowboys', 'AT&T Stadium', 32.747778, -97.092778, 'America/Chicago', 'NFC East'],
+        'DEN': ['Denver Broncos', 'Empower Field at Mile High', 39.743936, -105.020097, 'America/Denver', 'AFC West'],
+        'DET': ['Detroit Lions', 'Ford Field', 42.340156, -83.045808, 'America/New_York', 'NFC North'],
+        'GB': ['Green Bay Packers', 'Lambeau Field', 44.501306, -88.062167, 'America/Chicago', 'NFC North'],
+        'HOU': ['Houston Texans', 'NRG Stadium', 29.684781, -95.410956, 'America/Chicago', 'AFC South'],
+        'IND': ['Indianapolis Colts', 'Lucas Oil Stadium', 39.760056, -86.163806, 'America/New_York', 'AFC South'],
+        'JAX': ['Jacksonville Jaguars', 'Everbank Stadium', 30.323925, -81.637356, 'America/New_York', 'AFC South'],
+        'KC': ['Kansas City Chiefs', 'Arrowhead Stadium', 39.048786, -94.484566, 'America/Chicago', 'AFC West'],
+        'LV': ['Las Vegas Raiders', 'Allegiant Stadium', 36.090794, -115.183952, 'America/Los_Angeles', 'AFC West'],
+        'LAC': ['Los Angeles Chargers', 'SoFi Stadium', 33.953587, -118.33963, 'America/Los_Angeles', 'AFC West'],
+        'LAR': ['Los Angeles Rams', 'SoFi Stadium', 33.953587, -118.33963, 'America/Los_Angeles', 'NFC West'],
+        'LA': ['Los Angeles Rams', 'SoFi Stadium', 33.953587, -118.33963, 'America/Los_Angeles', 'NFC West'],
+        'MIA': ['Miami Dolphins', 'Hard Rock Stadium', 25.957919, -80.238842, 'America/New_York', 'AFC East'],
+        'MIN': ['Minnesota Vikings', 'U.S Bank Stadium', 44.973881, -93.258094, 'America/Chicago', 'NFC North'],
+        'NE': ['New England Patriots', 'Gillette Stadium', 42.090925, -71.26435, 'America/New_York', 'AFC East'],
+        'NO': ['New Orleans Saints', 'Caesars Superdome', 29.950931, -90.081364, 'America/Chicago', 'NFC South'],
+        'NYG': ['New York Giants', 'MetLife Stadium', 40.812194, -74.076983, 'America/New_York', 'NFC East'],
+        'NYJ': ['New York Jets', 'MetLife Stadium', 40.812194, -74.076983, 'America/New_York', 'AFC East'],
+        'PHI': ['Philadelphia Eagles', 'Lincoln Financial Field', 39.900775, -75.167453, 'America/New_York', 'NFC East'],
+        'PIT': ['Pittsburgh Steelers', 'Acrisure Stadium', 40.446786, -80.015761, 'America/New_York', 'AFC North'],
+        'SF': ['San Francisco 49ers', 'Levi\'s Stadium', 37.713486, -122.386256, 'America/Los_Angeles', 'NFC West'],
+        'SEA': ['Seattle Seahawks', 'Lumen Field', 47.595153, -122.331625, 'America/Los_Angeles', 'NFC West'],
+        'TB': ['Tampa Bay Buccaneers', 'Raymomd James Stadium', 27.975967, -82.50335, 'America/New_York', 'NFC South'],
+        'TEN': ['Tennessee Titans', 'Nissan Stadium', 36.166461, -86.771289, 'America/Chicago', 'AFC South'],
+        'WAS': ['Washington Commanders', 'FedExField', 38.907697, -76.864517, 'America/New_York', 'NFC East'],
+        'WSH': ['Washington Commanders', 'FedExField', 38.907697, -76.864517, 'America/New_York', 'NFC East']
+    }
+    
+    # Division mapping
+    public_pick_df['Team Division'] = public_pick_df['Team'].map(lambda team: teams.get(team, ['', '', '', '', '', ''])[5])
+    public_pick_df['Opponent Division'] = public_pick_df['Opponent'].map(lambda opponent: teams.get(opponent, ['', '', '', '', '', ''])[5])
+    public_pick_df['Divisional Matchup?'] = (public_pick_df['Team Division'] == public_pick_df['Opponent Division']).astype(int)
+    
+    # Load the historical data from the file created by nflreadpy
+    away_data_df = df_api_schedule
+    away_data_df['Calendar Date'] = pd.to_datetime(away_data_df['Calendar Date'])
+    
+    # Initialization of new columns
+    public_pick_df['Away Team'] = 0
+    public_pick_df[['Availability', 'Calculated Current Week Alive Entries', 'Calculated Current Week Picks', 'Winning Team']] = [0,0,0,0]
+    public_pick_df['Calendar Date'] = pd.NaT
+    
+    # Merge the dataframes directly (replacing the slow apply/lambda functions)
+    
+    # 1. Merge to get HOME/AWAY/WINNER
+    merged_schedule = pd.merge(
+        public_pick_df,
+        away_data_df[['Year', 'Week', 'Home Team', 'Away Team', 'Winner/tie']],
+        left_on=['Year', 'Week', 'Team'],
+        right_on=['Year', 'Week', 'Home Team'],
+        how='left',
+        suffixes=('', '_home') # Suffix for Home/Away columns when 'Team' is Home
+    )
+    
+    # Rename the column from the first merge to avoid a name conflict
+    merged_schedule = merged_schedule.rename(columns={'Away Team_home': 'Opponent_from_home_merge'})
+    
+    
+    # Merge again for when 'Team' is the Away Team
+    merged_schedule = pd.merge(
+        merged_schedule,
+        away_data_df[['Year', 'Week', 'Home Team', 'Away Team', 'Winner/tie']],
+        left_on=['Year', 'Week', 'Team'],
+        right_on=['Year', 'Week', 'Away Team'],
+        how='left',
+        suffixes=('_home', '_away') # Suffix for Home/Away columns when 'Team' is Away
+    )
+    
+    merged_schedule = merged_schedule.drop_duplicates(
+        subset=['Year', 'Week', 'Team'],
+        keep='first'
+    ).reset_index(drop=True)
+    
+    merged_schedule.to_csv("merged_schedule.csv", index= False)
+    
+    public_pick_df.to_csv("public_pick_df.csv", index= False)
+    
+    
+    
+    # Populate 'Away Team' (binary) and 'Winning Team' (binary)
+    public_pick_df['Away Team'] = (
+        merged_schedule['Away Team_away'].notna()
+    ).astype(int).values
+    
+    public_pick_df.to_csv("TEST.csv", index= False)
+    print("public_pick_df")
+    print(public_pick_df)
+    
+    print("Away Team Column")
+    print(public_pick_df['Away Team'])
+    
+    # Winning Team Logic:
+    # The team is the winner if it matches the 'Winner/tie' column from either merge
+    public_pick_df['Winning Team'] = (
+        (merged_schedule['Winner/tie_home'] == merged_schedule['Team']) | 
+        (merged_schedule['Winner/tie_away'] == merged_schedule['Team'])
+    ).fillna(0).astype(int).values
+    
+    # 2. Merge to get Calendar Date (using the cleaner merge logic from your original script)
+    home_dates = away_data_df[['Year', 'Week', 'Home Team', 'Calendar Date']].copy()
+    home_dates.rename(columns={'Home Team': 'Team_schedule', 'Calendar Date': 'Matched_Date'}, inplace=True)
+    away_dates = away_data_df[['Year', 'Week', 'Away Team', 'Calendar Date']].copy()
+    away_dates.rename(columns={'Away Team': 'Team_schedule', 'Calendar Date':'Matched_Date'}, inplace=True)
+    
+    
+    
+    schedule_lookup = pd.concat([home_dates, away_dates]).drop_duplicates(
+        subset=['Year', 'Week', 'Team_schedule']
+    ).reset_index(drop=True)
+    
+    schedule_lookup['Team_schedule'] = schedule_lookup['Team_schedule'].replace('LA', 'LAR')
+    # Merge with the lookup table for the date
+    merged_for_calendar_date = pd.merge(
+        public_pick_df.reset_index(), # Reset index to avoid merge issues
+        schedule_lookup,
+        left_on=['Year', 'Week', 'Team'],
+        right_on=['Year', 'Week', 'Team_schedule'],
+        how='left'
+    )
+    public_pick_df['Calendar Date'] = merged_for_calendar_date.set_index('index')['Matched_Date'].values
+    # Assuming your conversion worked, or you fix it like we discussed:
+    public_pick_df['Calendar Date'] = pd.to_datetime(public_pick_df['Calendar Date'], format='%Y-%m-%d')
+    #df['Calendar Date_String'] = df['Calendar Date'].dt.strftime('%m/%d/%Y')
+    
+    # Drop rows where 'Team Division' or 'Opponent Division' is an empty string
+    public_pick_df = public_pick_df[public_pick_df['Team Division'] != '']
+    public_pick_df = public_pick_df[public_pick_df['Opponent Division'] != '']
+    
+    public_pick_df = public_pick_df[public_pick_df['Year'] == current_year]
+    
+    public_pick_df = public_pick_df.drop_duplicates()
+    
+    public_pick_df['Calendar Date'] = pd.to_datetime(public_pick_df['Calendar Date'], format='%Y-%m-%d')
+    
+    # ... (The final date manipulation logic remains the same)
+    pre_circa_dates = {2010, 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019}
+    is_not_in_pre_circa = ~public_pick_df['Year'].isin(pre_circa_dates)
+    public_pick_df = public_pick_df[is_not_in_pre_circa]
+    
+    # Final date manipulation (e.g., correcting Thanksgiving/Christmas week numbers)
+    # NOTE: The df.loc assignments must be run *after* the Calendar Date is populated.
+    
+    # For Year 2025
+    condition_2025_date = (public_pick_df['Year'] == 2025) & (public_pick_df['Calendar Date'] >= pd.to_datetime('2025-11-29'))
+    public_pick_df.loc[condition_2025_date, 'Week'] += 1
+    condition_2025_week = (public_pick_df['Year'] == 2025) & (public_pick_df['Calendar Date'] >= pd.to_datetime('2025-12-26'))
+    public_pick_df.loc[condition_2025_week, 'Week'] += 1
+    
+    # For Year 2024
+    condition_2024_date = (public_pick_df['Year'] == 2024) & (public_pick_df['Calendar Date'] >= pd.to_datetime('2024-11-30'))
+    public_pick_df.loc[condition_2024_date, 'Week'] += 1
+    condition_2024_week = (public_pick_df['Year'] == 2024) & (public_pick_df['Calendar Date'] >= pd.to_datetime('2024-12-27'))
+    public_pick_df.loc[condition_2024_week, 'Week'] += 1
+    
+    # For Year 2023
+    condition_2023_date = (public_pick_df['Year'] == 2023) & (public_pick_df['Calendar Date'] >= pd.to_datetime('2023-11-25'))
+    public_pick_df.loc[condition_2023_date, 'Week'] += 1
+    condition_2023_week = (public_pick_df['Year'] == 2023) & (public_pick_df['Calendar Date'] >= pd.to_datetime('2023-12-25'))
+    public_pick_df.loc[condition_2023_week, 'Week'] += 1
+    
+    # For Year 2022
+    condition_2022_date = (public_pick_df['Year'] == 2022) & (public_pick_df['Calendar Date'] >= pd.to_datetime('2022-11-25'))
+    public_pick_df.loc[condition_2022_date, 'Week'] += 1
+    condition_2022_week = (public_pick_df['Year'] == 2022) & (public_pick_df['Calendar Date'] >= pd.to_datetime('2022-12-25'))
+    public_pick_df.loc[condition_2022_week, 'Week'] += 1
+    
+    # For Year 2021
+    condition_2021_date = (public_pick_df['Year'] == 2021) & (public_pick_df['Calendar Date'] >= pd.to_datetime('2021-11-26'))
+    public_pick_df.loc[condition_2021_date, 'Week'] += 1
+    
+    condition_2021_week = (public_pick_df['Year'] == 2021) & (public_pick_df['Calendar Date'] >= pd.to_datetime('2021-12-26'))
+    public_pick_df.loc[condition_2021_week, 'Week'] += 1
+    
+    # For Year 2020
+    condition_2020_date = (public_pick_df['Year'] == 2020) & (public_pick_df['Calendar Date'] >= pd.to_datetime('2020-11-27'))
+    public_pick_df.loc[condition_2020_date, 'Week'] += 1
+    
+    public_pick_df['EV'] = 0 
+    
+    
+    
+    public_pick_df = public_pick_df.drop_duplicates()
+    
+    
+    
+    # ==============================================================================
+    # SECTION 4: POPULATE week_df WITH PUBLIC PICK DATA
+    # ==============================================================================
+    
+    # This assumes 'week_df' already exists in your environment, as mentioned.
+    
+    print("Creating reverse team map for lookup...")
+    # Create a reverse map: {"Carolina Panthers": "CAR", "Chicago Bears": "CHI", ...}
+    # This is VITAL for linking week_df (full names) to public_pick_df (abbreviations)
+    try:
+        team_name_to_abbr_map = {details[0]: abbr for abbr, details in teams2.items()}
+    except NameError:
+        print("CRITICAL ERROR: 'teams' dictionary not defined. Cannot create lookup map.")
+        # Handle this error, perhaps by exiting
+        team_name_to_abbr_map = {}
+    
+    def get_public_pick_percent(row, team_type):
+        """
+        Looks up the public pick percentage from 'public_pick_df' for a team.
+        
+        'row' is a row from week_df.
+        'team_type' is either 'home' or 'away'.
+        """
+        try:
+            # 1. Get week number (e.g., "Week 10" -> 10)
+            week_num = int(row["Week"].replace("Week ", ""))
+            
+            # 2. Get the full team name and identify if we seek a home or away team
+            if team_type == 'home':
+                team_name = row["Home Team"]
+                is_away_flag = 0 # The 'Away Team' flag in public_pick_df should be 0
+            elif team_type == 'away':
+                team_name = row["Away Team"]
+                is_away_flag = 1 # The 'Away Team' flag in public_pick_df should be 1
+            else:
+                return np.nan # Invalid team_type
+    
+            # 3. Convert the full team name ("Carolina Panthers") to its abbreviation ("CAR")
+            team_abbr = team_name_to_abbr_map.get(team_name)
+            
+            if not team_abbr:
+                # print(f"Warning: Could not find abbreviation for {team_name}")
+                return np.nan # Team name not in our map
+    
+            # 4. Find the matching row in public_pick_df
+            # We filter by the integer week, the team abbreviation, and the home/away flag
+            match = public_pick_df[
+                (public_pick_df["Week"] == week_num2) &
+                (public_pick_df["Team"] == team_abbr) &
+                (public_pick_df["Away Team"] == is_away_flag)
+            ]
+    
+            # 5. Return the value if found, otherwise return NaN
+            if not match.empty:
+                # .values[0] gets the first (and should be only) matching value
+                return match["Public Pick %"].values[0]
+            else:
+                # No match found in public_pick_df for this team/week
+                return np.nan
+    
+        except Exception as e:
+            # Catch any errors (like failed int conversion)
+            # print(f"Error processing row: {e}")
+            return np.nan
+    
+    # --- Apply the function to your week_df ---
+    
+    print("Populating 'Away Team Public Pick %' in week_df...")
+    week_df["Away Team Public Pick %"] = week_df.apply(
+        lambda row: get_public_pick_percent(row, 'away'),
+        axis=1
+    )
+    
+    print("Populating 'Home Team Public Pick %' in week_df...")
+    week_df["Home Team Public Pick %"] = week_df.apply(
+        lambda row: get_public_pick_percent(row, 'home'),
+        axis=1
+    )
+    
+    print("Finished populating public pick percentages.")
 
     # Save the consolidated DataFrame to a single CSV file
 

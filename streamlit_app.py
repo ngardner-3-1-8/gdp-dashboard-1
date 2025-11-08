@@ -1919,7 +1919,7 @@ def get_predicted_pick_percentages(pd, config: dict, schedule_df: pd.DataFrame):
     
     # --- MODIFIED: Train Base Model (No Public Pick Data) ---
     print("Training base model (no public pick data)...")
-    base_features = ['Win %', 'Future Value (Stars)', 'Date', 'Away Team', 'Divisional Matchup?', 'Availability', 'Entry Remaining Percent']
+    base_features = ['Win %', 'Future Value (Stars)', 'Date', 'Away Team', 'Divisional Matchup?']
     X = df[base_features]
     y = df['Pick %']
 

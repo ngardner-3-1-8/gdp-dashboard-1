@@ -4443,6 +4443,7 @@ TEAM_NAME_TO_ABBR = {
     "New York Jets": "NYJ", "Philadelphia Eagles": "PHI", "Pittsburgh Steelers": "PIT", "San Francisco 49ers": "SF",
     "Seattle Seahawks": "SEA", "Tampa Bay Buccaneers": "TB", "Tennessee Titans": "TEN", "Washington Commanders": "WAS"
 }
+team_abbreviations = list(TEAM_NAME_TO_ABBR.values())
 
 # Contest Options
 contest_options = ["Circa", "Splash Sports", "Other"]

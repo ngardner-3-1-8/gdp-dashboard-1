@@ -1467,7 +1467,7 @@ def collect_schedule_travel_ranking_data(pd, config: dict, schedule_rows):
         status_text.text("✅ Data scraping complete!")
     
         return all_data
-    st.write("Starting data scrape...")
+    st.write("Collecting Live Public Pick Percentages...")
     all_data = scrape_all_data(starting_year, current_year_plus_1)
 
     st.success(f"Scraping complete! Retrieved {len(all_data)} rows.")

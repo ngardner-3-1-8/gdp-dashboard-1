@@ -4590,12 +4590,9 @@ def calculate_alive_entries(file_path: str, config: dict) -> int:
     # 1. Read the CSV file into a pandas DataFrame
     df = pd.read_csv(file_path)
     start_w = config['starting_week']
-    # 2. Dynamically identify the final column (which holds the status)
-    # This works because you stated the status is always in the last column.
-    status_column_name = df['Total_Wins']
 
     # 3. Filter the DataFrame and count the entries where the status is 'ALIVE'
-    alive_entries_count = (df['Total Wins'] >= (start_w - 1)).sum()
+    alive_entries_count = (df['Total_Wins'] >= (start_w - 1)).sum()
 
     return alive_entries_count
 

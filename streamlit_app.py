@@ -4599,7 +4599,7 @@ def calculate_alive_entries(file_path: str, config: dict) -> int:
 
     return alive_entries_count
 
-def calculate_team_availability(historical_data_path, picks_data_path, config)
+def calculate_team_availability(historical_data_path, picks_data_path, config):
     """
     Calculates the availability of each team for the target week (start_w) in the 
     Circa Survivor Contest, based on the picks made up to the week prior (W_max).

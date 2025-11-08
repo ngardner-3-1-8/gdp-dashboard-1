@@ -4433,6 +4433,16 @@ nfl_teams = [
     "New York Jets", "Philadelphia Eagles", "Pittsburgh Steelers", "San Francisco 49ers",
     "Seattle Seahawks", "Tampa Bay Buccaneers", "Tennessee Titans", "Washington Commanders"
 ]
+TEAM_NAME_TO_ABBR = {
+    "Arizona Cardinals": "ARI", "Atlanta Falcons": "ATL", "Baltimore Ravens": "BAL", "Buffalo Bills": "BUF",
+    "Carolina Panthers": "CAR", "Chicago Bears": "CHI", "Cincinnati Bengals": "CIN", "Cleveland Browns": "CLE",
+    "Dallas Cowboys": "DAL", "Denver Broncos": "DEN", "Detroit Lions": "DET", "Green Bay Packers": "GB",
+    "Houston Texans": "HOU", "Indianapolis Colts": "IND", "Jacksonville Jaguars": "JAX", "Kansas City Chiefs": "KC",
+    "Las Vegas Raiders": "LV", "Los Angeles Chargers": "LAC", "Los Angeles Rams": "LAR", "Miami Dolphins": "MIA",
+    "Minnesota Vikings": "MIN", "New England Patriots": "NE", "New Orleans Saints": "NO", "New York Giants": "NYG",
+    "New York Jets": "NYJ", "Philadelphia Eagles": "PHI", "Pittsburgh Steelers": "PIT", "San Francisco 49ers": "SF",
+    "Seattle Seahawks": "SEA", "Tampa Bay Buccaneers": "TB", "Tennessee Titans": "TEN", "Washington Commanders": "WAS"
+}
 
 # Contest Options
 contest_options = ["Circa", "Splash Sports", "Other"]
@@ -5130,7 +5140,37 @@ else:
             args=('use_live_data',) 
         )
 
-    if st.session_state.current_config['use_live_data'] == False:
+    nfl_teams = list(TEAM_NAME_TO_ABBR.keys())
+
+    live_availability_data = None
+    show_live_data = False
+    
+    # 2. Calculate live data early if needed
+    if st.session_state.current_config['use_live_data']:
+        # Calculate the team availability (DataFrame)
+        team_availability_df = calculate_team_availability("Circa_historical_data.csv", "2025_survivor_picks.csv", config)
+        
+        # CONVERSION FIX: Use the correct column name 'Availability_Percent'
+        live_availability_data = team_availability_df['Availability_Percent'].to_dict() 
+        show_live_data = True
+        
+        # 3. Inject Live Data into Session State for "Auto" teams
+        # This ensures that when the user toggles to 'provide_availability', 
+        # the sliders are initialized with the live data unless they were previously overridden.
+        for abbr, live_value in live_availability_data.items():
+            # Check if the team's current setting is the "Auto" sentinel value (-1.0)
+            current_config_value = st.session_state.current_config['team_availabilities'].get(abbr, -1.0)
+            
+            # Only inject the live value if the user hasn't set a custom value yet (i.e., it's still Auto)
+            if current_config_value < 0:
+                 st.session_state.current_config['team_availabilities'][abbr] = live_value
+    
+    # Display the calculated live data and the checkbox for override
+    if show_live_data:
+        st.subheader(f"Week {current_start_week} Team Availability (Live)")
+        # We display the *calculated* DataFrame here, which shows the source of the data
+        st.dataframe(team_availability_df)
+        
         st.checkbox(
             "Provide your own estimates for this week's availability for each team?",
             key='provide_availability_widget',
@@ -5138,10 +5178,60 @@ else:
             on_change=update_config_value,
             args=('provide_availability',)
         )
-    else: 
-        team_availability = calculate_team_availability("Circa_historical_data.csv", "2025_survivor_picks.csv", config)
-        st.subheader(f"Week {current_start_week} Team Availability")
-        st.write(team_availability)
+    else: # use_live_data == False
+        st.checkbox(
+            "Provide your own estimates for this week's availability for each team?",
+            key='provide_availability_widget',
+            value=st.session_state.current_config['provide_availability'],
+            on_change=update_config_value,
+            args=('provide_availability',)
+        )
+    
+    # --- Manual Availability Sliders ---
+    if st.session_state.current_config['provide_availability']:
+        st.write("Set availability % (0-100). Use -1 to estimate automatically.")
+        
+        # Use columns for better layout
+        num_cols = 2
+        cols = st.columns(num_cols)
+        col_idx = 0
+        
+        for team in nfl_teams:
+            # 4. Use the abbreviation for the internal key lookup
+            team_abbr = TEAM_NAME_TO_ABBR[team]
+            
+            with cols[col_idx]:
+                outer_key = 'team_availabilities'
+                inner_key = team_abbr # IMPORTANT: Use the abbreviation here
+                widget_key = f"{outer_key}_{inner_key}_widget".replace(" ", "_")
+                
+                # Get current value from the config (it is now the live value if auto)
+                current_val_float = st.session_state.current_config[outer_key].get(inner_key, -1.0)
+                
+                # Convert float value (-1.0 to 1.0) to integer slider value (-1 to 100)
+                if current_val_float is None or current_val_float < 0:
+                    current_val_int = -1
+                else:
+                    current_val_int = int(current_val_float * 100) # Convert to integer for slider (0..100)
+        
+                st.slider(
+                    f"{team}:",
+                    min_value=-1,
+                    max_value=100,
+                    key=widget_key,
+                    value=current_val_int,
+                    on_change=update_nested_value,
+                    args=(outer_key, inner_key)
+                )
+                
+                # Display current setting from the dictionary
+                display_val = st.session_state.current_config[outer_key].get(inner_key, -1.0)
+                if display_val < 0:
+                     st.caption(":red[Auto]")
+                else:
+                     st.caption(f":green[{display_val*100:.0f}%]")
+    
+            col_idx = (col_idx + 1) % num_cols
 
     if st.session_state.current_config['provide_availability']:
         st.write("Set availability % (0-100). Use -1 to estimate automatically.")

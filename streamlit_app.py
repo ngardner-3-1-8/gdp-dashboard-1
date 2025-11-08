@@ -2015,7 +2015,7 @@ def get_predicted_pick_percentages(pd, config: dict, schedule_df: pd.DataFrame):
     # Drop unwanted columns
     away_df.drop(columns=[
         'Home Team Fair Odds', 'Home Team Star Rating', 'Home Team Thanksgiving Favorite', 
-        'Home Team Christmas Favorite', 'Home Team Expected Availability', 
+        'Home Team Christmas Favorite',
         'Home Team Public Pick %' # Drop the other team's pick %
     ], inplace=True)
     
@@ -2038,7 +2038,7 @@ def get_predicted_pick_percentages(pd, config: dict, schedule_df: pd.DataFrame):
     # Drop unwanted columns
     home_df.drop(columns=[
         'Away Team Fair Odds', 'Away Team Star Rating', 'Away Team Thanksgiving Favorite', 
-        'Away Team Christmas Favorite', 'Away Team Expected Availability',
+        'Away Team Christmas Favorite',
         'Away Team Public Pick %' # Drop the other team's pick %
     ], inplace=True)
 

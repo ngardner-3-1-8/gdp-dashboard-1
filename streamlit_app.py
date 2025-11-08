@@ -2288,7 +2288,7 @@ def get_predicted_pick_percentages(pd, config: dict, schedule_df: pd.DataFrame):
     nfl_schedule_df['Home Team Expected Availability'] = 1.0
     nfl_schedule_df['Away Team Expected Availability'] = 1.0
 
-    def get_expected_availability(team_abbr, availability_dict):
+    def get_expected_availability(team_name, availability_dict):
         # Map team abbreviations to full names
         def expand_availability_keys(availability_dict):
             team_name_map = {
@@ -2335,7 +2335,7 @@ def get_predicted_pick_percentages(pd, config: dict, schedule_df: pd.DataFrame):
         availability_dict = expand_availability_keys(availability_dict)
 
         # Get availability from dictionary using full name
-        availability = availability_dict.get(team_full_name)
+        availability = availability_dict.get(team_name)
     
         st.write("AVAILABILITY DICTIONARY")
         st.write(availability_dict)

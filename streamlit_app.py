@@ -1567,21 +1567,7 @@ def collect_schedule_travel_ranking_data(pd, config: dict, schedule_rows):
     df_api_schedule['Calendar Date'] = pd.to_datetime(df_api_schedule['Calendar Date'], errors='coerce')
     df_api_schedule['Calendar Date'] = df_api_schedule['Calendar Date'].dt.strftime('%Y-%m-%d')
     
-    historical_away_df = pd.read_csv('Historical Home and Away data.csv')
-    historical_away_df['Calendar Date'] = pd.to_datetime(
-        historical_away_df['Calendar Date'],
-        format='mixed',  # Instructs Pandas to infer the format for each string
-        dayfirst=False,  # Assuming your dates are year-first or month-first
-        errors='coerce'  # Highly recommended: turns unparsable strings into NaT
-    )
-    
-    # Optional: To ensure the time component is consistently 00:00:00 after conversion
-    historical_away_df['Calendar Date'] = historical_away_df['Calendar Date'].dt.normalize()
-    
-    historical_away_df['Calendar Date'] = historical_away_df['Calendar Date'].dt.strftime('%Y-%m-%d')
-    
-    df_api_schedule = pd.concat([historical_away_df, df_api_schedule], ignore_index=True)
-    
+
     df_api_schedule['Home Team'] = df_api_schedule['Home Team'].replace('LA', 'LAR')
     df_api_schedule['Home Team'] = df_api_schedule['Home Team'].replace('WAS', 'WSH')
     df_api_schedule['Away Team'] = df_api_schedule['Away Team'].replace('LA', 'LAR')

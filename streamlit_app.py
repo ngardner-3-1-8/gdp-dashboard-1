@@ -1813,7 +1813,7 @@ def collect_schedule_travel_ranking_data(pd, config: dict, schedule_rows):
         """
         try:
             # 1. Get week number (e.g., "Week 10" -> 10)
-            week_num = int(row["Week"].replace("Week ", ""))
+            week_num = int(row["Week_x"].replace("Week ", ""))
             
             # 2. Get the full team name and identify if we seek a home or away team
             if team_type == 'home':

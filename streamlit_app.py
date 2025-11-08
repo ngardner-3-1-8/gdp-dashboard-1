@@ -1974,12 +1974,7 @@ def get_predicted_pick_percentages(pd, config: dict, schedule_df: pd.DataFrame):
 
     # --- FIX: Correcting your column name typo 'Publicj' ---
     selected_columns = ['Week', 'Away Team', 'Home Team', 'Away Team Fair Odds',
-                        'Home Team Fair Odds', 'Away Team Star Rating', 'Home Team Star Rating', 
-                        'Divisional Matchup Boolean', 'Away Team Thanksgiving Favorite', 
-                        'Home Team Thanksgiving Favorite', 'Away Team Christmas Favorite', 
-                        'Home Team Christmas Favorite', 'Entry Remaining Percent', 
-                        'Home Team Expected Availability', 'Away Team Expected Availability', 
-                        'Away Team Public Pick %', 'Home Team Public Pick %'] # Corrected typo
+                        'Home Team Fair Odds', 'Away Team Star Rating', 'Home Team Star Rating', 'Divisional Matchup Boolean', 'Away Team Thanksgiving Favorite', 'Home Team Thanksgiving Favorite', 'Away Team Christmas Favorite', 'Home Team Christmas Favorite', 'Away Team Pick %', 'Home Team Pick %']
     
     new_df = new_df[selected_columns]
     

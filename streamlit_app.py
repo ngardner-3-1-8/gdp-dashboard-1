@@ -1687,18 +1687,12 @@ def collect_schedule_travel_ranking_data(pd, config: dict, schedule_rows):
         keep='first'
     ).reset_index(drop=True)
     
-    merged_schedule.to_csv("merged_schedule.csv", index= False)
-    
-    public_pick_df.to_csv("public_pick_df.csv", index= False)
-    
-    
     
     # Populate 'Away Team' (binary) and 'Winning Team' (binary)
     public_pick_df['Away Team'] = (
         merged_schedule['Away Team_away'].notna()
     ).astype(int).values
     
-    public_pick_df.to_csv("TEST.csv", index= False)
     
     # Winning Team Logic:
     # The team is the winner if it matches the 'Winner/tie' column from either merge
@@ -1862,13 +1856,13 @@ def collect_schedule_travel_ranking_data(pd, config: dict, schedule_rows):
     # --- Apply the function to your week_df ---
     
     print("Populating 'Away Team Public Pick %' in week_df...")
-    week_df["Away Team Public Pick %"] = week_df.apply(
+    consolidated_df["Away Team Public Pick %"] = consolidated_df.apply(
         lambda row: get_public_pick_percent(row, 'away'),
         axis=1
     )
     
     print("Populating 'Home Team Public Pick %' in week_df...")
-    week_df["Home Team Public Pick %"] = week_df.apply(
+    consolidated_df["Home Team Public Pick %"] = consolidated_df.apply(
         lambda row: get_public_pick_percent(row, 'home'),
         axis=1
     )

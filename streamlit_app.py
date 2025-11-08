@@ -4622,6 +4622,29 @@ def calculate_team_availability(historical_data_path, picks_data_path, config):
     df_picks = pd.read_csv(picks_data_path, low_memory=False)
     start_w = config['starting_week']
 
+    # --- User Provided Data ---
+    correction_map = {
+        "ARI": "ARI", "ATL": "ATL", "BAL": "BAL", "BUF": "BUF",
+        "CAR": "CAR", "CHI": "CHI", "CIN": "CIN", "CLE": "CLE",
+        "DAL": "DAL", "DEN": "DEN", "DET": "DET", "GB": "GB",
+        "HOU": "HOU", "IND": "IND", "JAX": "JAC", "KC": "KC",
+        "LAC": "LAC", "LAR": "LAR", "LV": "LV", "MIA": "MIA",
+        "MIN": "MIN", "NE": "NE", "NO": "NO", "NYG": "NYG",
+        "NYJ": "NYJ", "PHI": "PHI", "PIT": "PIT", "SEA": "SEA",
+        "SF": "SF", "TB": "TB", "TEN": "TEN", "WAS": "WAS"
+    }
+
+    end_week = start_w - 1
+    week_columns = [f"Week_{i}" for i in range(1, end_week + 1)]
+    
+    # Apply the replacement to all specified columns in df_picks
+    for col in week_columns:
+        if col in df_picks.columns:
+            df_picks[col] = df_picks[col].replace(correction_map)
+        else:
+            print(f"Warning: Column '{col}' not found in df_picks.")
+    
+    print("df_picks successfully updated to use 'JAX' for all weekly columns.")
     # --- 2. Determine the Target Week (W_next) and Last Completed Week (W_max) ---
     
     # W_next is the week we are calculating availability FOR (start_w)

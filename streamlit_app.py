@@ -4624,14 +4624,7 @@ def calculate_team_availability(historical_data_path, picks_data_path, config):
 
     # --- User Provided Data ---
     correction_map = {
-        "ARI": "ARI", "ATL": "ATL", "BAL": "BAL", "BUF": "BUF",
-        "CAR": "CAR", "CHI": "CHI", "CIN": "CIN", "CLE": "CLE",
-        "DAL": "DAL", "DEN": "DEN", "DET": "DET", "GB": "GB",
-        "HOU": "HOU", "IND": "IND", "JAX": "JAC", "KC": "KC",
-        "LAC": "LAC", "LAR": "LAR", "LV": "LV", "MIA": "MIA",
-        "MIN": "MIN", "NE": "NE", "NO": "NO", "NYG": "NYG",
-        "NYJ": "NYJ", "PHI": "PHI", "PIT": "PIT", "SEA": "SEA",
-        "SF": "SF", "TB": "TB", "TEN": "TEN", "WAS": "WAS"
+        "JAC": "JAX"
     }
 
     end_week = start_w - 1

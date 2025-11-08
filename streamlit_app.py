@@ -2337,9 +2337,6 @@ def get_predicted_pick_percentages(pd, config: dict, schedule_df: pd.DataFrame):
         # Get availability from dictionary using full name
         availability = availability_dict.get(team_name)
     
-        st.write("AVAILABILITY DICTIONARY")
-        st.write(availability_dict)
-    
         # Handle missing or invalid values
         if availability is None or availability <= -0.01:
             return 1.0

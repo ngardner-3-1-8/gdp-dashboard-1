@@ -1643,8 +1643,8 @@ def collect_schedule_travel_ranking_data(pd, config: dict, schedule_rows):
     }
     
     # Division mapping
-    public_pick_df['Team Division'] = public_pick_df['Team'].map(lambda team: teams.get(team, ['', '', '', '', '', ''])[5])
-    public_pick_df['Opponent Division'] = public_pick_df['Opponent'].map(lambda opponent: teams.get(opponent, ['', '', '', '', '', ''])[5])
+    public_pick_df['Team Division'] = public_pick_df['Team'].map(lambda team: teams2.get(team, ['', '', '', '', '', ''])[5])
+    public_pick_df['Opponent Division'] = public_pick_df['Opponent'].map(lambda opponent: teams2.get(opponent, ['', '', '', '', '', ''])[5])
     public_pick_df['Divisional Matchup?'] = (public_pick_df['Team Division'] == public_pick_df['Opponent Division']).astype(int)
     
     # Load the historical data from the file created by nflreadpy
@@ -1699,11 +1699,6 @@ def collect_schedule_travel_ranking_data(pd, config: dict, schedule_rows):
     ).astype(int).values
     
     public_pick_df.to_csv("TEST.csv", index= False)
-    print("public_pick_df")
-    print(public_pick_df)
-    
-    print("Away Team Column")
-    print(public_pick_df['Away Team'])
     
     # Winning Team Logic:
     # The team is the winner if it matches the 'Winner/tie' column from either merge

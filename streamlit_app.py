@@ -2290,9 +2290,11 @@ def get_predicted_pick_percentages(pd, config: dict, schedule_df: pd.DataFrame):
 
 # Function to get availability
     def get_expected_availability(team_name, availability_dict):
-        availability = availability_dict.get(team_name) 
+        availability = availability_dict.get(team_name)
+        st.write("AVAILABILITY DICTIONARY")
+        st.write(availability_dict)
     # 2. Check if the value is -1 (from the Streamlit slider) OR None (if team is missing)
-        if availability == -.01 or availability is None:
+        if availability <= -.01 or availability is None:
             return 1.0
         else:
             return availability

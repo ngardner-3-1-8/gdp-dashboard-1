@@ -5140,7 +5140,7 @@ else:
         )
     else: 
         team_availability = calculate_team_availability("Circa_historical_data.csv", "2025_survivor_picks.csv", config)
-		st.subheader(f"Week {current_start_week} Team Availability")
+        st.subheader(f"Week {current_start_week} Team Availability")
         st.write(team_availability)
 
     if st.session_state.current_config['provide_availability']:

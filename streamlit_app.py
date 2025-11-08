@@ -1835,7 +1835,7 @@ def collect_schedule_travel_ranking_data(pd, config: dict, schedule_rows):
             # 4. Find the matching row in public_pick_df
             # We filter by the integer week, the team abbreviation, and the home/away flag
             match = public_pick_df[
-                (public_pick_df["Week"] == week_num2) &
+                (public_pick_df["Week"] == week_num) &
                 (public_pick_df["Team"] == team_abbr) &
                 (public_pick_df["Away Team"] == is_away_flag)
             ]

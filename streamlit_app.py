@@ -5153,17 +5153,19 @@ else:
         # CONVERSION FIX: Use the correct column name 'Availability_Percent'
         live_availability_data = team_availability_df['Availability_Percent'].to_dict() 
         show_live_data = True
-        
+        st.write("live_availability_data")
+        st.write(live_availability_data)
         # 3. Inject Live Data into Session State for "Auto" teams
         # This ensures that when the user toggles to 'provide_availability', 
         # the sliders are initialized with the live data unless they were previously overridden.
-#        for abbr, live_value in live_availability_data.items():
-            # Check if the team's current setting is the "Auto" sentinel value (-1.0)
-#            current_config_value = st.session_state.current_config['team_availabilities'].get(abbr, -1.0)
+        for abbr, live_value in live_availability_data.items():
+            # Retrieve the current value and ensure it's a float for comparison
+            current_config_value_raw = st.session_state.current_config['team_availabilities'].get(abbr, -1.0)
+            current_config_value = float(current_config_value_raw)
             
             # Only inject the live value if the user hasn't set a custom value yet (i.e., it's still Auto)
-#            if current_config_value < 0:
-#                 st.session_state.current_config['team_availabilities'][abbr] = live_value
+            if current_config_value < 0:
+                 st.session_state.current_config['team_availabilities'][abbr] = live_value
     
     # Display the calculated live data and the checkbox for override
     if show_live_data:

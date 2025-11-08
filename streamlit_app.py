@@ -1984,7 +1984,7 @@ def get_predicted_pick_percentages(pd, config: dict, schedule_df: pd.DataFrame):
     else:
         new_df['Week'] = new_df['Week']
     new_df = new_df[new_df['Week'] >= starting_week]
-    new_df = new_df.drop(columns=['Week'])
+    new_df = new_df.rename(columns={'Week': 'Date'})
 
     # --- NEW: Check if public pick data is available for this week's predictions ---
     # We check one column; you said it's all-or-nothing for a week.

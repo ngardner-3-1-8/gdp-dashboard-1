@@ -5127,7 +5127,7 @@ else:
         )
     else: 
         team_availability = calculate_team_availability("Circa_historical_data.csv", "2025_survivor_picks.csv", config)
-        st.write(historical_picks)
+        st.write(team_availability)
 
     if st.session_state.current_config['provide_availability']:
         st.write("Set availability % (0-100). Use -1 to estimate automatically.")

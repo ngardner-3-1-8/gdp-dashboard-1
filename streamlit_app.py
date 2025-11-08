@@ -5094,7 +5094,7 @@ else:
     # Only execute if Contest is 'Circa' AND user has left the value as the sentinel '-1'
     elif config.get('selected_contest') == 'Circa' and current_entries_value == -1:       
         # 1. Run the dynamic calculation
-        alive_count = calculate_alive_entries(current_year_pick_data)
+        alive_count = calculate_alive_entries(current_year_pick_data, config)
         # 2. Overwrite the -1 flag in the config with the calculated value
         config['current_week_entries'] = alive_count
         

@@ -1403,7 +1403,6 @@ def collect_schedule_travel_ranking_data(pd, config: dict, schedule_rows):
 
     # Set values based on 'Divisional Matchup?' column
     consolidated_df.loc[consolidated_df["Divisional Matchup?"] == True, "Divisional Matchup Boolean"] = 1
-
     def scrape_data(url):
         response = requests.get(url)
         soup = BeautifulSoup(response.content, "lxml")
@@ -1413,31 +1412,20 @@ def collect_schedule_travel_ranking_data(pd, config: dict, schedule_rows):
         for row in table_rows:
             columns = row.find_all("td")
             if len(columns) >= 5:
-                # Safely unpack columns, adjusting for potential length differences
-                # EV, win_pct, pick_pct, team, opponent are the first 5 columns we care about
-                if len(columns) < 5: continue # Skip if not enough columns
-    
                 ev, win_pct, pick_pct, team, opponent = columns[:5]
-                rest = columns[5:] # Any columns after opponent
-    
-                # This logic assumes the 'Future Value' is in the last cell of the row
+                rest = columns[5:]
                 future_value_cell = rest[-1] if rest else None
     
                 if future_value_cell:
-                    # Extract the width value from the style attribute
                     div_tag = future_value_cell.find("div")
                     if div_tag and "style" in div_tag.attrs:
                         style_attr = div_tag["style"]
                         width_match = re.search(r"width:\s*(\d+)px", style_attr)
-                        if width_match:
-                            width_px = int(width_match.group(1))
-                            star_rating = width_px / 16  # Assuming each star is 16px wide
-                        else:
-                            star_rating = 0
+                        star_rating = int(width_match.group(1)) / 16 if width_match else 0
                     else:
                         star_rating = 0
                 else:
-                    star_rating = 0  # No "Future Value" column/cell
+                    star_rating = 0
     
                 data.append({
                     "EV": ev.text,
@@ -1451,23 +1439,34 @@ def collect_schedule_travel_ranking_data(pd, config: dict, schedule_rows):
         return data
     
     
-    # Create an empty list to store data
-    all_data = []
+    def scrape_all_data(starting_year, current_year_plus_1):
+        all_data = []
+        base_url = "https://www.survivorgrid.com/{year}/{week}"
     
-    # Iterate through desired weeks and years
-    base_url = "https://www.survivorgrid.com/{year}/{week}"
-    # NOTE: The loop runs from 2025 up to (but not including) 2026 for the year.
-    for year in tqdm(range(starting_year, current_year_plus_1), desc="Scraping data"):
-        # The week loop runs from 1 up to (but not including) starting_week (e.g., up to 6)
-        for week in tqdm(range(1, 19), desc=f"Year {year}"):
-            url = base_url.format(year=year, week=week)
-            # print(url) # Uncomment for detailed progress
-            week_data = scrape_data(url)
-            for row in week_data:
-                row["Year"] = year
-                row["Week"] = f"Week {week}"
-                all_data.append(row)
-            time.sleep(2)  # Pause for 2 seconds between requests
+        total_iterations = (current_year_plus_1 - starting_year) * 18
+        progress_bar = st.progress(0)
+        status_text = st.empty()
+    
+        completed = 0
+        for year in range(starting_year, current_year_plus_1):
+            for week in range(1, 19):
+                url = base_url.format(year=year, week=week)
+                status_text.text(f"🔄 Scraping data for {year} Week {week} ...")
+                week_data = scrape_data(url)
+    
+                for row in week_data:
+                    row["Year"] = year
+                    row["Week"] = f"Week {week}"
+                    all_data.append(row)
+    
+                completed += 1
+                progress_bar.progress(completed / total_iterations)
+                time.sleep(2)  # Delay between requests
+    
+        progress_bar.progress(1.0)
+        status_text.text("✅ Data scraping complete!")
+    
+        return all_data
     
     # Convert the list of dictionaries to a DataFrame
     public_pick_df = pd.DataFrame(all_data)

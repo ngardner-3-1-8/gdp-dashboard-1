@@ -5161,11 +5161,24 @@ else:
         # This ensures that when the user toggles to 'provide_availability', 
         # the sliders are initialized with the live data unless they were previously overridden.
         for abbr, live_value in live_availability_data.items():
-            # Retrieve the current value and ensure it's a float for comparison
-            current_config_value = st.session_state.current_config['team_availabilities'].get(abbr, -1.0)            
+            
+            # --- FIX APPLIED HERE ---
+            # Retrieve the current value. It might be stored as a string if loaded from JSON.
+            raw_config_value = st.session_state.current_config['team_availabilities'].get(abbr, -1.0)
+            
+            # Attempt to safely convert the value to a float for comparison.
+            try:
+                current_config_value = float(raw_config_value)
+            except (ValueError, TypeError):
+                current_config_value = -1.0 # Default to auto if value is corrupted
+                
             # Only inject the live value if the user hasn't set a custom value yet (i.e., it's still Auto)
             if current_config_value < 0:
-                 st.session_state.current_config['team_availabilities'][abbr] = live_value
+                 # CRITICAL FIX: Ensure the injected value is also a float
+                 try:
+                     st.session_state.current_config['team_availabilities'][abbr] = float(live_value)
+                 except (ValueError, TypeError):
+                     st.session_state.current_config['team_availabilities'][abbr] = -1.0 # Fallback on bad data
     
     # Display the calculated live data and the checkbox for override
     if show_live_data:

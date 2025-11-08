@@ -5471,7 +5471,7 @@ else:
         # --- FIX: Pass schedule_rows to this function ---
         collect_schedule_travel_ranking_data_df = collect_schedule_travel_ranking_data(pd, config, schedule_rows)
         st.write("Schedule Travel Ranking DF")
-		st.write(collect_schedule_travel_ranking_data_df)
+        st.write(collect_schedule_travel_ranking_data_df)
         st.write("Step 2 Completed.")
 
         # Step 3: Predict Pick % (Preliminary)

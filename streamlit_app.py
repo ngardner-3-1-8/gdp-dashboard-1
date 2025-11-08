@@ -2290,44 +2290,50 @@ def get_predicted_pick_percentages(pd, config: dict, schedule_df: pd.DataFrame):
 
     def get_expected_availability(team_abbr, availability_dict):
         # Map team abbreviations to full names
-        team_name_map = {
-            "ARI": "Arizona Cardinals",
-            "ATL": "Atlanta Falcons",
-            "BAL": "Baltimore Ravens",
-            "BUF": "Buffalo Bills",
-            "CAR": "Carolina Panthers",
-            "CHI": "Chicago Bears",
-            "CIN": "Cincinnati Bengals",
-            "CLE": "Cleveland Browns",
-            "DAL": "Dallas Cowboys",
-            "DEN": "Denver Broncos",
-            "DET": "Detroit Lions",
-            "GB": "Green Bay Packers",
-            "HOU": "Houston Texans",
-            "IND": "Indianapolis Colts",
-            "JAX": "Jacksonville Jaguars",
-            "KC": "Kansas City Chiefs",
-            "LV": "Las Vegas Raiders",
-            "LAC": "Los Angeles Chargers",
-            "LAR": "Los Angeles Rams",
-            "MIA": "Miami Dolphins",
-            "MIN": "Minnesota Vikings",
-            "NE": "New England Patriots",
-            "NO": "New Orleans Saints",
-            "NYG": "New York Giants",
-            "NYJ": "New York Jets",
-            "PHI": "Philadelphia Eagles",
-            "PIT": "Pittsburgh Steelers",
-            "SF": "San Francisco 49ers",
-            "SEA": "Seattle Seahawks",
-            "TB": "Tampa Bay Buccaneers",
-            "TEN": "Tennessee Titans",
-            "WAS": "Washington Commanders"
-        }
-    
-        # Convert abbreviation to full name
-        team_full_name = team_name_map.get(team_abbr, team_abbr)
-    
+        def expand_availability_keys(availability_dict):
+            team_name_map = {
+                "ARI": "Arizona Cardinals",
+                "ATL": "Atlanta Falcons",
+                "BAL": "Baltimore Ravens",
+                "BUF": "Buffalo Bills",
+                "CAR": "Carolina Panthers",
+                "CHI": "Chicago Bears",
+                "CIN": "Cincinnati Bengals",
+                "CLE": "Cleveland Browns",
+                "DAL": "Dallas Cowboys",
+                "DEN": "Denver Broncos",
+                "DET": "Detroit Lions",
+                "GB": "Green Bay Packers",
+                "HOU": "Houston Texans",
+                "IND": "Indianapolis Colts",
+                "JAX": "Jacksonville Jaguars",
+                "KC": "Kansas City Chiefs",
+                "LV": "Las Vegas Raiders",
+                "LAC": "Los Angeles Chargers",
+                "LAR": "Los Angeles Rams",
+                "MIA": "Miami Dolphins",
+                "MIN": "Minnesota Vikings",
+                "NE": "New England Patriots",
+                "NO": "New Orleans Saints",
+                "NYG": "New York Giants",
+                "NYJ": "New York Jets",
+                "PHI": "Philadelphia Eagles",
+                "PIT": "Pittsburgh Steelers",
+                "SF": "San Francisco 49ers",
+                "SEA": "Seattle Seahawks",
+                "TB": "Tampa Bay Buccaneers",
+                "TEN": "Tennessee Titans",
+                "WAS": "Washington Commanders"
+            }
+        
+            # Create a new dictionary with full team names as keys
+            return {
+                team_name_map.get(k, k): v
+                for k, v in availability_dict.items()
+            }
+
+        availability_dict = expand_availability_keys(availability_dict)
+
         # Get availability from dictionary using full name
         availability = availability_dict.get(team_full_name)
     

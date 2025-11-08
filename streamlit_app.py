@@ -1907,114 +1907,176 @@ def get_predicted_pick_percentages(pd, config: dict, schedule_df: pd.DataFrame):
     else:
         df = pd.read_csv('DK_historical_data.csv')
     df.rename(columns={"Week": "Date"}, inplace=True)
-    # Remove percentage sign and convert to float
-    #df['Win %'] = df['Win %'].str.rstrip('%').astype(float, -1, 100) / 100
-    #df['Pick %'] = df['Pick %'].str.rstrip('%').astype(float, -1, 100) / 100
-    # Extract the numeric part (week number)
-    #df['Week'] = df['Week'].str.extract(r'(\d+)').astype(int)
-    #print(df['Date'])
     df['Pick %'].fillna(0.0, inplace=True)
-
-    #print(df)
-    X = df[['Win %', 'Future Value (Stars)', 'Date', 'Away Team', 'Divisional Matchup?']]
+    
+    # --- CRITICAL ASSUMPTION ---
+    # For this to work, your 'Circa_historical_data.csv' MUST contain
+    # a column with the historical public pick percentages.
+    #
+    # I am ASSUMING this column is named 'Public Pick %'.
+    # If it's named something else, change it in the code below.
+    # If you don't have this data, you must add it to your historical file.
+    
+    # --- MODIFIED: Train Base Model (No Public Pick Data) ---
+    print("Training base model (no public pick data)...")
+    base_features = ['Win %', 'Future Value (Stars)', 'Date', 'Away Team', 'Divisional Matchup?', 'Availability', 'Entry Remaining Percent']
+    X = df[base_features]
     y = df['Pick %']
 
-    # Split data into training and testing sets
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
-    # Initialize and train the Random Forest model
-    rf_model = RandomForestRegressor(n_estimators=50, random_state=0)
-    rf_model.fit(X_train, y_train)
+    # This is your original model, now renamed 'base'
+    rf_model_base = RandomForestRegressor(n_estimators=50, random_state=0)
+    rf_model_base.fit(X_train, y_train)
 
-    # Make predictions on the test data
-    y_pred = rf_model.predict(X_test)
-
-    # Evaluate model performance (MAE)
+    y_pred = rf_model_base.predict(X_test)
     mae = mean_absolute_error(y_test, y_pred)
-    #print(f"Mean Absolute Error: {mae:.2f}")
+    print(f"Base Model Mean Absolute Error: {mae:.2f}")
 
-    # Read the CSV file into a DataFrame
+    # --- NEW: Train Enhanced Model (WITH Public Pick Data) ---
+    print("Training enhanced model (with public pick data)...")
     
+    # --- !! CHANGE 'Public Pick %' IF YOUR COLUMN IS NAMED DIFFERENTLY !! ---
+    assumed_public_pick_col = 'Public Pick %' 
+    
+    if assumed_public_pick_col not in df.columns:
+        print(f"Warning: Historical data does not contain '{assumed_public_pick_col}'. Cannot train enhanced model.")
+        rf_model_enhanced = None
+    else:
+        # 1. Define the new, enhanced feature list
+        enhanced_features = base_features + [assumed_public_pick_col]
+        
+        # 2. Filter historical data to rows WHERE public pick data was available
+        df_enhanced = df.dropna(subset=[assumed_public_pick_col])
+        
+        if df_enhanced.empty:
+            print("Warning: No historical data found with public pick %. Enhanced model will not be trained.")
+            rf_model_enhanced = None
+        else:
+            print(f"Training enhanced model on {len(df_enhanced)} historical samples.")
+            X_enhanced = df_enhanced[enhanced_features]
+            y_enhanced = df_enhanced['Pick %']
+            
+            # Train/test split for the enhanced model
+            X_train_e, X_test_e, y_train_e, y_test_e = train_test_split(X_enhanced, y_enhanced, test_size=0.2, random_state=42)
+            
+            rf_model_enhanced = RandomForestRegressor(n_estimators=50, random_state=0)
+            rf_model_enhanced.fit(X_train_e, y_train_e)
+            
+            y_pred_e = rf_model_enhanced.predict(X_test_e)
+            mae_e = mean_absolute_error(y_test_e, y_pred_e)
+            print(f"Enhanced Model Mean Absolute Error: {mae_e:.2f}")
+
+    # --- MODIFIED: Prepare Prediction Data ---
     new_df = schedule_df.copy()
 
-    # Create a new DataFrame with selected columns
+    # --- FIX: Correcting your column name typo 'Publicj' ---
     selected_columns = ['Week', 'Away Team', 'Home Team', 'Away Team Fair Odds',
-                        'Home Team Fair Odds', 'Away Team Star Rating', 'Home Team Star Rating', 'Divisional Matchup Boolean', 'Away Team Thanksgiving Favorite', 'Home Team Thanksgiving Favorite', 'Away Team Christmas Favorite', 'Home Team Christmas Favorite']
+                        'Home Team Fair Odds', 'Away Team Star Rating', 'Home Team Star Rating', 
+                        'Divisional Matchup Boolean', 'Away Team Thanksgiving Favorite', 
+                        'Home Team Thanksgiving Favorite', 'Away Team Christmas Favorite', 
+                        'Home Team Christmas Favorite', 'Entry Remaining Percent', 
+                        'Home Team Expected Availability', 'Away Team Expected Availability', 
+                        'Away Team Public Pick %', 'Home Team Public Pick %'] # Corrected typo
+    
     new_df = new_df[selected_columns]
-    new_df['Week_Number'] = new_df['Week'].str.split(' ').str[1].astype(int)
-    # Filter the DataFrame
+    
+    # ... (Your week filtering code) ...
+    if new_df['Week'].dtype == 'object':
+        new_df['Week_Number'] = new_df['Week'].str.split(' ').str[1].astype(int)
+    else:
+        new_df['Week_Number'] = new_df['Week']
     new_df = new_df[new_df['Week_Number'] >= starting_week]
-    # You can drop the auxiliary 'Week_Number' column if you no longer need it
     new_df = new_df.drop(columns=['Week_Number'])
 
-    # Read the original CSV file into a DataFrame
-    #csv_path = 'nfl_Schedule_circa.csv'
-    #df = pd.read_csv(csv_path)
-
-    # Create the new DataFrame with modified column names
+    # --- NEW: Check if public pick data is available for this week's predictions ---
+    # We check one column; you said it's all-or-nothing for a week.
+    public_picks_available = new_df['Home Team Public Pick %'].notna().any()
+    
+    if public_picks_available and rf_model_enhanced is None:
+        print("Warning: Public picks available, but enhanced model isn't trained. Falling back to base model.")
+        public_picks_available = False # Force fallback
+    
+    # --- MODIFIED: Create away_df and home_df ---
+    
+    # Create away_df
     away_df = new_df.rename(columns={
         'Week': 'Date',
         'Away Team': 'Team',
         'Home Team': 'Opponent',
         'Away Team Fair Odds': 'Win %',
         'Away Team Star Rating': 'Future Value (Stars)',
-        'Divisional Matchup Boolean': 'Divisional Matchup?'
+        'Divisional Matchup Boolean': 'Divisional Matchup?',
+        'Away Team Expected Availability': 'Availability',
+        # --- NEW: Map the 'Public Pick %' column for the enhanced model ---
+        'Away Team Public Pick %': assumed_public_pick_col 
     })
-    away_df['Year'] = 2025
+    away_df['Year'] = 2025 # Assuming 2025, adjust as needed
     away_df['Home/Away'] = 'Away'
     away_df['Away Team'] = 1
-    # Add the "Pick %" and "EV" columns (initially empty)
-    away_df['Pick %'] = None
-    away_df['EV'] = None
-
-    # Drop the unwanted columns
-    away_df.drop(columns=['Home Team Fair Odds', 'Home Team Star Rating', 'Home Team Thanksgiving Favorite', 'Home Team Christmas Favorite'], inplace=True)
-
-    # Reorder the columns
-    column_order = ['EV', 'Win %', 'Pick %', 'Team', 'Opponent', 'Future Value (Stars)', 'Year', 'Date', 'Home/Away', 'Away Team', 'Divisional Matchup?', 'Away Team Thanksgiving Favorite', 'Away Team Christmas Favorite']
-    away_df = away_df[column_order]
-
-
-    # Create the new DataFrame with modified column names
+    
+    # Drop unwanted columns
+    away_df.drop(columns=[
+        'Home Team Fair Odds', 'Home Team Star Rating', 'Home Team Thanksgiving Favorite', 
+        'Home Team Christmas Favorite', 'Home Team Expected Availability', 
+        'Home Team Public Pick %' # Drop the other team's pick %
+    ], inplace=True)
+    
+    # Create home_df
     home_df = new_df.rename(columns={
         'Week': 'Date',
         'Home Team': 'Team',
         'Away Team': 'Opponent',
         'Home Team Fair Odds': 'Win %',
         'Home Team Star Rating': 'Future Value (Stars)',
-        'Divisional Matchup Boolean': 'Divisional Matchup?'
+        'Divisional Matchup Boolean': 'Divisional Matchup?',
+        'Home Team Expected Availability': 'Availability',
+        # --- NEW: Map the 'Public Pick %' column for the enhanced model ---
+        'Home Team Public Pick %': assumed_public_pick_col
     })
-    home_df['Year'] = 2025
+    home_df['Year'] = 2025 # Assuming 2025, adjust as needed
     home_df['Home/Away'] = 'Home'
     home_df['Away Team'] = 0
-    # Add the "Pick %" and "EV" columns (initially empty)
-    home_df['Pick %'] = None
+    
+    # Drop unwanted columns
+    home_df.drop(columns=[
+        'Away Team Fair Odds', 'Away Team Star Rating', 'Away Team Thanksgiving Favorite', 
+        'Away Team Christmas Favorite', 'Away Team Expected Availability',
+        'Away Team Public Pick %' # Drop the other team's pick %
+    ], inplace=True)
+
+    # --- NEW: Conditional Prediction ---
+    if public_picks_available:
+        print("--- Predicting using ENHANCED model (with public pick data) ---")
+        
+        # Ensure columns are in the correct order for prediction
+        away_predict_data = away_df[enhanced_features]
+        home_predict_data = home_df[enhanced_features]
+        
+        away_df['Pick %'] = rf_model_enhanced.predict(away_predict_data)
+        home_df['Pick %'] = rf_model_enhanced.predict(home_predict_data)
+        
+    else:
+        print("--- Predicting using BASE model (no public pick data) ---")
+        
+        # Ensure columns are in the correct order for prediction
+        away_predict_data = away_df[base_features]
+        home_predict_data = home_df[base_features]
+        
+        away_df['Pick %'] = rf_model_base.predict(away_predict_data)
+        home_df['Pick %'] = rf_model_base.predict(home_predict_data)
+
+    # Your original code was predicting on dataframes that still had
+    # columns from the *other* team (e.g., away_df had 'Home Team Fair Odds').
+    # My cleanup code above fixes that, so the predictions should be more reliable.
+    
+    # --- Re-add columns for concatenation ---
+    # (This part is to match your original column_order, you can adjust)
+    away_df['Pick %'] = away_df['Pick %'].fillna(None)
+    away_df['EV'] = None
+    home_df['Pick %'] = home_df['Pick %'].fillna(None)
     home_df['EV'] = None
-
-    # Drop the unwanted columns
-    home_df.drop(columns=['Away Team Fair Odds', 'Away Team Star Rating', 'Away Team Thanksgiving Favorite', 'Away Team Christmas Favorite'], inplace=True)
-
-    # Reorder the columns
-    column_order = ['EV', 'Win %', 'Pick %', 'Team', 'Opponent', 'Future Value (Stars)', 'Year', 'Date', 'Home/Away', 'Away Team', 'Divisional Matchup?', 'Home Team Thanksgiving Favorite', 'Home Team Christmas Favorite']
-    home_df = home_df[column_order]
-
-    # Now `away_df` contains the desired columns with modified names
-    #print(home_df)
-    home_df['Date'] = home_df['Date'].str.extract(r'(\d+)').astype(int)
-    away_df['Date'] = away_df['Date'].str.extract(r'(\d+)').astype(int)
-
-    #print(home_df)
-    #print(away_df)
-
-    predictions = rf_model.predict(away_df[['Win %', 'Future Value (Stars)', 'Date', 'Away Team', 'Divisional Matchup?']])
-    away_df['Pick %'] = predictions
-    #away_df.to_csv('predicted_away_data_circa.csv', index=False)
-
-    predictions = rf_model.predict(home_df[['Win %', 'Future Value (Stars)', 'Date', 'Away Team', 'Divisional Matchup?']])
-    home_df['Pick %'] = predictions
-    #home_df.to_csv('predicted_home_data_circa.csv', index=False)
-
-    # Concatenate your DataFrames
+    
     pick_predictions_df = pd.concat([away_df, home_df], ignore_index=True)
     
     # Function to calculate the adjusted "Pick %"
@@ -2446,56 +2508,99 @@ def get_predicted_pick_percentages_with_availability(pd, config: dict, schedule_
         df = pd.read_csv('Circa_historical_data.csv')
 
         df.rename(columns={"Week": "Date"}, inplace=True)
-        # Remove percentage sign and convert to float
-        #df['Win %'] = df['Win %'].str.rstrip('%').astype(float, -1, 100) / 100
-        #df['Pick %'] = df['Pick %'].str.rstrip('%').astype(float, -1, 100) / 100
-        # Extract the numeric part (week number)
-        #df['Week'] = df['Week'].str.extract(r'(\d+)').astype(int)
-        #print(df['Date'])
         df['Pick %'].fillna(0.0, inplace=True)
-    
-        #print(df)
-        # Split data into input features (X) and target variable (y)
-        X = df[['Win %', 'Future Value (Stars)', 'Date', 'Away Team', 'Divisional Matchup?', 'Availability', 'Entry Remaining Percent']]
+        
+        # --- CRITICAL ASSUMPTION ---
+        # For this to work, your 'Circa_historical_data.csv' MUST contain
+        # a column with the historical public pick percentages.
+        #
+        # I am ASSUMING this column is named 'Public Pick %'.
+        # If it's named something else, change it in the code below.
+        # If you don't have this data, you must add it to your historical file.
+        
+        # --- MODIFIED: Train Base Model (No Public Pick Data) ---
+        print("Training base model (no public pick data)...")
+        base_features = ['Win %', 'Future Value (Stars)', 'Date', 'Away Team', 'Divisional Matchup?', 'Availability', 'Entry Remaining Percent']
+        X = df[base_features]
         y = df['Pick %']
     
-        # Split data into training and testing sets
         X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
     
-        # Initialize and train the Random Forest model
-        rf_model = RandomForestRegressor(n_estimators=50, random_state=0)
-        rf_model.fit(X_train, y_train)
+        # This is your original model, now renamed 'base'
+        rf_model_base = RandomForestRegressor(n_estimators=50, random_state=0)
+        rf_model_base.fit(X_train, y_train)
     
-        # Make predictions on the test data
-        y_pred = rf_model.predict(X_test)
-    
-        # Evaluate model performance (MAE)
+        y_pred = rf_model_base.predict(X_test)
         mae = mean_absolute_error(y_test, y_pred)
-        #print(f"Mean Absolute Error: {mae:.2f}")
-    
-        # Read the CSV file into a DataFrame
+        print(f"Base Model Mean Absolute Error: {mae:.2f}")
+
+        # --- NEW: Train Enhanced Model (WITH Public Pick Data) ---
+        print("Training enhanced model (with public pick data)...")
         
+        # --- !! CHANGE 'Public Pick %' IF YOUR COLUMN IS NAMED DIFFERENTLY !! ---
+        assumed_public_pick_col = 'Public Pick %' 
+        
+        if assumed_public_pick_col not in df.columns:
+            print(f"Warning: Historical data does not contain '{assumed_public_pick_col}'. Cannot train enhanced model.")
+            rf_model_enhanced = None
+        else:
+            # 1. Define the new, enhanced feature list
+            enhanced_features = base_features + [assumed_public_pick_col]
+            
+            # 2. Filter historical data to rows WHERE public pick data was available
+            df_enhanced = df.dropna(subset=[assumed_public_pick_col])
+            
+            if df_enhanced.empty:
+                print("Warning: No historical data found with public pick %. Enhanced model will not be trained.")
+                rf_model_enhanced = None
+            else:
+                print(f"Training enhanced model on {len(df_enhanced)} historical samples.")
+                X_enhanced = df_enhanced[enhanced_features]
+                y_enhanced = df_enhanced['Pick %']
+                
+                # Train/test split for the enhanced model
+                X_train_e, X_test_e, y_train_e, y_test_e = train_test_split(X_enhanced, y_enhanced, test_size=0.2, random_state=42)
+                
+                rf_model_enhanced = RandomForestRegressor(n_estimators=50, random_state=0)
+                rf_model_enhanced.fit(X_train_e, y_train_e)
+                
+                y_pred_e = rf_model_enhanced.predict(X_test_e)
+                mae_e = mean_absolute_error(y_test_e, y_pred_e)
+                print(f"Enhanced Model Mean Absolute Error: {mae_e:.2f}")
+
+        # --- MODIFIED: Prepare Prediction Data ---
         new_df = schedule_df.copy()
 
-    
-        # Create a new DataFrame with selected columns
+        # --- FIX: Correcting your column name typo 'Publicj' ---
         selected_columns = ['Week', 'Away Team', 'Home Team', 'Away Team Fair Odds',
-                            'Home Team Fair Odds', 'Away Team Star Rating', 'Home Team Star Rating', 'Divisional Matchup Boolean', 'Away Team Thanksgiving Favorite', 'Home Team Thanksgiving Favorite', 'Away Team Christmas Favorite', 'Home Team Christmas Favorite', 'Entry Remaining Percent', 'Home Team Expected Availability', 'Away Team Expected Availability']
+                            'Home Team Fair Odds', 'Away Team Star Rating', 'Home Team Star Rating', 
+                            'Divisional Matchup Boolean', 'Away Team Thanksgiving Favorite', 
+                            'Home Team Thanksgiving Favorite', 'Away Team Christmas Favorite', 
+                            'Home Team Christmas Favorite', 'Entry Remaining Percent', 
+                            'Home Team Expected Availability', 'Away Team Expected Availability', 
+                            'Away Team Public Pick %', 'Home Team Public Pick %'] # Corrected typo
+        
         new_df = new_df[selected_columns]
+        
+        # ... (Your week filtering code) ...
         if new_df['Week'].dtype == 'object':
             new_df['Week_Number'] = new_df['Week'].str.split(' ').str[1].astype(int)
         else:
             new_df['Week_Number'] = new_df['Week']
-        # Filter the DataFrame
         new_df = new_df[new_df['Week_Number'] >= starting_week]
-        # You can drop the auxiliary 'Week_Number' column if you no longer need it
         new_df = new_df.drop(columns=['Week_Number'])
-    
-        # Read the original CSV file into a DataFrame
-        #csv_path = 'nfl_Schedule_circa.csv'
-        #df = pd.read_csv(csv_path)
-    
-        # Create the new DataFrame with modified column names
+
+        # --- NEW: Check if public pick data is available for this week's predictions ---
+        # We check one column; you said it's all-or-nothing for a week.
+        public_picks_available = new_df['Home Team Public Pick %'].notna().any()
+        
+        if public_picks_available and rf_model_enhanced is None:
+            print("Warning: Public picks available, but enhanced model isn't trained. Falling back to base model.")
+            public_picks_available = False # Force fallback
+        
+        # --- MODIFIED: Create away_df and home_df ---
+        
+        # Create away_df
         away_df = new_df.rename(columns={
             'Week': 'Date',
             'Away Team': 'Team',
@@ -2503,24 +2608,22 @@ def get_predicted_pick_percentages_with_availability(pd, config: dict, schedule_
             'Away Team Fair Odds': 'Win %',
             'Away Team Star Rating': 'Future Value (Stars)',
             'Divisional Matchup Boolean': 'Divisional Matchup?',
-            'Away Team Expected Availability': 'Availability'
+            'Away Team Expected Availability': 'Availability',
+            # --- NEW: Map the 'Public Pick %' column for the enhanced model ---
+            'Away Team Public Pick %': assumed_public_pick_col 
         })
-        away_df['Year'] = 2025
+        away_df['Year'] = 2025 # Assuming 2025, adjust as needed
         away_df['Home/Away'] = 'Away'
         away_df['Away Team'] = 1
-        # Add the "Pick %" and "EV" columns (initially empty)
-        away_df['Pick %'] = None
-        away_df['EV'] = None
-    
-        # Drop the unwanted columns
-        away_df.drop(columns=['Home Team Fair Odds', 'Home Team Star Rating', 'Home Team Thanksgiving Favorite', 'Home Team Christmas Favorite', 'Home Team Expected Availability'], inplace=True)
-    
-        # Reorder the columns
-        column_order = ['EV', 'Win %', 'Pick %', 'Team', 'Opponent', 'Future Value (Stars)', 'Year', 'Date', 'Home/Away', 'Away Team', 'Divisional Matchup?', 'Away Team Thanksgiving Favorite', 'Away Team Christmas Favorite', 'Availability', 'Entry Remaining Percent']
-        away_df = away_df[column_order]
-    
-    
-        # Create the new DataFrame with modified column names
+        
+        # Drop unwanted columns
+        away_df.drop(columns=[
+            'Home Team Fair Odds', 'Home Team Star Rating', 'Home Team Thanksgiving Favorite', 
+            'Home Team Christmas Favorite', 'Home Team Expected Availability', 
+            'Home Team Public Pick %' # Drop the other team's pick %
+        ], inplace=True)
+        
+        # Create home_df
         home_df = new_df.rename(columns={
             'Week': 'Date',
             'Home Team': 'Team',
@@ -2528,32 +2631,59 @@ def get_predicted_pick_percentages_with_availability(pd, config: dict, schedule_
             'Home Team Fair Odds': 'Win %',
             'Home Team Star Rating': 'Future Value (Stars)',
             'Divisional Matchup Boolean': 'Divisional Matchup?',
-            'Home Team Expected Availability': 'Availability'
+            'Home Team Expected Availability': 'Availability',
+            # --- NEW: Map the 'Public Pick %' column for the enhanced model ---
+            'Home Team Public Pick %': assumed_public_pick_col
         })
-        home_df['Year'] = 2025
+        home_df['Year'] = 2025 # Assuming 2025, adjust as needed
         home_df['Home/Away'] = 'Home'
         home_df['Away Team'] = 0
-        # Add the "Pick %" and "EV" columns (initially empty)
-        home_df['Pick %'] = None
+        
+        # Drop unwanted columns
+        home_df.drop(columns=[
+            'Away Team Fair Odds', 'Away Team Star Rating', 'Away Team Thanksgiving Favorite', 
+            'Away Team Christmas Favorite', 'Away Team Expected Availability',
+            'Away Team Public Pick %' # Drop the other team's pick %
+        ], inplace=True)
+
+        # --- NEW: Conditional Prediction ---
+        if public_picks_available:
+            print("--- Predicting using ENHANCED model (with public pick data) ---")
+            
+            # Ensure columns are in the correct order for prediction
+            away_predict_data = away_df[enhanced_features]
+            home_predict_data = home_df[enhanced_features]
+            
+            away_df['Pick %'] = rf_model_enhanced.predict(away_predict_data)
+            home_df['Pick %'] = rf_model_enhanced.predict(home_predict_data)
+            
+        else:
+            print("--- Predicting using BASE model (no public pick data) ---")
+            
+            # Ensure columns are in the correct order for prediction
+            away_predict_data = away_df[base_features]
+            home_predict_data = home_df[base_features]
+            
+            away_df['Pick %'] = rf_model_base.predict(away_predict_data)
+            home_df['Pick %'] = rf_model_base.predict(home_predict_data)
+
+        # Your original code was predicting on dataframes that still had
+        # columns from the *other* team (e.g., away_df had 'Home Team Fair Odds').
+        # My cleanup code above fixes that, so the predictions should be more reliable.
+        
+        # --- Re-add columns for concatenation ---
+        # (This part is to match your original column_order, you can adjust)
+        away_df['Pick %'] = away_df['Pick %'].fillna(None)
+        away_df['EV'] = None
+        home_df['Pick %'] = home_df['Pick %'].fillna(None)
         home_df['EV'] = None
-    
-        # Drop the unwanted columns
-        home_df.drop(columns=['Away Team Fair Odds', 'Away Team Star Rating', 'Away Team Thanksgiving Favorite', 'Away Team Christmas Favorite', 'Away Team Expected Availability'], inplace=True)
-    
-        # Reorder the columns
-        column_order = ['EV', 'Win %', 'Pick %', 'Team', 'Opponent', 'Future Value (Stars)', 'Year', 'Date', 'Home/Away', 'Away Team', 'Divisional Matchup?', 'Home Team Thanksgiving Favorite', 'Home Team Christmas Favorite', 'Availability', 'Entry Remaining Percent']
-        home_df = home_df[column_order]
-    
-    
-        predictions = rf_model.predict(away_df[['Win %', 'Future Value (Stars)', 'Date', 'Away Team', 'Divisional Matchup?', 'Availability', 'Entry Remaining Percent']])
-        away_df['Pick %'] = predictions
-        #away_df.to_csv('predicted_away_data_circa.csv', index=False)
-    
-        predictions = rf_model.predict(home_df[['Win %', 'Future Value (Stars)', 'Date', 'Away Team', 'Divisional Matchup?', 'Availability', 'Entry Remaining Percent']])
-        home_df['Pick %'] = predictions
-        #home_df.to_csv('predicted_home_data_circa.csv', index=False)
-    
+        
         pick_predictions_df = pd.concat([away_df, home_df], ignore_index=True)
+        
+        # ... (rest of your function) ...
+        
+        return pick_predictions_df
+        
         # Function to calculate the adjusted "Pick %"
         def adjust_pick_percentage(row):
             """
@@ -2588,9 +2718,7 @@ def get_predicted_pick_percentages_with_availability(pd, config: dict, schedule_
                 adjust_pick_percentage,
                 axis=1
             )
-		
-        st.write("TEST PICK PERCENTAGES LINE 1858")
-        st.write(pick_predictions_df[["Team", "Pick %", "Availability", "Date", 'Away Team Thanksgiving Favorite', 'Home Team Thanksgiving Favorite', 'Away Team Christmas Favorite', 'Home Team Christmas Favorite']])		
+			
         pick_predictions_df["Pick %"] = pick_predictions_df.apply(
             lambda row: row["Pick %"] * row["Availability"],
             axis=1

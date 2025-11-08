@@ -1969,6 +1969,8 @@ def get_predicted_pick_percentages(pd, config: dict, schedule_df: pd.DataFrame):
 
     # --- MODIFIED: Prepare Prediction Data ---
     new_df = schedule_df.copy()
+	st.write("NEW DF COPY")
+	st.write(new_df)
 
     # --- FIX: Correcting your column name typo 'Publicj' ---
     selected_columns = ['Week', 'Away Team', 'Home Team', 'Away Team Fair Odds',

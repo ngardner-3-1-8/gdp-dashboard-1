@@ -2190,21 +2190,21 @@ def get_predicted_pick_percentages(config: dict, schedule_df: pd.DataFrame):
         
         # --- Create away_df and home_df (Feature Engineering) ---
         # Helper function to rename columns consistently for prediction
-        def create_pick_df(df_in, team_type, opponent_type, is_away):
+        def create_pick_df(df_in, team_type_1, team_type, opponent_type, is_away):
             df_out = df_in.rename(columns={
-                f'{team_type} Team': 'Team', 
-                f'{opponent_type} Team': 'Opponent', 
+                f'{team_type_1} Team': 'Team', 
+                f'{opponent_type_1} Team': 'Opponent', 
                 f'{team_type} Fair Odds': 'Win %', 
                 f'{team_type} Star Rating': 'Future Value (Stars)', 
                 'Divisional Matchup Boolean': 'Divisional Matchup?',
                 f'{team_type} Expected Availability': 'Availability', 
                 f'{team_type} Public Pick %': assumed_public_pick_col,
-				f'{team_type} ': 'Thanksgiving Favorite',
-				f'{team_type} ': 'Thanksgiving Underdog',
-				f'{team_type} ': 'Christmas Favorite',
-				f'{team_type} ': 'Christmas Underdog',
-				f'{team_type} ': 'Pre Thanksgiving',
-				f'{team_type} ': 'Pre Christmas',
+				f'{team_type} Thanksgiving Favorite': 'Thanksgiving Favorite',
+				f'{team_type} Thanksgiving Underdog': 'Thanksgiving Underdog',
+				f'{team_type} Christmas Favorite': 'Christmas Favorite',
+				f'{team_type} Christmas Underdog': 'Christmas Underdog',
+				f'{team_type} Pre Thanksgiving': 'Pre Thanksgiving',
+				f'{team_type} Pre Christmas': 'Pre Christmas'
             }).drop(columns=[f'{opponent_type} Fair Odds', f'{opponent_type} Star Rating', f'{opponent_type} Public Pick %', f'{opponent_type} Expected Availability'])
             
             df_out['Home/Away'] = 'Away' if is_away else 'Home'
@@ -2212,8 +2212,8 @@ def get_predicted_pick_percentages(config: dict, schedule_df: pd.DataFrame):
             df_out['Date'] = current_week
             return df_out.copy()
 
-        away_df = create_pick_df(new_df, 'Away Team', 'Home Team', True)
-        home_df = create_pick_df(new_df, 'Home Team', 'Away Team', False)
+        away_df = create_pick_df(new_df, 'Away', 'Away Team', 'Home Team', True)
+        home_df = create_pick_df(new_df, 'Home', 'Home Team', 'Away Team', False)
 
         st.write("ERROR CHECK LINE 2218")
         st.write(away_df)

@@ -1953,7 +1953,10 @@ def get_predicted_pick_percentages(pd, config: dict, schedule_df: pd.DataFrame):
     
     # --- MODIFIED: Train Base Model (No Public Pick Data) ---
     print("Training base model (no public pick data)...")
-    base_features = ['Win %', 'Future Value (Stars)', 'Date', 'Away Team', 'Divisional Matchup?']
+    if selected_contest == 'Circa':
+        base_features = ['Win %', 'Future Value (Stars)', 'Date', 'Away Team', 'Divisional Matchup?', 'Thanksgiving Favorite', 'Thanksgiving Underdog', 'Christmas Favorite', 'Christmas Underdog', 'Pre Thanksgiving', 'Pre Christmas']
+    else:
+        base_features = ['Win %', 'Future Value (Stars)', 'Date', 'Away Team', 'Divisional Matchup?']
     X = df[base_features]
     y = df['Pick %']
 
@@ -2006,7 +2009,12 @@ def get_predicted_pick_percentages(pd, config: dict, schedule_df: pd.DataFrame):
 
     # --- FIX: Correcting your column name typo 'Publicj' ---
     selected_columns = ['Week', 'Away Team', 'Home Team', 'Away Team Fair Odds',
-                        'Home Team Fair Odds', 'Away Team Star Rating', 'Home Team Star Rating', 'Divisional Matchup Boolean', 'Away Team Thanksgiving Favorite', 'Home Team Thanksgiving Favorite', 'Away Team Christmas Favorite', 'Home Team Christmas Favorite', 'Away Team Public Pick %', 'Home Team Public Pick %']
+                        'Home Team Fair Odds', 'Away Team Star Rating', 'Home Team Star Rating', 
+						'Divisional Matchup Boolean', 'Away Team Thanksgiving Favorite', 'Home Team Thanksgiving Favorite', 
+						'Away Team Christmas Favorite', 'Home Team Christmas Favorite', 'Away Team Thanksgiving Underdog', 
+						'Home Team Thanksgiving Underdog', 'Away Team Christmas Underdog', 'Home Team Christmas Underdog', 'Away Team Public Pick %', 
+						'Home Team Public Pick %', 'Away Team Pre Thanksgiving', 'Home Team Pre Thanksgiving', 
+						'Away Team Pre Christmas', 'Home Team Pre Christmas']
     
     new_df = new_df[selected_columns]
     # ... (Your week filtering code) ...
@@ -2036,8 +2044,13 @@ def get_predicted_pick_percentages(pd, config: dict, schedule_df: pd.DataFrame):
         'Away Team Star Rating': 'Future Value (Stars)',
         'Divisional Matchup Boolean': 'Divisional Matchup?',
         'Away Team Expected Availability': 'Availability',
-        # --- NEW: Map the 'Public Pick %' column for the enhanced model ---
-        'Away Team Public Pick %': assumed_public_pick_col 
+        'Away Team Public Pick %': assumed_public_pick_col
+        'Away Team Thanksgiving Favorite': 'Thanksgiving Favorite',
+        'Away Team Thanksgiving Underdog': 'Thanksgiving Underdog',
+        'Away Team Christmas Favorite': 'Christmas Favorite',
+        'Away Team Christmas Underdog': 'Christmas Underdog',		
+        'Away Team Pre Thanksgiving': 'Pre Thanksgiving',
+        'Away Team Pre Christmas': 'Pre Christmas'		
     })
     away_df['Year'] = 2025 # Assuming 2025, adjust as needed
     away_df['Home/Away'] = 'Away'
@@ -2059,8 +2072,13 @@ def get_predicted_pick_percentages(pd, config: dict, schedule_df: pd.DataFrame):
         'Home Team Star Rating': 'Future Value (Stars)',
         'Divisional Matchup Boolean': 'Divisional Matchup?',
         'Home Team Expected Availability': 'Availability',
-        # --- NEW: Map the 'Public Pick %' column for the enhanced model ---
-        'Home Team Public Pick %': assumed_public_pick_col
+        'Home Team Public Pick %': assumed_public_pick_col,
+        'Home Team Thanksgiving Favorite': 'Thanksgiving Favorite',
+        'Home Team Thanksgiving Underdog': 'Thanksgiving Underdog',
+        'Home Team Christmas Favorite': 'Christmas Favorite',
+        'Home Team Christmas Underdog': 'Christmas Underdog',		
+        'Home Team Pre Thanksgiving': 'Pre Thanksgiving',
+        'Home Team Pre Christmas': 'Pre Christmas'		
     })
     home_df['Year'] = 2025 # Assuming 2025, adjust as needed
     home_df['Home/Away'] = 'Home'
@@ -2134,13 +2152,14 @@ def get_predicted_pick_percentages(pd, config: dict, schedule_df: pd.DataFrame):
     
         # Final adjustment: multiply by Availability (applied once)
         return original_pick_percent
-    
-    # Apply the consolidated function
-    if selected_contest == 'Circa':
-        pick_predictions_df["Pick %"] = pick_predictions_df.apply(
-            adjust_pick_percentage,
-            axis=1
-        )
+
+#UNCOMMENT THE LINES BELOW IF YOU WANT TO ADD THE MANUAL PICK ADJUSTMENTS AGAIN
+#    # Apply the consolidated function
+#    if selected_contest == 'Circa':
+#        pick_predictions_df["Pick %"] = pick_predictions_df.apply(
+#            adjust_pick_percentage,
+#            axis=1
+#        )
 
     pick_predictions_df.drop(columns=['Away Team Thanksgiving Favorite', 'Away Team Christmas Favorite', 'Home Team Thanksgiving Favorite', 'Home Team Christmas Favorite'], inplace=True)
 

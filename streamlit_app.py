@@ -2056,11 +2056,11 @@ def get_predicted_pick_percentages(config: dict, schedule_df: pd.DataFrame):
     
     # 1. Load full schedule and copy
     nfl_schedule_df = schedule_df.copy()
-    st.write(nfl_schedule_df['Week'])
+    st.write(nfl_schedule_df['Week_Num'])
 
 
     if current_week_entries >= 0:
-        nfl_schedule_df.loc[nfl_schedule_df['Week'] == starting_week, 'Total Remaining Entries at Start of Week'] = current_week_entries
+        nfl_schedule_df.loc[nfl_schedule_df['Week_Num'] == starting_week, 'Total Remaining Entries at Start of Week'] = current_week_entries
     else:
         # Handle the -1 (auto-estimate) case based on contest
         if selected_contest == 'Circa':
@@ -2086,19 +2086,19 @@ def get_predicted_pick_percentages(config: dict, schedule_df: pd.DataFrame):
                 default_entries = 20000
         else: # DraftKings
              default_entries = 20000 # Example
-        nfl_schedule_df.loc[nfl_schedule_df['Week'] == starting_week, 'Total Remaining Entries at Start of Week'] = default_entries
+        nfl_schedule_df.loc[nfl_schedule_df['Week_Num'] == starting_week, 'Total Remaining Entries at Start of Week'] = default_entries
     # --- End POOL SIZE LOGIC ---
 
     # Ensure 'Total Remaining Entries at Start of Week' has been correctly initialized
     # If the entry size is not set, the simulation will break.
-    if nfl_schedule_df.loc[nfl_schedule_df['Week'] == starting_week, 'Total Remaining Entries at Start of Week'].empty:
+    if nfl_schedule_df.loc[nfl_schedule_df['Week_Num'] == starting_week, 'Total Remaining Entries at Start of Week'].empty:
          st_write(f"Error: 'Total Remaining Entries' not set for starting week {starting_week}. Assuming 10000.")
-         nfl_schedule_df.loc[nfl_schedule_df['Week'] == starting_week, 'Total Remaining Entries at Start of Week'] = 10000
+         nfl_schedule_df.loc[nfl_schedule_df['Week_Num'] == starting_week, 'Total Remaining Entries at Start of Week'] = 10000
     
-    max_week = nfl_schedule_df['Week'].max() # Get max week from the data itself
+    max_week = nfl_schedule_df['Week_Num'].max() # Get max week from the data itself
     
     # 2. Initialize 'used' dictionary (U_prev_week)
-    S_at_sw = nfl_schedule_df[nfl_schedule_df['Week'] == starting_week]['Total Remaining Entries at Start of Week'].iloc[0]
+    S_at_sw = nfl_schedule_df[nfl_schedule_df['Week_Num'] == starting_week]['Total Remaining Entries at Start of Week'].iloc[0]
     U_prev_week: Dict[str, float] = {}
     
     # Get all unique teams

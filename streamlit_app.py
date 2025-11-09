@@ -2182,7 +2182,7 @@ def get_predicted_pick_percentages(config: dict, schedule_df: pd.DataFrame):
 			'Away Team Thanksgiving Favorite', 'Away Team Thanksgiving Underdog', 
 			'Home Team Thanksgiving Favorite', 'Home Team Thanksgiving Underdog', 
 			'Away Team Christmas Favorite', 'Away Team Christmas Underdog',
-			'Home Team Christmas favorite', 'Home Team Christmas Underdog',
+			'Home Team Christmas Favorite', 'Home Team Christmas Underdog',
 			'Away Team Pre Thanksgiving', 'Away Team Pre Christmas',
 			'Home Team Pre Thanksgiving', 'Home Team Pre Christmas'
         ]

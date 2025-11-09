@@ -1999,7 +1999,7 @@ def get_predicted_pick_percentages(config: dict, schedule_df: pd.DataFrame):
     # The actual presence of these columns depends on your data loading/feature engineering elsewhere.
     holiday_cols = ['Thanksgiving Favorite', 'Thanksgiving Underdog', 'Christmas Favorite', 'Christmas Underdog', 'Pre Thanksgiving', 'Pre Christmas']
     st.write("ERROR CHECK LNE 2001")
-    st.write(new_df)
+    st.write(schedule_df)
     # Load your historical data (Replace dummy paths with your actual file loading logic if necessary)
     if selected_contest == 'Circa':
         df = pd.read_csv('Circa_historical_data.csv')

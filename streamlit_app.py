@@ -2325,65 +2325,64 @@ def get_predicted_pick_percentages(config: dict, schedule_df: pd.DataFrame):
         
         st_write(f"Projected Pool Size for Week {next_week}: {total_survivors_this_week:,.0f}")
         
-    st_success("Sequential prediction and availability calculation complete for all weeks!")
-# Create the boolean mask once, as it's used twice
-    multiplier_mask = (selected_contest == 'Splash Sports') & \
-                  (nfl_schedule_df['Week'].isin(week_requiring_two_selections)) & \
-	              (subcontest != "Week 9 Bloody Survivor ($100 Entry)")
-    multiplier_mask_3 = (selected_contest == 'Splash Sports') & \
-                  (nfl_schedule_df['Week'].isin(week_requiring_three_selections)) & \
-	              (subcontest == "Week 9 Bloody Survivor ($100 Entry)")
-	
-    nfl_schedule_df['Home Expected Survival Rate'] = nfl_schedule_df['Home Team Fair Odds'] * nfl_schedule_df['Home Pick %']
-    nfl_schedule_df.loc[multiplier_mask, 'Home Expected Survival Rate'] *= 0.65
-    nfl_schedule_df.loc[multiplier_mask_3, 'Home Expected Survival Rate'] *= 0.35
-    nfl_schedule_df['Home Expected Elimination Percent'] = nfl_schedule_df['Home Pick %'] - nfl_schedule_df['Home Expected Survival Rate']
-    nfl_schedule_df['Away Expected Survival Rate'] = nfl_schedule_df['Away Team Fair Odds'] * nfl_schedule_df['Away Pick %']
-    nfl_schedule_df.loc[multiplier_mask, 'Away Expected Survival Rate'] *= 0.65
-    nfl_schedule_df.loc[multiplier_mask_3, 'Away Expected Survival Rate'] *= 0.35
-    nfl_schedule_df['Away Expected Elimination Percent'] = nfl_schedule_df['Away Pick %'] - nfl_schedule_df['Away Expected Survival Rate']
-    nfl_schedule_df['Expected Eliminated Entry Percent From Game'] = nfl_schedule_df['Home Expected Elimination Percent'] + nfl_schedule_df['Away Expected Elimination Percent']
-    nfl_schedule_df['Expected Away Team Picks'] = nfl_schedule_df['Away Pick %'] * nfl_schedule_df['Total Remaining Entries at Start of Week']
-    nfl_schedule_df['Expected Home Team Picks'] = nfl_schedule_df['Home Pick %'] * nfl_schedule_df['Total Remaining Entries at Start of Week']
-
-    return nfl_schedule_df
+    # Create the boolean mask once, as it's used twice
+        multiplier_mask = (selected_contest == 'Splash Sports') & \
+                      (nfl_schedule_df['Week'].isin(week_requiring_two_selections)) & \
+    	              (subcontest != "Week 9 Bloody Survivor ($100 Entry)")
+        multiplier_mask_3 = (selected_contest == 'Splash Sports') & \
+                      (nfl_schedule_df['Week'].isin(week_requiring_three_selections)) & \
+    	              (subcontest == "Week 9 Bloody Survivor ($100 Entry)")
+    	
+        nfl_schedule_df['Home Expected Survival Rate'] = nfl_schedule_df['Home Team Fair Odds'] * nfl_schedule_df['Home Pick %']
+        nfl_schedule_df.loc[multiplier_mask, 'Home Expected Survival Rate'] *= 0.65
+        nfl_schedule_df.loc[multiplier_mask_3, 'Home Expected Survival Rate'] *= 0.35
+        nfl_schedule_df['Home Expected Elimination Percent'] = nfl_schedule_df['Home Pick %'] - nfl_schedule_df['Home Expected Survival Rate']
+        nfl_schedule_df['Away Expected Survival Rate'] = nfl_schedule_df['Away Team Fair Odds'] * nfl_schedule_df['Away Pick %']
+        nfl_schedule_df.loc[multiplier_mask, 'Away Expected Survival Rate'] *= 0.65
+        nfl_schedule_df.loc[multiplier_mask_3, 'Away Expected Survival Rate'] *= 0.35
+        nfl_schedule_df['Away Expected Elimination Percent'] = nfl_schedule_df['Away Pick %'] - nfl_schedule_df['Away Expected Survival Rate']
+        nfl_schedule_df['Expected Eliminated Entry Percent From Game'] = nfl_schedule_df['Home Expected Elimination Percent'] + nfl_schedule_df['Away Expected Elimination Percent']
+        nfl_schedule_df['Expected Away Team Picks'] = nfl_schedule_df['Away Pick %'] * nfl_schedule_df['Total Remaining Entries at Start of Week']
+        nfl_schedule_df['Expected Home Team Picks'] = nfl_schedule_df['Home Pick %'] * nfl_schedule_df['Total Remaining Entries at Start of Week']
+    
     
 
-    def assign_pick_percentages_from_config(row, custom_picks_config):
-        home_team = row['Home Team']
-        away_team = row['Away Team']
-        week = row['Week'] # Assumes week is like "Week 1", "Week 2"
-        week_num_str = str(week).replace('Week ', '')
-        week_key = f"week_{week_num_str}"
-
-        home_pick_percent = row.get('Home Pick %') # Default
-        away_pick_percent = row.get('Away Pick %') # Default
-
-        if week_key in custom_picks_config:
-            week_overrides = custom_picks_config[week_key]
-            
-            # Check for Home Team override [cite: 638]
-            if home_team in week_overrides:
-                user_override_value = week_overrides[home_team]
-                if user_override_value >= 0:
-                    home_pick_percent = user_override_value
-                    
-            # Check for Away Team override [cite: 639]
-            if away_team in week_overrides:
-                user_override_value = week_overrides[away_team]
-                if user_override_value >= 0: # Keep -1 logic [cite: 639]
-                    away_pick_percent = user_override_value
-
-        return pd.Series({'Home Pick %': home_pick_percent, 'Away Pick %': away_pick_percent})
-                                                  
-    # Get the single source of truth...
-    custom_pick_percentages = config.get('pick_percentages', {})
+        def assign_pick_percentages_from_config(row, custom_picks_config):
+            home_team = row['Home Team']
+            away_team = row['Away Team']
+            week = row['Week'] # Assumes week is like "Week 1", "Week 2"
+            week_num_str = str(week).replace('Week ', '')
+            week_key = f"week_{week_num_str}"
     
-    nfl_schedule_df[['Home Pick %', 'Away Pick %']] = nfl_schedule_df.apply(
-        assign_pick_percentages_from_config,  # <-- CORRECT NAME
-        axis=1, 
-        args=(custom_pick_percentages,) # Pass the config dict
-    )
+            home_pick_percent = row.get('Home Pick %') # Default
+            away_pick_percent = row.get('Away Pick %') # Default
+    
+            if week_key in custom_picks_config:
+                week_overrides = custom_picks_config[week_key]
+                
+                # Check for Home Team override [cite: 638]
+                if home_team in week_overrides:
+                    user_override_value = week_overrides[home_team]
+                    if user_override_value >= 0:
+                        home_pick_percent = user_override_value
+                        
+                # Check for Away Team override [cite: 639]
+                if away_team in week_overrides:
+                    user_override_value = week_overrides[away_team]
+                    if user_override_value >= 0: # Keep -1 logic [cite: 639]
+                        away_pick_percent = user_override_value
+    
+            return pd.Series({'Home Pick %': home_pick_percent, 'Away Pick %': away_pick_percent})
+                                                      
+        # Get the single source of truth...
+        custom_pick_percentages = config.get('pick_percentages', {})
+        
+        nfl_schedule_df[['Home Pick %', 'Away Pick %']] = nfl_schedule_df.apply(
+            assign_pick_percentages_from_config,  # <-- CORRECT NAME
+            axis=1, 
+            args=(custom_pick_percentages,) # Pass the config dict
+        )
+        return nfl_schedule_df
     
     if selected_contest == 'Circa':
         nfl_schedule_df.to_csv("Circa_Predicted_pick_percent.csv", index=False)

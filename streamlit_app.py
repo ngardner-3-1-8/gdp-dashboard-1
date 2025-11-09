@@ -2165,6 +2165,8 @@ def get_predicted_pick_percentages(config: dict, schedule_df: pd.DataFrame):
 
         # --- C. PREPARE & PREDICT *THIS* WEEK'S PICKS ---
         new_df = nfl_schedule_df[current_week_mask].copy()
+        st.write("ERROR CHECK LINE 2168")
+        st.write(new_df)
 
         # Select all columns needed for prediction features
         selected_columns = [
@@ -2190,7 +2192,7 @@ def get_predicted_pick_percentages(config: dict, schedule_df: pd.DataFrame):
         
         # --- Create away_df and home_df (Feature Engineering) ---
         # Helper function to rename columns consistently for prediction
-        def create_pick_df(df_in, team_type_1, team_type, opponent_type, is_away):
+        def create_pick_df(df_in, team_type_1, team_type, opponent_type_1, opponent_type, is_away):
             df_out = df_in.rename(columns={
                 f'{team_type_1} Team': 'Team', 
                 f'{opponent_type} Team': 'Opponent', 
@@ -2205,7 +2207,7 @@ def get_predicted_pick_percentages(config: dict, schedule_df: pd.DataFrame):
 				f'{team_type} Christmas Underdog': 'Christmas Underdog',
 				f'{team_type} Pre Thanksgiving': 'Pre Thanksgiving',
 				f'{team_type} Pre Christmas': 'Pre Christmas'
-            }).drop(columns=[f'{opponent_type} Fair Odds', f'{opponent_type} Star Rating', f'{opponent_type} Public Pick %', f'{opponent_type} Expected Availability'])
+            }).drop(columns=[f'{opponent_type_1} Fair Odds', f'{opponent_type_1} Star Rating', f'{opponent_type_1} Public Pick %', f'{opponent_type_1} Expected Availability'])
             
             df_out['Home/Away'] = 'Away' if is_away else 'Home'
             df_out['Away Team'] = 1 if is_away else 0

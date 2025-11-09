@@ -2058,34 +2058,34 @@ def get_predicted_pick_percentages(config: dict, schedule_df: pd.DataFrame):
     nfl_schedule_df = schedule_df.copy()
 
     if current_week_entries >= 0:
-            nfl_schedule_df.loc[nfl_schedule_df['Week'] == starting_week, 'Total Remaining Entries at Start of Week'] = current_week_entries
-        else:
-            # Handle the -1 (auto-estimate) case based on contest
-            if selected_contest == 'Circa':
-                default_entries = circa_total_entries # Example
-            elif selected_contest == 'Splash Sports':
-                if subcontest == "The Big Splash ($150 Entry)":
-                    default_entries = splash_big_splash_total_entries
-                elif subcontest == "4 for 4 ($50 Entry)":
-                    default_entries = splash_4_for_4_total_entries
-                elif subcontest == "Free RotoWire (Free Entry)":
-                    default_entries = splash_rotowire_total_entries
-                elif subcontest == "For the Fans ($40 Entry)":
-                    default_entries = splash_for_the_fans_total_entries
-                elif subcontest == "Walker's Ultimate Survivor ($25 Entry)":
-                    default_entries = splash_walkers_25_total_entries
-                elif subcontest == "Ship It Nation ($25 Entry)":
-                    default_entries = splash_ship_it_nation_total_entries
-                elif subcontest == "High Roller ($1000 Entry)":
-                    default_entries = splash_high_roller_total_entries
-                elif subcontest == "Week 9 Bloody Survivor ($100 Entry)":
-                    default_entries = splash_bloody_total_entries
-                else:
-                    default_entries = 20000
-            else: # DraftKings
-                 default_entries = 20000 # Example
-            nfl_schedule_df.loc[nfl_schedule_df['Week'] == starting_week, 'Total Remaining Entries at Start of Week'] = default_entries
-        # --- End POOL SIZE LOGIC ---
+        nfl_schedule_df.loc[nfl_schedule_df['Week'] == starting_week, 'Total Remaining Entries at Start of Week'] = current_week_entries
+    else:
+        # Handle the -1 (auto-estimate) case based on contest
+        if selected_contest == 'Circa':
+            default_entries = circa_total_entries # Example
+        elif selected_contest == 'Splash Sports':
+            if subcontest == "The Big Splash ($150 Entry)":
+                default_entries = splash_big_splash_total_entries
+            elif subcontest == "4 for 4 ($50 Entry)":
+                default_entries = splash_4_for_4_total_entries
+            elif subcontest == "Free RotoWire (Free Entry)":
+                default_entries = splash_rotowire_total_entries
+            elif subcontest == "For the Fans ($40 Entry)":
+                default_entries = splash_for_the_fans_total_entries
+            elif subcontest == "Walker's Ultimate Survivor ($25 Entry)":
+                default_entries = splash_walkers_25_total_entries
+            elif subcontest == "Ship It Nation ($25 Entry)":
+                default_entries = splash_ship_it_nation_total_entries
+            elif subcontest == "High Roller ($1000 Entry)":
+                default_entries = splash_high_roller_total_entries
+            elif subcontest == "Week 9 Bloody Survivor ($100 Entry)":
+                default_entries = splash_bloody_total_entries
+            else:
+                default_entries = 20000
+        else: # DraftKings
+             default_entries = 20000 # Example
+        nfl_schedule_df.loc[nfl_schedule_df['Week'] == starting_week, 'Total Remaining Entries at Start of Week'] = default_entries
+    # --- End POOL SIZE LOGIC ---
 
     # Ensure 'Total Remaining Entries at Start of Week' has been correctly initialized
     # If the entry size is not set, the simulation will break.

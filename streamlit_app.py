@@ -2057,6 +2057,11 @@ def get_predicted_pick_percentages(config: dict, schedule_df: pd.DataFrame):
     # 1. Load full schedule and copy
     nfl_schedule_df = schedule_df.copy()
 
+	nfl_schedule_df['Week_Num'] = pd.to_numeric(
+            nfl_schedule_df['Week_Num'], 
+            errors='coerce'
+        ).fillna(-1).astype(int)
+
     if current_week_entries >= 0:
         nfl_schedule_df.loc[nfl_schedule_df['Week_Num'] == starting_week, 'Total Remaining Entries at Start of Week'] = current_week_entries
     else:

@@ -1487,7 +1487,7 @@ def collect_schedule_travel_ranking_data(pd, config: dict, schedule_rows):
         start_week = config.get("starting_week")
         completed = 0
         for year in range(starting_year, current_year_plus_1):
-            for week in range(1, start_week):
+            for week in range(1, start_week + 1):
                 url = base_url.format(year=year, week=week)
                 status_text.text(f"🔄 Scraping data for {year} Week {week} ...")
                 week_data = scrape_data(url)
@@ -2070,8 +2070,6 @@ def get_predicted_pick_percentages(config: dict, schedule_df: pd.DataFrame):
             nfl_schedule_df['Week_Num'], 
             errors='coerce'
         ).fillna(-1).astype(int)
-    st.write("ERROR CHECK LINE 2073")
-    st.write(nfl_schedule_df)
 
     if current_week_entries >= 0:
         nfl_schedule_df.loc[nfl_schedule_df['Week_Num'] == starting_week, 'Total Remaining Entries at Start of Week'] = current_week_entries

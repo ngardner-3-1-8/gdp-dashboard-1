@@ -1971,12 +1971,15 @@ def get_predicted_pick_percentages(config: dict, schedule_df: pd.DataFrame):
     Calculates predicted pick percentages for each team in each week,
     adjusting for team availability based on previous expected picks.
     """
-    # Add these definitions near the top of the function
-    selected_contest = config['selected_contest']
-    starting_week = config['starting_week']
-    team_availability = config.get('team_availabilities', {})
-    # Note: custom_pick_percentages is defined but not used in the provided logic, keeping for context
-    # custom_pick_percentages = config.get('pick_percentages', {}) 
+
+    selected_contest = config['selected_contest'] 
+    subcontest = config['subcontest'] 
+    starting_week = config['starting_week'] 
+    current_week_entries = config['current_week_entries'] 
+    week_requiring_two_selections = config.get('weeks_two_picks', []) 
+    week_requiring_three_selections = config.get('weeks_three_picks', []) 
+    team_availability = config.get('team_availabilities', {}) 
+    custom_pick_percentages = config.get('pick_percentages', {})
     
     # Define features related to holiday games (ensure consistency with training/prediction)
     # The actual presence of these columns depends on your data loading/feature engineering elsewhere.
@@ -2001,6 +2004,7 @@ def get_predicted_pick_percentages(config: dict, schedule_df: pd.DataFrame):
         # Add back only if guaranteed to exist in the historical data 'df'
         base_features.extend([col for col in holiday_cols if col in df.columns])
         base_features = list(set(base_features)) # Remove duplicates
+        st.write(f"Training Factors: {base_features}")
     else:
         base_features = ['Win %', 'Future Value (Stars)', 'Date', 'Away Team', 'Divisional Matchup?']
         
@@ -2052,6 +2056,35 @@ def get_predicted_pick_percentages(config: dict, schedule_df: pd.DataFrame):
     
     # 1. Load full schedule and copy
     nfl_schedule_df = schedule_df.copy()
+
+    if current_week_entries >= 0:
+            nfl_schedule_df.loc[nfl_schedule_df['Week'] == starting_week, 'Total Remaining Entries at Start of Week'] = current_week_entries
+        else:
+            # Handle the -1 (auto-estimate) case based on contest
+            if selected_contest == 'Circa':
+                default_entries = circa_total_entries # Example
+            elif selected_contest == 'Splash Sports':
+                if subcontest == "The Big Splash ($150 Entry)":
+                    default_entries = splash_big_splash_total_entries
+                elif subcontest == "4 for 4 ($50 Entry)":
+                    default_entries = splash_4_for_4_total_entries
+                elif subcontest == "Free RotoWire (Free Entry)":
+                    default_entries = splash_rotowire_total_entries
+                elif subcontest == "For the Fans ($40 Entry)":
+                    default_entries = splash_for_the_fans_total_entries
+                elif subcontest == "Walker's Ultimate Survivor ($25 Entry)":
+                    default_entries = splash_walkers_25_total_entries
+                elif subcontest == "Ship It Nation ($25 Entry)":
+                    default_entries = splash_ship_it_nation_total_entries
+                elif subcontest == "High Roller ($1000 Entry)":
+                    default_entries = splash_high_roller_total_entries
+                elif subcontest == "Week 9 Bloody Survivor ($100 Entry)":
+                    default_entries = splash_bloody_total_entries
+                else:
+                    default_entries = 20000
+            else: # DraftKings
+                 default_entries = 20000 # Example
+            nfl_schedule_df.loc[nfl_schedule_df['Week'] == starting_week, 'Total Remaining Entries at Start of Week'] = default_entries
 
     # Ensure 'Total Remaining Entries at Start of Week' has been correctly initialized
     # If the entry size is not set, the simulation will break.
@@ -2259,6 +2292,23 @@ def get_predicted_pick_percentages(config: dict, schedule_df: pd.DataFrame):
         st_write(f"Projected Pool Size for Week {next_week}: {total_survivors_this_week:,.0f}")
         
     st_success("Sequential prediction and availability calculation complete for all weeks!")
+# Create the boolean mask once, as it's used twice
+    multiplier_mask = (selected_contest == 'Splash Sports') & \
+                  (nfl_schedule_df['Week'].isin(week_requiring_two_selections)) & \
+	              (subcontest != "Week 9 Bloody Survivor ($100 Entry)")
+    multiplier_mask_3 = (selected_contest == 'Splash Sports') & \
+                  (nfl_schedule_df['Week'].isin(week_requiring_three_selections)) & \
+	              (subcontest == "Week 9 Bloody Survivor ($100 Entry)")
+	
+    nfl_schedule_df['Home Expected Survival Rate'] = nfl_schedule_df['Home Team Fair Odds'] * nfl_schedule_df['Home Pick %']
+    nfl_schedule_df.loc[multiplier_mask, 'Home Expected Survival Rate'] *= 0.65
+    nfl_schedule_df.loc[multiplier_mask_3, 'Home Expected Survival Rate'] *= 0.35
+    nfl_schedule_df['Home Expected Elimination Percent'] = nfl_schedule_df['Home Pick %'] - nfl_schedule_df['Home Expected Survival Rate']
+    nfl_schedule_df['Away Expected Survival Rate'] = nfl_schedule_df['Away Team Fair Odds'] * nfl_schedule_df['Away Pick %']
+    nfl_schedule_df.loc[multiplier_mask, 'Away Expected Survival Rate'] *= 0.65
+    nfl_schedule_df.loc[multiplier_mask_3, 'Away Expected Survival Rate'] *= 0.35
+    nfl_schedule_df['Away Expected Elimination Percent'] = nfl_schedule_df['Away Pick %'] - nfl_schedule_df['Away Expected Survival Rate']
+    nfl_schedule_df['Expected Eliminated Entry Percent From Game'] = nfl_schedule_df['Home Expected Elimination Percent'] + nfl_schedule_df['Away Expected Elimination Percent']
     return nfl_schedule_df
     
 

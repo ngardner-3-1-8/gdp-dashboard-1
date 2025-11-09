@@ -2196,8 +2196,8 @@ def get_predicted_pick_percentages(config: dict, schedule_df: pd.DataFrame):
             df_out['Date'] = current_week
             return df_out.copy()
 
-        away_df = create_pick_df(new_df, 'Away', 'Home', True)
-        home_df = create_pick_df(new_df, 'Home', 'Away', False)
+        away_df = create_pick_df(new_df, 'Away Team', 'Home Team', True)
+        home_df = create_pick_df(new_df, 'Home Team', 'Away Team', False)
         
         # --- Conditional Prediction ---
         if public_picks_available and rf_model_enhanced:

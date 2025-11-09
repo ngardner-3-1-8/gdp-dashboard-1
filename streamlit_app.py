@@ -2199,7 +2199,7 @@ def get_predicted_pick_percentages(config: dict, schedule_df: pd.DataFrame):
                 f'{team_type} Star Rating': 'Future Value (Stars)', 
                 'Divisional Matchup Boolean': 'Divisional Matchup?',
                 f'{team_type} Expected Availability': 'Availability', 
-                f'{team_type} Public Pick %': assumed_public_pick_col,
+                f'{team_type} Public Pick %': 'Public Pick %',
 				f'{team_type} Thanksgiving Favorite': 'Thanksgiving Favorite',
 				f'{team_type} Thanksgiving Underdog': 'Thanksgiving Underdog',
 				f'{team_type} Christmas Favorite': 'Christmas Favorite',

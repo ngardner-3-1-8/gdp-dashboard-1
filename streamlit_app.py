@@ -1921,13 +1921,6 @@ def collect_schedule_travel_ranking_data(pd, config: dict, schedule_rows):
 #		elif subcontest = '':
 #		elif subcontest = '':
 #	else:
-		
-import pandas as pd
-import numpy as np
-from sklearn.model_selection import train_test_split
-from sklearn.ensemble import RandomForestRegressor
-from sklearn.metrics import mean_absolute_error
-from typing import Dict
 
 # --- Helper function used in the main logic (Moved from the bottom) ---
 def get_expected_availability(team_name, availability_dict: Dict):

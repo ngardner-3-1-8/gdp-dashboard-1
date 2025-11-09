@@ -2128,6 +2128,7 @@ def get_predicted_pick_percentages(config: dict, schedule_df: pd.DataFrame):
         st_write(f"\n--- 🏈 Processing Week {current_week} ---")
         st.write("ERROR CHECK LINE 2130")
         st.write(nfl_schedule_df)
+		st.write(f"CURRENT WEEK: {current_week}")
         current_week_mask = nfl_schedule_df['Week_Num'] == current_week
         st.write(current_week_mask)
         if not current_week_mask.any():

@@ -1998,7 +1998,8 @@ def get_predicted_pick_percentages(config: dict, schedule_df: pd.DataFrame):
     # Define features related to holiday games (ensure consistency with training/prediction)
     # The actual presence of these columns depends on your data loading/feature engineering elsewhere.
     holiday_cols = ['Thanksgiving Favorite', 'Thanksgiving Underdog', 'Christmas Favorite', 'Christmas Underdog', 'Pre Thanksgiving', 'Pre Christmas']
-
+    st.write("ERROR CHECK LNE 2001")
+    st.write(new_df)
     # Load your historical data (Replace dummy paths with your actual file loading logic if necessary)
     if selected_contest == 'Circa':
         df = pd.read_csv('Circa_historical_data.csv')
@@ -2188,8 +2189,7 @@ def get_predicted_pick_percentages(config: dict, schedule_df: pd.DataFrame):
         # Ensure only valid columns are selected
         new_df = new_df[[col for col in selected_columns if col in new_df.columns]].copy()
         new_df = new_df.rename(columns={'Week': 'Date'})
-        st.write("ERROR CHECK LNE 2187")
-        st.write(new_df)
+
         # Check if public pick data is available for this week's predictions
         # Note: This check relies on 'Home Team Public Pick %' not being NaN
         public_picks_available = (new_df['Home Team Public Pick %'].notna().any())

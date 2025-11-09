@@ -2188,6 +2188,8 @@ def get_predicted_pick_percentages(config: dict, schedule_df: pd.DataFrame):
         # Check if public pick data is available for this week's predictions
         # Note: This check relies on 'Home Team Public Pick %' not being NaN
         public_picks_available = (assumed_public_pick_col in new_df.columns and new_df['Home Team Public Pick %'].notna().any())
+        st.write("ERROR CHECK LINE 2191")
+        st.write(public_picks_available)
         
         # --- Create away_df and home_df (Feature Engineering) ---
         # Helper function to rename columns consistently for prediction

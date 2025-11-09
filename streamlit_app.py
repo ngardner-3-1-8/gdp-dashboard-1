@@ -2165,7 +2165,7 @@ def get_predicted_pick_percentages(config: dict, schedule_df: pd.DataFrame):
             nfl_schedule_df.loc[current_week_mask & (nfl_schedule_df['Away Team'] == team), 'Away Team Expected Availability'] = team_avail_percent
 
         # --- C. PREPARE & PREDICT *THIS* WEEK'S PICKS ---
-
+        new_df = nfl_schedule_df.loc[current_week_mask].copy()
         # Select all columns needed for prediction features
         selected_columns = [
             'Week', 'Away Team', 'Home Team', 'Away Team Fair Odds', 'Home Team Fair Odds', 

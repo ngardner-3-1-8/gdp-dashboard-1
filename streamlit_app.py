@@ -2165,7 +2165,6 @@ def get_predicted_pick_percentages(config: dict, schedule_df: pd.DataFrame):
             nfl_schedule_df.loc[current_week_mask & (nfl_schedule_df['Away Team'] == team), 'Away Team Expected Availability'] = team_avail_percent
 
         # --- C. PREPARE & PREDICT *THIS* WEEK'S PICKS ---
-        st.write(new_df)
 
         # Select all columns needed for prediction features
         selected_columns = [
@@ -2184,7 +2183,8 @@ def get_predicted_pick_percentages(config: dict, schedule_df: pd.DataFrame):
         # Ensure only valid columns are selected
         new_df = new_df[[col for col in selected_columns if col in new_df.columns]].copy()
         new_df = new_df.rename(columns={'Week': 'Date'})
-
+        st.write("ERROR CHECK LNE 2187")
+        st.write(new_df)
         # Check if public pick data is available for this week's predictions
         # Note: This check relies on 'Home Team Public Pick %' not being NaN
         public_picks_available = (assumed_public_pick_col in new_df.columns and new_df['Home Team Public Pick %'].notna().any())

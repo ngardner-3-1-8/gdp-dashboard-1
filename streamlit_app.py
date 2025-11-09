@@ -2085,6 +2085,7 @@ def get_predicted_pick_percentages(config: dict, schedule_df: pd.DataFrame):
             else: # DraftKings
                  default_entries = 20000 # Example
             nfl_schedule_df.loc[nfl_schedule_df['Week'] == starting_week, 'Total Remaining Entries at Start of Week'] = default_entries
+        # --- End POOL SIZE LOGIC ---
 
     # Ensure 'Total Remaining Entries at Start of Week' has been correctly initialized
     # If the entry size is not set, the simulation will break.

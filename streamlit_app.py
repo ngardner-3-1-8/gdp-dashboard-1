@@ -2070,6 +2070,8 @@ def get_predicted_pick_percentages(config: dict, schedule_df: pd.DataFrame):
             nfl_schedule_df['Week_Num'], 
             errors='coerce'
         ).fillna(-1).astype(int)
+    st.write("ERROR CHECK LINE 2073")
+    st.write(nfl_schedule_df)
 
     if current_week_entries >= 0:
         nfl_schedule_df.loc[nfl_schedule_df['Week_Num'] == starting_week, 'Total Remaining Entries at Start of Week'] = current_week_entries

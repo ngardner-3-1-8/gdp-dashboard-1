@@ -2322,6 +2322,8 @@ def get_predicted_pick_percentages(config: dict, schedule_df: pd.DataFrame):
         # Set the next week's starting pool size based on this week's survivors
         next_week = current_week + 1
         nfl_schedule_df.loc[nfl_schedule_df['Week_Num'] == next_week, 'Total Remaining Entries at Start of Week'] = total_survivors_this_week
+        st.write(f"Next Week: {next_week}")
+        st.write(nfl_schedule_df[nfl_schedule_df['Week_Num'] == next_week]
         
         st_write(f"Projected Pool Size for Week {next_week}: {total_survivors_this_week:,.0f}")
         

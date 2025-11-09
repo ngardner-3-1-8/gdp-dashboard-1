@@ -2044,7 +2044,7 @@ def get_predicted_pick_percentages(pd, config: dict, schedule_df: pd.DataFrame):
         'Away Team Star Rating': 'Future Value (Stars)',
         'Divisional Matchup Boolean': 'Divisional Matchup?',
         'Away Team Expected Availability': 'Availability',
-        'Away Team Public Pick %': assumed_public_pick_col
+        'Away Team Public Pick %': assumed_public_pick_col,
         'Away Team Thanksgiving Favorite': 'Thanksgiving Favorite',
         'Away Team Thanksgiving Underdog': 'Thanksgiving Underdog',
         'Away Team Christmas Favorite': 'Christmas Favorite',

@@ -2056,7 +2056,6 @@ def get_predicted_pick_percentages(config: dict, schedule_df: pd.DataFrame):
     
     # 1. Load full schedule and copy
     nfl_schedule_df = schedule_df.copy()
-    st.write(nfl_schedule_df['Week_Num'])
 
 
     if current_week_entries >= 0:
@@ -2130,6 +2129,7 @@ def get_predicted_pick_percentages(config: dict, schedule_df: pd.DataFrame):
         st_write(f"\n--- 🏈 Processing Week {current_week} ---")
         
         current_week_mask = nfl_schedule_df['Week'] == current_week
+        st.write(current_week_mask)
         if not current_week_mask.any():
             st_write(f"Skipping week {current_week} (no data found).")
             continue

@@ -2193,7 +2193,7 @@ def get_predicted_pick_percentages(config: dict, schedule_df: pd.DataFrame):
         def create_pick_df(df_in, team_type_1, team_type, opponent_type, is_away):
             df_out = df_in.rename(columns={
                 f'{team_type_1} Team': 'Team', 
-                f'{opponent_type_1} Team': 'Opponent', 
+                f'{opponent_type} Team': 'Opponent', 
                 f'{team_type} Fair Odds': 'Win %', 
                 f'{team_type} Star Rating': 'Future Value (Stars)', 
                 'Divisional Matchup Boolean': 'Divisional Matchup?',
@@ -2212,8 +2212,8 @@ def get_predicted_pick_percentages(config: dict, schedule_df: pd.DataFrame):
             df_out['Date'] = current_week
             return df_out.copy()
 
-        away_df = create_pick_df(new_df, 'Away', 'Away Team', 'Home Team', True)
-        home_df = create_pick_df(new_df, 'Home', 'Home Team', 'Away Team', False)
+        away_df = create_pick_df(new_df, 'Away', 'Away Team', 'Home', True)
+        home_df = create_pick_df(new_df, 'Home', 'Home Team', 'Away', False)
 
         st.write("ERROR CHECK LINE 2218")
         st.write(away_df)

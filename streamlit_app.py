@@ -1487,7 +1487,7 @@ def collect_schedule_travel_ranking_data(pd, config: dict, schedule_rows):
         start_week = config.get("starting_week")
         completed = 0
         for year in range(starting_year, current_year_plus_1):
-            for week in range(1, ):
+            for week in range(1, start_week):
                 url = base_url.format(year=year, week=week)
                 status_text.text(f"🔄 Scraping data for {year} Week {week} ...")
                 week_data = scrape_data(url)

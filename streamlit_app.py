@@ -1962,9 +1962,14 @@ def get_expected_availability(team_name, availability_dict: Dict):
     availability = availability_dict.get(team_name)
 
     # Handle missing or invalid values. Default to 1.0 (fully available).
-    if availability is None or availability <= -0.01:
+    if availability is None:
+        st.write("ERROR CHECK: availability is none")
         return 1.0
+    elif availability <= -0.01:
+        st.write("ERROR CHECK: availability is <=-.01")
+        return 1.0		
     else:
+        st.write(f"ERROR CHECK: availability found: {availability}")
         return availability
 
 # Mock for st.write/st.success (assuming Streamlit is used for output)

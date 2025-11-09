@@ -1907,7 +1907,8 @@ def collect_schedule_travel_ranking_data(pd, config: dict, schedule_rows):
         lambda row: get_public_pick_percent(row, 'home'),
         axis=1
     )
-    
+    st.write("ERROR CHECK LINE 1910")
+    st.write(consolidated_df["Home Team Public Pick %"])
     print("Finished populating public pick percentages.")
 
     # Save the consolidated DataFrame to a single CSV file

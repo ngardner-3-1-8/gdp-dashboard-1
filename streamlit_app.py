@@ -2171,8 +2171,14 @@ def get_predicted_pick_percentages(config: dict, schedule_df: pd.DataFrame):
             'Week', 'Away Team', 'Home Team', 'Away Team Fair Odds', 'Home Team Fair Odds', 
             'Away Team Star Rating', 'Home Team Star Rating', 'Divisional Matchup Boolean', 
             'Away Team Public Pick %', 'Home Team Public Pick %', 
-            'Away Team Expected Availability', 'Home Team Expected Availability'
-        ] + [col for col in holiday_cols if col in new_df.columns]
+            'Away Team Expected Availability', 'Home Team Expected Availability', 
+			'Away Team Thanksgiving Favorite', 'Away Team Thanksgiving Underdog', 
+			'Home Team Thanksgiving Favorite', 'Home Team Thanksgiving Underdog', 
+			'Away Team Christmas Favorite', 'Away Team Christmas Underdog',
+			'Home Team Christmas favorite', 'Home Team Christmas Underdog',
+			'Away Team Pre Thanksgiving', 'Away Team Pre Christmas',
+			'Home Team Pre Thanksgiving', 'Home Team Pre Christmas'
+        ]
         
         # Ensure only valid columns are selected
         new_df = new_df[[col for col in selected_columns if col in new_df.columns]].copy()
@@ -2192,7 +2198,13 @@ def get_predicted_pick_percentages(config: dict, schedule_df: pd.DataFrame):
                 f'{team_type} Star Rating': 'Future Value (Stars)', 
                 'Divisional Matchup Boolean': 'Divisional Matchup?',
                 f'{team_type} Expected Availability': 'Availability', 
-                f'{team_type} Public Pick %': assumed_public_pick_col
+                f'{team_type} Public Pick %': assumed_public_pick_col,
+				f'{team_type} ': 'Thanksgiving Favorite',
+				f'{team_type} ': 'Thanksgiving Underdog',
+				f'{team_type} ': 'Christmas Favorite',
+				f'{team_type} ': 'Christmas Underdog',
+				f'{team_type} ': 'Pre Thanksgiving',
+				f'{team_type} ': 'Pre Christmas',
             }).drop(columns=[f'{opponent_type} Fair Odds', f'{opponent_type} Star Rating', f'{opponent_type} Public Pick %', f'{opponent_type} Expected Availability'])
             
             df_out['Home/Away'] = 'Away' if is_away else 'Home'

@@ -1821,11 +1821,16 @@ def collect_schedule_travel_ranking_data(pd, config: dict, schedule_rows):
     condition_2020_date = (public_pick_df['Year'] == 2020) & (public_pick_df['Calendar Date'] >= pd.to_datetime('2020-11-27'))
     public_pick_df.loc[condition_2020_date, 'Week'] += 1
     
-    public_pick_df['EV'] = 0 
+    public_pick_df['EV'] = 0
+
+
     
     
     
     public_pick_df = public_pick_df.drop_duplicates()
+
+    st.write("ERROR CHECK FOR PUBLIC PICK % LINE 1826")
+    st.write(public_pick_df)
     
     
     
@@ -2214,8 +2219,8 @@ def get_predicted_pick_percentages(config: dict, schedule_df: pd.DataFrame):
             df_out['Date'] = current_week
             return df_out.copy()
 
-        away_df = create_pick_df(new_df, 'Away', 'Away Team', 'Home', 'Home Team', True)
-        home_df = create_pick_df(new_df, 'Home', 'Home Team', 'Away', 'Away Team', False)
+        away_df = create_pick_df(new_df, 'Away', 'Away Team', 'Home Team', 'Home', True)
+        home_df = create_pick_df(new_df, 'Home', 'Home Team', 'Away Team', 'Away', False)
 
         st.write("ERROR CHECK LINE 2218")
         st.write(away_df)

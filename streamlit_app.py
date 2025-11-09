@@ -2505,7 +2505,8 @@ def reformat_df(df: pd.DataFrame, config: dict):
     # --- Fix 2: Use the passed 'df' argument instead of global 'full_df_with_ev' ---
     # Make a copy to avoid SettingWithCopyWarning on the original df
     df = df.copy() 
-    
+    st.write("ERROR CHECKING LINE 2508")
+	st.write(df)
     df['ID'] = df.index + 1
     
     # --- Away Team Dataframe ---

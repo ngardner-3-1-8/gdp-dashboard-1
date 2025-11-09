@@ -1410,11 +1410,11 @@ def collect_schedule_travel_ranking_data(pd, config: dict, schedule_rows):
         )
         consolidated_df = pd.concat([consolidated_df, week_df])
 
-    df['Away Team Pre Thanksgiving'] = True if ((df['Away Team Thanksgiving Favorite'] or df['Away Team Thanksgiving Underdog']) and df['Week_Num'] < thanksgiving_week) else False
-    df['Home Team Pre Thanksgiving'] = True if ((df['Home Team Thanksgiving Favorite'] or df['Home Team Thanksgiving Underdog']) and df['Week_Num'] < thanksgiving_week) else False
+    consolidated_df['Away Team Pre Thanksgiving'] = True if ((consolidated_df['Away Team Thanksgiving Favorite'] or consolidated_df['Away Team Thanksgiving Underdog']) and consolidated_df['Week_Num'] < thanksgiving_week) else False
+    consolidated_df['Home Team Pre Thanksgiving'] = True if ((consolidated_df['Home Team Thanksgiving Favorite'] or consolidated_df['Home Team Thanksgiving Underdog']) and consolidated_df['Week_Num'] < thanksgiving_week) else False
 
-    df['Away Team Pre Christmas'] = True if ((df['Away Team Christmas Favorite'] or df['Away Team Christmas Underdog']) and df['Week_Num'] < christmas_week) else False
-    df['Home Team Pre Christmas'] = True if ((df['Home Team Christmas Favorite'] or df['Home Team Christmas Underdog']) and df['Week_Num'] < christmas_week) else False
+    consolidated_df['Away Team Pre Christmas'] = True if ((consolidated_df['Away Team Christmas Favorite'] or consolidated_df['Away Team Christmas Underdog']) and consolidated_df['Week_Num'] < christmas_week) else False
+    consolidated_df['Home Team Pre Christmas'] = True if ((consolidated_df['Home Team Christmas Favorite'] or consolidated_df['Home Team Christmas Underdog']) and consolidated_df['Week_Num'] < christmas_week) else False
 
     # Create the 'Divisional Matchup Boolean' column
     consolidated_df["Divisional Matchup Boolean"] = 0

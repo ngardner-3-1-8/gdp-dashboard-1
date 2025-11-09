@@ -1410,14 +1410,26 @@ def collect_schedule_travel_ranking_data(pd, config: dict, schedule_rows):
         )
         consolidated_df = pd.concat([consolidated_df, week_df])
 
-    consolidated_df['Away Team Pre Thanksgiving'] = True if ((consolidated_df['Away Team Thanksgiving Favorite'] or consolidated_df['Away Team Thanksgiving Underdog']) and consolidated_df['Week_Num'] < thanksgiving_week) else False
-    consolidated_df['Home Team Pre Thanksgiving'] = True if ((consolidated_df['Home Team Thanksgiving Favorite'] or consolidated_df['Home Team Thanksgiving Underdog']) and consolidated_df['Week_Num'] < thanksgiving_week) else False
-
-    consolidated_df['Away Team Pre Christmas'] = True if ((consolidated_df['Away Team Christmas Favorite'] or consolidated_df['Away Team Christmas Underdog']) and consolidated_df['Week_Num'] < christmas_week) else False
-    consolidated_df['Home Team Pre Christmas'] = True if ((consolidated_df['Home Team Christmas Favorite'] or consolidated_df['Home Team Christmas Underdog']) and consolidated_df['Week_Num'] < christmas_week) else False
-
-    # Create the 'Divisional Matchup Boolean' column
-    consolidated_df["Divisional Matchup Boolean"] = 0
+    # Corrected logic using Pandas element-wise operations (& for AND, | for OR)
+    consolidated_df['Away Team Pre Thanksgiving'] = (
+        (consolidated_df['Away Team Thanksgiving Favorite'] | consolidated_df['Away Team Thanksgiving Underdog']) 
+        & (consolidated_df['Week_Num'] < thanksgiving_week)
+    )
+    consolidated_df['Home Team Pre Thanksgiving'] = (
+        (consolidated_df['Home Team Thanksgiving Favorite'] | consolidated_df['Home Team Thanksgiving Underdog']) 
+        & (consolidated_df['Week_Num'] < thanksgiving_week)
+    )
+    
+    consolidated_df['Away Team Pre Christmas'] = (
+        (consolidated_df['Away Team Christmas Favorite'] | consolidated_df['Away Team Christmas Underdog']) 
+        & (consolidated_df['Week_Num'] < christmas_week)
+    )
+    consolidated_df['Home Team Pre Christmas'] = (
+        (consolidated_df['Home Team Christmas Favorite'] | consolidated_df['Home Team Christmas Underdog']) 
+        & (consolidated_df['Week_Num'] < christmas_week)
+    )
+        # Create the 'Divisional Matchup Boolean' column
+        consolidated_df["Divisional Matchup Boolean"] = 0
 
     # Set values based on 'Divisional Matchup?' column
     consolidated_df.loc[consolidated_df["Divisional Matchup?"] == True, "Divisional Matchup Boolean"] = 1

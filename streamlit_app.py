@@ -2214,8 +2214,8 @@ def get_predicted_pick_percentages(config: dict, schedule_df: pd.DataFrame):
             df_out['Date'] = current_week
             return df_out.copy()
 
-        away_df = create_pick_df(new_df, 'Away', 'Away Team', 'Home', True)
-        home_df = create_pick_df(new_df, 'Home', 'Home Team', 'Away', False)
+        away_df = create_pick_df(new_df, 'Away', 'Away Team', 'Home', 'Home Team', True)
+        home_df = create_pick_df(new_df, 'Home', 'Home Team', 'Away', 'Away Team', False)
 
         st.write("ERROR CHECK LINE 2218")
         st.write(away_df)

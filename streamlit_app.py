@@ -2321,16 +2321,16 @@ def get_predicted_pick_percentages(config: dict, schedule_df: pd.DataFrame):
         
         # Set the next week's starting pool size based on this week's survivors
         next_week = current_week + 1
-        nfl_schedule_df.loc[nfl_schedule_df['Week'] == next_week, 'Total Remaining Entries at Start of Week'] = total_survivors_this_week
+        nfl_schedule_df.loc[nfl_schedule_df['Week_Num'] == next_week, 'Total Remaining Entries at Start of Week'] = total_survivors_this_week
         
         st_write(f"Projected Pool Size for Week {next_week}: {total_survivors_this_week:,.0f}")
         
     # Create the boolean mask once, as it's used twice
         multiplier_mask = (selected_contest == 'Splash Sports') & \
-                      (nfl_schedule_df['Week'].isin(week_requiring_two_selections)) & \
+                      (nfl_schedule_df['Week_Num'].isin(week_requiring_two_selections)) & \
     	              (subcontest != "Week 9 Bloody Survivor ($100 Entry)")
         multiplier_mask_3 = (selected_contest == 'Splash Sports') & \
-                      (nfl_schedule_df['Week'].isin(week_requiring_three_selections)) & \
+                      (nfl_schedule_df['Week_Num'].isin(week_requiring_three_selections)) & \
     	              (subcontest == "Week 9 Bloody Survivor ($100 Entry)")
     	
         nfl_schedule_df['Home Expected Survival Rate'] = nfl_schedule_df['Home Team Fair Odds'] * nfl_schedule_df['Home Pick %']

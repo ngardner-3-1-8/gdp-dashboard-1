@@ -4587,11 +4587,11 @@ else:
         
         for team in nfl_teams:
             # 4. Use the abbreviation for the internal key lookup
-            team_abbr = TEAM_NAME_TO_ABBR[team]
+#            team_abbr = TEAM_NAME_TO_ABBR[team]
             
             with cols[col_idx]:
                 outer_key = 'team_availabilities'
-                inner_key = team_abbr # IMPORTANT: Use the abbreviation here
+                inner_key = team#_abbr # IMPORTANT: Use the abbreviation here
                 widget_key = f"{outer_key}_{inner_key}_widget".replace(" ", "_")
                 
                 # --- FIX APPLIED HERE ---

@@ -2125,7 +2125,7 @@ def get_predicted_pick_percentages(config: dict, schedule_df: pd.DataFrame):
     for col in calc_cols:
         nfl_schedule_df[col] = np.nan
     st.write(f"STARTING WEEK: {starting_week}")
-	st.write(f"MAX WEEK: {max_week}")
+    st.write(f"MAX WEEK: {max_week}")
     # Loop through each week, starting from your defined starting week
     for current_week in range(starting_week, int(max_week) + 1):
         st_write(f"\n--- 🏈 Processing Week {current_week} ---")

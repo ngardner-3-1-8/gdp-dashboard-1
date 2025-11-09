@@ -1328,6 +1328,7 @@ def collect_schedule_travel_ranking_data(pd, config: dict, schedule_rows):
         week_df = df[df["Week"] == week]
 
         # Calculate star ratings first
+        # Assuming calculate_star_rating is defined elsewhere and returns a number
         week_df["Away Team Star Rating"] = week_df["Away Team Cumulative Win Percentage"].apply(lambda x: calculate_star_rating(x, week))
         week_df["Home Team Star Rating"] = week_df["Home Team Cumulative Win Percentage"].apply(lambda x: calculate_star_rating(x, week))
 
@@ -1335,20 +1336,19 @@ def collect_schedule_travel_ranking_data(pd, config: dict, schedule_rows):
         # Find Week 13 games and winners
         week13_df = df[df["Week"] == "Week 13"]
         week13_winners = week13_df["Favorite"].unique()
-	
-
-        # Create new columns and mark Thanksgiving Favorites
+        
+        # Create new columns and mark Thanksgiving Favorites (returning 1 or 0)
         week_df["Away Team Thanksgiving Favorite"] = week_df.apply(
-            lambda row: True
+            lambda row: 1
             if (1 <= int(row["Week"].replace("Week ", "")) <= 12) and (row["Away Team"] in week13_winners)
-            else False,
+            else 0,
             axis=1,
         )
 
         week_df["Home Team Thanksgiving Favorite"] = week_df.apply(
-            lambda row: True
+            lambda row: 1
             if (1 <= int(row["Week"].replace("Week ", "")) <= 12) and (row["Home Team"] in week13_winners)
-            else False,
+            else 0,
             axis=1,
         )
 
@@ -1357,77 +1357,85 @@ def collect_schedule_travel_ranking_data(pd, config: dict, schedule_rows):
         week18_df = df[df["Week"] == "Week 18"]
         week18_winners = week18_df["Favorite"].unique()
 
-        # Create new columns and mark Thanksgiving Favorites
+        # Create new columns and mark Christmas Favorites (returning 1 or 0)
         week_df["Away Team Christmas Favorite"] = week_df.apply(
-            lambda row: True
+            lambda row: 1
             if (1 <= int(row["Week"].replace("Week ", "")) <= 17) and (row["Away Team"] in week18_winners)
-            else False,
+            else 0,
             axis=1,
         )
         week_df["Home Team Christmas Favorite"] = week_df.apply(
-            lambda row: True
+            lambda row: 1
             if (1 <= int(row["Week"].replace("Week ", "")) <= 17) and (row["Home Team"] in week18_winners)
-            else False,
+            else 0,
             axis=1,
         )
-		
+        
+        # Mark Thanksgiving Underdogs
         week13_df = df[df["Week"] == "Week 13"]
-        week13_winners = week13_df["Underdog"].unique()
-	
+        week13_underdogs = week13_df["Underdog"].unique() # Changed variable name to underdogs
+        
 
-        # Create new columns and mark Thanksgiving Favorites
+        # Create new columns and mark Thanksgiving Underdogs (returning 1 or 0)
         week_df["Away Team Thanksgiving Underdog"] = week_df.apply(
-            lambda row: True
-            if (1 <= int(row["Week"].replace("Week ", "")) <= 12) and (row["Away Team"] in week13_winners)
-            else False,
+            lambda row: 1
+            if (1 <= int(row["Week"].replace("Week ", "")) <= 12) and (row["Away Team"] in week13_underdogs)
+            else 0,
             axis=1,
         )
 
         week_df["Home Team Thanksgiving Underdog"] = week_df.apply(
-            lambda row: True
-            if (1 <= int(row["Week"].replace("Week ", "")) <= 12) and (row["Home Team"] in week13_winners)
-            else False,
+            lambda row: 1
+            if (1 <= int(row["Week"].replace("Week ", "")) <= 12) and (row["Home Team"] in week13_underdogs)
+            else 0,
             axis=1,
         )
 
-        # Mark Christmas Favorites
-        # Find Week 18 games and winners
+        # Mark Christmas Underdogs
+        # Find Week 18 games and underdogs
         week18_df = df[df["Week"] == "Week 18"]
-        week18_winners = week18_df["Underdog"].unique()
+        week18_underdogs = week18_df["Underdog"].unique() # Changed variable name to underdogs
 
-        # Create new columns and mark Thanksgiving Favorites
+        # Create new columns and mark Christmas Underdogs (returning 1 or 0)
         week_df["Away Team Christmas Underdog"] = week_df.apply(
-            lambda row: True
-            if (1 <= int(row["Week"].replace("Week ", "")) <= 17) and (row["Away Team"] in week18_winners)
-            else False,
+            lambda row: 1
+            if (1 <= int(row["Week"].replace("Week ", "")) <= 17) and (row["Away Team"] in week18_underdogs)
+            else 0,
             axis=1,
         )
         week_df["Home Team Christmas Underdog"] = week_df.apply(
-            lambda row: True
-            if (1 <= int(row["Week"].replace("Week ", "")) <= 17) and (row["Home Team"] in week18_winners)
-            else False,
+            lambda row: 1
+            if (1 <= int(row["Week"].replace("Week ", "")) <= 17) and (row["Home Team"] in week18_underdogs)
+            else 0,
             axis=1,
         )
         consolidated_df = pd.concat([consolidated_df, week_df])
 
-    # Corrected logic using Pandas element-wise operations (& for AND, | for OR)
+    # Corrected logic for Pre-Holiday weeks using integer columns
+    # We use boolean logic with | (OR) and & (AND) and then call .astype(int) 
+    # to convert the resulting True/False Series to 1/0.
+    
+    # NOTE: You may need to ensure 'Week_Num' is also integer/numeric here if it wasn't already.
+    
     consolidated_df['Away Team Pre Thanksgiving'] = (
-        (consolidated_df['Away Team Thanksgiving Favorite'] | consolidated_df['Away Team Thanksgiving Underdog']) 
+        (consolidated_df['Away Team Thanksgiving Favorite'].astype(bool) | consolidated_df['Away Team Thanksgiving Underdog'].astype(bool))
         & (consolidated_df['Week_Num'] < thanksgiving_week)
-    )
+    ).astype(int)
+    
     consolidated_df['Home Team Pre Thanksgiving'] = (
-        (consolidated_df['Home Team Thanksgiving Favorite'] | consolidated_df['Home Team Thanksgiving Underdog']) 
+        (consolidated_df['Home Team Thanksgiving Favorite'].astype(bool) | consolidated_df['Home Team Thanksgiving Underdog'].astype(bool))
         & (consolidated_df['Week_Num'] < thanksgiving_week)
-    )
+    ).astype(int)
     
     consolidated_df['Away Team Pre Christmas'] = (
-        (consolidated_df['Away Team Christmas Favorite'] | consolidated_df['Away Team Christmas Underdog']) 
+        (consolidated_df['Away Team Christmas Favorite'].astype(bool) | consolidated_df['Away Team Christmas Underdog'].astype(bool))
         & (consolidated_df['Week_Num'] < christmas_week)
-    )
+    ).astype(int)
+    
     consolidated_df['Home Team Pre Christmas'] = (
-        (consolidated_df['Home Team Christmas Favorite'] | consolidated_df['Home Team Christmas Underdog']) 
+        (consolidated_df['Home Team Christmas Favorite'].astype(bool) | consolidated_df['Home Team Christmas Underdog'].astype(bool))
         & (consolidated_df['Week_Num'] < christmas_week)
-    )
+    ).astype(int)
     # Create the 'Divisional Matchup Boolean' column
     consolidated_df["Divisional Matchup Boolean"] = 0
 

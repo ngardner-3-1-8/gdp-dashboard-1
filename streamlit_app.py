@@ -1428,8 +1428,8 @@ def collect_schedule_travel_ranking_data(pd, config: dict, schedule_rows):
         (consolidated_df['Home Team Christmas Favorite'] | consolidated_df['Home Team Christmas Underdog']) 
         & (consolidated_df['Week_Num'] < christmas_week)
     )
-        # Create the 'Divisional Matchup Boolean' column
-        consolidated_df["Divisional Matchup Boolean"] = 0
+    # Create the 'Divisional Matchup Boolean' column
+    consolidated_df["Divisional Matchup Boolean"] = 0
 
     # Set values based on 'Divisional Matchup?' column
     consolidated_df.loc[consolidated_df["Divisional Matchup?"] == True, "Divisional Matchup Boolean"] = 1

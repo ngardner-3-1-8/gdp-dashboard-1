@@ -38,6 +38,17 @@ starting_week = 10
 starting_year = 2025 #Can go as far back as 2010 if you need to collect all new data. You shouldn't need to change this though
 current_year = 2025
 current_year_plus_1 = current_year + 1 #current_year + 1
+thanksgiving_week = 13
+christmas_week = 18
+
+thanksgiving_date = '2025-11-27'
+black_friday_date = '2025-11-28'
+christmas_date = '2025-12-25'
+boxing_day_date = '2025-12-26'
+
+thanksgiving_reset_date = '2025-11-29' #THIS DATE IS INCLUDED IN THE RESET. SO IF THERE ARE GAMES ON THIS DATE, THEY WILL HAVE A WEEK ADDED
+christmas_reset_date = '2025-12-26'
+season_start_date = 'September 3, 2025' # MUST BE A WEDNESDAY
 
 circa_2020_entries = 1373
 circa_2021_entries = 4071
@@ -324,7 +335,7 @@ def collect_schedule_travel_ranking_data(pd, config: dict, schedule_rows):
     data = []
     # Initialize a variable to hold the last valid date and week
     last_date = None
-    start_date_str = 'September 3, 2025'
+    start_date_str = season_start_date
     start_date = parse(start_date_str)
     week = 1
     # Initialize a dictionary to store the last game date for each team
@@ -475,10 +486,11 @@ def collect_schedule_travel_ranking_data(pd, config: dict, schedule_rows):
 
     selected_contest = config['selected_contest']
     if selected_contest == 'Circa':
-        df.loc[df['Date'] >= pd.to_datetime('2025-11-29'), 'Week'] += 1
-        df.loc[df['Date'] >= pd.to_datetime('2025-12-26'), 'Week'] += 1
-        df.loc[df['Date'] >= pd.to_datetime('2025-11-29'), 'Week_Num'] += 1
-        df.loc[df['Date'] >= pd.to_datetime('2025-12-26'), 'Week_Num'] += 1
+        df.loc[df['Date'] >= pd.to_datetime(thanksgiving_reset_date), 'Week'] += 1
+        df.loc[df['Date'] >= pd.to_datetime(christmas_reset_date), 'Week'] += 1
+        df.loc[df['Date'] >= pd.to_datetime(thanksgiving_reset_date), 'Week_Num'] += 1
+        df.loc[df['Date'] >= pd.to_datetime(christmas_reset_date), 'Week_Num'] += 1
+
 
     # Convert 'Week' back to string format if needed
     df['Week'] = 'Week ' + df['Week'].astype(str)
@@ -690,7 +702,7 @@ def collect_schedule_travel_ranking_data(pd, config: dict, schedule_rows):
 
     
     df['Thursday Night Game'] = 'False'
-    df["Thursday Night Game"] = df.apply(lambda row: 'True' if (row['Date'].weekday() == 3) and (row['Date'] != pd.to_datetime('2024-11-28')) and (row['Date'] != pd.to_datetime('2024-12-26'))  else row["Thursday Night Game"], axis =1)
+    df["Thursday Night Game"] = df.apply(lambda row: 'True' if (row['Date'].weekday() == 3) and (row['Date'] != pd.to_datetime(thanksgiving_date)) and (row['Date'] != pd.to_datetime(boxing_day_date)) and (row['Date'] != pd.to_datetime(christmas_date))  else row["Thursday Night Game"], axis =1)
 
 
     df['Home Team Winner?'] = df.apply(lambda row: 'Home Team' if row['Adjusted Current Winner'] == row['Home Team'] else 'Away Team', axis=1)
@@ -1397,6 +1409,12 @@ def collect_schedule_travel_ranking_data(pd, config: dict, schedule_rows):
             axis=1,
         )
         consolidated_df = pd.concat([consolidated_df, week_df])
+
+    df['Away Team Pre Thanksgiving'] = True if ((df['Away Team Thanksgiving Favorite'] or df['Away Team Thanksgiving Underdog']) and df['Week_Num'] < thanksgiving_week) else False
+    df['Home Team Pre Thanksgiving'] = True if ((df['Home Team Thanksgiving Favorite'] or df['Home Team Thanksgiving Underdog']) and df['Week_Num'] < thanksgiving_week) else False
+
+    df['Away Team Pre Christmas'] = True if ((df['Away Team Christmas Favorite'] or df['Away Team Christmas Underdog']) and df['Week_Num'] < christmas_week) else False
+    df['Home Team Pre Christmas'] = True if ((df['Home Team Christmas Favorite'] or df['Home Team Christmas Underdog']) and df['Week_Num'] < christmas_week) else False
 
     # Create the 'Divisional Matchup Boolean' column
     consolidated_df["Divisional Matchup Boolean"] = 0

@@ -1828,10 +1828,6 @@ def collect_schedule_travel_ranking_data(pd, config: dict, schedule_rows):
     
     
     public_pick_df = public_pick_df.drop_duplicates()
-
-    st.write("ERROR CHECK FOR PUBLIC PICK % LINE 1826")
-    st.write(public_pick_df)
-    
     
     
     # ==============================================================================
@@ -1907,8 +1903,7 @@ def collect_schedule_travel_ranking_data(pd, config: dict, schedule_rows):
         lambda row: get_public_pick_percent(row, 'home'),
         axis=1
     )
-    st.write("ERROR CHECK LINE 1910")
-    st.write(consolidated_df["Home Team Public Pick %"])
+
     print("Finished populating public pick percentages.")
 
     # Save the consolidated DataFrame to a single CSV file
@@ -2170,8 +2165,6 @@ def get_predicted_pick_percentages(config: dict, schedule_df: pd.DataFrame):
             nfl_schedule_df.loc[current_week_mask & (nfl_schedule_df['Away Team'] == team), 'Away Team Expected Availability'] = team_avail_percent
 
         # --- C. PREPARE & PREDICT *THIS* WEEK'S PICKS ---
-        new_df = nfl_schedule_df[current_week_mask].copy()
-        st.write("ERROR CHECK LINE 2168")
         st.write(new_df)
 
         # Select all columns needed for prediction features
@@ -2223,8 +2216,6 @@ def get_predicted_pick_percentages(config: dict, schedule_df: pd.DataFrame):
         away_df = create_pick_df(new_df, 'Away', 'Away Team', 'Home Team', 'Home', True)
         home_df = create_pick_df(new_df, 'Home', 'Home Team', 'Away Team', 'Away', False)
 
-        st.write("ERROR CHECK LINE 2218")
-        st.write(away_df)
         
         # --- Conditional Prediction ---
         if public_picks_available and rf_model_enhanced:
@@ -2541,8 +2532,7 @@ def reformat_df(df: pd.DataFrame, config: dict):
     # --- Fix 2: Use the passed 'df' argument instead of global 'full_df_with_ev' ---
     # Make a copy to avoid SettingWithCopyWarning on the original df
     df = df.copy() 
-    st.write("ERROR CHECKING LINE 2508")
-    st.write(df)
+
     df['ID'] = df.index + 1
     
     # --- Away Team Dataframe ---
@@ -4988,8 +4978,6 @@ else:
         # --- FIX: Pass schedule_rows to this function ---
         collect_schedule_travel_ranking_data_df = collect_schedule_travel_ranking_data(pd, config, schedule_rows)
         st.write("Step 2 Completed.")
-        st.write("ERROR CHECK LINE 4991")
-        st.write(collect_schedule_travel_ranking_data_df)
 
         # Step 3: Predict Pick % (Preliminary)
         st.write("Step 3/6: Predicting Pick Percentages & Calculating Availability...")

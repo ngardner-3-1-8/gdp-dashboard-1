@@ -2214,6 +2214,9 @@ def get_predicted_pick_percentages(config: dict, schedule_df: pd.DataFrame):
 
         away_df = create_pick_df(new_df, 'Away Team', 'Home Team', True)
         home_df = create_pick_df(new_df, 'Home Team', 'Away Team', False)
+
+        st.write("ERROR CHECK LINE 2218")
+        st.write(away_df)
         
         # --- Conditional Prediction ---
         if public_picks_available and rf_model_enhanced:

@@ -2111,7 +2111,7 @@ def get_predicted_pick_percentages(config: dict, schedule_df: pd.DataFrame):
     # If the entry size is not set, the simulation will break.
     if nfl_schedule_df.loc[nfl_schedule_df['Week_Num'] == starting_week, 'Total Remaining Entries at Start of Week'].empty:
          st_write(f"Error: 'Total Remaining Entries' not set for starting week {starting_week}. Assuming 10000.")
-         nfl_schedule_df.loc[nfl_schedule_df['Week_Num'] == starting_week, 'Total Remaining Entries at Start of Week'] = 10000
+         nfl_schedule_df.loc[nfl_schedule_df['Week_Num'] == starting_week, 'Total Remaining Entries at Start of Week'] = default_entries
     
     max_week = nfl_schedule_df['Week_Num'].max() # Get max week from the data itself
     
@@ -2145,7 +2145,7 @@ def get_predicted_pick_percentages(config: dict, schedule_df: pd.DataFrame):
 
     # Loop through each week, starting from your defined starting week
     for current_week in range(starting_week, int(max_week) + 1):
-        st_write(f"\n--- 🏈 Processing Week {current_week} ---")
+        st_write(f"\n--- 🏈 Processing Week {current_week} of {max_week}---")
         current_week_mask = nfl_schedule_df['Week_Num'] == current_week
         if not current_week_mask.any():
             st_write(f"Skipping week {current_week} (no data found).")
@@ -2160,11 +2160,13 @@ def get_predicted_pick_percentages(config: dict, schedule_df: pd.DataFrame):
         # --- B. CALCULATE & SET *THIS* WEEK'S AVAILABILITY ---
         for team in all_teams:
             unavailable_count = U_prev_week.get(team, 0.0)
-            st
             # (S_w - unavailable_count) is the number of remaining entries who CAN pick this team
             # We divide by S_w to get the percentage of the remaining pool who can pick this team
             team_avail_percent = (S_w - unavailable_count) / S_w
             team_avail_percent = max(0.0, min(1.0, team_avail_percent)) # Clamp between 0 and 1
+
+            st.write("ERROR CHECK: AVIL PERCENT - LINE 2168")
+            st.write(team_avail_percent)
             
             # Set it in the main dataframe (only for the games this team is playing in this week)
             nfl_schedule_df.loc[current_week_mask & (nfl_schedule_df['Home Team'] == team), 'Home Team Expected Availability'] = team_avail_percent
@@ -2193,8 +2195,6 @@ def get_predicted_pick_percentages(config: dict, schedule_df: pd.DataFrame):
         # Check if public pick data is available for this week's predictions
         # Note: This check relies on 'Home Team Public Pick %' not being NaN
         public_picks_available = (new_df['Home Team Public Pick %'].notna().any())
-        st.write("ERROR CHECK LINE 2191")
-        st.write(public_picks_available)
         
         # --- Create away_df and home_df (Feature Engineering) ---
         # Helper function to rename columns consistently for prediction

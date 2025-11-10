@@ -4980,7 +4980,13 @@ else:
         st.write("Step 2 Completed.")
 
         # Step 3: Predict Pick % (Preliminary)
-        
+        st.write("Step 3/6: Predicting Pick Percentages & Calculating Availability...")
+
+        # --- Pass the dataframe from Step 2 into this function ---
+
+        nfl_schedule_pick_percentages_df = get_predicted_pick_percentages(config, collect_schedule_travel_ranking_data_df)
+
+        st.write("Step 3a Completed (Availability Calculated).")
         # Step 3b: Predict Pick % (With Availability)
 #        st.write("Step 3b/6: Refining Pick Percentages using Availability...")
         # --- Pass the dataframe from Step 3a into this function ---

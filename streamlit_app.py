@@ -1998,8 +1998,7 @@ def get_predicted_pick_percentages(config: dict, schedule_df: pd.DataFrame):
     # Define features related to holiday games (ensure consistency with training/prediction)
     # The actual presence of these columns depends on your data loading/feature engineering elsewhere.
     holiday_cols = ['Thanksgiving Favorite', 'Thanksgiving Underdog', 'Christmas Favorite', 'Christmas Underdog', 'Pre Thanksgiving', 'Pre Christmas']
-    st.write("ERROR CHECK LNE 2001")
-    st.write(schedule_df)
+
     # Load your historical data (Replace dummy paths with your actual file loading logic if necessary)
     if selected_contest == 'Circa':
         df = pd.read_csv('Circa_historical_data.csv')
@@ -2019,7 +2018,6 @@ def get_predicted_pick_percentages(config: dict, schedule_df: pd.DataFrame):
         # Add back only if guaranteed to exist in the historical data 'df'
         base_features.extend([col for col in holiday_cols if col in df.columns])
         base_features = list(set(base_features)) # Remove duplicates
-        st.write(f"Training Factors: {base_features}")
     else:
         base_features = ['Win %', 'Future Value (Stars)', 'Date', 'Away Team', 'Divisional Matchup?']
         
@@ -2110,7 +2108,7 @@ def get_predicted_pick_percentages(config: dict, schedule_df: pd.DataFrame):
     # Ensure 'Total Remaining Entries at Start of Week' has been correctly initialized
     # If the entry size is not set, the simulation will break.
     if nfl_schedule_df.loc[nfl_schedule_df['Week_Num'] == starting_week, 'Total Remaining Entries at Start of Week'].empty:
-         st_write(f"Error: 'Total Remaining Entries' not set for starting week {starting_week}. Assuming 10000.")
+         st_write(f"Error: 'Total Remaining Entries' not set for starting week {starting_week}. Assuming {deafault_entries}.")
          nfl_schedule_df.loc[nfl_schedule_df['Week_Num'] == starting_week, 'Total Remaining Entries at Start of Week'] = default_entries
     
     max_week = nfl_schedule_df['Week_Num'].max() # Get max week from the data itself
@@ -2165,8 +2163,6 @@ def get_predicted_pick_percentages(config: dict, schedule_df: pd.DataFrame):
             team_avail_percent = (S_w - unavailable_count) / S_w
             team_avail_percent = max(0.0, min(1.0, team_avail_percent)) # Clamp between 0 and 1
 
-            st.write("ERROR CHECK: AVIL PERCENT - LINE 2168")
-            st.write(team_avail_percent)
             
             # Set it in the main dataframe (only for the games this team is playing in this week)
             nfl_schedule_df.loc[current_week_mask & (nfl_schedule_df['Home Team'] == team), 'Home Team Expected Availability'] = team_avail_percent
@@ -2318,8 +2314,6 @@ def get_predicted_pick_percentages(config: dict, schedule_df: pd.DataFrame):
         # *** FEEDBACK LOOP ***
         # The "used" dictionary for the next loop is the one we just calculated
         U_prev_week = U_next_week.copy()
-        st.write("U_prev_week")
-        st.write(U_prev_week)
 		
         # Set the next week's starting pool size based on this week's survivors
         next_week = current_week + 1

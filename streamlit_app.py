@@ -2160,7 +2160,7 @@ def get_predicted_pick_percentages(config: dict, schedule_df: pd.DataFrame):
         # --- B. CALCULATE & SET *THIS* WEEK'S AVAILABILITY ---
         for team in all_teams:
             unavailable_count = U_prev_week.get(team, 0.0)
-            
+            st
             # (S_w - unavailable_count) is the number of remaining entries who CAN pick this team
             # We divide by S_w to get the percentage of the remaining pool who can pick this team
             team_avail_percent = (S_w - unavailable_count) / S_w
@@ -2318,12 +2318,13 @@ def get_predicted_pick_percentages(config: dict, schedule_df: pd.DataFrame):
         # *** FEEDBACK LOOP ***
         # The "used" dictionary for the next loop is the one we just calculated
         U_prev_week = U_next_week.copy()
-        
+        st.write("U_prev_week")
+        st.write(U_prev_week)
+		
         # Set the next week's starting pool size based on this week's survivors
         next_week = current_week + 1
         nfl_schedule_df.loc[nfl_schedule_df['Week_Num'] == next_week, 'Total Remaining Entries at Start of Week'] = total_survivors_this_week
-        st.write(f"Next Week: {next_week}")
-        st.write(nfl_schedule_df[nfl_schedule_df['Week_Num'] == next_week])
+
         
         st_write(f"Projected Pool Size for Week {next_week}: {total_survivors_this_week:,.0f}")
         
@@ -2392,8 +2393,6 @@ def get_predicted_pick_percentages(config: dict, schedule_df: pd.DataFrame):
         nfl_schedule_df.to_csv("Splash_Predicted_pick_percent.csv", index=False)
     else:
         nfl_schedule_df.to_csv("DK_Predicted_pick_percent.csv", index=False)
-    st.subheader('Estimated Pick Percentages Without Availability')
-    st.write(nfl_schedule_df)
     return nfl_schedule_df
 
 def calculate_ev(df, config: dict, use_cache=False):

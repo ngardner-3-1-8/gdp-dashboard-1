@@ -2379,6 +2379,25 @@ def get_predicted_pick_percentages(config: dict, schedule_df: pd.DataFrame):
             axis=1, 
             args=(custom_pick_percentages,) # Pass the config dict
         )
+	# 1. Convert all 'object' columns to 'str' to handle mixed types
+    for col in nfl_schedule_df.select_dtypes(include=['object']).columns:
+        nfl_schedule_df[col] = nfl_schedule_df[col].astype(str).fillna('')
+
+    # 2. Explicitly convert calculated columns to float
+    float_cols = [
+        'Home Team Expected Availability', 'Away Team Expected Availability',
+        'Home Pick %', 'Away Pick %', 'Expected Home Team Survivors', 
+        'Expected Away Team Survivors', 'Expected Home Team Eliminations', 
+        'Expected Away Team Eliminations', 'Total Remaining Entries at Start of Week'
+    ]
+    
+    for col in float_cols:
+        if col in nfl_schedule_df.columns:
+            # The errors='coerce' is a fallback, but simple .astype(float) is better
+            # since we expect only numbers or NaNs at this point.
+            nfl_schedule_df[col] = pd.to_numeric(nfl_schedule_df[col], errors='coerce') 
+
+    # --- END PYARROW/STREAMLIT FIX ---
     
     if selected_contest == 'Circa':
         nfl_schedule_df.to_csv("Circa_Predicted_pick_percent.csv", index=False)
@@ -4981,9 +5000,7 @@ else:
 
         # Step 3: Predict Pick % (Preliminary)
         st.write("Step 3/6: Predicting Pick Percentages & Calculating Availability...")
-
         # --- Pass the dataframe from Step 2 into this function ---
-
         nfl_schedule_pick_percentages_df = get_predicted_pick_percentages(config, collect_schedule_travel_ranking_data_df)
 
         st.write("Step 3a Completed (Availability Calculated).")

@@ -4228,7 +4228,6 @@ def calculate_team_availability(historical_data_path, picks_data_path, config):
     
     df_availability['Team'] = df_availability['Team'].map(abbreviations_to_full_name)
     print("\n--- Availability Calculation Complete ---")
-    st.write(df_availability)
     return df_availability
 
 

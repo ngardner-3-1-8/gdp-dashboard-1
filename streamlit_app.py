@@ -4226,7 +4226,7 @@ def calculate_team_availability(historical_data_path, picks_data_path, config):
         "SEA": "Seattle Seahawks",
         "TB": "Tampa Bay Buccaneers",
         "TEN": "Tennessee Titans",
-        "WAS": "Washington Commanders"
+        "WSH": "Washington Commanders"
     }
     
     df_availability['Team'] = df_availability['Team'].map(abbreviations_to_full_name)

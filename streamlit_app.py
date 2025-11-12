@@ -2379,7 +2379,7 @@ def get_predicted_pick_percentages(config: dict, schedule_df: pd.DataFrame):
 
     ####################################################################################################
     
-    def run_monte_carlo_simulation(nfl_schedule_df, num_trials=10000):
+    def run_monte_carlo_simulation(nfl_schedule_df, num_trials=1000):
         """
         Runs a Monte Carlo simulation to estimate the distribution of survivor
         pool outcomes, based on the 'Expected Value' pick percentages.
@@ -2387,11 +2387,6 @@ def get_predicted_pick_percentages(config: dict, schedule_df: pd.DataFrame):
         This function is defined *inside* get_predicted_pick_percentages
         to access its scope (starting_week, max_week).
         """
-        
-        # We need these libraries
-        import numpy as np
-        import pandas as pd
-        import streamlit as st
         
         st.write(f"Running Monte Carlo Simulation with {num_trials:,} trials...")
         

@@ -4103,6 +4103,8 @@ def calculate_team_availability(historical_data_path, picks_data_path, config):
             st.write("ERROR CHECK  LINE 4103")
             st.write(df_picks[col])
             df_picks[col] = df_picks[col].replace(correction_map)
+            st.write("ERROR CHECK  LINE 4106")
+            st.write(df_picks[col])
         else:
             print(f"Warning: Column '{col}' not found in df_picks.")
 

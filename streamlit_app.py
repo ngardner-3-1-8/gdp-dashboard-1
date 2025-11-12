@@ -4088,7 +4088,7 @@ def calculate_team_availability(historical_data_path, picks_data_path, config):
     start_w = config['starting_week']
 
     st.write("ERROR CHECK LINE 4086")
-    st.write("df_hist")
+    st.write(df_hist)
     # --- User Provided Data ---
     correction_map = {
         "JAC": "JAX",

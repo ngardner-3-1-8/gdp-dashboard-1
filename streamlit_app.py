@@ -2397,6 +2397,112 @@ def get_predicted_pick_percentages(config: dict, schedule_df: pd.DataFrame):
             # since we expect only numbers or NaNs at this point.
             nfl_schedule_df[col] = pd.to_numeric(nfl_schedule_df[col], errors='coerce') 
 
+#######################################################################################################
+    
+    def run_monte_carlo_simulation(nfl_schedule_df, num_trials=10000):
+        """
+        Run Monte Carlo simulations to estimate eliminations, survival distribution, and team availability.
+        """
+    
+        st_write(f"Running Monte Carlo Simulation with {num_trials:,} trials...")
+    
+        # Collect results for aggregation
+        monte_results = []
+    
+        # Identify unique weeks
+        weeks = sorted(nfl_schedule_df['Week_Num'].unique())
+    
+        # For each simulation
+        for trial in range(num_trials):
+            # Initialize survivors and availability dictionary
+            remaining_entries = nfl_schedule_df.loc[
+                nfl_schedule_df['Week_Num'] == weeks[0],
+                'Total Remaining Entries at Start of Week'
+            ].iloc[0]
+    
+            used_teams = {team: 0 for team in pd.unique(nfl_schedule_df[['Home Team', 'Away Team']].values.ravel('K'))}
+    
+            week_records = []
+    
+            for week in weeks:
+                week_df = nfl_schedule_df[nfl_schedule_df['Week_Num'] == week].copy()
+                week_df = week_df.fillna(0)
+    
+                # Skip empty weeks
+                if week_df.empty:
+                    continue
+    
+                # Simulate picks (convert pick % to counts)
+                week_df['Home Picks'] = np.random.binomial(
+                    n=int(remaining_entries),
+                    p=week_df['Home Pick %']
+                )
+                week_df['Away Picks'] = np.random.binomial(
+                    n=int(remaining_entries),
+                    p=week_df['Away Pick %']
+                )
+    
+                # Simulate wins/losses based on Fair Odds
+                week_df['Home Wins'] = np.random.binomial(1, week_df['Home Team Fair Odds'])
+                week_df['Away Wins'] = np.random.binomial(1, week_df['Away Team Fair Odds'])
+    
+                # Calculate eliminations and survivors for this week
+                home_eliminations = (week_df['Home Picks'] * (1 - week_df['Home Wins']))
+                away_eliminations = (week_df['Away Picks'] * (1 - week_df['Away Wins']))
+                total_eliminations = home_eliminations.sum() + away_eliminations.sum()
+                survivors_this_week = max(remaining_entries - total_eliminations, 0)
+    
+                # Store week-level results
+                week_records.append({
+                    'Week_Num': week,
+                    'Trial': trial,
+                    'Eliminations': total_eliminations,
+                    'Survivors': survivors_this_week
+                })
+    
+                # Update availability (teams used by survivors who picked them)
+                for _, row in week_df.iterrows():
+                    used_teams[row['Home Team']] += row['Home Picks']
+                    used_teams[row['Away Team']] += row['Away Picks']
+    
+                remaining_entries = survivors_this_week
+    
+                if remaining_entries <= 0:
+                    break  # everyone eliminated, stop simulating
+    
+            monte_results.extend(week_records)
+    
+        monte_df = pd.DataFrame(monte_results)
+    
+        summary = monte_df.groupby('Week_Num').agg({
+            'Eliminations': ['mean', 'std', 'median'],
+            'Survivors': ['mean', 'std', 'median']
+        }).reset_index()
+        
+        summary.columns = [
+            'Week_Num', 
+            'Avg Eliminations', 'Std Eliminations', 'Median Eliminations',
+            'Avg Survivors', 'Std Survivors', 'Median Survivors'
+        ]
+
+    
+        st_write("Monte Carlo simulation completed ✅")
+        return summary
+    # --- OPTIONAL: Run Monte Carlo after predictions ---
+    monte_summary = run_monte_carlo_simulation(nfl_schedule_df, num_trials=100000)
+    
+    # Merge back into main dataframe for charting
+    nfl_schedule_df = nfl_schedule_df.merge(
+        monte_summary[['Week_Num', 'Avg Survivors', 'Avg Eliminations']],
+        on='Week_Num',
+        how='left'
+    )
+    
+    return nfl_schedule_df, monte_summary
+
+
+#######################################################################################################
+
     # --- END PYARROW/STREAMLIT FIX ---
     
     if selected_contest == 'Circa':

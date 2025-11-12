@@ -2422,7 +2422,7 @@ def get_predicted_pick_percentages(config: dict, schedule_df: pd.DataFrame):
             week_records = []
     
             for week in tqdm(range(start_w, end_w), desc="Processing Weeks"):
-                week_df = df[df['Week_Num'] == week].copy()
+                week_df = nfl_schedule_df[nfl_schedule_df['Week_Num'] == week].copy()
                 if week_df.empty:
                     print(f"⚠️ Skipping Week {week} — no games found.")
                     continue

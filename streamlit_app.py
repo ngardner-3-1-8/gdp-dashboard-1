@@ -2412,7 +2412,7 @@ def get_predicted_pick_percentages(config: dict, schedule_df: pd.DataFrame):
         # For each simulation
         for trial in range(num_trials):
             # Initialize survivors and availability dictionary
-            remaining_entries = nfl_schedule_df.loc[
+            total_remaining_entries = nfl_schedule_df.loc[
                 nfl_schedule_df['Week_Num'] == weeks[0],
                 'Total Remaining Entries at Start of Week'
             ].iloc[0]

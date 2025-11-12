@@ -1963,13 +1963,10 @@ def get_expected_availability(team_name, availability_dict: Dict):
 
     # Handle missing or invalid values. Default to 1.0 (fully available).
     if availability is None:
-        st.write("ERROR CHECK: availability is none")
         return 1.0
     elif availability <= -0.01:
-        st.write("ERROR CHECK: availability is <=-.01")
         return 1.0		
     else:
-        st.write(f"ERROR CHECK: availability found: {availability}")
         return availability
 
 # Mock for st.write/st.success (assuming Streamlit is used for output)
@@ -2108,7 +2105,7 @@ def get_predicted_pick_percentages(config: dict, schedule_df: pd.DataFrame):
     # Ensure 'Total Remaining Entries at Start of Week' has been correctly initialized
     # If the entry size is not set, the simulation will break.
     if nfl_schedule_df.loc[nfl_schedule_df['Week_Num'] == starting_week, 'Total Remaining Entries at Start of Week'].empty:
-         st_write(f"Error: 'Total Remaining Entries' not set for starting week {starting_week}. Assuming {deafault_entries}.")
+         st_write(f"Error: 'Total Remaining Entries' not set for starting week {starting_week}. Assuming {default_entries}.")
          nfl_schedule_df.loc[nfl_schedule_df['Week_Num'] == starting_week, 'Total Remaining Entries at Start of Week'] = default_entries
     
     max_week = nfl_schedule_df['Week_Num'].max() # Get max week from the data itself
@@ -2397,7 +2394,7 @@ def get_predicted_pick_percentages(config: dict, schedule_df: pd.DataFrame):
             # since we expect only numbers or NaNs at this point.
             nfl_schedule_df[col] = pd.to_numeric(nfl_schedule_df[col], errors='coerce') 
 
-#######################################################################################################
+    ####################################################################################################
     
     def run_monte_carlo_simulation(nfl_schedule_df, num_trials=10000):
         """
@@ -2424,23 +2421,58 @@ def get_predicted_pick_percentages(config: dict, schedule_df: pd.DataFrame):
     
             week_records = []
     
-            for week in weeks:
-                week_df = nfl_schedule_df[nfl_schedule_df['Week_Num'] == week].copy()
-                week_df = week_df.fillna(0)
-    
-                # Skip empty weeks
+            for week in tqdm(range(start_w, end_w), desc="Processing Weeks"):
+                week_df = df[df['Week_Num'] == week].copy()
                 if week_df.empty:
+                    print(f"⚠️ Skipping Week {week} — no games found.")
                     continue
-    
-                # Simulate picks (convert pick % to counts)
+            
+                # --- Defensive Fix: Prevent NaN, division by zero, or invalid probabilities ---
+            
+                # Fill missing pick percentages
+                week_df['Home Pick %'] = week_df['Home Pick %'].fillna(0.0)
+                week_df['Away Pick %'] = week_df['Away Pick %'].fillna(0.0)
+            
+                # Normalize pick percentages so total = 1.0
+                total_pick_prob = week_df['Home Pick %'].sum() + week_df['Away Pick %'].sum()
+                if total_pick_prob == 0 or pd.isna(total_pick_prob):
+                    print(f"⚠️ All pick percentages missing or zero in Week {week}. Defaulting uniform.")
+                    total_pick_prob = 1.0
+                week_df['Home Pick %'] = week_df['Home Pick %'] / total_pick_prob
+                week_df['Away Pick %'] = week_df['Away Pick %'] / total_pick_prob
+            
+                # Handle NaN or zero remaining entries
+                if 'Remaining Entries' in week_df.columns:
+                    remaining_entries = week_df['Remaining Entries'].iloc[0]
+                else:
+                    # Or however you track pool size between weeks
+                    remaining_entries = total_remaining_entries.get(week, np.nan)  
+            
+                if pd.isna(remaining_entries) or remaining_entries <= 0:
+                    print(f"⚠️ NaN or zero remaining_entries in Week {week}. Defaulting to 1.")
+                    remaining_entries = 1
+            
+                remaining_entries = int(remaining_entries)
+            
+                # --- Safe Monte Carlo Draws ---
                 week_df['Home Picks'] = np.random.binomial(
-                    n=int(remaining_entries),
-                    p=week_df['Home Pick %']
+                    n=remaining_entries,
+                    p=np.clip(week_df['Home Pick %'], 0, 1)
                 )
                 week_df['Away Picks'] = np.random.binomial(
-                    n=int(remaining_entries),
-                    p=week_df['Away Pick %']
+                    n=remaining_entries,
+                    p=np.clip(week_df['Away Pick %'], 0, 1)
                 )
+            
+                # Continue with your elimination/survivor calculations below
+                week_df['Home Eliminations'] = week_df['Home Picks'] * (1 - week_df['Home Team Fair Odds'])
+                week_df['Away Eliminations'] = week_df['Away Picks'] * (1 - week_df['Away Team Fair Odds'])
+                week_df['Total Eliminations'] = week_df['Home Eliminations'] + week_df['Away Eliminations']
+            
+                total_remaining_entries[week + 1] = max(
+                    0, remaining_entries - week_df['Total Eliminations'].sum()
+                )
+
     
                 # Simulate wins/losses based on Fair Odds
                 week_df['Home Wins'] = np.random.binomial(1, week_df['Home Team Fair Odds'])
@@ -2489,7 +2521,7 @@ def get_predicted_pick_percentages(config: dict, schedule_df: pd.DataFrame):
         st_write("Monte Carlo simulation completed ✅")
         return summary
     # --- OPTIONAL: Run Monte Carlo after predictions ---
-    monte_summary = run_monte_carlo_simulation(nfl_schedule_df, num_trials=100000)
+    monte_summary = run_monte_carlo_simulation(nfl_schedule_df, num_trials=10000)
     
     # Merge back into main dataframe for charting
     nfl_schedule_df = nfl_schedule_df.merge(
@@ -2501,7 +2533,7 @@ def get_predicted_pick_percentages(config: dict, schedule_df: pd.DataFrame):
     return nfl_schedule_df, monte_summary
 
 
-#######################################################################################################
+    ###################################################################################################
 
     # --- END PYARROW/STREAMLIT FIX ---
     

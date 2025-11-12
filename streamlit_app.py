@@ -2674,7 +2674,7 @@ def calculate_ev(df, config: dict, use_cache=False):
     for week in tqdm(range(start_w, end_w), desc="Processing Weeks", leave=False):
         st.write("ERROR CHECK LINE 2675")
         st.write(f"Week = {week}")
-		st.write(df)
+        st.write(df)
         week_df = df[df['Week_Num'] == week].copy() # Use the 'df' argument
         # Check if the current week requires two picks
 #        if week in week_requiring_two_selections:

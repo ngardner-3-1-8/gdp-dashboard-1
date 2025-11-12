@@ -4161,7 +4161,8 @@ def calculate_team_availability(historical_data_path, picks_data_path, config):
     all_teams_home = df_hist['Team'].dropna().unique()
     all_teams_away = df_hist['Opponent'].dropna().unique()
     all_teams = np.unique(np.concatenate((all_teams_home, all_teams_away)))
-
+    st.write("ERROR CHECK LINE 4165")
+    st.write(all_teams)
     availability_list = []
 
     for team in all_teams:
@@ -4192,7 +4193,8 @@ def calculate_team_availability(historical_data_path, picks_data_path, config):
     df_availability = pd.DataFrame(availability_list)
     df_availability['Availability_Percent_Float'] = pd.to_numeric(df_availability['Availability_Percent'], errors='coerce')
     df_availability = df_availability.sort_values(by='Availability_Percent_Float', ascending=False).drop(columns=['Availability_Percent_Float'])
-
+    st.write("ERROR CHECK LINE 4165")
+    st.write(df_availability)
     # Map team abbreviations to full names
     abbreviations_to_full_name = {
         "ARI": "Arizona Cardinals",
@@ -4230,8 +4232,8 @@ def calculate_team_availability(historical_data_path, picks_data_path, config):
     }
     
     df_availability['Team'] = df_availability['Team'].map(abbreviations_to_full_name)
-
     print("\n--- Availability Calculation Complete ---")
+	
     return df_availability
 
 

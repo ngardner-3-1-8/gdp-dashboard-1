@@ -34,7 +34,7 @@ import csv
 from typing import Optional
 from typing import Dict, List, Any
 
-starting_week = 10
+starting_week = 11
 starting_year = 2025 #Can go as far back as 2010 if you need to collect all new data. You shouldn't need to change this though
 current_year = 2025
 current_year_plus_1 = current_year + 1 #current_year + 1

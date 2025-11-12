@@ -4087,8 +4087,6 @@ def calculate_team_availability(historical_data_path, picks_data_path, config):
     df_picks = pd.read_csv(picks_data_path, low_memory=False)
     start_w = config['starting_week']
 
-    st.write("ERROR CHECK LINE 4086")
-    st.write(df_hist)
     # --- User Provided Data ---
     correction_map = {
         "JAC": "JAX",

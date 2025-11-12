@@ -4100,10 +4100,12 @@ def calculate_team_availability(historical_data_path, picks_data_path, config):
     # Apply the replacement to all specified columns in df_picks
     for col in week_columns:
         if col in df_picks.columns:
+            st.write("ERROR CHECK  LINE 4103")
+            st.write(df_picks[col]
             df_picks[col] = df_picks[col].replace(correction_map)
         else:
             print(f"Warning: Column '{col}' not found in df_picks.")
-    
+
     print("df_picks successfully updated to use 'JAX' for all weekly columns.")
     # --- 2. Determine the Target Week (W_next) and Last Completed Week (W_max) ---
     # W_next is the week we are calculating availability FOR (start_w)

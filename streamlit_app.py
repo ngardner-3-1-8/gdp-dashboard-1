@@ -4089,7 +4089,8 @@ def calculate_team_availability(historical_data_path, picks_data_path, config):
 
     # --- User Provided Data ---
     correction_map = {
-        "JAC": "JAX"
+        "JAC": "JAX",
+		"WSH": "WAS"
     }
 
     end_week = start_w - 1

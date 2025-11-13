@@ -2567,7 +2567,7 @@ def get_predicted_pick_percentages(config: dict, schedule_df: pd.DataFrame):
     else:
         nfl_schedule_df.to_csv("DK_Predicted_pick_percent.csv", index=False)
 	
-    return nfl_schedule_df, monte_summary
+    return nfl_schedule_df
 
 
 def calculate_ev(df, config: dict, use_cache=False):

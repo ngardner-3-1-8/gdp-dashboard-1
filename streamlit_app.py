@@ -4056,7 +4056,7 @@ def update_config_value(key):
         if subcontest_name == "The Big Splash ($150 Entry)":
             st.session_state.current_config['weeks_two_picks'] = [11, 12, 13, 14, 15, 16, 17, 18]
         elif subcontest_name == "4 for 4 ($50 Entry)":
-            st.session_state.current_config['weeks_two_picks'] = [11, 12, 13, 14, 15, 16, 17, 18]
+            st.session_state.current_config['weeks_two_picks'] = [12, 13, 14, 15, 16, 17, 18]
         elif subcontest_name == "Free RotoWire (Free Entry)":
             st.session_state.current_config['weeks_two_picks'] = []
         elif subcontest_name == "For the Fans ($40 Entry)":

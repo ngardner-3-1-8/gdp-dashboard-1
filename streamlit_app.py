@@ -2537,7 +2537,7 @@ def get_predicted_pick_percentages(config: dict, schedule_df: pd.DataFrame):
 
     st.write("ERROR CHECK LINE 2538")
     st.write(monte_summary)
-	st.write(nfl_schedule_df)
+    st.write(nfl_schedule_df)
     # Merge back into main dataframe for charting
     nfl_schedule_df = nfl_schedule_df.merge(
         monte_summary[['Week_Num', 'Avg Survivors', 'Avg Eliminations']],

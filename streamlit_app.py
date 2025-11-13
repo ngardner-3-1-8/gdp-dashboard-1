@@ -2535,17 +2535,12 @@ def get_predicted_pick_percentages(config: dict, schedule_df: pd.DataFrame):
     # --- OPTIONAL: Run Monte Carlo after predictions ---
     monte_summary = run_monte_carlo_simulation(nfl_schedule_df, num_trials=1000)
 
-    st.write("ERROR CHECK LINE 2538")
-    st.write(monte_summary)
-    st.write(nfl_schedule_df)
     # Merge back into main dataframe for charting
     nfl_schedule_df = nfl_schedule_df.merge(
         monte_summary[['Week_Num', 'Avg Survivors', 'Avg Eliminations']],
         on='Week_Num',
         how='left'
     )
-    st.write("MERGED NFL SCHEDULE DF")
-    st.write(nfl_schedule_df)
 	# 1. Convert all 'object' columns to 'str' to handle mixed types
     for col in nfl_schedule_df.select_dtypes(include=['object']).columns:
         nfl_schedule_df[col] = nfl_schedule_df[col].astype(str).fillna('')
@@ -2676,9 +2671,6 @@ def calculate_ev(df, config: dict, use_cache=False):
     all_weeks_ev = {} #Store the EV values for each week
 
     for week in tqdm(range(start_w, end_w), desc="Processing Weeks", leave=False):
-        st.write("ERROR CHECK LINE 2675")
-        st.write(f"Week = {week}")
-        st.write(df)
         week_df = df[df['Week_Num'] == week].copy() # Use the 'df' argument
         # Check if the current week requires two picks
 #        if week in week_requiring_two_selections:

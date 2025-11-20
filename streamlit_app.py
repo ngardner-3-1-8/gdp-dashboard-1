@@ -2224,7 +2224,7 @@ def get_predicted_pick_percentages(config: dict, schedule_df: pd.DataFrame):
         print("\n⚙️ Starting Section 4: Feature Engineering (Ranks and Relative Stats)...")
         
         # Define group keys for weekly calculations
-        group_keys = ['Year', 'Week']
+        group_keys = ['Year', 'Date']
         
         # 1. Calculate Weekly Win % Stats
         # Using .transform() to broadcast the group-level stats to every row in that group
@@ -2291,7 +2291,7 @@ def get_predicted_pick_percentages(config: dict, schedule_df: pd.DataFrame):
         print("\n⚙️ Starting Section 4: Feature Engineering (Ranks and Relative Stats)...")
         
         # Define group keys for weekly calculations
-        group_keys = ['Year', 'Week']
+        group_keys = ['Year', 'Date']
         
         # 1. Calculate Weekly Win % Stats
         # Using .transform() to broadcast the group-level stats to every row in that group

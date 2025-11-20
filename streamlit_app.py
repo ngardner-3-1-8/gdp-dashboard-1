@@ -2317,57 +2317,62 @@ def get_predicted_pick_percentages(config: dict, schedule_df: pd.DataFrame):
         elif current_week in week_requiring_three_selections:
             target_pick_sum = 3.0
             
-        # 2. Iterative Capping and Redistribution
-        # We loop to ensure that after redistributing, we didn't push a new team over their limit.
-        
-        # Ensure we don't divide by zero initially
-        if pick_predictions_df['Pick %'].sum() == 0:
-             pick_predictions_df['Pick %'] = 0.0
-        else:
-            # Initial scale to get us to the target sum roughly
-            current_sum = pick_predictions_df['Pick %'].sum()
+        # 2. Initial Normalization
+        # Scale predictions so they sum to target BEFORE applying constraints
+        # This ensures we are starting from the correct total volume
+        current_sum = pick_predictions_df['Pick %'].sum()
+        if current_sum > 0:
             pick_predictions_df['Pick %'] = pick_predictions_df['Pick %'] * (target_pick_sum / current_sum)
+        else:
+            # Handle rare case where model predicts 0 for everyone
+            pick_predictions_df['Pick %'] = 0.0
         
-        max_iterations = 10
+        # 3. Iterative Water-Filling Loop
+        max_iterations = 15 
+        
         for i in range(max_iterations):
-            # Check for violations: Pick % > Availability
-            # We verify Availability is not NaN, replacing with 0.0 if needed
+            # Ensure Availability is filled
             pick_predictions_df['Availability'] = pick_predictions_df['Availability'].fillna(0.0)
-            
+        
+            # A. Find teams exceeding their availability
             over_cap_mask = pick_predictions_df['Pick %'] > pick_predictions_df['Availability']
             
-            # If no violations, and we are close to target sum, we are done
-            current_total = pick_predictions_df['Pick %'].sum()
-            if not over_cap_mask.any() and np.isclose(current_total, target_pick_sum):
-                break
-                
-            # If no violations but sum is WRONG (e.g. less than 1.0 because we clamped everyone),
-            # we might be in a scenario where total availability < target (End of season scenario).
-            # In that case, we can't reach target_sum. Break to avoid infinite loop.
+            # Check if we are done (no violations and sum is correct)
+            current_total_pick = pick_predictions_df['Pick %'].sum()
+            
+            # If no one is over the cap, we are likely done, unless the sum drifted due to floating point math
             if not over_cap_mask.any():
                 break
-        
-            # --- Step A: Clamp the violators ---
-            # Calculate how much "excess" probability we have to move
+                
+            # B. Calculate the "Overflow" (The amount we must take away)
+            # Sum of (Prediction - Availability) for all teams over the limit
             excess_prob = (pick_predictions_df.loc[over_cap_mask, 'Pick %'] - pick_predictions_df.loc[over_cap_mask, 'Availability']).sum()
             
-            # Clamp the violators to their max availability
+            # C. Clamp the violators to their max availability
             pick_predictions_df.loc[over_cap_mask, 'Pick %'] = pick_predictions_df.loc[over_cap_mask, 'Availability']
             
-            # --- Step B: Redistribute to non-violators ---
-            non_violators_mask = ~over_cap_mask
-            sum_non_violators = pick_predictions_df.loc[non_violators_mask, 'Pick %'].sum()
+            # D. Distribute Overflow to valid teams
+            # We only distribute to teams that are NOT currently over the cap
+            non_violator_mask = ~over_cap_mask
+            sum_non_violators = pick_predictions_df.loc[non_violator_mask, 'Pick %'].sum()
             
             if sum_non_violators > 0:
-                # Distribute excess proportionally relative to their current prediction strength
-                redistribution_factor = 1 + (excess_prob / sum_non_violators)
-                pick_predictions_df.loc[non_violators_mask, 'Pick %'] *= redistribution_factor
-            else:
-                # If there are no non-violators (everyone is capped), we can't redistribute. 
-                # This happens if the pool is dead or math is impossible.
-                break
+                # Calculate the share for each team
+                # Your Logic: Team_Share = Team_Pick / Sum_Of_Available_Teams
+                # Example: Eagles (28%) / Sum (56%) = 0.5
+                shares = pick_predictions_df.loc[non_violator_mask, 'Pick %'] / sum_non_violators
                 
-        # Final sanity check: Ensure no small floating point errors pushed us over
+                # Add their share of the excess
+                # Example: Eagles (28%) += 8% * 0.5
+                pick_predictions_df.loc[non_violator_mask, 'Pick %'] += (excess_prob * shares)
+            else:
+                # If sum_non_violators is 0 (everyone is either capped or has 0% prediction),
+                # we cannot distribute the excess. The specific math is impossible.
+                # We break to avoid infinite loop.
+                st_write(f"Warning Week {current_week}: Cannot redistribute excess {excess_prob:.4f}. Pool is saturated.")
+                break
+        
+        # Final sanity clamp to ensure floating point math didn't push anyone 0.00001 over
         pick_predictions_df['Pick %'] = pick_predictions_df[['Pick %', 'Availability']].min(axis=1)
 
         # --- D. STORE PREDICTIONS & CALCULATE SURVIVORS ---

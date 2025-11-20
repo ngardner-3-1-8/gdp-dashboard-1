@@ -2311,14 +2311,64 @@ def get_predicted_pick_percentages(config: dict, schedule_df: pd.DataFrame):
         # Predict on the *entire* weekly dataframe at once
         pick_predictions_df['Pick %'] = model.predict(predict_data)
 
-
+        target_pick_sum = 1.0
+        if current_week in week_requiring_two_selections:
+            target_pick_sum = 2.0
+        elif current_week in week_requiring_three_selections:
+            target_pick_sum = 3.0
+            
+        # 2. Iterative Capping and Redistribution
+        # We loop to ensure that after redistributing, we didn't push a new team over their limit.
         
-        # Normalize the 'Pick %' so the sum of all picks for the week is 1.0 (relative picks)
-        sum_of_picks = pick_predictions_df['Pick %'].sum()
-        if sum_of_picks > 0:
-            pick_predictions_df['Pick %'] = pick_predictions_df['Pick %'] / sum_of_picks
+        # Ensure we don't divide by zero initially
+        if pick_predictions_df['Pick %'].sum() == 0:
+             pick_predictions_df['Pick %'] = 0.0
         else:
-            st_write(f"Pick prediction sum is zero for Week {current_week}. Cannot normalize.")
+            # Initial scale to get us to the target sum roughly
+            current_sum = pick_predictions_df['Pick %'].sum()
+            pick_predictions_df['Pick %'] = pick_predictions_df['Pick %'] * (target_pick_sum / current_sum)
+        
+        max_iterations = 10
+        for i in range(max_iterations):
+            # Check for violations: Pick % > Availability
+            # We verify Availability is not NaN, replacing with 0.0 if needed
+            pick_predictions_df['Availability'] = pick_predictions_df['Availability'].fillna(0.0)
+            
+            over_cap_mask = pick_predictions_df['Pick %'] > pick_predictions_df['Availability']
+            
+            # If no violations, and we are close to target sum, we are done
+            current_total = pick_predictions_df['Pick %'].sum()
+            if not over_cap_mask.any() and np.isclose(current_total, target_pick_sum):
+                break
+                
+            # If no violations but sum is WRONG (e.g. less than 1.0 because we clamped everyone),
+            # we might be in a scenario where total availability < target (End of season scenario).
+            # In that case, we can't reach target_sum. Break to avoid infinite loop.
+            if not over_cap_mask.any():
+                break
+        
+            # --- Step A: Clamp the violators ---
+            # Calculate how much "excess" probability we have to move
+            excess_prob = (pick_predictions_df.loc[over_cap_mask, 'Pick %'] - pick_predictions_df.loc[over_cap_mask, 'Availability']).sum()
+            
+            # Clamp the violators to their max availability
+            pick_predictions_df.loc[over_cap_mask, 'Pick %'] = pick_predictions_df.loc[over_cap_mask, 'Availability']
+            
+            # --- Step B: Redistribute to non-violators ---
+            non_violators_mask = ~over_cap_mask
+            sum_non_violators = pick_predictions_df.loc[non_violators_mask, 'Pick %'].sum()
+            
+            if sum_non_violators > 0:
+                # Distribute excess proportionally relative to their current prediction strength
+                redistribution_factor = 1 + (excess_prob / sum_non_violators)
+                pick_predictions_df.loc[non_violators_mask, 'Pick %'] *= redistribution_factor
+            else:
+                # If there are no non-violators (everyone is capped), we can't redistribute. 
+                # This happens if the pool is dead or math is impossible.
+                break
+                
+        # Final sanity check: Ensure no small floating point errors pushed us over
+        pick_predictions_df['Pick %'] = pick_predictions_df[['Pick %', 'Availability']].min(axis=1)
 
         # --- D. STORE PREDICTIONS & CALCULATE SURVIVORS ---
         

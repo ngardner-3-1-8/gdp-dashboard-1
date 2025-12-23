@@ -930,8 +930,8 @@ def collect_schedule_travel_ranking_data(pd, config: dict, schedule_rows):
     st.write("")
     st.write("")
     st.write("")
-    st.subheader("Live Odds Aggregated from Multiple Sportsbooks")
-    st.write(live_api_odds_df)
+    st.subheader("Live Odds Successfully Aggregated from Multiple Sportsbooks")
+#    st.write(live_api_odds_df)
     st.write("")
     st.write("")
     st.write("")
@@ -1074,9 +1074,9 @@ def collect_schedule_travel_ranking_data(pd, config: dict, schedule_rows):
                 overridden_games_df.loc[index, 'Home Team Sportsbook Spread'] = row['Away Team Adjusted Current Rank'] - row['Home Team Adjusted Current Rank']
             if pd.isna(row['Away Team Sportsbook Spread']) or row['Away Team Sportsbook Spread'] is None:
                 overridden_games_df.loc[index, 'Away Team Sportsbook Spread'] = row['Home Team Adjusted Current Rank'] - row['Away Team Adjusted Current Rank']
-        st.subheader('Games with Unavailable Live Odds')
-        st.write('This dataframe contains the games where live odds from the Live Odds API were unavailable. This will likely happen for lookahead lines and future weeks')
-        st.write(overridden_games_df)
+#        st.subheader('Games with Unavailable Live Odds')
+#        st.write('This dataframe contains the games where live odds from the Live Odds API were unavailable. This will likely happen for lookahead lines and future weeks')
+#        st.write(overridden_games_df)
         st.write('')
         st.write('')
         st.write('')
@@ -5297,12 +5297,7 @@ else:
         nfl_schedule_pick_percentages_df = get_predicted_pick_percentages(config, collect_schedule_travel_ranking_data_df)
 
         st.write("Step 3a Completed (Availability Calculated).")
-        st.write(nfl_schedule_pick_percentages_df)
-        # Step 3b: Predict Pick % (With Availability)
-#        st.write("Step 3b/6: Refining Pick Percentages using Availability...")
-        # --- Pass the dataframe from Step 3a into this function ---
-#        nfl_schedule_pick_percentages_df = get_predicted_pick_percentages_with_availability(pd, config, df_with_availability)
-#        st.write("Step 3b Completed (Final Pick % Predicted).")
+#        st.write(nfl_schedule_pick_percentages_df)
         
         # Step 4: Calculate EV
         st.write("Step 4/6: Calculating Live Expected Value...")
@@ -5310,12 +5305,12 @@ else:
             # Pass the dataframe from Step 3 into this function
             full_df_with_ev = calculate_ev(nfl_schedule_pick_percentages_df, config, use_cache)
         st.write("Step 4 Completed.")
-        st.dataframe(full_df_with_ev) 
+#        st.dataframe(full_df_with_ev) 
 
         # Step 4b: Reformat
         st.write("Reformatting Data for Solver...")
         reformatted_df = reformat_df(full_df_with_ev, config)
-        st.write("Reformatting Complete.")
+        st.write("Reformatting Complete. Full Dataset:")
         st.dataframe(reformatted_df)
 
         # Step 5 & 6: Run Solvers

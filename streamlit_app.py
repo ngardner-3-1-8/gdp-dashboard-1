@@ -2283,6 +2283,73 @@ def get_predicted_pick_percentages(config: dict, schedule_df: pd.DataFrame):
         
         print("✅ Feature engineering complete.")
         # print(df[['Year', 'Week', 'Team', 'Win %', 'Win % Rank', 'Rank_Density', 'Num_Teams_This_Week']].head())
+
+
+		# ------------------------------------------------------------------------------
+        # NEW SECTION: Future Value & Holiday Features
+        # ------------------------------------------------------------------------------
+        
+        # A. Holiday Booleans
+        # Convert existing holiday specific columns into a single boolean "Is Holiday Game?"
+        # (Checks if either Favorite or Underdog status is > 0)
+        pick_predictions_df['Is_Christmas_Game'] = (
+            pick_predictions_df['Week_Num'] == christmas_week).astype(int)
+
+        pick_predictions_df['Is_Thanksgiving_Game'] = (
+            pick_predictions_df['Week_Num'] == thanksgiving_week).astype(int)
+
+        # B. Current Week Relative Strength
+        # "Win Percentage of the team minus the win percentage of the Top team that week."
+        # Note: 'Week_Max_WinPct' was calculated in Section 4
+        pick_predictions_df['WinPct_Diff_From_Top'] = pick_predictions_df['Win %'] - pick_predictions_df['Week_Max_WinPct']
+
+        # C. Future Schedule Analysis (The "Look-ahead" counts)
+        # We need to look at nfl_schedule_df for all weeks GREATER than current_week
+        future_schedule = nfl_schedule_df[nfl_schedule_df['Week_Num'] > current_week].copy()
+
+        if not future_schedule.empty:
+            # 1. Flatten the future schedule to a simple (Team, Week, WinPct) format
+            fut_home = future_schedule[['Home Team', 'Home Team Fair Odds', 'Week_Num']].rename(
+                columns={'Home Team': 'Team', 'Home Team Fair Odds': 'WinPct'}
+            )
+            fut_away = future_schedule[['Away Team', 'Away Team Fair Odds', 'Week_Num']].rename(
+                columns={'Away Team': 'Team', 'Away Team Fair Odds': 'WinPct'}
+            )
+            fut_long = pd.concat([fut_home, fut_away], ignore_index=True)
+
+            # 2. Identify if they are the "Top Team" in that future week
+            # Group by Week to find the Max Win % for that specific future week
+            weekly_max_series = fut_long.groupby('Week_Num')['WinPct'].transform('max')
+            fut_long['Is_Top_Team'] = (fut_long['WinPct'] == weekly_max_series)
+
+            # 3. Calculate the counts per team
+            # Create boolean columns for the criteria
+            fut_long['Future_Weeks_Top_Team'] = fut_long['Is_Top_Team'].astype(int)
+            fut_long['Future_Weeks_Over_80'] = (fut_long['WinPct'] > 0.80).astype(int)
+            fut_long['Future_Weeks_70_80'] = ((fut_long['WinPct'] >= 0.70) & (fut_long['WinPct'] <= 0.80)).astype(int)
+            fut_long['Future_Weeks_60_70'] = ((fut_long['WinPct'] >= 0.60) & (fut_long['WinPct'] < 0.70)).astype(int)
+
+            # 4. Aggregate by Team (Summing the weeks)
+            team_future_stats = fut_long.groupby('Team')[[
+                'Future_Weeks_Top_Team', 
+                'Future_Weeks_Over_80', 
+                'Future_Weeks_70_80', 
+                'Future_Weeks_60_70'
+            ]].sum().reset_index()
+
+            # 5. Merge these stats back into the current prediction dataframe
+            pick_predictions_df = pick_predictions_df.merge(team_future_stats, on='Team', how='left')
+            
+            # Fill NaNs with 0 (for teams that might not have future games in the filtered set)
+            pick_predictions_df[['Future_Weeks_Top_Team', 'Future_Weeks_Over_80', 'Future_Weeks_70_80', 'Future_Weeks_60_70']] = \
+                pick_predictions_df[['Future_Weeks_Top_Team', 'Future_Weeks_Over_80', 'Future_Weeks_70_80', 'Future_Weeks_60_70']].fillna(0)
+
+        else:
+            # If no future weeks exist (last week of season), set all to 0
+            pick_predictions_df['Future_Weeks_Top_Team'] = 0
+            pick_predictions_df['Future_Weeks_Over_80'] = 0
+            pick_predictions_df['Future_Weeks_70_80'] = 0
+            pick_predictions_df['Future_Weeks_60_70'] = 0
         
         # ==============================================================================
         # END SECTION 4

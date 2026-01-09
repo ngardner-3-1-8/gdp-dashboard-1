@@ -821,7 +821,7 @@ def collect_schedule_travel_ranking_data(pd, config: dict, schedule_rows):
             
             # 2. Load Schedule and Team Data
             df_schedule = nfl.load_schedules([season])
-            df_teams = nfl.import_team_desc()
+            df_teams = nfl.load_teams()
             
             # Create a mapping from Abbreviation (KC) to Full Name (Kansas City Chiefs)
             # to match The Odds API format
@@ -887,7 +887,7 @@ def collect_schedule_travel_ranking_data(pd, config: dict, schedule_rows):
         # Import schedule and team data
         try:
             df_schedule = nfl.load_schedules([season])
-            df_teams = nfl.import_team_desc()
+            df_teams = nfl.load_teams()
         except Exception as e:
             st.error(f"Error fetching nflreadpy data: {e}")
             return pd.DataFrame()

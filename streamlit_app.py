@@ -886,7 +886,7 @@ def collect_schedule_travel_ranking_data(pd, config: dict, schedule_rows):
         
         # Import schedule and team data
         try:
-            df_schedule = nfl.import_schedules([season])
+            df_schedule = nfl.load_schedules([season])
             df_teams = nfl.import_team_desc()
         except Exception as e:
             st.error(f"Error fetching nflreadpy data: {e}")

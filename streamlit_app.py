@@ -2442,6 +2442,7 @@ def get_predicted_pick_percentages(config: dict, schedule_df: pd.DataFrame):
             weekly_max_series = fut_long.groupby('Week_Num')['WinPct'].transform('max')
             fut_long['Is_Top_Team'] = (fut_long['WinPct'] == weekly_max_series)
 
+            total_future_weeks = future_schedule['Week_Num'].nunique()
             # 3. Calculate the counts per team
             # Create boolean columns for the criteria
             fut_long['Future_Weeks_Top_Team'] = fut_long['Is_Top_Team'].astype(int)
@@ -2456,6 +2457,10 @@ def get_predicted_pick_percentages(config: dict, schedule_df: pd.DataFrame):
                 'Future_Weeks_70_80', 
                 'Future_Weeks_60_70'
             ]].sum().reset_index()
+
+            if total_future_weeks > 0:
+                stat_cols = ['Future_Weeks_Top_Team', 'Future_Weeks_Over_80', 'Future_Weeks_70_80', 'Future_Weeks_60_70']
+                team_future_stats[stat_cols] = team_future_stats[stat_cols] / total_future_weeks
 
             # 5. Merge these stats back into the current prediction dataframe
             pick_predictions_df = pick_predictions_df.merge(team_future_stats, on='Team', how='left')

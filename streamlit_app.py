@@ -2124,12 +2124,19 @@ def get_predicted_pick_percentages(config: dict, schedule_df: pd.DataFrame):
     st_write("Training base model (no public pick data)...")
     if selected_contest == 'Circa':
         # Removed holiday cols from base_features to avoid KeyError if they don't exist in historical data
-        base_features = ['Win %', 'Future Value (Stars)', 'Date', 'Away Team', 'Divisional Matchup?', 'Week_Mean_WinPct', 'Week_Mean_FV', 'Week_Max_WinPct', 'Week_Max_FV', 'Week_Min_WinPct', 'Week_Min_FV', 'Week_Std_WinPct', 'Week_Std_FV', 'Team_WinPct_RelativeToWeekMean', 'Team_FV_RelativeToWeekMean', 'Team_WinPct_RelativeToTopTeam', 'Team_FV_RelativeToTopTeam', 'Win % Rank', 'Star Rating Rank','Num_Teams_This_Week', 'Rank_Density', 'FV_Rank_Density', 'Future_Weeks_Top_Team', 'Future_Weeks_Over_80', 'Future_Weeks_70_80', 'Future_Weeks_60_70', 'Pre Christmas', 'Pre Thanksgiving', 'Christmas Underdog', 'Christmas Favorite', 'Thanksgiving Underdog', 'Thanksgiving Favorite', 'Is_Thanksgiving_Game', 'Is_Christmas_Game']
+        base_features = ['Win %', 'Future Value (Stars)', 'Date', 'Away Team', 'Divisional Matchup?', 'Week_Mean_WinPct', 'Week_Mean_FV', 'Week_Max_WinPct', 
+						 'Week_Max_FV', 'Week_Min_WinPct', 'Week_Min_FV', 'Week_Std_WinPct', 'Week_Std_FV', 'Team_WinPct_RelativeToWeekMean', 'Team_FV_RelativeToWeekMean', 
+						 'Team_WinPct_RelativeToTopTeam', 'Team_FV_RelativeToTopTeam', 'Win % Rank', 'Star Rating Rank','Num_Teams_This_Week', 'Rank_Density', 'FV_Rank_Density', 
+						 'Future_Weeks_Top_Team', 'Future_Weeks_Over_80', 'Future_Weeks_70_80', 'Future_Weeks_60_70', 'Pre Christmas', 'Pre Thanksgiving', 'Christmas Underdog', 
+						 'Christmas Favorite', 'Thanksgiving Underdog', 'Thanksgiving Favorite', 'thanksgiving_week', 'christmas_week']
         # Add back only if guaranteed to exist in the historical data 'df'
         base_features.extend([col for col in holiday_cols if col in df.columns])
         base_features = list(set(base_features)) # Remove duplicates
     else:
-        base_features = ['Win %', 'Future Value (Stars)', 'Date', 'Away Team', 'Divisional Matchup?', 'Week_Mean_WinPct', 'Week_Mean_FV', 'Week_Max_WinPct', 'Week_Max_FV', 'Week_Min_WinPct', 'Week_Min_FV', 'Week_Std_WinPct', 'Week_Std_FV', 'Team_WinPct_RelativeToWeekMean', 'Team_FV_RelativeToWeekMean', 'Team_WinPct_RelativeToTopTeam', 'Team_FV_RelativeToTopTeam', 'Win % Rank', 'Star Rating Rank','Num_Teams_This_Week', 'Rank_Density', 'FV_Rank_Density',  'Future_Weeks_Top_Team', 'Future_Weeks_Over_80', 'Future_Weeks_70_80', 'Future_Weeks_60_70']
+        base_features = ['Win %', 'Future Value (Stars)', 'Date', 'Away Team', 'Divisional Matchup?', 'Week_Mean_WinPct', 'Week_Mean_FV', 'Week_Max_WinPct', 
+						 'Week_Max_FV', 'Week_Min_WinPct', 'Week_Min_FV', 'Week_Std_WinPct', 'Week_Std_FV', 'Team_WinPct_RelativeToWeekMean', 'Team_FV_RelativeToWeekMean', 
+						 'Team_WinPct_RelativeToTopTeam', 'Team_FV_RelativeToTopTeam', 'Win % Rank', 'Star Rating Rank','Num_Teams_This_Week', 'Rank_Density',
+						 'FV_Rank_Density',  'Future_Weeks_Top_Team', 'Future_Weeks_Over_80', 'Future_Weeks_70_80', 'Future_Weeks_60_70']
         
     X = df[base_features].fillna(0) # Fill NA for training data
     y = df['Pick %']
@@ -2405,10 +2412,10 @@ def get_predicted_pick_percentages(config: dict, schedule_df: pd.DataFrame):
         # A. Holiday Booleans
         # Convert existing holiday specific columns into a single boolean "Is Holiday Game?"
         # (Checks if either Favorite or Underdog status is > 0)
-        pick_predictions_df['Is_Christmas_Game'] = (
+        pick_predictions_df['christmas_week'] = (
             pick_predictions_df['Date'] == christmas_week).astype(int)
 
-        pick_predictions_df['Is_Thanksgiving_Game'] = (
+        pick_predictions_df['thanksgiving_week'] = (
             pick_predictions_df['Date'] == thanksgiving_week).astype(int)
 
         # B. Current Week Relative Strength

@@ -2293,10 +2293,10 @@ def get_predicted_pick_percentages(config: dict, schedule_df: pd.DataFrame):
         # Convert existing holiday specific columns into a single boolean "Is Holiday Game?"
         # (Checks if either Favorite or Underdog status is > 0)
         pick_predictions_df['Is_Christmas_Game'] = (
-            pick_predictions_df['Week'] == christmas_week).astype(int)
+            pick_predictions_df['Date'] == christmas_week).astype(int)
 
         pick_predictions_df['Is_Thanksgiving_Game'] = (
-            pick_predictions_df['Week'] == thanksgiving_week).astype(int)
+            pick_predictions_df['Date'] == thanksgiving_week).astype(int)
 
         # B. Current Week Relative Strength
         # "Win Percentage of the team minus the win percentage of the Top team that week."

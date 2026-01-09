@@ -867,111 +867,183 @@ def collect_schedule_travel_ranking_data(pd, config: dict, schedule_rows):
             print(f"Backup data fetch failed: {e}")
             return pd.DataFrame()
     
-    def get_api_nfl_odds(api_key):
-        # API key and parameters
+    def get_full_season_odds(api_key):
+        """
+        Generates a full season view:
+        1. Fetches the ENTIRE season schedule from nflreadpy (Past & Future).
+        2. Fetches LIVE odds from The Odds API.
+        3. Merges them: Updates the nflreadpy schedule with live API data where available.
+        """
+        
+        # ---------------------------------------------------------
+        # STEP 1: Get the "Base" Schedule (Past + Future) from nflreadpy
+        # ---------------------------------------------------------
+        print("Fetching full season schedule from nflreadpy...")
+        
+        # Determine season (if currently Jan/Feb 2025, we want the 2024 season)
+        now = datetime.now()
+        season = now.year if now.month > 3 else now.year - 1
+        
+        # Import schedule and team data
+        try:
+            df_schedule = nfl.import_schedules([season])
+            df_teams = nfl.import_team_desc()
+        except Exception as e:
+            st.error(f"Error fetching nflreadpy data: {e}")
+            return pd.DataFrame()
+    
+        # Create mapping: Abbr (KC) -> Full Name (Kansas City Chiefs) to match Odds API
+        team_map = dict(zip(df_teams['team_abbr'], df_teams['team_name']))
+        
+        base_games = []
+    
+        for index, row in df_schedule.iterrows():
+            # Map abbreviations to full names
+            home_full = team_map.get(row['home_team'], row['home_team'])
+            away_full = team_map.get(row['away_team'], row['away_team'])
+            
+            # Format Time
+            try:
+                # Combine gameday and gametime
+                game_time_str = f"{row['gameday']} {row['gametime']}"
+                dt_obj = datetime.strptime(game_time_str, '%Y-%m-%d %H:%M')
+                formatted_time = dt_obj.strftime('%I:%M %p ET').replace('AM ET', 'am').replace('PM ET', 'pm').lstrip('0')
+            except:
+                formatted_time = str(row['gameday']) # Fallback
+    
+            # Handle Spreads (nflreadpy is usually Home relative)
+            # If Spread is -3.0, Home is favored by 3.
+            home_spread = row['spread_line']
+            away_spread = -1 * home_spread if home_spread is not None else None
+    
+            # Build the row
+            base_games.append({
+                'Match_ID': f"{home_full} vs {away_full}", # Unique Key for merging
+                'Time': formatted_time,
+                'Away Team': away_full,
+                'Away Odds': row['away_moneyline'],
+                'Home Team': home_full,
+                'Home Odds': row['home_moneyline'],
+                'Away Spread': away_spread,
+                'Home Spread': home_spread,
+                'Source': 'Historical (nflreadpy)' # Tag source for debugging
+            })
+        
+        df_base = pd.DataFrame(base_games)
+    
+        # ---------------------------------------------------------
+        # STEP 2: Get the "Live" Data from The Odds API
+        # ---------------------------------------------------------
+        print("Fetching live odds from API...")
+        
+        live_games = []
+        
+        # API Config
         SPORT = 'americanfootball_nfl'
         REGIONS = 'us'
         MARKETS = 'h2h,spreads'
         ODDS_FORMAT = 'decimal'
         DATE_FORMAT = 'iso'
-        
         url = f'https://api.the-odds-api.com/v4/sports/{SPORT}/odds/?apiKey={api_key}&regions={REGIONS}&markets={MARKETS}&oddsFormat={ODDS_FORMAT}&dateFormat={DATE_FORMAT}'
-        
-        # --- LOGIC UPDATE START ---
+    
         try:
             response = requests.get(url)
-            # Check for non-200 status
-            if response.status_code != 200:
-                print(f'API Error: {response.status_code}. Switching to backup.')
-                return get_backup_nfl_odds()
-                
-            odds_data = response.json()
-            
-            # Check if the list is empty (API works but no live games found)
-            if not odds_data:
-                print('No live odds found in API. Switching to backup.')
-                return get_backup_nfl_odds()
-                
+            if response.status_code == 200:
+                odds_data = response.json()
+                eastern_tz = pytz.timezone('America/New_York')
+    
+                for event in odds_data:
+                    home_team = event['home_team']
+                    away_team = event['away_team']
+                    
+                    # Time Formatting
+                    utc_time = datetime.fromisoformat(event['commence_time'].replace('Z', '+00:00'))
+                    east_time = utc_time.astimezone(eastern_tz)
+                    formatted_time = east_time.strftime('%I:%M %p ET').replace('AM ET', 'am').replace('PM ET', 'pm').lstrip('0')
+    
+                    # Odds Aggregation
+                    game_odds = {'home': [], 'away': [], 'home_spread': [], 'away_spread': []}
+                    for bookmaker in event['bookmakers']:
+                        for market in bookmaker['markets']:
+                            if market['key'] == 'h2h':
+                                for outcome in market['outcomes']:
+                                    if outcome['name'] == home_team: game_odds['home'].append(outcome['price'])
+                                    elif outcome['name'] == away_team: game_odds['away'].append(outcome['price'])
+                            elif market['key'] == 'spreads':
+                                for outcome in market['outcomes']:
+                                    if outcome['name'] == home_team: game_odds['home_spread'].append(outcome['point'])
+                                    elif outcome['name'] == away_team: game_odds['away_spread'].append(outcome['point'])
+    
+                    # Averages
+                    avg_home = sum(game_odds['home'])/len(game_odds['home']) if game_odds['home'] else None
+                    avg_away = sum(game_odds['away'])/len(game_odds['away']) if game_odds['away'] else None
+                    avg_home_spread = sum(game_odds['home_spread'])/len(game_odds['home_spread']) if game_odds['home_spread'] else None
+                    avg_away_spread = sum(game_odds['away_spread'])/len(game_odds['away_spread']) if game_odds['away_spread'] else None
+    
+                    # Convert Decimal to American
+                    def dec_to_amer(dec):
+                        if not dec: return None
+                        if dec >= 2.0: return round((dec - 1) * 100)
+                        else: return round(-100 / (dec - 1))
+    
+                    live_games.append({
+                        'Match_ID': f"{home_team} vs {away_team}",
+                        'Time': formatted_time,
+                        'Away Team': away_team,
+                        'Away Odds': dec_to_amer(avg_away),
+                        'Home Team': home_team,
+                        'Home Odds': dec_to_amer(avg_home),
+                        'Away Spread': avg_away_spread,
+                        'Home Spread': avg_home_spread,
+                        'Source': 'Live API'
+                    })
         except Exception as e:
-            print(f'Request failed: {e}. Switching to backup.')
-            return get_backup_nfl_odds()
-        # --- LOGIC UPDATE END ---
+            print(f"API failed ({e}), relying solely on backup data.")
     
-        # ... The rest of your original processing code below ...
-        formatted_games = []
-        eastern_tz = pytz.timezone('America/New_York')
+        # ---------------------------------------------------------
+        # STEP 3: Merge - Overwrite Base with Live Data
+        # ---------------------------------------------------------
         
-        for event in odds_data:
-            game_id = event['id']
-            home_team = event['home_team']
-            away_team = event['away_team']
+        if live_games:
+            df_live = pd.DataFrame(live_games)
             
-            utc_commence_time = datetime.fromisoformat(event['commence_time'].replace('Z', '+00:00'))
-            eastern_commence_time = utc_commence_time.astimezone(eastern_tz)
-            
-            formatted_time = eastern_commence_time.strftime('%I:%M %p ET').replace('AM ET', 'am').replace('PM ET', 'pm').lstrip('0')
-            
-            game_odds_avg = {'home': [], 'away': [], 'home_spread': [], 'away_spread': []}
-            
-            for bookmaker in event['bookmakers']:
-                for market in bookmaker['markets']:
-                    if market['key'] == 'h2h':
-                        for outcome in market['outcomes']:
-                            if outcome['name'] == home_team:
-                                game_odds_avg['home'].append(outcome['price'])
-                            elif outcome['name'] == away_team:
-                                game_odds_avg['away'].append(outcome['price'])
-                    elif market['key'] == 'spreads':
-                        for outcome in market['outcomes']:
-                            if outcome['name'] == home_team:
-                                game_odds_avg['home_spread'].append(outcome['point'])
-                            elif outcome['name'] == away_team:
-                                game_odds_avg['away_spread'].append(outcome['point'])
-                                
-            avg_home_odds = sum(game_odds_avg['home']) / len(game_odds_avg['home']) if game_odds_avg['home'] else None
-            avg_away_odds = sum(game_odds_avg['away']) / len(game_odds_avg['away']) if game_odds_avg['away'] else None
+            # Iterate through live games and update the base dataframe
+            # We match on "Match_ID" (Home vs Away)
+            for index, row in df_live.iterrows():
+                match_id = row['Match_ID']
+                
+                # Find matching index in df_base
+                mask = df_base['Match_ID'] == match_id
+                
+                if mask.any():
+                    # Update specific columns
+                    cols_to_update = ['Time', 'Away Odds', 'Home Odds', 'Away Spread', 'Home Spread', 'Source']
+                    df_base.loc[mask, cols_to_update] = row[cols_to_update].values
+                else:
+                    # Optional: If for some reason the game isn't in nflreadpy (rare), append it
+                    # df_base = pd.concat([df_base, pd.DataFrame([row])], ignore_index=True)
+                    pass
     
-            avg_home_spread = sum(game_odds_avg['home_spread']) / len(game_odds_avg['home_spread']) if game_odds_avg['home_spread'] else None
-            avg_away_spread = sum(game_odds_avg['away_spread']) / len(game_odds_avg['away_spread']) if game_odds_avg['away_spread'] else None
-            
-            american_home_odds = None
-            if avg_home_odds:
-                if avg_home_odds >= 2.0:
-                    american_home_odds = round((avg_home_odds - 1) * 100)
-                else:
-                    american_home_odds = round(-100 / (avg_home_odds - 1))
-            
-            american_away_odds = None
-            if avg_away_odds:
-                if avg_away_odds >= 2.0:
-                    american_away_odds = round((avg_away_odds - 1) * 100)
-                else:
-                    american_away_odds = round(-100 / (avg_away_odds - 1))
-            
-            formatted_games.append({
-                'Time': formatted_time,
-                'Away Team': away_team,
-                'Away Odds': american_away_odds,
-                'Home Team': home_team,
-                'Home Odds': american_home_odds,
-                'Away Spread': avg_away_spread,
-                'Home Spread': avg_home_spread
-            })
+        # Drop the Match_ID helper column before returning
+        df_base = df_base.drop(columns=['Match_ID'])
         
-        live_api_odds_nfl_df = pd.DataFrame(formatted_games)
-        return live_api_odds_nfl_df
+        return df_base
     
-    # Example usage
-    API_KEY = '34671f7aeaa8f4fbee2398163f2f45d3' 
+    # ---------------------------------------------------------
+    # Usage in Streamlit
+    # ---------------------------------------------------------
+    API_KEY = '34671f7aeaa8f4fbee2398163f2f45d3'# Replace with actual key
     
     if API_KEY != 'YOUR_API_KEY':
-        live_api_odds_df = get_api_nfl_odds(API_KEY)
+        # Fetch Data
+        live_api_odds_df = get_full_season_odds(API_KEY)
         
-        st.write("")
-        st.subheader("NFL Odds (Live or Fallback)")
+        st.subheader("Full Season Odds (Historical + Live)")
+        
+        # Optional: Highlight the Source column so you see which are Live vs Historical
         st.dataframe(live_api_odds_df)
     else:
-        st.write("Please replace 'YOUR_API_KEY' with your actual API key.")
+        st.warning("Please enter your API Key")
 	
     def add_odds_to_main_csv():
         """

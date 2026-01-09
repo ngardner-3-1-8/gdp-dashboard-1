@@ -820,7 +820,7 @@ def collect_schedule_travel_ranking_data(pd, config: dict, schedule_rows):
             season = now.year if now.month > 3 else now.year - 1
             
             # 2. Load Schedule and Team Data
-            df_schedule = nfl.import_schedules([season])
+            df_schedule = nfl.load_schedules([season])
             df_teams = nfl.import_team_desc()
             
             # Create a mapping from Abbreviation (KC) to Full Name (Kansas City Chiefs)

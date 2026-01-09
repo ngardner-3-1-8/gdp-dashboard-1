@@ -892,8 +892,6 @@ def collect_schedule_travel_ranking_data(pd, config: dict, schedule_rows):
             # 2. Convert to Pandas to use .iterrows()
             df_schedule = df_schedule_polars.to_pandas()
             df_teams = df_teams_polars.to_pandas()
-            
-            st.write(df_schedule)
         except Exception as e:
             st.error(f"Error fetching nflreadpy data: {e}")
             return pd.DataFrame()

@@ -884,12 +884,16 @@ def collect_schedule_travel_ranking_data(pd, config: dict, schedule_rows):
         now = datetime.now()
         season = now.year if now.month > 3 else now.year - 1
         
-        # Import schedule and team data
         try:
-            df_schedule = nfl.load_schedules([season])
+            # 1. Load data (returns Polars DataFrame)
+            df_schedule_polars = nfl.load_schedules([season])
+            df_teams_polars = nfl.load_teams()
+        
+            # 2. Convert to Pandas to use .iterrows()
+            df_schedule = df_schedule_polars.to_pandas()
+            df_teams = df_teams_polars.to_pandas()
+            
             st.write(df_schedule)
-            df_teams = nfl.load_teams()
-            st.write(df_teams)
         except Exception as e:
             st.error(f"Error fetching nflreadpy data: {e}")
             return pd.DataFrame()

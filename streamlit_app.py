@@ -2506,6 +2506,8 @@ def get_predicted_pick_percentages(config: dict, schedule_df: pd.DataFrame):
         predict_data = pick_predictions_df[predict_data_cols].fillna(0) # Fill NA for prediction
         
         # Predict on the *entire* weekly dataframe at once
+        st.write('TESTESTESTESTESTTESTTESTTESTTESTESTTESTTESTTESTT')
+        st.write(pick_predictions_df)
         pick_predictions_df['Pick %'] = model.predict(predict_data)
 
         target_pick_sum = 1.0

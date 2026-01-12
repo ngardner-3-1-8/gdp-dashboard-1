@@ -3122,12 +3122,12 @@ def reformat_df(df: pd.DataFrame, config: dict):
     
     # ... (Rounding) ...
     away_reformatted_df['Expected EV'] = round(away_reformatted_df['Expected EV'], 4)
-    away_reformatted_df['Fair Odds Based on Sportsbook Odds'] = round(away_reformatted_df['Fair Odds Based on Sportsbook Odds'], 2)
-    away_reformatted_df['Fair Odds Based on Internal Rankings'] = round(away_reformatted_df['Fair Odds Based on Internal Rankings'], 2)
-    away_reformatted_df['Expected Pick Percent'] = round(away_reformatted_df['Expected Pick Percent'], 2)
-    away_reformatted_df['Expected Availability'] = round(away_reformatted_df['Expected Availability'], 2)
-    away_reformatted_df['Expected Survival Rate'] = round(away_reformatted_df['Expected Survival Rate'], 2)
-    away_reformatted_df['Expected Contest Elimination Percent'] = round(away_reformatted_df['Expected Contest Elimination Percent'], 2)
+    away_reformatted_df['Fair Odds Based on Sportsbook Odds'] = round(away_reformatted_df['Fair Odds Based on Sportsbook Odds'], 4)
+    away_reformatted_df['Fair Odds Based on Internal Rankings'] = round(away_reformatted_df['Fair Odds Based on Internal Rankings'], 4)
+    away_reformatted_df['Expected Pick Percent'] = round(away_reformatted_df['Expected Pick Percent'], 4)
+    away_reformatted_df['Expected Availability'] = round(away_reformatted_df['Expected Availability'], 4)
+    away_reformatted_df['Expected Survival Rate'] = round(away_reformatted_df['Expected Survival Rate'], 4)
+    away_reformatted_df['Expected Contest Elimination Percent'] = round(away_reformatted_df['Expected Contest Elimination Percent'], 4)
     away_reformatted_df['Expected Picks'] = round(away_reformatted_df['Expected Picks'])
     away_reformatted_df['Expected Eliminations'] = round(away_reformatted_df['Expected Eliminations'])
     away_reformatted_df['Expected Survivors'] = round(away_reformatted_df['Expected Survivors'])

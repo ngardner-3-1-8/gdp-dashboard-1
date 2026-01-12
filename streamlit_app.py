@@ -2047,40 +2047,45 @@ def collect_schedule_travel_ranking_data(pd, config: dict, schedule_rows):
 # --- Helper function used in the main logic (Moved from the bottom) ---
 def get_expected_availability(team_name, availability_dict: Dict):
     """
-    Calculates the expected availability percentage for a team based on initial config.
-    Includes a team abbreviation to full name mapping for robustness.
+    Calculates the expected availability percentage for a team.
+    Normalizes the input 'team_name' to Full Name to ensure it matches the dictionary keys.
     """
-    # Map team abbreviations to full names
-    def expand_availability_keys(availability_dict):
-        team_name_map = {
-            "ARI": "Arizona Cardinals", "ATL": "Atlanta Falcons", "BAL": "Baltimore Ravens",
-            "BUF": "Buffalo Bills", "CAR": "Carolina Panthers", "CHI": "Chicago Bears",
-            "CIN": "Cincinnati Bengals", "CLE": "Cleveland Browns", "DAL": "Dallas Cowboys",
-            "DEN": "Denver Broncos", "DET": "Detroit Lions", "GB": "Green Bay Packers",
-            "HOU": "Houston Texans", "IND": "Indianapolis Colts", "JAX": "Jacksonville Jaguars",
-            "KC": "Kansas City Chiefs", "LV": "Las Vegas Raiders", "LAC": "Los Angeles Chargers",
-            "LAR": "Los Angeles Rams", "MIA": "Miami Dolphins", "MIN": "Minnesota Vikings",
-            "NE": "New England Patriots", "NO": "New Orleans Saints", "NYG": "New York Giants",
-            "NYJ": "New York Jets", "PHI": "Philadelphia Eagles", "PIT": "Pittsburgh Steelers",
-            "SF": "San Francisco 49ers", "SEA": "Seattle Seahawks", "TB": "Tampa Bay Buccaneers",
-            "TEN": "Tennessee Titans", "WAS": "Washington Commanders"
-        }
-        # Create a new dictionary with full team names as keys
-        return {
-            team_name_map.get(k, k): v
-            for k, v in availability_dict.items()
-        }
+    # 1. Define the mapping (Abbr -> Full Name)
+    # Ensure this matches the keys used in your availability_dict
+    team_name_map = {
+        "ARI": "Arizona Cardinals", "ATL": "Atlanta Falcons", "BAL": "Baltimore Ravens",
+        "BUF": "Buffalo Bills", "CAR": "Carolina Panthers", "CHI": "Chicago Bears",
+        "CIN": "Cincinnati Bengals", "CLE": "Cleveland Browns", "DAL": "Dallas Cowboys",
+        "DEN": "Denver Broncos", "DET": "Detroit Lions", "GB": "Green Bay Packers",
+        "HOU": "Houston Texans", "IND": "Indianapolis Colts", "JAX": "Jacksonville Jaguars",
+        "KC": "Kansas City Chiefs", "LV": "Las Vegas Raiders", "LAC": "Los Angeles Chargers",
+        "LAR": "Los Angeles Rams", "MIA": "Miami Dolphins", "MIN": "Minnesota Vikings",
+        "NE": "New England Patriots", "NO": "New Orleans Saints", "NYG": "New York Giants",
+        "NYJ": "New York Jets", "PHI": "Philadelphia Eagles", "PIT": "Pittsburgh Steelers",
+        "SF": "San Francisco 49ers", "SEA": "Seattle Seahawks", "TB": "Tampa Bay Buccaneers",
+        "TEN": "Tennessee Titans", "WAS": "Washington Commanders", "WSH": "Washington Commanders"
+    }
 
-    availability_dict = expand_availability_keys(availability_dict)
-    availability = availability_dict.get(team_name)
+    # 2. Normalize the lookup key
+    # If team_name is "ARI", this becomes "Arizona Cardinals"
+    # If team_name is "Arizona Cardinals", this stays "Arizona Cardinals"
+    full_team_name = team_name_map.get(team_name, team_name)
 
-    # Handle missing or invalid values. Default to 1.0 (fully available).
+    # 3. Perform Lookup
+    # Try looking up the full name first
+    availability = availability_dict.get(full_team_name)
+    
+    # Optional fallback: If not found, try the original abbreviation
+    if availability is None:
+        availability = availability_dict.get(team_name)
+
+    # 4. Handle missing/invalid values
     if availability is None:
         return 1.0
     elif availability <= -0.01:
-        return 1.0		
+        return 1.0      
     else:
-        return availability
+        return float(availability)
 
 # Mock for st.write/st.success (assuming Streamlit is used for output)
 def st_write(message):
@@ -4603,7 +4608,7 @@ def calculate_team_availability(historical_data_path, picks_data_path, config):
         "WAS": "Washington Commanders"
     }
     
-    df_availability['Team'] = df_availability['Team'].map(abbreviations_to_full_name)
+    df_availability['Team'] = df_availability['Team'].replace(abbreviations_to_full_name)
     print("\n--- Availability Calculation Complete ---")
     return df_availability
 

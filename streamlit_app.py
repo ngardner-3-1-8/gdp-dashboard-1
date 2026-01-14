@@ -2436,7 +2436,7 @@ def get_predicted_pick_percentages(config: dict, schedule_df: pd.DataFrame):
                 (pick_predictions_df['christmas_week'] == 0) & 
                 (pick_predictions_df['thanksgiving_week'] == 0)
             ).astype(int) # Convert boolean (True/False) to integer (1/0)
-		else:
+        else:
             pick_predictions_df['Calendar Date'] = pd.to_datetime(pick_predictions_df['Calendar Date'])
             pick_predictions_df['Thursday Night Game'] = (
                 (pick_predictions_df['Calendar Date'].dt.dayofweek == 3)

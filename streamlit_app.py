@@ -2303,7 +2303,7 @@ def get_predicted_pick_percentages(config: dict, schedule_df: pd.DataFrame):
 			'Away Team Christmas Favorite', 'Away Team Christmas Underdog',
 			'Home Team Christmas Favorite', 'Home Team Christmas Underdog',
 			'Away Team Pre Thanksgiving', 'Away Team Pre Christmas',
-			'Home Team Pre Thanksgiving', 'Home Team Pre Christmas', 'Thursday Night Game'
+			'Home Team Pre Thanksgiving', 'Home Team Pre Christmas', 'Date'
         ]
         
         # Ensure only valid columns are selected
@@ -2332,7 +2332,8 @@ def get_predicted_pick_percentages(config: dict, schedule_df: pd.DataFrame):
 				f'{team_type} Christmas Favorite': 'Christmas Favorite',
 				f'{team_type} Christmas Underdog': 'Christmas Underdog',
 				f'{team_type} Pre Thanksgiving': 'Pre Thanksgiving',
-				f'{team_type} Pre Christmas': 'Pre Christmas'
+				f'{team_type} Pre Christmas': 'Pre Christmas',
+				f'Date': 'Calendar Date'
             }).drop(columns=[f'{opponent_type_1} Fair Odds', f'{opponent_type_1} Star Rating', f'{opponent_type_1} Public Pick %', f'{opponent_type_1} Expected Availability'])
             
             df_out['Home/Away'] = 'Away' if is_away else 'Home'

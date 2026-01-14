@@ -2308,7 +2308,7 @@ def get_predicted_pick_percentages(config: dict, schedule_df: pd.DataFrame):
         
         # Ensure only valid columns are selected
         new_df = new_df[[col for col in selected_columns if col in new_df.columns]].copy()
-		new_df = new_df.rename(columns={'Date': 'Calendar Date'})
+        new_df = new_df.rename(columns={'Date': 'Calendar Date'})
         new_df = new_df.rename(columns={'Week': 'Date'})
 
 	

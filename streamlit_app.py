@@ -2133,7 +2133,7 @@ def get_predicted_pick_percentages(config: dict, schedule_df: pd.DataFrame):
 						 'Week_Max_FV', 'Week_Min_WinPct', 'Week_Min_FV', 'Week_Std_WinPct', 'Week_Std_FV', 'Team_WinPct_RelativeToWeekMean', 'Team_FV_RelativeToWeekMean', 
 						 'Team_WinPct_RelativeToTopTeam', 'Team_FV_RelativeToTopTeam', 'Win % Rank', 'Star Rating Rank','Num_Teams_This_Week', 'Rank_Density', 'FV_Rank_Density', 
 						 'Future_Weeks_Top_Team', 'Future_Weeks_Over_80', 'Future_Weeks_70_80', 'Future_Weeks_60_70', 'Pre Christmas', 'Pre Thanksgiving', 'Christmas Underdog', 
-						 'Christmas Favorite', 'Thanksgiving Underdog', 'Thanksgiving Favorite', 'thanksgiving_week', 'christmas_week', 'Thursday Night Game']
+						 'Christmas Favorite', 'Thanksgiving Underdog', 'Thanksgiving Favorite', 'thanksgiving_week', 'christmas_week', 'Thursday_Home', 'Thursday_Away', 'Thursday_Underdog', 'Thursday_Favorite']
         # Add back only if guaranteed to exist in the historical data 'df'
         base_features.extend([col for col in holiday_cols if col in df.columns])
         base_features = list(set(base_features)) # Remove duplicates
@@ -2141,7 +2141,7 @@ def get_predicted_pick_percentages(config: dict, schedule_df: pd.DataFrame):
         base_features = ['Win %', 'Future Value (Stars)', 'Date', 'Away Team', 'Divisional Matchup?', 'Week_Mean_WinPct', 'Week_Mean_FV', 'Week_Max_WinPct', 
 						 'Week_Max_FV', 'Week_Min_WinPct', 'Week_Min_FV', 'Week_Std_WinPct', 'Week_Std_FV', 'Team_WinPct_RelativeToWeekMean', 'Team_FV_RelativeToWeekMean', 
 						 'Team_WinPct_RelativeToTopTeam', 'Team_FV_RelativeToTopTeam', 'Win % Rank', 'Star Rating Rank','Num_Teams_This_Week', 'Rank_Density',
-						 'FV_Rank_Density',  'Future_Weeks_Top_Team', 'Future_Weeks_Over_80', 'Future_Weeks_70_80', 'Future_Weeks_60_70', 'Thursday Night Game']
+						 'FV_Rank_Density',  'Future_Weeks_Top_Team', 'Future_Weeks_Over_80', 'Future_Weeks_70_80', 'Future_Weeks_60_70', 'Thursday_Home', 'Thursday_Away', 'Thursday_Underdog', 'Thursday_Favorite']
         
     X = df[base_features].fillna(0) # Fill NA for training data
     y = df['Pick %']
@@ -2441,7 +2441,19 @@ def get_predicted_pick_percentages(config: dict, schedule_df: pd.DataFrame):
             pick_predictions_df['Calendar Date'] = pd.to_datetime(pick_predictions_df['Calendar Date'])
             pick_predictions_df['Thursday Night Game'] = (
                 (pick_predictions_df['Calendar Date'].dt.dayofweek == 3)
-            ).astype(int)            
+            ).astype(int)
+
+        # Home vs Away on Thursday
+        pick_predictions_df['Thursday_Home'] = (pick_predictions_df['Thursday Night Game'] == 1) & (pick_predictions_df['Away Team'] == 0)
+        pick_predictions_df['Thursday_Away'] = (pick_predictions_df['Thursday Night Game'] == 1) & (pick_predictions_df['Away Team'] == 1)
+
+        # Favorite vs Underdog on Thursday
+        pick_predictions_df['Thursday_Favorite'] = (pick_predictions_df['Thursday Night Game'] == 1) & (pick_predictions_df['Win %'] > .5)
+        pick_predictions_df['Thursday_Underdog'] = (pick_predictions_df['Thursday Night Game'] == 1) & (pick_predictions_df['Win %'] <= .5)
+
+        # Convert all to integers (1/0)
+        cols_to_convert = ['Thursday_Home', 'Thursday_Away', 'Thursday_Favorite', 'Thursday_Underdog']
+        pick_predictions_df[cols_to_convert] = pick_predictions_df[cols_to_convert].astype(int)
 
 
         # B. Current Week Relative Strength

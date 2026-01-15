@@ -2133,7 +2133,14 @@ def get_predicted_pick_percentages(config: dict, schedule_df: pd.DataFrame):
 						 'Week_Max_FV', 'Week_Min_WinPct', 'Week_Min_FV', 'Week_Std_WinPct', 'Week_Std_FV', 'Team_WinPct_RelativeToWeekMean', 'Team_FV_RelativeToWeekMean', 
 						 'Team_WinPct_RelativeToTopTeam', 'Team_FV_RelativeToTopTeam', 'Win % Rank', 'Star Rating Rank','Num_Teams_This_Week', 'Rank_Density', 'FV_Rank_Density', 
 						 'Future_Weeks_Top_Team', 'Future_Weeks_Over_80', 'Future_Weeks_70_80', 'Future_Weeks_60_70', 'Pre Christmas', 'Pre Thanksgiving', 'Christmas Underdog', 
-						 'Christmas Favorite', 'Thanksgiving Underdog', 'Thanksgiving Favorite', 'thanksgiving_week', 'christmas_week', 'Thursday_Home', 'Thursday_Away', 'Thursday_Underdog', 'Thursday_Favorite']
+						 'Christmas Favorite', 'Thanksgiving Underdog', 'Thanksgiving Favorite', 'thanksgiving_week', 'christmas_week', 'Thursday_Home', 'Thursday_Away', 
+						 'Thursday_Underdog', 'Thursday_Favorite', 'Week_Mean_80', 'Week_Max_80', 'Week_Min_80', 'Week_Std_80', 'Team_80_RelativeToWeekMean', 
+						 'Team_80_RelativeToTopTeam', '80_Rank', '80_Rank_Density', 'Week_Mean_70_80', 'Week_Max_70_80', 'Week_Min_70_80', 'Week_Std_70_80', 
+						 'Team_70_80_RelativeToWeekMean', 'Team_70_80_RelativeToTopTeam', '70_80_Rank', '70_80_Rank_Density', 'Week_Mean_60_70', 'Week_Max_60_70', 'Week_Min_60_70', 
+						 'Week_Std_60_70', 'Team_60_70_RelativeToWeekMean', 'Team_60_70_RelativeToTopTeam', '60_70_Rank', '60_70_Rank_Density', 'Week_Mean_Top_Team', 'Week_Max_Top_Team', 
+						 'Week_Min_Top_Team', 'Week_Std_Top_Team', 'Team_Top_Team_RelativeToWeekMean', 'Team_Top_Team_RelativeToTopTeam', 'Top_Team_Rank', 'Top_Team_Rank_Density', 'Week_Mean_Availability', 
+						 'Week_Max_Availability', 'Week_Min_Availability', 'Week_Std_Availability', 'Team_Availability_RelativeToWeekMean', 'Team_Availability_RelativeToTopTeam', 'Availability_Rank', 
+						 'Availability_Rank_Density']
         # Add back only if guaranteed to exist in the historical data 'df'
         base_features.extend([col for col in holiday_cols if col in df.columns])
         base_features = list(set(base_features)) # Remove duplicates
@@ -2141,7 +2148,12 @@ def get_predicted_pick_percentages(config: dict, schedule_df: pd.DataFrame):
         base_features = ['Win %', 'Future Value (Stars)', 'Date', 'Away Team', 'Divisional Matchup?', 'Week_Mean_WinPct', 'Week_Mean_FV', 'Week_Max_WinPct', 
 						 'Week_Max_FV', 'Week_Min_WinPct', 'Week_Min_FV', 'Week_Std_WinPct', 'Week_Std_FV', 'Team_WinPct_RelativeToWeekMean', 'Team_FV_RelativeToWeekMean', 
 						 'Team_WinPct_RelativeToTopTeam', 'Team_FV_RelativeToTopTeam', 'Win % Rank', 'Star Rating Rank','Num_Teams_This_Week', 'Rank_Density',
-						 'FV_Rank_Density',  'Future_Weeks_Top_Team', 'Future_Weeks_Over_80', 'Future_Weeks_70_80', 'Future_Weeks_60_70', 'Thursday_Home', 'Thursday_Away', 'Thursday_Underdog', 'Thursday_Favorite']
+						 'FV_Rank_Density',  'Future_Weeks_Top_Team', 'Future_Weeks_Over_80', 'Future_Weeks_70_80', 'Future_Weeks_60_70', 'Thursday_Home', 'Thursday_Away', 
+						 'Thursday_Underdog', 'Thursday_Favorite', 'Week_Mean_80', 'Week_Max_80', 'Week_Min_80', 'Week_Std_80', 'Team_80_RelativeToWeekMean', 
+						 'Team_80_RelativeToTopTeam', '80_Rank', '80_Rank_Density', 'Week_Mean_70_80', 'Week_Max_70_80', 'Week_Min_70_80', 'Week_Std_70_80', 
+						 'Team_70_80_RelativeToWeekMean', 'Team_70_80_RelativeToTopTeam', '70_80_Rank', '70_80_Rank_Density', 'Week_Mean_60_70', 'Week_Max_60_70', 'Week_Min_60_70', 
+						 'Week_Std_60_70', 'Team_60_70_RelativeToWeekMean', 'Team_60_70_RelativeToTopTeam', '60_70_Rank', '60_70_Rank_Density', 'Week_Mean_Top_Team', 'Week_Max_Top_Team', 
+						 'Week_Min_Top_Team', 'Week_Std_Top_Team', 'Team_Top_Team_RelativeToWeekMean', 'Team_Top_Team_RelativeToTopTeam', 'Top_Team_Rank', 'Top_Team_Rank_Density']
         
     X = df[base_features].fillna(0) # Fill NA for training data
     y = df['Pick %']
@@ -2517,6 +2529,142 @@ def get_predicted_pick_percentages(config: dict, schedule_df: pd.DataFrame):
         # ==============================================================================
         # END SECTION 4
         # ==============================================================================
+        
+        print("\n⚙️ Starting Section 5: Feature Engineering (Ranks and Relative Stats)...")
+        
+        
+        # 1. Calculate Weekly Win % Stats
+        # Using .transform() to broadcast the group-level stats to every row in that group
+        print("  Calculating weekly Win % statistics (mean, max, min, std)...")
+        pick_predictions_df['Week_Mean_80'] = pick_predictions_df.groupby(group_keys)['Future_Weeks_Over_80'].transform('mean')
+        pick_predictions_df['Week_Max_80'] = pick_predictions_df.groupby(group_keys)['Future_Weeks_Over_80'].transform('max')
+        pick_predictions_df['Week_Min_80'] = pick_predictions_df.groupby(group_keys)['Future_Weeks_Over_80'].transform('min')
+        pick_predictions_df['Week_Std_80'] = pick_predictions_df.groupby(group_keys)['Future_Weeks_Over_80'].transform('std')
+        
+        # Fill NaN for Std on weeks with only one game (if any)
+        pick_predictions_df['Week_Std_80'] = pick_predictions_df['Week_Std_80'].fillna(0)
+        
+        # 2. Calculate Team-Specific Relative Stats
+        print("  Calculating team-relative Win % stats...")
+        pick_predictions_df['Team_80_RelativeToWeekMean'] = pick_predictions_df['Future_Weeks_Over_80'] - pick_predictions_df['Week_Mean_80']
+        
+        # Handle potential division by zero if Max_WinPct is 0 (unlikely, but safe)
+        pick_predictions_df['Team_80_RelativeToTopTeam'] = pick_predictions_df['Future_Weeks_Over_80'] / pick_predictions_df['Week_Max_80']
+        pick_predictions_df['Team_80_RelativeToTopTeam'] = pick_predictions_df['Team_80_RelativeToTopTeam'].fillna(0).replace([np.inf, -np.inf], 0)                                                                                        
+        
+        # 3. Calculate Ranks (Win % and Star Rating)
+        pick_predictions_df['80_Rank'] = pick_predictions_df.groupby(group_keys)['Future_Weeks_Over_80'].rank(ascending=False, method='min')
+        
+        # This normalizes the rank based on the number of available teams that week
+        pick_predictions_df['80_Rank_Density'] = pick_predictions_df['80_Rank'] / pick_predictions_df['Num_Teams_This_Week']
+        
+        
+        
+        # 1. Calculate Weekly Win % Stats
+        # Using .transform() to broadcast the group-level stats to every row in that group
+        print("  Calculating weekly Win % statistics (mean, max, min, std)...")
+        pick_predictions_df['Week_Mean_70_80'] = pick_predictions_df.groupby(group_keys)['Future_Weeks_70_80'].transform('mean')
+        pick_predictions_df['Week_Max_70_80'] = pick_predictions_df.groupby(group_keys)['Future_Weeks_70_80'].transform('max')
+        pick_predictions_df['Week_Min_70_80'] = pick_predictions_df.groupby(group_keys)['Future_Weeks_70_80'].transform('min')
+        pick_predictions_df['Week_Std_70_80'] = pick_predictions_df.groupby(group_keys)['Future_Weeks_70_80'].transform('std')
+        
+        # Fill NaN for Std on weeks with only one game (if any)
+        pick_predictions_df['Week_Std_70_80'] = pick_predictions_df['Week_Std_70_80'].fillna(0)
+        
+        # 2. Calculate Team-Specific Relative Stats
+        print("  Calculating team-relative Win % stats...")
+        pick_predictions_df['Team_70_80_RelativeToWeekMean'] = pick_predictions_df['Future_Weeks_70_80'] - pick_predictions_df['Week_Mean_70_80']
+        
+        # Handle potential division by zero if Max_WinPct is 0 (unlikely, but safe)
+        pick_predictions_df['Team_70_80_RelativeToTopTeam'] = pick_predictions_df['Future_Weeks_70_80'] / pick_predictions_df['Week_Max_70_80']
+        pick_predictions_df['Team_70_80_RelativeToTopTeam'] = pick_predictions_df['Team_70_80_RelativeToTopTeam'].fillna(0).replace([np.inf, -np.inf], 0)                                                                                        
+        
+        # 3. Calculate Ranks (Win % and Star Rating)
+        pick_predictions_df['70_80_Rank'] = pick_predictions_df.groupby(group_keys)['Future_Weeks_70_80'].rank(ascending=False, method='min')
+        
+        # This normalizes the rank based on the number of available teams that week
+        pick_predictions_df['70_80_Rank_Density'] = pick_predictions_df['70_80_Rank'] / pick_predictions_df['Num_Teams_This_Week']
+        
+        
+        
+        # 1. Calculate Weekly Win % Stats
+        # Using .transform() to broadcast the group-level stats to every row in that group
+        print("  Calculating weekly Win % statistics (mean, max, min, std)...")
+        pick_predictions_df['Week_Mean_60_70'] = pick_predictions_df.groupby(group_keys)['Future_Weeks_60_70'].transform('mean')
+        pick_predictions_df['Week_Max_60_70'] = pick_predictions_df.groupby(group_keys)['Future_Weeks_60_70'].transform('max')
+        pick_predictions_df['Week_Min_60_70'] = pick_predictions_df.groupby(group_keys)['Future_Weeks_60_70'].transform('min')
+        pick_predictions_df['Week_Std_60_70'] = pick_predictions_df.groupby(group_keys)['Future_Weeks_60_70'].transform('std')
+        
+        # Fill NaN for Std on weeks with only one game (if any)
+        pick_predictions_df['Week_Std_60_70'] = pick_predictions_df['Week_Std_60_70'].fillna(0)
+        
+        # 2. Calculate Team-Specific Relative Stats
+        print("  Calculating team-relative Win % stats...")
+        pick_predictions_df['Team_60_70_RelativeToWeekMean'] = pick_predictions_df['Future_Weeks_60_70'] - pick_predictions_df['Week_Mean_60_70']
+        
+        # Handle potential division by zero if Max_WinPct is 0 (unlikely, but safe)
+        pick_predictions_df['Team_60_70_RelativeToTopTeam'] = pick_predictions_df['Future_Weeks_60_70'] / pick_predictions_df['Week_Max_60_70']
+        pick_predictions_df['Team_60_70_RelativeToTopTeam'] = pick_predictions_df['Team_60_70_RelativeToTopTeam'].fillna(0).replace([np.inf, -np.inf], 0)                                                                                        
+        
+        # 3. Calculate Ranks (Win % and Star Rating)
+        pick_predictions_df['60_70_Rank'] = pick_predictions_df.groupby(group_keys)['Future_Weeks_60_70'].rank(ascending=False, method='min')
+        
+        # This normalizes the rank based on the number of available teams that week
+        pick_predictions_df['60_70_Rank_Density'] = pick_predictions_df['60_70_Rank'] / pick_predictions_df['Num_Teams_This_Week']
+        
+
+        # 1. Calculate Weekly Win % Stats
+        # Using .transform() to broadcast the group-level stats to every row in that group
+        print("  Calculating weekly Win % statistics (mean, max, min, std)...")
+        pick_predictions_df['Week_Mean_Top_Team'] = pick_predictions_df.groupby(group_keys)['Future_Weeks_Top_Team'].transform('mean')
+        pick_predictions_df['Week_Max_Top_Team'] = pick_predictions_df.groupby(group_keys)['Future_Weeks_Top_Team'].transform('max')
+        pick_predictions_df['Week_Min_Top_Team'] = pick_predictions_df.groupby(group_keys)['Future_Weeks_Top_Team'].transform('min')
+        pick_predictions_df['Week_Std_Top_Team'] = pick_predictions_df.groupby(group_keys)['Future_Weeks_Top_Team'].transform('std')
+        
+        # Fill NaN for Std on weeks with only one game (if any)
+        pick_predictions_df['Week_Std_Top_Team'] = pick_predictions_df['Week_Std_Top_Team'].fillna(0)
+        
+        # 2. Calculate Team-Specific Relative Stats
+        print("  Calculating team-relative Win % stats...")
+        pick_predictions_df['Team_Top_Team_RelativeToWeekMean'] = pick_predictions_df['Future_Weeks_Top_Team'] - pick_predictions_df['Week_Mean_Top_Team']
+        
+        # Handle potential division by zero if Max_WinPct is 0 (unlikely, but safe)
+        pick_predictions_df['Team_Top_Team_RelativeToTopTeam'] = pick_predictions_df['Future_Weeks_Top_Team'] / pick_predictions_df['Week_Max_Top_Team']
+        pick_predictions_df['Team_Top_Team_RelativeToTopTeam'] = pick_predictions_df['Team_Top_Team_RelativeToTopTeam'].fillna(0).replace([np.inf, -np.inf], 0)                                                                                        
+        
+        # 3. Calculate Ranks (Win % and Star Rating)
+        pick_predictions_df['Top_Team_Rank'] = pick_predictions_df.groupby(group_keys)['Future_Weeks_Top_Team'].rank(ascending=False, method='min')
+        
+        # This normalizes the rank based on the number of available teams that week
+        pick_predictions_df['Top_Team_Rank_Density'] = pick_predictions_df['Top_Team_Rank'] / pick_predictions_df['Num_Teams_This_Week']
+        
+        
+        # 1. Calculate Weekly Win % Stats
+        # Using .transform() to broadcast the group-level stats to every row in that group
+        print("  Calculating weekly Win % statistics (mean, max, min, std)...")
+        pick_predictions_df['Week_Mean_Availability'] = pick_predictions_df.groupby(group_keys)['Availability'].transform('mean')
+        pick_predictions_df['Week_Max_Availability'] = pick_predictions_df.groupby(group_keys)['Availability'].transform('max')
+        pick_predictions_df['Week_Min_Availability'] = pick_predictions_df.groupby(group_keys)['Availability'].transform('min')
+        pick_predictions_df['Week_Std_Availability'] = pick_predictions_df.groupby(group_keys)['Availability'].transform('std')
+        
+        # Fill NaN for Std on weeks with only one game (if any)
+        pick_predictions_df['Week_Std_Availability'] = pick_predictions_df['Week_Std_Availability'].fillna(0)
+        
+        # 2. Calculate Team-Specific Relative Stats
+        print("  Calculating team-relative Win % stats...")
+        pick_predictions_df['Team_Availability_RelativeToWeekMean'] = pick_predictions_df['Availability'] - pick_predictions_df['Week_Mean_Availability']
+        
+        # Handle potential division by zero if Max_WinPct is 0 (unlikely, but safe)
+        pick_predictions_df['Team_Availability_RelativeToTopTeam'] = pick_predictions_df['Availability'] / pick_predictions_df['Week_Max_Availability']
+        pick_predictions_df['Team_Availability_RelativeToTopTeam'] = pick_predictions_df['Team_Availability_RelativeToTopTeam'].fillna(0).replace([np.inf, -np.inf], 0)                                                                                        
+        
+        # 3. Calculate Ranks (Win % and Star Rating)
+        pick_predictions_df['Availability_Rank'] = pick_predictions_df.groupby(group_keys)['Availability'].rank(ascending=False, method='min')
+        
+        # This normalizes the rank based on the number of available teams that week
+        pick_predictions_df['Availability_Rank_Density'] = pick_predictions_df['Availability_Rank'] / pick_predictions_df['Num_Teams_This_Week']
+        
+        print("✅ Feature engineering complete.")
 
         # --- Conditional Prediction (NOW on the combined, feature-rich dataframe) ---
         if public_picks_available and rf_model_enhanced:
@@ -2539,8 +2687,6 @@ def get_predicted_pick_percentages(config: dict, schedule_df: pd.DataFrame):
         predict_data = pick_predictions_df[predict_data_cols].fillna(0) # Fill NA for prediction
         
         # Predict on the *entire* weekly dataframe at once
-        st.write('TESTESTESTESTESTTESTTESTTESTTESTESTTESTTESTTESTT')
-        st.write(pick_predictions_df)
         pick_predictions_df['Pick %'] = model.predict(predict_data)
 
         target_pick_sum = 1.0

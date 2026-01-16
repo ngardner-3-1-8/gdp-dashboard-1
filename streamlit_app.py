@@ -2727,43 +2727,42 @@ def get_predicted_pick_percentages(config: dict, schedule_df: pd.DataFrame):
         st.write("TESTTESTTESTTESTTESTTESTETSTETSTETS")
         st.write(pick_predictions_df)
 
-        # --- Conditional Prediction (NOW on the combined, feature-rich dataframe) ---
+        # --- Conditional Model Selection ---
         if public_picks_available and rf_model_enhanced:
             st_write("--- Predicting using ENHANCED model (with public pick data) ---")
-            features = enhanced_features
             model = rf_model_enhanced
+            # 🌟 FIX: Ask the model exactly what columns it was trained on
+            features_to_use = list(rf_model_enhanced.feature_names_in_)
         else:
             st_write("--- Predicting using BASE model (no public pick data) ---")
-            features = base_features
             model = rf_model_base
+            # 🌟 FIX: Ask the model exactly what columns it was trained on
+            features_to_use = list(rf_model_base.feature_names_in_)
             
-        # Ensure all required features exist, fill NA with 0
-        predict_data_cols = [col for col in features if col in pick_predictions_df.columns]
-        
-        # Add any missing feature columns (e.g., if a holiday col wasn't in future data)
-        for col in features:
+        # 1. Ensure all features the model expects exist in this week's data
+        # (Prevents KeyErrors if a specific week is missing a holiday column)
+        for col in features_to_use:
             if col not in pick_predictions_df.columns:
-                pick_predictions_df[col] = 0.0 # Default value for missing feature
+                pick_predictions_df[col] = 0.0 
                 
-        predict_data = pick_predictions_df[predict_data_cols].fillna(0) # Fill NA for prediction
+        # 2. 🌟 CRITICAL FIX: Slice the dataframe to ONLY the features the model knows
+        # This also ensures the ORDER of columns is identical to training.
+        predict_data = pick_predictions_df[features_to_use].fillna(0) 
         
-        # Predict on the *entire* weekly dataframe at once
+        # 3. Predict will now work because predict_data matches the training set exactly
         pick_predictions_df['Pick %'] = model.predict(predict_data)
 
+        # --- Normalization Logic remains the same ---
         target_pick_sum = 1.0
         if current_week in week_requiring_two_selections:
             target_pick_sum = 2.0
         elif current_week in week_requiring_three_selections:
             target_pick_sum = 3.0
             
-        # 2. Initial Normalization
-        # Scale predictions so they sum to target BEFORE applying constraints
-        # This ensures we are starting from the correct total volume
         current_sum = pick_predictions_df['Pick %'].sum()
         if current_sum > 0:
             pick_predictions_df['Pick %'] = pick_predictions_df['Pick %'] * (target_pick_sum / current_sum)
         else:
-            # Handle rare case where model predicts 0 for everyone
             pick_predictions_df['Pick %'] = 0.0
         
         # 3. Iterative Water-Filling Loop

@@ -2677,8 +2677,8 @@ def get_predicted_pick_percentages(config: dict, schedule_df: pd.DataFrame):
         
         # 2. Map those holiday-specific Win percentages back to every row for that team/year
         # This allows the "Pre holiday" rows to "know" how strong the team is on the upcoming holiday
-        pick_predictions_df['christmas_win_pct'] = pick_predictions_df.set_index(['Year', 'Team']).index.map(xmas_map).fillna(0)
-        pick_predictions_df['thanksgiving_win_pct'] = pick_predictions_df.set_index(['Year', 'Team']).index.map(tgiving_map).fillna(0)
+        pick_predictions_df['christmas_win_pct'] = pick_predictions_df.set_index(['Team']).index.map(xmas_map).fillna(0)
+        pick_predictions_df['thanksgiving_win_pct'] = pick_predictions_df.set_index(['Team']).index.map(tgiving_map).fillna(0)
         
         # 3. Apply your interaction logic
         # This turns the 'Pre' binary flag into a continuous "Expectation" variable

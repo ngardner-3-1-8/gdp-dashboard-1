@@ -2143,7 +2143,7 @@ def get_predicted_pick_percentages(config: dict, schedule_df: pd.DataFrame):
 						 'Week_Std_60_70', 'Team_60_70_RelativeToWeekMean', 'Team_60_70_RelativeToTopTeam', '60_70_Rank', '60_70_Rank_Density', 'Week_Mean_Top_Team', 'Week_Max_Top_Team', 
 						 'Week_Min_Top_Team', 'Week_Std_Top_Team', 'Team_Top_Team_RelativeToWeekMean', 'Team_Top_Team_RelativeToTopTeam', 'Top_Team_Rank', 'Top_Team_Rank_Density', 'Week_Mean_Availability', 
 						 'Week_Max_Availability', 'Week_Min_Availability', 'Week_Std_Availability', 'Team_Availability_RelativeToWeekMean', 'Team_Availability_RelativeToTopTeam', 'Availability_Rank', 
-						 'Availability_Rank_Density']
+						 'Availability_Rank_Density', 'Holiday Strength']
         # Add back only if guaranteed to exist in the historical data 'df'
         base_features.extend([col for col in holiday_cols if col in df.columns])
         base_features = list(set(base_features)) # Remove duplicates
@@ -2668,6 +2668,25 @@ def get_predicted_pick_percentages(config: dict, schedule_df: pd.DataFrame):
         pick_predictions_df['Availability_Rank_Density'] = pick_predictions_df['Availability_Rank'] / pick_predictions_df['Num_Teams_This_Week']
         
         print("✅ Feature engineering complete.")
+
+
+        # 1. Create lookup maps for the Win % on the actual holiday weeks
+        # This isolates the team's strength specifically on the day of the holiday
+        xmas_map = pick_predictions_df[pick_predictions_df['christmas_week'] == 1].set_index(['Year', 'Team'])['Win %']
+        tgiving_map = pick_predictions_df[pick_predictions_df['thanksgiving_week'] == 1].set_index(['Year', 'Team'])['Win %']
+        
+        # 2. Map those holiday-specific Win percentages back to every row for that team/year
+        # This allows the "Pre holiday" rows to "know" how strong the team is on the upcoming holiday
+        pick_predictions_df['christmas_win_pct'] = pick_predictions_df.set_index(['Year', 'Team']).index.map(xmas_map).fillna(0)
+        pick_predictions_df['thanksgiving_win_pct'] = pick_predictions_df.set_index(['Year', 'Team']).index.map(tgiving_map).fillna(0)
+        
+        # 3. Apply your interaction logic
+        # This turns the 'Pre' binary flag into a continuous "Expectation" variable
+        pick_predictions_df['Pre Christmas'] = pick_predictions_df['Pre Christmas'] * pick_predictions_df['christmas_win_pct']
+        pick_predictions_df['Pre Thanksgiving'] = pick_predictions_df['Pre Thanksgiving'] * pick_predictions_df['thanksgiving_win_pct']
+        
+        # 4. Create the final aggregate feature
+        pick_predictions_df['Holiday Strength'] = pick_predictions_df['Pre Thanksgiving'] + pick_predictions_df['Pre Christmas']
 
         st.write("TESTTESTTESTTESTTESTTESTETSTETSTETS")
         st.write(pick_predictions_df)

@@ -1755,8 +1755,7 @@ def collect_schedule_travel_ranking_data(pd, config: dict, schedule_rows):
     
     # Convert 'Week' to integer representing the week number
     public_pick_df['Week'] = public_pick_df['Week'].str.replace('Week ', '').astype(int)
-    st.write('PUBLIC PICK DF')
-    st.write(public_pick_df)
+
     # df['Week'] = pd.to_numeric(df['Week']) # This is now redundant after astype(int)
     
     # Use your existing 'teams' dictionary for *Division* mapping (still needed)
@@ -1804,7 +1803,10 @@ def collect_schedule_travel_ranking_data(pd, config: dict, schedule_rows):
     public_pick_df['Team Division'] = public_pick_df['Team'].map(lambda team: teams2.get(team, ['', '', '', '', '', ''])[5])
     public_pick_df['Opponent Division'] = public_pick_df['Opponent'].map(lambda opponent: teams2.get(opponent, ['', '', '', '', '', ''])[5])
     public_pick_df['Divisional Matchup?'] = (public_pick_df['Team Division'] == public_pick_df['Opponent Division']).astype(int)
-    
+
+    st.write('PUBLIC PICK DF')
+    st.write(public_pick_df)    
+
     # Load the historical data from the file created by nflreadpy
     away_data_df = df_api_schedule
     away_data_df['Calendar Date'] = pd.to_datetime(away_data_df['Calendar Date'])

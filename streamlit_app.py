@@ -2666,8 +2666,8 @@ def get_predicted_pick_percentages(config: dict, schedule_df: pd.DataFrame):
         
         print("✅ Feature engineering complete.")
 
-        print("TESTTESTTESTTESTTESTTESTETSTETSTETS")
-        print(pick_predictions_df)
+        st.write("TESTTESTTESTTESTTESTTESTETSTETSTETS")
+        st.write(pick_predictions_df)
 
         # --- Conditional Prediction (NOW on the combined, feature-rich dataframe) ---
         if public_picks_available and rf_model_enhanced:

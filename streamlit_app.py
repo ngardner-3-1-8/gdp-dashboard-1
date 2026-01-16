@@ -1799,6 +1799,8 @@ def collect_schedule_travel_ranking_data(pd, config: dict, schedule_rows):
     }
     
     # Division mapping
+	public_pick_df['Team'] = public_pick_df['Team'].replace('WSH', 'WAS')
+    public_pick_df['Opponent'] = public_pick_df['Opponent'].replace('WSH', 'WAS')
     public_pick_df['Team Division'] = public_pick_df['Team'].map(lambda team: teams2.get(team, ['', '', '', '', '', ''])[5])
     public_pick_df['Opponent Division'] = public_pick_df['Opponent'].map(lambda opponent: teams2.get(opponent, ['', '', '', '', '', ''])[5])
     public_pick_df['Divisional Matchup?'] = (public_pick_df['Team Division'] == public_pick_df['Opponent Division']).astype(int)

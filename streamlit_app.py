@@ -2672,8 +2672,8 @@ def get_predicted_pick_percentages(config: dict, schedule_df: pd.DataFrame):
 
         # 1. Create lookup maps for the Win % on the actual holiday weeks
         # This isolates the team's strength specifically on the day of the holiday
-        xmas_map = pick_predictions_df[pick_predictions_df['christmas_week'] == 1].set_index(['Year', 'Team'])['Win %']
-        tgiving_map = pick_predictions_df[pick_predictions_df['thanksgiving_week'] == 1].set_index(['Year', 'Team'])['Win %']
+        xmas_map = pick_predictions_df[pick_predictions_df['christmas_week'] == 1].set_index(['Team'])['Win %']
+        tgiving_map = pick_predictions_df[pick_predictions_df['thanksgiving_week'] == 1].set_index(['Team'])['Win %']
         
         # 2. Map those holiday-specific Win percentages back to every row for that team/year
         # This allows the "Pre holiday" rows to "know" how strong the team is on the upcoming holiday

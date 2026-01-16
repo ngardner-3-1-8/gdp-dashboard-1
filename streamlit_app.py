@@ -1947,7 +1947,8 @@ def collect_schedule_travel_ranking_data(pd, config: dict, schedule_rows):
     
     
     public_pick_df = public_pick_df.drop_duplicates()
-    
+
+    st.write(public_pick_df)
     
     # ==============================================================================
     # SECTION 4: POPULATE week_df WITH PUBLIC PICK DATA

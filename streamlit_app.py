@@ -2159,7 +2159,15 @@ def get_predicted_pick_percentages(config: dict, schedule_df: pd.DataFrame):
 
     else:
         # (Your existing code for other contests...)
-        base_features = ['Win %', 'Future Value (Stars)', 'Date', 'Away Team', 'Divisional Matchup?'] # ... abbreviated for brevity
+        base_features = ['Win %', 'Future Value (Stars)', 'Date', 'Away Team', 'Divisional Matchup?', 'Week_Mean_WinPct', 'Week_Mean_FV', 'Week_Max_WinPct', 
+						 'Week_Max_FV', 'Week_Min_WinPct', 'Week_Min_FV', 'Week_Std_WinPct', 'Week_Std_FV', 'Team_WinPct_RelativeToWeekMean', 'Team_FV_RelativeToWeekMean', 
+						 'Team_WinPct_RelativeToTopTeam', 'Team_FV_RelativeToTopTeam', 'Win % Rank', 'Star Rating Rank','Num_Teams_This_Week', 'Rank_Density',
+						 'FV_Rank_Density',  'Future_Weeks_Top_Team', 'Future_Weeks_Over_80', 'Future_Weeks_70_80', 'Future_Weeks_60_70', 'Thursday_Home', 'Thursday_Away', 
+						 'Thursday_Underdog', 'Thursday_Favorite', 'Week_Mean_80', 'Week_Max_80', 'Week_Min_80', 'Week_Std_80', 'Team_80_RelativeToWeekMean', 
+						 'Team_80_RelativeToTopTeam', '80_Rank', '80_Rank_Density', 'Week_Mean_70_80', 'Week_Max_70_80', 'Week_Min_70_80', 'Week_Std_70_80', 
+						 'Team_70_80_RelativeToWeekMean', 'Team_70_80_RelativeToTopTeam', '70_80_Rank', '70_80_Rank_Density', 'Week_Mean_60_70', 'Week_Max_60_70', 'Week_Min_60_70', 
+						 'Week_Std_60_70', 'Team_60_70_RelativeToWeekMean', 'Team_60_70_RelativeToTopTeam', '60_70_Rank', '60_70_Rank_Density', 'Week_Mean_Top_Team', 'Week_Max_Top_Team', 
+						 'Week_Min_Top_Team', 'Week_Std_Top_Team', 'Team_Top_Team_RelativeToWeekMean', 'Team_Top_Team_RelativeToTopTeam', 'Top_Team_Rank', 'Top_Team_Rank_Density']
         
     X = df[base_features].fillna(0)
     y = df['Pick %']
@@ -2198,6 +2206,37 @@ def get_predicted_pick_percentages(config: dict, schedule_df: pd.DataFrame):
     y_pred = rf_model_base.predict(X_test)
     mae = mean_absolute_error(y_test, y_pred)
     st_write(f"Base Model Mean Absolute Error: {mae:.4f}")
+
+    # --- Train Enhanced Model (WITH Public Pick Data) ---
+    st_write("Training enhanced model (with public pick data)...")
+    
+    assumed_public_pick_col = 'Public Pick %' 
+    rf_model_enhanced = None
+    
+    if assumed_public_pick_col not in df.columns:
+        st_write(f"Warning: Historical data does not contain '{assumed_public_pick_col}'. Cannot train enhanced model.")
+    else:
+        enhanced_features = base_features + [assumed_public_pick_col]
+        
+        # Filter historical data to rows WHERE public pick data was available
+        df_enhanced = df.dropna(subset=[assumed_public_pick_col])
+        
+        if df_enhanced.empty:
+            st_write("Warning: No historical data found with public pick %. Enhanced model will not be trained.")
+        else:
+            st_write(f"Training enhanced model on {len(df_enhanced)} historical samples.")
+            X_enhanced = df_enhanced[enhanced_features].fillna(0) # Fill NA for training data
+            y_enhanced = df_enhanced['Pick %']
+            
+            # Train/test split for the enhanced model
+            X_train_e, X_test_e, y_train_e, y_test_e = train_test_split(X_enhanced, y_enhanced, test_size=0.2, random_state=42)
+            
+            rf_model_enhanced = RandomForestRegressor(n_estimators=50, random_state=0)
+            rf_model_enhanced.fit(X_train_e, y_train_e)
+            
+            y_pred_e = rf_model_enhanced.predict(X_test_e)
+            mae_e = mean_absolute_error(y_test_e, y_pred_e)
+            st_write(f"Enhanced Model Mean Absolute Error: {mae_e:.2f}")
 
     st_write("Starting week-by-week pick percentage predictions...")
     

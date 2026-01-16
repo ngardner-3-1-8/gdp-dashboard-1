@@ -1798,7 +1798,7 @@ def collect_schedule_travel_ranking_data(pd, config: dict, schedule_rows):
     }
     
     # Division mapping
-	public_pick_df['Team'] = public_pick_df['Team'].replace('WSH', 'WAS')
+    public_pick_df['Team'] = public_pick_df['Team'].replace('WSH', 'WAS')
     public_pick_df['Opponent'] = public_pick_df['Opponent'].replace('WSH', 'WAS')
     public_pick_df['Team Division'] = public_pick_df['Team'].map(lambda team: teams2.get(team, ['', '', '', '', '', ''])[5])
     public_pick_df['Opponent Division'] = public_pick_df['Opponent'].map(lambda opponent: teams2.get(opponent, ['', '', '', '', '', ''])[5])
@@ -1941,11 +1941,7 @@ def collect_schedule_travel_ranking_data(pd, config: dict, schedule_rows):
     public_pick_df.loc[condition_2020_date, 'Week'] += 1
     
     public_pick_df['EV'] = 0
-
-
-    
-    
-    
+  
     public_pick_df = public_pick_df.drop_duplicates()
 
     st.write(public_pick_df)

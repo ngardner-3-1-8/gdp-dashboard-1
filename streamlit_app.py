@@ -2420,8 +2420,7 @@ def get_predicted_pick_percentages(config: dict, schedule_df: pd.DataFrame):
         pick_predictions_df['FV_Rank_Density'] = pick_predictions_df['Star Rating Rank'] / pick_predictions_df['Num_Teams_This_Week']
         
         print("✅ Feature engineering complete.")
-        print("TESTTESTTESTTESTTESTTESTETSTETSTETS")
-        print(pick_predictions_df)
+
 
 
 		# ------------------------------------------------------------------------------
@@ -2666,6 +2665,9 @@ def get_predicted_pick_percentages(config: dict, schedule_df: pd.DataFrame):
         pick_predictions_df['Availability_Rank_Density'] = pick_predictions_df['Availability_Rank'] / pick_predictions_df['Num_Teams_This_Week']
         
         print("✅ Feature engineering complete.")
+
+        print("TESTTESTTESTTESTTESTTESTETSTETSTETS")
+        print(pick_predictions_df)
 
         # --- Conditional Prediction (NOW on the combined, feature-rich dataframe) ---
         if public_picks_available and rf_model_enhanced:

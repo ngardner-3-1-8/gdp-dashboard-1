@@ -2115,8 +2115,8 @@ def get_predicted_pick_percentages(config: dict, schedule_df: pd.DataFrame):
     custom_pick_percentages = config.get('pick_percentages', {})
     
     # NEW CONFIG OPTION: Set to True to auto-select best features
-    run_optimization = config.get('optimize_features', False) 
-    n_features_to_keep = config.get('num_features', 20) 
+    run_optimization = config.get('optimize_features', True) 
+    n_features_to_keep = config.get('num_features', 70) 
 
     # Define features related to holiday games
     holiday_cols = ['Thanksgiving Favorite', 'Thanksgiving Underdog', 'Christmas Favorite', 'Christmas Underdog', 'Pre Thanksgiving', 'Pre Christmas']

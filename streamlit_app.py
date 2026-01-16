@@ -33,6 +33,7 @@ import random
 import csv
 from typing import Optional
 from typing import Dict, List, Any
+from sklearn.feature_selection import RFE
 
 starting_week = 2
 starting_year = 2025 #Can go as far back as 2010 if you need to collect all new data. You shouldn't need to change this though

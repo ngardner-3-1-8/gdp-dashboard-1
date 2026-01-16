@@ -2420,7 +2420,8 @@ def get_predicted_pick_percentages(config: dict, schedule_df: pd.DataFrame):
         pick_predictions_df['FV_Rank_Density'] = pick_predictions_df['Star Rating Rank'] / pick_predictions_df['Num_Teams_This_Week']
         
         print("✅ Feature engineering complete.")
-        # print(df[['Year', 'Week', 'Team', 'Win %', 'Win % Rank', 'Rank_Density', 'Num_Teams_This_Week']].head())
+        print("TESTTESTTESTTESTTESTTESTETSTETSTETS")
+        print(pick_predictions_df)
 
 
 		# ------------------------------------------------------------------------------

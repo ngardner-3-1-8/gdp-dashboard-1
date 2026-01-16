@@ -1755,6 +1755,8 @@ def collect_schedule_travel_ranking_data(pd, config: dict, schedule_rows):
     
     # Convert 'Week' to integer representing the week number
     public_pick_df['Week'] = public_pick_df['Week'].str.replace('Week ', '').astype(int)
+    st.write('PUBLIC PICK DF')
+    st.write(public_pick_df)
     # df['Week'] = pd.to_numeric(df['Week']) # This is now redundant after astype(int)
     
     # Use your existing 'teams' dictionary for *Division* mapping (still needed)

@@ -35,12 +35,10 @@ try:
     # Load the schedule for the target year
     schedule = nfl.load_schedules([target_year])
     
-    # Filter for Regular Season games only
-    reg_season_games = schedule.filter(
-        pl.col('game_type') == 'REG'
-    )
-
-    reg_season_games = reg_season_games.to_pandas()
+    schedule = schedule_raw.to_pandas() # Convert here!
+    
+    # Now all the standard Pandas filtering works:
+    reg_season_games = schedule[schedule['game_type'] == 'REG']
     
     if not reg_season_games.empty:
         # Find the very first game date of the season

@@ -35,7 +35,7 @@ try:
     # Load the schedule for the target year
     schedule = nfl.load_schedules([target_year])
     
-    schedule = schedule_raw.to_pandas() # Convert here!
+    schedule = schedule.to_pandas() # Convert here!
     
     # Now all the standard Pandas filtering works:
     reg_season_games = schedule[schedule['game_type'] == 'REG']

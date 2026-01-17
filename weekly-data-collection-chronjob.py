@@ -128,10 +128,10 @@ df2 = df[df['Year'] != current_year]
 
 df = df[df['Year'] == current_year]
 # Save the initial scraped data
-df.to_csv(f'historical_pick_data_FV_week_{starting_week - 1}.csv', index=False)
+df.to_csv(f'contest-historical-data/historical_pick_data_FV_week_{starting_week - 1}.csv', index=False)
 
 ###
-###df.to_csv(f'historical_pick_data_FV_ALL_Years.csv', index=False)
+###df.to_csv(f'contest-historical-data/historical_pick_data_FV_ALL_Years.csv', index=False)
 
 # ==============================================================================
 # SECTION 2: API DATA COLLECTION (REPLACED BY nflreadpy)
@@ -210,7 +210,7 @@ df_api_schedule['Week'] = df_api_schedule['Week'].astype(int)
 df_api_schedule['Calendar Date'] = pd.to_datetime(df_api_schedule['Calendar Date'], errors='coerce')
 df_api_schedule['Calendar Date'] = df_api_schedule['Calendar Date'].dt.strftime('%Y-%m-%d')
 
-historical_home_df = pd.read_csv('Historical Home and Away data.csv')
+historical_home_df = pd.read_csv('contest-historical-data/Historical Home and Away data.csv')
 
 historical_home_df = historical_home_df.drop_duplicates()
 
@@ -242,9 +242,9 @@ df_api_schedule['Loser/tie'] = df_api_schedule['Loser/tie'].replace('WAS', 'WSH'
 df_api_schedule = df_api_schedule.drop_duplicates()
 
 # Save the nflreadpy data
-df_api_schedule.to_csv('Historical Home and Away data.csv', index=False)
+df_api_schedule.to_csv('contest-historical-data/Historical Home and Away data.csv', index=False)
 
-print("nflreadpy data successfully fetched and saved to 'Historical Home and Away data.csv'.")
+print("nflreadpy data successfully fetched and saved to 'contest-historical-data/Historical Home and Away data.csv'.")
 
 
 # ==============================================================================
@@ -254,8 +254,8 @@ print("nflreadpy data successfully fetched and saved to 'Historical Home and Awa
 # Your 'teams' dictionary for mapping is now **redundant for the schedule data**
 # since nflreadpy already uses the abbreviations (e.g., ARI, BAL) that your
 # web-scraped data uses. This simplifies the code significantly!
-df = pd.read_csv('historical_pick_data_FV_All_Years.csv')
-df2 = pd.read_csv(f'historical_pick_data_FV_week_{starting_week - 1}.csv')
+df = pd.read_csv('contest-historical-data/historical_pick_data_FV_ALL_Years.csv')
+df2 = pd.read_csv(f'contest-historical-data/historical_pick_data_FV_week_{starting_week - 1}.csv')
   
 #condition_to_remove = (
 #    (df['Year'] == current_year)
@@ -287,7 +287,7 @@ df['Opponent'] = df['Opponent'].replace('WSH', 'WAS')
 
 df.drop_duplicates()
 
-df.to_csv('historical_pick_data_FV_All_Years.csv', index=False)
+df.to_csv('contest-historical-data/historical_pick_data_FV_ALL_Years.csv', index=False)
 
 # Existing cleanup of the scraped data
 df = df.replace(r'\u00A0\(W\)', '', regex=True)
@@ -352,7 +352,7 @@ df['Opponent Division'] = df['Opponent'].map(lambda opponent: teams.get(opponent
 df['Divisional Matchup?'] = (df['Team Division'] == df['Opponent Division']).astype(int)
 
 # Load the historical data from the file created by nflreadpy
-away_data_df = pd.read_csv('Historical Home and Away data.csv')
+away_data_df = pd.read_csv('contest-historical-data/Historical Home and Away data.csv')
 away_data_df['Calendar Date'] = pd.to_datetime(away_data_df['Calendar Date'])
 
 # Initialization of new columns
@@ -436,12 +436,12 @@ df = df[df['Opponent Division'] != '']
 df = df[df['Year'] == current_year]
 
 
-df2 = pd.read_csv("DK_historical_data.csv")
+df2 = pd.read_csv("contest-historical-data/DK_historical_data.csv")
 df2 = df2[df2['Year'] != current_year]
 
 
 df = df.drop_duplicates()
-df.to_csv(f"DK_historical_data_{current_year}.csv", index=False)
+df.to_csv(f"contest-historical-data/DK_historical_data_{current_year}.csv", index=False)
 
 df = pd.concat([df2, df], ignore_index=True)
 
@@ -749,7 +749,7 @@ print("✅ Feature engineering complete.")
 
 
 
-home_df.to_csv("DK_historical_data.csv", index=False)
+home_df.to_csv("contest-historical-data/DK_historical_data.csv", index=False)
 
 # ... (The final date manipulation logic remains the same)
 pre_circa_dates = {2010, 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019}
@@ -1195,7 +1195,7 @@ print("✅ Feature engineering complete.")
 
 ###df = df[df['Year'] == current_year]
 
-df2 = pd.read_csv("Circa_historical_data.csv")
+df2 = pd.read_csv("contest-historical-data/Circa_historical_data.csv")
 df2 = df2[df2['Year'] != current_year]
 df = df[df['Year'] == current_year]
 
@@ -1235,7 +1235,7 @@ df2 = df2.drop_duplicates()
 #df2['Calendar Date'] = pd.to_datetime(df2['Calendar Date'], format='%Y-%m-%d %H:%M:%S')
 #df2['Calendar Date_String'] = df2['Calendar Date'].dt.strftime('%m/%d/%Y')
 
-df.to_csv(f"Circa_historical_data_{current_year}.csv", index=False)
+df.to_csv(f"contest-historical-data/Circa_historical_data_{current_year}.csv", index=False)
 
 df = pd.concat([df2, df], ignore_index=True)
 
@@ -1247,7 +1247,7 @@ df['Calendar Date'] = pd.to_datetime(df['Calendar Date'], format='%Y-%m-%d')
 
 df = df.drop_duplicates()
 
-df.to_csv("Circa_historical_data.csv", index=False)
+df.to_csv("contest-historical-data/Circa_historical_data.csv", index=False)
 
 def scrape_circa_survivor_picks():
     """
@@ -1432,15 +1432,15 @@ team_dictionary = {
 }
 
 # --- File Names ---
-historical_data_file = f"Circa_historical_data_{current_year}.csv"
-####historical_data_file = "Circa_historical_data.csv"
+historical_data_file = f"contest-historical-data/Circa_historical_data_{current_year}.csv"
+####historical_data_file = "contest-historical-data/Circa_historical_data.csv"
 
 
 # Assuming the pick data CSVs are named like '2025_survivor_picks.csv'
 pick_data_base_path = "Circa Pick History/CSVs_Output/" 
 
-####output_file = f"Circa_historical_data.csv"
-output_file = f"Circa_historical_data_{current_year}.csv"
+####output_file = f"contest-historical-data/Circa_historical_data.csv"
+output_file = f"contest-historical-data/Circa_historical_data_{current_year}.csv"
 
 # --- Correction: Use the exact string the scraper uses for eliminated entries ---
 ELIMINATED_MARKER = "ELIMINATED"
@@ -1694,7 +1694,7 @@ def update_historical_data():
 if __name__ == '__main__':
     update_historical_data()
 
-df = pd.read_csv(f'Circa_historical_data_{current_year}.csv')
+df = pd.read_csv(f'contest-historical-data/Circa_historical_data_{current_year}.csv')
 # Define group keys for weekly calculations
 group_keys = ['Year', 'Week']
 
@@ -1725,7 +1725,7 @@ df['Availability_Rank_Density'] = df['Availability_Rank'] / df['Num_Teams_This_W
 
 print("✅ Feature engineering complete.")
 
-df.to_csv(f'Circa_historical_data_{current_year}.csv', index = False)
+df.to_csv(f'contest-historical-data/Circa_historical_data_{current_year}.csv', index = False)
 
 def process_game_data(input_path):
     """
@@ -1966,9 +1966,9 @@ def calculate_ev(df):
 
     print("EV calculations complete for all seasons.")
 
-    csv_df = pd.read_csv(f'Circa_historical_data_{current_year}.csv')
+    csv_df = pd.read_csv(f'contest-historical-data/Circa_historical_data_{current_year}.csv')
     csv_df = csv_df[csv_df['Year'] == current_year]
-####    csv_df = pd.read_csv(f'Circa_historical_data.csv')
+####    csv_df = pd.read_csv(f'contest-historical-data/Circa_historical_data.csv')
     merge_cols = ['Team', 'Opponent', 'Week', 'Year']
     merged_1 = pd.merge(
         csv_df,
@@ -1995,16 +1995,16 @@ def calculate_ev(df):
     csv_df['EV'] = merged_2['EV_from_df2'].combine_first(csv_df['EV'])
 
     # Save to a CSV
-    output_filename = f"Circa_historical_data_{current_year}.csv"
-####    output_filename = f"Circa_historical_data.csv"
+    output_filename = f"contest-historical-data/Circa_historical_data_{current_year}.csv"
+####    output_filename = f"contest-historical-data/Circa_historical_data.csv"
     csv_df.to_csv(output_filename, index=False)
     print(f"Updated data saved to {output_filename}")
     
     return df
 
 
-initial_input_filename = f"Circa_historical_data_{current_year}.csv"
-####initial_input_filename = f"Circa_historical_data.csv"
+initial_input_filename = f"contest-historical-data/Circa_historical_data_{current_year}.csv"
+####initial_input_filename = f"contest-historical-data/Circa_historical_data.csv"
 
 historical_df = process_game_data(initial_input_filename)
 
@@ -2028,15 +2028,15 @@ if updated_df is not None:
     print("\n--- Sample of Updated Data (Opponent EV) ---")
     print(updated_df[updated_df['Opponent EV'].notna()][['Year', 'Week', 'Opponent', 'Opponent EV']].head())
 
-df_historical = pd.read_csv("Circa_historical_data.csv")
-df_current_year = pd.read_csv(f"Circa_historical_data_{current_year}.csv")
+df_historical = pd.read_csv("contest-historical-data/Circa_historical_data.csv")
+df_current_year = pd.read_csv(f"contest-historical-data/Circa_historical_data_{current_year}.csv")
 
 df_filtered = df_historical[df_historical['Year'] != current_year].copy()
 
 df_combined = pd.concat([df_filtered, df_current_year], ignore_index=True)
 
 # --- Step 4: Save the result (Optional, but recommended) ---
-df_combined.to_csv("Circa_historical_data.csv", index=False)
+df_combined.to_csv("contest-historical-data/Circa_historical_data.csv", index=False)
         
 print(df_combined)
     
@@ -2071,7 +2071,7 @@ def calculate_team_availability(historical_data_path: str, picks_data_path: str)
 
     # --- 2. Determine the Last Completed Week (W_max) ---
     if 'Week' not in df_hist.columns:
-        print("ERROR: 'Circa_historical_data.csv' must contain a 'Week' column.")
+        print("ERROR: 'contest-historical-data/Circa_historical_data.csv' must contain a 'Week' column.")
         return None
 
     # Find the maximum completed week (W_max) and the next week for calculation (W_next)
@@ -2178,9 +2178,9 @@ def calculate_team_availability(historical_data_path: str, picks_data_path: str)
 # --- Main Execution Block ---
 
 # Define the file paths as provided by the user
-historical_file = "Circa_historical_data.csv"
+historical_file = "contest-historical-data/Circa_historical_data.csv"
 picks_file = "Circa Pick History/CSVs_Output/2025_survivor_picks.csv"
-output_file = "Circa_historical_data.csv" # New output file name
+output_file = "contest-historical-data/Circa_historical_data.csv" # New output file name
 
 # Run the calculation
 results_df = calculate_team_availability(historical_file, picks_file)

@@ -36,7 +36,9 @@ try:
     schedule = nfl.load_schedules([target_year])
     
     # Filter for Regular Season games only
-    reg_season_games = schedule[schedule['game_type'] == 'REG']
+    reg_season_games = schedule.filter(
+        pl.col('game_type') == 'REG'
+    )
 
     reg_season_games = reg_season_games.to_pandas()
     

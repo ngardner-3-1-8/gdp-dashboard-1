@@ -79,7 +79,7 @@ dk_total_entries = 20000
 # --- 1. DEFAULT TEAM RANKS (Baseline) ---
 # Used if the user selects 'Default' in the UI for their current rank setting.
 # --------------------------------------------------------------------------
-DEFAULT_RANKS = {
+massey_peabody_rankings = {
     'Arizona Cardinals' : -5.6,
     'Atlanta Falcons' : -1.61,
     'Baltimore Ravens' : 5,
@@ -309,7 +309,7 @@ def collect_schedule_travel_ranking_data(pd, config: dict, schedule_rows):
         # 2. Get Current/Custom Rank (from config or default)
         user_rank = custom_rankings.get(team, 'Default')
         if user_rank == 'Default':
-            current_rank = DEFAULT_RANKS.get(team, 0)
+            current_rank = massey_peabody_rankings.get(team, 0)
         else:
             current_rank = float(user_rank) # Ensure it's a number
         
@@ -4645,7 +4645,7 @@ def update_nested_value(outer_key, inner_key):
             else:
                 value = value / 100.0
         elif outer_key == 'team_rankings' and value == "Default":
-            value = DEFAULT_RANKS.get(inner_key, 0)
+            value = massey_peabody_rankings.get(inner_key, 0)
 
         if outer_key not in st.session_state.current_config:
             st.session_state.current_config[outer_key] = {}
@@ -5503,7 +5503,7 @@ else:
                         args=(outer_key, inner_key)
                     )
                     # Display the effective rank
-                    effective_rank = current_val if current_val != 'Default' else DEFAULT_RANKS.get(team, 0)
+                    effective_rank = current_val if current_val != 'Default' else massey_peabody_rankings.get(team, 0)
                     st.caption(f"Effective: :green[{effective_rank}]")
 
                  rank_col_idx = (rank_col_idx + 1) % 3

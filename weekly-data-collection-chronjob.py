@@ -34,7 +34,7 @@ print(f"Initial Target Year based on month: {target_year}")
 # We need to see if the season has actually started yet.
 try:
     # Load the schedule for the target year
-    schedule = nfl.import_schedules([target_year])
+    schedule = nfl.load_schedules([target_year])
     
     # Filter for Regular Season games only
     reg_season_games = schedule[schedule['game_type'] == 'REG']
@@ -48,7 +48,7 @@ try:
             print(f"Today ({today.date()}) is before the first game ({first_game_date.date()}). dropping year by 1.")
             target_year -= 1
             # Reload schedule for the adjusted year so we can calculate the week correctly below
-            schedule = nfl.import_schedules([target_year])
+            schedule = nfl.load_schedules([target_year])
     
     # 4. Calculate the Current Week
     # We find the latest game that has happened to determine "current" week

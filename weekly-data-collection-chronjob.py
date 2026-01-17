@@ -2241,7 +2241,7 @@ def calculate_team_availability(historical_data_path: str, picks_data_path: str)
 
 # Define the file paths as provided by the user
 historical_file = "contest-historical-data/Circa_historical_data.csv"
-picks_file = "Circa Pick History/CSVs_Output/2025_survivor_picks.csv"
+picks_file = f"circa-pick-history/{current_year}_survivor_picks.csv"
 output_file = "contest-historical-data/Circa_historical_data.csv" # New output file name
 
 # Run the calculation

@@ -39,6 +39,8 @@ try:
     
     # Filter for Regular Season games only
     reg_season_games = schedule[schedule['game_type'] == 'REG']
+
+    reg_season_games = reg_season_games.to_pandas()
     
     if not reg_season_games.empty:
         # Find the very first game date of the season

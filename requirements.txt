@@ -17,3 +17,4 @@ polars
 nflreadpy
 tqdm
 PyGithub
+pyarrow

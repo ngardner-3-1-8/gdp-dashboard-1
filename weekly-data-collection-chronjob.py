@@ -20,6 +20,7 @@ import calendar
 
 # 1. Get current date
 today = datetime.datetime.now()
+
 current_cal_year = today.year 
 
 # 2. Initial Year Logic based on Month (User Rule)
@@ -109,19 +110,21 @@ def get_thanksgiving(year):
 # 1. Standard Logic
 NUM_WEEKS_TO_KEEP = starting_week - 1
 
-# 2. Thanksgiving Calculation (2 days after)
-thanksgiving_this_year = get_thanksgiving(today.year)
-two_days_after_thanksgiving = thanksgiving_this_year + datetime.timedelta(days=2)
+# 2. HOLIDAY CALCULATIONS BASED ON THE SEASON YEAR (current_year)
+# If it's Jan 2026, current_year is 2025. This ensures we look at 2025 holidays.
+thanksgiving_season = get_thanksgiving(current_year)
+two_days_after_thanksgiving = thanksgiving_season + datetime.timedelta(days=2)
 
-# 3. Christmas Calculation (Dec 26th)
-december_26 = datetime.datetime(today.year, 12, 26)
+christmas_season_cutoff = datetime.datetime(current_year, 12, 26)
 
-# 4. Apply Adjustments
+# 3. Apply Adjustments
+# Use separate 'if' statements if you want them to be additive (+2 total)
 if today >= two_days_after_thanksgiving:
-    print(f"Detected: Post-Thanksgiving window. Adjusting NUM_WEEKS_TO_KEEP.")
+    print(f"Detected: Date is after {current_year} Thanksgiving. +1 to NUM_WEEKS_TO_KEEP.")
     NUM_WEEKS_TO_KEEP += 1
-elif today >= december_26:
-    print(f"Detected: Post-Christmas window. Adjusting NUM_WEEKS_TO_KEEP.")
+
+if today >= christmas_season_cutoff:
+    print(f"Detected: Date is after {current_year} Christmas. +1 to NUM_WEEKS_TO_KEEP.")
     NUM_WEEKS_TO_KEEP += 1
 
 print(f"Final NUM_WEEKS_TO_KEEP: {NUM_WEEKS_TO_KEEP}")

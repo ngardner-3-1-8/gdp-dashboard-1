@@ -16,6 +16,7 @@ from typing import Dict, List, Any
 import polars as pl
 import nflreadpy as nfl
 import datetime
+import calendar
 
 # 1. Get current date
 today = datetime.datetime.now()
@@ -94,8 +95,34 @@ circa_2025_entries = 18718
 # SECTION 1: SURVIVORGRID.COM SCRAPING (UNCHANGED - nflreadpy CANNOT DO THIS)
 # ==============================================================================
 
+# --- AUTOMATION FIX 3: Thanksgiving & Christmas Adjustment ---
+
+def get_thanksgiving(year):
+    # Thanksgiving is the 4th Thursday in November
+    nov1_weekday = calendar.weekday(year, 11, 1)
+    days_to_first_thursday = (3 - nov1_weekday + 7) % 7
+    thanksgiving_day = 1 + days_to_first_thursday + 21
+    return datetime.datetime(year, 11, thanksgiving_day)
+
+# 1. Standard Logic
 NUM_WEEKS_TO_KEEP = starting_week - 1
-current_year_plus_1 = current_year + 1 #current_year + 1
+
+# 2. Thanksgiving Calculation (2 days after)
+thanksgiving_this_year = get_thanksgiving(today.year)
+two_days_after_thanksgiving = thanksgiving_this_year + datetime.timedelta(days=2)
+
+# 3. Christmas Calculation (Dec 26th)
+december_26 = datetime.datetime(today.year, 12, 26)
+
+# 4. Apply Adjustments
+if today >= two_days_after_thanksgiving:
+    print(f"Detected: Post-Thanksgiving window. Adjusting NUM_WEEKS_TO_KEEP.")
+    NUM_WEEKS_TO_KEEP += 1
+elif today >= december_26:
+    print(f"Detected: Post-Christmas window. Adjusting NUM_WEEKS_TO_KEEP.")
+    NUM_WEEKS_TO_KEEP += 1
+
+print(f"Final NUM_WEEKS_TO_KEEP: {NUM_WEEKS_TO_KEEP}")
 
 def scrape_data(url):
     response = requests.get(url)

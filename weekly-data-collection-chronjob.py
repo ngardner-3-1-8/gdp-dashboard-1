@@ -16,7 +16,47 @@ from typing import Dict, List, Any
 import polars as pl
 import nflreadpy as nfl
 
-starting_week = 2 # The week AFTER which you want to stop scraping (e.g., up to Week 6). In most cases this will be the upcoming week. Prior to week 1 in a new season, you will just use the prior year and use week 21
+# --- AUTOMATION FIX 2: Dynamic Week Detection ---
+import datetime
+import nflreadpy as nfl
+
+# Get current date
+today = datetime.datetime.now()
+current_year = today.year 
+
+# If running in Jan/Feb, we are technically in the "previous" calendar year's season
+if today.month < 9:
+    current_year -= 1
+
+# Load schedule to find current week
+try:
+    schedule = nfl.import_schedules([current_year])
+    
+    # Filter for games that have happened or are happening this week
+    # We find the week number where games are closest to 'today'
+    current_week_info = schedule[
+        (pd.to_datetime(schedule['gameday']) <= pd.to_datetime(today))
+    ]
+    
+    if not current_week_info.empty:
+        # Get the max week that has passed + 1 for the "upcoming" week
+        # Or just use the max week if you are collecting data for the week that just finished
+        calculated_week = int(current_week_info['week'].max())
+        
+        # LOGIC CHECK: 
+        # If you run this on Tuesday AM to get the "just finished" week data:
+        starting_week = calculated_week + 1 
+    else:
+        starting_week = 1 # Pre-season fallback
+
+    print(f"Auto-detected Date: {today.date()} | Season: {current_year} | Week: {starting_week}")
+
+except Exception as e:
+    print(f"Error calculating week: {e}. Falling back to manual defaults.")
+    starting_week = 2 # Manual Fallback
+    current_year = 2025
+
+starting_year = current_year # Usually same as current year # The week AFTER which you want to stop scraping (e.g., up to Week 6). In most cases this will be the upcoming week. Prior to week 1 in a new season, you will just use the prior year and use week 21
 starting_year = 2025 #Can go as far back as 2010 if you need to collect all new data. You shouldn't need to change this though
 current_year = 2025
 MAX_PAGES = 187 # Based on user input, scrape pages 1 through 187
@@ -1404,7 +1444,7 @@ def scrape_circa_survivor_picks():
     df = pd.DataFrame(all_entries_data, columns=COLUMN_HEADERS)
     
     # Save the DataFrame to a CSV file
-    output_filename = f"Circa Pick History/CSVs_Output/{current_year}_survivor_picks.csv"
+    output_filename = f"circa-pick-history/{current_year}_survivor_picks.csv"
     df.to_csv(output_filename, index=False, quoting=csv.QUOTE_MINIMAL, encoding='utf-8')
 
     print(f"\n✅ Scraping and processing finished!")

@@ -1,0 +1,36 @@
+name: Weekly NFL Data Collection
+
+on:
+  schedule:
+    # 14:00 UTC is 9:00 AM Eastern Time
+    # '0 14 * * 2' = Minute 0, Hour 14, Every Day, Every Month, Tuesday (2)
+    - cron: '0 14 * * 2'
+  workflow_dispatch: # Allows you to trigger it manually for testing
+
+jobs:
+  collect-data:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Install Dependencies
+        run: |
+          pip install -r requirements.txt
+
+      - name: Run Script
+        run: python weekly-data-collection-chronjob.py
+
+      - name: Commit and Push to Repo
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          # This ensures the folder exists so the git add doesn't fail
+          git add contest-historical-data/*.csv
+          git commit -m "Weekly Data Update: $(date +'%Y-%m-%d')" || echo "No changes to commit"
+          git push

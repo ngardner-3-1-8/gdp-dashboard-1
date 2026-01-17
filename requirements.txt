@@ -15,3 +15,5 @@ selenium
 undetected-chromedriver
 polars
 nflreadpy
+tqdm
+PyGithub

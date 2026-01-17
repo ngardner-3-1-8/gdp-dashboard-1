@@ -26,11 +26,16 @@ jobs:
       - name: Run Script
         run: python weekly-data-collection-chronjob.py
 
-      - name: Commit and Push to Repo
+- name: Commit and Push Changes
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
-          # This ensures the folder exists so the git add doesn't fail
+          
+          # Add the data folder
           git add contest-historical-data/*.csv
-          git commit -m "Weekly Data Update: $(date +'%Y-%m-%d')" || echo "No changes to commit"
+          
+          # Add the Circa folder (quote path due to spaces)
+          git add "Circa Pick History/CSVs_Output/*.csv"
+          
+          git commit -m "Weekly Data Auto-Update: Week $(date +'%U')" || echo "No changes to commit"
           git push

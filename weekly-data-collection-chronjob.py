@@ -15,50 +15,72 @@ from typing import Optional
 from typing import Dict, List, Any
 import polars as pl
 import nflreadpy as nfl
-
-# --- AUTOMATION FIX 2: Dynamic Week Detection ---
 import datetime
-import nflreadpy as nfl
 
-# Get current date
+# 1. Get current date
 today = datetime.datetime.now()
-current_year = today.year 
+current_cal_year = today.year 
 
-# If running in Jan/Feb, we are technically in the "previous" calendar year's season
-if today.month < 9:
-    current_year -= 1
+# 2. Initial Year Logic based on Month (User Rule)
+# If Jan-May (< 6), assume we are finishing the previous season.
+if today.month < 6:
+    target_year = current_cal_year - 1
+else:
+    target_year = current_cal_year
 
-# Load schedule to find current week
+print(f"Initial Target Year based on month: {target_year}")
+
+# 3. Pre-Season Check (User Rule)
+# We need to see if the season has actually started yet.
 try:
-    schedule = nfl.import_schedules([current_year])
+    # Load the schedule for the target year
+    schedule = nfl.import_schedules([target_year])
     
-    # Filter for games that have happened or are happening this week
-    # We find the week number where games are closest to 'today'
-    current_week_info = schedule[
-        (pd.to_datetime(schedule['gameday']) <= pd.to_datetime(today))
+    # Filter for Regular Season games only
+    reg_season_games = schedule[schedule['game_type'] == 'REG']
+    
+    if not reg_season_games.empty:
+        # Find the very first game date of the season
+        first_game_date = pd.to_datetime(reg_season_games['gameday'].min())
+        
+        # Check if today is BEFORE the first game
+        if pd.to_datetime(today) < first_game_date:
+            print(f"Today ({today.date()}) is before the first game ({first_game_date.date()}). dropping year by 1.")
+            target_year -= 1
+            # Reload schedule for the adjusted year so we can calculate the week correctly below
+            schedule = nfl.import_schedules([target_year])
+    
+    # 4. Calculate the Current Week
+    # We find the latest game that has happened to determine "current" week
+    games_played = schedule[
+        pd.to_datetime(schedule['gameday']) <= pd.to_datetime(today)
     ]
     
-    if not current_week_info.empty:
-        # Get the max week that has passed + 1 for the "upcoming" week
-        # Or just use the max week if you are collecting data for the week that just finished
-        calculated_week = int(current_week_info['week'].max())
+    if not games_played.empty:
+        # If games have been played, the "starting_week" for your script 
+        # (which usually scrapes the *upcoming* week) should be the last played week + 1.
+        last_played_week = int(games_played['week'].max())
+        starting_week = last_played_week + 1
         
-        # LOGIC CHECK: 
-        # If you run this on Tuesday AM to get the "just finished" week data:
-        starting_week = calculated_week + 1 
+        # Bound check: If season is over (e.g. Week 22), cap it or handle as needed
+        if starting_week > 19: 
+            starting_week = 19 
     else:
-        starting_week = 1 # Pre-season fallback
-
-    print(f"Auto-detected Date: {today.date()} | Season: {current_year} | Week: {starting_week}")
+        # If we fell back a year but that season is fully over, or if no games played yet
+        starting_week = 1 
 
 except Exception as e:
-    print(f"Error calculating week: {e}. Falling back to manual defaults.")
-    starting_week = 2 # Manual Fallback
-    current_year = 2025
+    print(f"⚠️ Error in dynamic detection: {e}. Falling back to defaults.")
+    # Fallback defaults to prevent crash
+    target_year = 2025
+    starting_week = 19
 
-starting_year = current_year # Usually same as current year # The week AFTER which you want to stop scraping (e.g., up to Week 6). In most cases this will be the upcoming week. Prior to week 1 in a new season, you will just use the prior year and use week 21
-starting_year = 2025 #Can go as far back as 2010 if you need to collect all new data. You shouldn't need to change this though
-current_year = 2025
+# 5. Final Assignment to your variables
+current_year = target_year
+starting_year = target_year
+
+print(f"✅ Final Configuration -> Year: {current_year} | Starting Week: {starting_week}")
+
 MAX_PAGES = 187 # Based on user input, scrape pages 1 through 187
 # The season parameter used in the URL
 

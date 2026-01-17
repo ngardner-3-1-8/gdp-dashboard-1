@@ -11,7 +11,6 @@ pytz
 python-dateutil
 Authlib
 datetime
-calendar
 selenium
 undetected-chromedriver
 polars

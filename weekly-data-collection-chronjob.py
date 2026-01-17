@@ -828,6 +828,23 @@ df['thanksgiving_week'] = 0
 # Ensure 'Calendar Date' is datetime format
 df['Calendar Date'] = pd.to_datetime(df['Calendar Date'])
 
+# --- Year 2026 ---
+# Note: Fixed typo (you had 2023-11-28 for the second date)
+condition_2026_date = (df['Year'] == 2026) & (df['Calendar Date'] >= pd.to_datetime('2026-11-28'))
+df.loc[condition_2026_date, 'Week'] += 1
+
+condition_2026_week = (df['Year'] == 2026) & (df['Calendar Date'] >= pd.to_datetime('2025-12-26'))
+df.loc[condition_2026_week, 'Week'] += 1
+
+condition_2026_xmas = (df['Year'] == 2026) & (df['Calendar Date'] == pd.to_datetime('2026-12-25'))
+df.loc[condition_2026_xmas, 'christmas_week'] = 1
+
+condition_2026_thanksgiving = (df['Year'] == 2026) & (
+    (df['Calendar Date'] == pd.to_datetime('2026-11-26')) | 
+    (df['Calendar Date'] == pd.to_datetime('2026-11-27'))
+)
+df.loc[condition_2026_thanksgiving, 'thanksgiving_week'] = 1
+
 # --- Year 2025 ---
 # Note: Fixed typo (you had 2023-11-28 for the second date)
 condition_2025_date = (df['Year'] == 2025) & (df['Calendar Date'] >= pd.to_datetime('2025-11-29'))

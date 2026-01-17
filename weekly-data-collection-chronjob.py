@@ -29,8 +29,6 @@ if today.month < 6:
 else:
     target_year = current_cal_year
 
-print(f"Initial Target Year based on month: {target_year}")
-
 # 3. Pre-Season Check (User Rule)
 # We need to see if the season has actually started yet.
 try:

@@ -82,6 +82,8 @@ except Exception as e:
 current_year = target_year
 starting_year = target_year
 
+current_year_plus_1 = current_year + 1
+
 print(f"✅ Final Configuration -> Year: {current_year} | Starting Week: {starting_week}")
 
 MAX_PAGES = 187 # Based on user input, scrape pages 1 through 187

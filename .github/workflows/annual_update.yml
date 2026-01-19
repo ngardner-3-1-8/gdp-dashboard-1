@@ -1,0 +1,39 @@
+name: Annual NFL Data Update
+
+on:
+  schedule:
+    # 13:00 UTC = 9:00 AM EST
+    # Cron format: 'Minute Hour DayMonth Month DayWeek'
+    - cron: '0 13 1 5 *'
+  workflow_dispatch: # Allows you to test it manually right now
+
+jobs:
+  annual-process:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Install Dependencies
+        run: |
+          pip install -r requirements.txt
+
+      - name: Run Annual Script
+        run: python "Annual Play by Play Historical Data.py"
+
+      - name: Commit and Push Results
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          
+          # Force add the specific folders where data is saved
+          git add nfl-pbp-data/*.csv
+          git add nfl-power-ratings/*.csv
+          
+          git commit -m "Annual Data Update: $(date +'%Y-%m-%d')" || echo "No changes to commit"
+          git push

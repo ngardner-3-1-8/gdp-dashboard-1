@@ -319,7 +319,7 @@ if __name__ == "__main__":
         full_df = pd.concat(all_history, ignore_index=True)
         
         # Save Long Format
-        filename_long = f"nfl_history_{START_YEAR}_{END_YEAR}_weighted.csv"
+        filename_long = f"nfl-power-ratings/nfl_history_{START_YEAR}_{END_YEAR}_weighted.csv"
         full_df.to_csv(filename_long, index=False)
         print(f"Saved: {filename_long}")
         
@@ -328,7 +328,7 @@ if __name__ == "__main__":
         recent_year = full_df[full_df['Season'] == END_YEAR]
         if not recent_year.empty:
             pivot_df = recent_year.pivot_table(index='Team', columns=['Side', 'Category'], values='EPA_Pct')
-            pivot_df.to_csv(f"nfl_ranks_{END_YEAR}_weighted.csv")
+            pivot_df.to_csv(f"nfl-power-ratings/nfl_ranks_{END_YEAR}_weighted.csv")
             print(f"Saved snapshot for {END_YEAR}")
 
         print("\nSUCCESS: Historical Database Created.")
@@ -336,12 +336,12 @@ if __name__ == "__main__":
         print("No data generated.")
 
 
-INPUT_FILE = f"nfl_history_{START_YEAR}_{END_YEAR}_weighted.csv"
-OUTPUT_FILE = f"nfl_games_with_schematic_data_{START_YEAR}_{END_YEAR}.csv"
+INPUT_FILE = f"nfl-pbp-data/nfl_history_{START_YEAR}_{END_YEAR}_weighted.csv"
+OUTPUT_FILE = f"nfl-pbp-data/nfl_games_with_schematic_data_{START_YEAR}_{END_YEAR}.csv"
 
 # File Paths for your ratings
-POWER_RATINGS_FILE = f"NFL Power Rankings/nfl_power_ratings_blended_week_{CURRENT_UPCOMING_WEEK}_{END_YEAR}.csv"
-HFA_RATINGS_FILE = "nfl_hfa_ratings.csv"
+POWER_RATINGS_FILE = f"nfl-power-ratings/nfl_power_ratings_blended_week_{CURRENT_UPCOMING_WEEK}_{END_YEAR}.csv"
+HFA_RATINGS_FILE = "nfl-power-ratings/nfl_hfa_ratings.csv"
 
 # --- HELPER: TEAM MAPPING ---
 def get_rating_team_map():

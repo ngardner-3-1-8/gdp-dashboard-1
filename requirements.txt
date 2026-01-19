@@ -19,3 +19,4 @@ tqdm
 PyGithub
 pyarrow
 tabulate
+scipy

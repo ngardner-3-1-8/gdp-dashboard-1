@@ -5,11 +5,81 @@ from scipy.stats import percentileofscore
 from datetime import datetime
 import warnings
 
+
+# 1. Get current date
+today = datetime.datetime.now()
+
+current_cal_year = today.year 
+
+# 2. Initial Year Logic based on Month (User Rule)
+# If Jan-May (< 6), assume we are finishing the previous season.
+if today.month < 6:
+    target_year = current_cal_year - 1
+else:
+    target_year = current_cal_year
+
+# 3. Pre-Season Check (User Rule)
+# We need to see if the season has actually started yet.
+try:
+    # Load the schedule for the target year
+    schedule = nfl.load_schedules([target_year])
+    
+    schedule = schedule.to_pandas() # Convert here!
+    
+    # Now all the standard Pandas filtering works:
+    reg_season_games = schedule[schedule['game_type'] == 'REG']
+    
+    if not reg_season_games.empty:
+        # Find the very first game date of the season
+        first_game_date = pd.to_datetime(reg_season_games['gameday'].min())
+        
+        # Check if today is BEFORE the first game
+        if pd.to_datetime(today) < first_game_date:
+            print(f"Today ({today.date()}) is before the first game ({first_game_date.date()}). dropping year by 1.")
+            target_year -= 1
+            # Reload schedule for the adjusted year so we can calculate the week correctly below
+            schedule = nfl.load_schedules([target_year])
+    
+    # 4. Calculate the Current Week
+    # We find the latest game that has happened to determine "current" week
+    games_played = schedule[
+        pd.to_datetime(schedule['gameday']) <= pd.to_datetime(today)
+    ]
+    
+    if not games_played.empty:
+        # If games have been played, the "starting_week" for your script 
+        # (which usually scrapes the *upcoming* week) should be the last played week + 1.
+        last_played_week = int(games_played['week'].max())
+        starting_week = last_played_week + 1
+        
+        # Bound check: If season is over (e.g. Week 22), cap it or handle as needed
+        if starting_week > 19: 
+            starting_week = 19 
+    else:
+        # If we fell back a year but that season is fully over, or if no games played yet
+        starting_week = 1 
+
+except Exception as e:
+    print(f"⚠️ Error in dynamic detection: {e}. Falling back to defaults.")
+    # Fallback defaults to prevent crash
+    target_year = 2025
+    starting_week = 19
+
+# 5. Final Assignment to your variables
+current_year = target_year
+starting_year = target_year
+
+current_year_plus_1 = current_year + 1
+
+print(f"✅ Final Configuration -> Year: {current_year} | Starting Week: {starting_week}")
+
+
+
 # --- CONFIGURATION ---
 CURRENT_UPCOMING_WEEK = 18
 
-START_YEAR = 2025
-END_YEAR = 2025
+START_YEAR = target_year
+END_YEAR = target_year
 DECAY_RATE = 0.00475
 MIN_WEIGHTED_PLAYS = 30
 GARBAGE_MIN = 0.05
@@ -268,24 +338,20 @@ if __name__ == "__main__":
         recent_year = full_df[full_df['Season'] == END_YEAR]
         if not recent_year.empty:
             pivot_df = recent_year.pivot_table(index='Team', columns=['Side', 'Category'], values='EPA_Pct')
-            pivot_df.to_csv(f"nfl_ranks_{END_YEAR}_weighted.csv")
+            pivot_df.to_csv(f"nfl-power-ratings/nfl_ranks_{END_YEAR}_weighted.csv")
             print(f"Saved snapshot for {END_YEAR}")
 
         print("\nSUCCESS: Historical Database Created.")
     else:
         print("No data generated.")
 
-import pandas as pd
-import numpy as np
-import nflreadpy as nfl
 
-
-INPUT_FILE = f"nfl_history_{START_YEAR}_{END_YEAR}_weighted.csv"
-OUTPUT_FILE = f"nfl_games_with_schematic_data_{START_YEAR}_{END_YEAR}.csv"
+INPUT_FILE = f"nfl-pbp-data/nfl_history_{START_YEAR}_{END_YEAR}_weighted.csv"
+OUTPUT_FILE = f"nfl-pbp-data/nfl_games_with_schematic_data_{START_YEAR}_{END_YEAR}.csv"
 
 # File Paths for your ratings
-POWER_RATINGS_FILE = f"NFL Power Rankings/nfl_power_ratings_blended_week_{CURRENT_UPCOMING_WEEK}_{END_YEAR}.csv"
-HFA_RATINGS_FILE = "nfl_hfa_ratings.csv"
+POWER_RATINGS_FILE = f"nfl-power-ratings/nfl_power_ratings_blended_week_{CURRENT_UPCOMING_WEEK}_{END_YEAR}.csv"
+HFA_RATINGS_FILE = "nfl-power-ratings/nfl_hfa_ratings.csv"
 
 # --- HELPER: TEAM MAPPING ---
 def get_rating_team_map():

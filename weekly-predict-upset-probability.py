@@ -4,6 +4,7 @@ import pandas as pd
 import numpy as np
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.impute import SimpleImputer
+import nflreadpy as nfl
 from datetime import datetime
 
 # 1. Get current date

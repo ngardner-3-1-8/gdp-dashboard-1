@@ -6,9 +6,9 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.impute import SimpleImputer
 
 # --- CONFIGURATION ---
-TRAIN_FILE = "nfl_games_with_schematic_data_2008_2024.csv"
-TEST_FILE = "nfl_games_with_schematic_data_2025_2025.csv"
-OUTPUT_FILE = "nfl_2025_matchup_upset_predictions.csv"
+TRAIN_FILE = f"nfl-pbp-data/nfl_games_with_schematic_data_2008_{target_year}.csv"
+TEST_FILE = f"nfl-pbp-data/nfl_games_with_schematic_data_{target_year}_{target_year}.csv"
+OUTPUT_FILE = f"nfl-ppower-rankings/nfl_{target_year}_matchup_upset_predictions.csv"
 
 # --- UPDATED CATEGORIES ---
 MATCHUP_CATEGORIES = [

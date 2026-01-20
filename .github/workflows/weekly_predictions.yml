@@ -1,0 +1,38 @@
+name: Weekly Upset Predictions
+
+on:
+  schedule:
+    # Runs at 13:45 UTC every Tuesday (15 mins after the Strengths script)
+    # (9:45 AM EDT / 8:45 AM EST)
+    - cron: '45 13 * * 2'
+  workflow_dispatch: # Manual run button
+
+jobs:
+  predict-upsets:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Install Dependencies
+        run: |
+          pip install -r requirements.txt
+
+      - name: Run Prediction Script
+        run: python "weekly_upset_predictions.py"
+
+      - name: Commit and Push Predictions
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          
+          # Adjust this if you save to a different folder/file
+          git add predictions/*.csv
+          
+          git commit -m "Weekly Predictions: Week $(date +'%U')" || echo "No changes to commit"
+          git push

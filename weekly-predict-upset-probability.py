@@ -4,6 +4,60 @@ import pandas as pd
 import numpy as np
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.impute import SimpleImputer
+from datetime import datetime
+
+# 1. Get current date
+today = datetime.datetime.now()
+
+current_cal_year = today.year 
+
+# 2. Initial Year Logic based on Month (User Rule)
+# If Jan-May (< 6), assume we are finishing the previous season.
+if today.month < 6:
+    target_year = current_cal_year - 1
+else:
+    target_year = current_cal_year
+
+# 3. Pre-Season Check (User Rule)
+# We need to see if the season has actually started yet.
+    try:
+        # Load the schedule for the target year
+        schedule = nfl.load_schedules([target_year])
+        
+        schedule = schedule.to_pandas() # Convert here!
+        
+        # Now all the standard Pandas filtering works:
+        reg_season_games = schedule[schedule['game_type'] == 'REG']
+        
+        if not reg_season_games.empty:
+            # Find the very first game date of the season
+            first_game_date = pd.to_datetime(reg_season_games['gameday'].min())
+            
+            # Check if today is BEFORE the first game
+            if pd.to_datetime(today) < first_game_date:
+                print(f"Today ({today.date()}) is before the first game ({first_game_date.date()}). dropping year by 1.")
+                target_year -= 1
+                # Reload schedule for the adjusted year so we can calculate the week correctly below
+                schedule = nfl.load_schedules([target_year])
+        
+        # 4. Calculate the Current Week
+        # We find the latest game that has happened to determine "current" week
+        games_played = schedule[
+            pd.to_datetime(schedule['gameday']) <= pd.to_datetime(today)
+        ]
+    
+        if not games_played.empty:
+            # If games have been played, the "starting_week" for your script 
+            # (which usually scrapes the *upcoming* week) should be the last played week + 1.
+            last_played_week = int(games_played['week'].max())
+            starting_week = last_played_week + 1
+            
+            # Bound check: If season is over (e.g. Week 22), cap it or handle as needed
+            if starting_week > 19: 
+                starting_week = 19 
+        else:
+            # If we fell back a year but that season is fully over, or if no games played yet
+            starting_week = 1 
 
 # --- CONFIGURATION ---
 TRAIN_FILE = f"nfl-pbp-data/nfl_games_with_schematic_data_2008_{target_year}.csv"

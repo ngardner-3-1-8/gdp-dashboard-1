@@ -7,11 +7,6 @@ from sklearn.impute import SimpleImputer
 import nflreadpy as nfl
 import datetime
 
-# --- CONFIGURATION ---
-TRAIN_FILE = f"nfl-pbp-data/nfl_games_with_schematic_data_2008_{target_year - 1}.csv"
-TEST_FILE = f"nfl-pbp-data/nfl_games_with_schematic_data_{target_year}_{target_year}.csv"
-OUTPUT_FILE = f"nfl-power-rankings/nfl_{target_year}_matchup_upset_predictions.csv"
-
 # 1. Get current date
 today = datetime.datetime.now()
 
@@ -117,6 +112,10 @@ else:
         target_year = 2025
         starting_week = 19
 
+# --- CONFIGURATION ---
+TRAIN_FILE = f"nfl-pbp-data/nfl_games_with_schematic_data_2008_{target_year - 1}.csv"
+TEST_FILE = f"nfl-pbp-data/nfl_games_with_schematic_data_{target_year}_{target_year}.csv"
+OUTPUT_FILE = f"nfl-power-rankings/nfl_{target_year}_matchup_upset_predictions.csv"
 
 # --- UPDATED CATEGORIES ---
 MATCHUP_CATEGORIES = [

@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np
 import nflreadpy as nfl
 from scipy.stats import percentileofscore
-from datetime import datetime
+import datetime
 import warnings
 
 

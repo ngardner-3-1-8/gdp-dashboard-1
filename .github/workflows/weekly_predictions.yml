@@ -4,7 +4,7 @@ on:
   schedule:
     # Runs at 13:45 UTC every Tuesday (15 mins after the Strengths script)
     # (9:45 AM EDT / 8:45 AM EST)
-    - cron: '45 13 * * 2'
+    - cron: '45 12 * * 2'
   workflow_dispatch: # Manual run button
 
 jobs:

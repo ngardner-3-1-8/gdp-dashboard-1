@@ -3,8 +3,8 @@ name: Weekly Team Strengths Update
 on:
   schedule:
     # Runs at 13:30 UTC every Tuesday
-    # (9:30 AM EDT / 8:30 AM EST)
-    - cron: '30 13 * * 2'
+    # (6:15 AM EDT / 5:15 AM EST)
+    - cron: '15 10 * * 2'
   workflow_dispatch: # Allows manual testing button
 
 jobs:

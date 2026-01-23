@@ -32,7 +32,7 @@ jobs:
           git config --local user.name "GitHub Action"
           
           # Adjust this if you save to a different folder/file
-          git add nfl-power-rankings/*.csv
+          git add nfl-power-ratings/*.csv
           
           git commit -m "Weekly Predictions: Week $(date +'%U')" || echo "No changes to commit"
           git push

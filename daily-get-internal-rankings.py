@@ -10,6 +10,13 @@ from scipy.stats import pearsonr, spearmanr
 import os
 from datetime import datetime, timedelta
 
+output_folders = ["nfl-power-ratings"] 
+
+for folder in output_folders:
+    if not os.path.exists(folder):
+        os.makedirs(folder)
+        print(f"Created directory: {folder}")
+
 
 # 1. Get current date
 today = datetime.datetime.now()

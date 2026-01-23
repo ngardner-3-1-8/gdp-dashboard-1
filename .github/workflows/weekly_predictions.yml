@@ -3,8 +3,8 @@ name: Weekly Upset Predictions
 on:
   schedule:
     # Runs at 13:45 UTC every Tuesday (15 mins after the Strengths script)
-    # (7:15 AM EDT / 6:15 AM EST)
-    - cron: '15 11 * * 2'
+    # (7:45 AM EDT / 6:45 AM EST)
+    - cron: '45 11 * * 2'
   workflow_dispatch: # Manual run button
 
 jobs:

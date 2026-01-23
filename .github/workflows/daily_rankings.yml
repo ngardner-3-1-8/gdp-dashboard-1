@@ -1,0 +1,39 @@
+name: Daily Internal Rankings
+
+on:
+  schedule:
+    # Runs at 15:00 UTC Daily
+    # (10:00 AM EST / 11:00 AM EDT)
+    - cron: '0 15 * * *'
+  workflow_dispatch: # Manual run button
+
+jobs:
+  daily-rankings:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Install Dependencies
+        run: |
+          pip install -r requirements.txt
+
+      - name: Run Rankings Script
+        run: python "daily-get-internal-rankings.py.txt"
+
+      - name: Commit and Push Results
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          
+          # Stage CSVs and Images (png/jpg) if you are generating plots
+          git add internal-rankings/*.csv
+          git add internal-rankings/*.png
+          
+          git commit -m "Daily Rankings Update: $(date +'%Y-%m-%d')" || echo "No changes to commit"
+          git push

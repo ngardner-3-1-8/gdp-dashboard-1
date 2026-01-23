@@ -19,7 +19,7 @@ for folder in output_folders:
 
 
 # 1. Get current date
-today = datetime.datetime.now()
+today = datetime.now()
 
 current_cal_year = today.year 
 

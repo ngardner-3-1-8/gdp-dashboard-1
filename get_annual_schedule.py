@@ -35,6 +35,7 @@ def update_annual_schedule():
 
         # 4. Save to CSV
         file_path = f"{output_dir}/schedule_{target_year}.csv"
+        schedule_df = schedule_df[schedule_df['game_type'] == 'REG']
         schedule_df.to_csv(file_path, index=False)
         
         print(f"✅ Success! {target_year} schedule saved to {file_path}")

@@ -446,13 +446,13 @@ if __name__ == "__main__":
     df = build_power_ratings()
     
     if not df.empty:
-        filename = f"NFL Power Rankings/nfl_power_ratings_blended_week_{CURRENT_UPCOMING_WEEK}_{current_date.year}.csv"
+        filename = f"nfl-power-ratings/nfl_power_ratings_blended_week_{CURRENT_UPCOMING_WEEK}_{current_date.year}.csv"
         
         # 2. Compare if file exists
-        if os.path.exists('mp_ratings.csv'):
+        if os.path.exists('nfl-power-ratings/mp_ratings.csv'):
             print("Found MP Ratings file. Merging and analyzing...")
             try:
-                final_df = compare_models(df, 'mp_ratings.csv')
+                final_df = compare_models(df, 'nfl-power-ratings/mp_ratings.csv')
             except Exception as e:
                 print(f"Error during merge: {e}. Saving internal ratings only.")
                 final_df = df
@@ -707,7 +707,7 @@ if __name__ == "__main__":
         print("\n--- HOME FIELD ADVANTAGE RANKINGS ---")
         print(df_hfa[['Team', 'HFA (Points)', 'Home Rating (Adj)', 'Away Rating (Adj)']].head(10).to_string(index=False))
         
-        filename = "nfl_hfa_ratings.csv"
+        filename = "nfl-power-ratings/nfl_hfa_ratings.csv"
         df_hfa.to_csv(filename, index=False)
         print(f"\nSaved to {filename}")
 
@@ -977,6 +977,6 @@ if __name__ == "__main__":
         print(df_splits.to_string(index=False))
         
         # 3. Save
-        fn = "nfl_timezone_splits.csv"
+        fn = "nfl-power-ratings/nfl_timezone_splits.csv"
         df_splits.to_csv(fn, index=False)
         print(f"\nSaved detailed data to {fn}")

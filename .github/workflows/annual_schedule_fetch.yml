@@ -1,0 +1,34 @@
+name: Annual Schedule Fetch
+
+on:
+  schedule:
+    # Runs at 14:00 UTC (10:00 AM ET) on May 15th every year
+    - cron: '0 14 15 5 *'
+  workflow_dispatch: # Allows you to run it manually right now to test
+
+jobs:
+  fetch-schedule:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Install Dependencies
+        run: |
+          pip install -r requirements.txt
+
+      - name: Run Schedule Script
+        run: python get_annual_schedule.py
+
+      - name: Commit and Push
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add nfl-schedules/*.csv
+          git commit -m "Annual Schedule Update: $(date +'%Y')" || echo "No changes"
+          git push

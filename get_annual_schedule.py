@@ -5,8 +5,18 @@ from datetime import datetime
 
 def update_annual_schedule():
     # 1. Determine the Year (May 15 is always for the UPCOMING season)
-    target_year = datetime.now().year
-    print(f"Fetching official NFL schedule for {target_year}...")
+    # 1. Get current date
+    today = datetime.now()
+    current_cal_year = today.year 
+    
+    # 2. Initial Year Logic based on Month (User Rule)
+    # If Jan-May (< 6), assume we are finishing the previous season.
+    if today.month < 5:
+        target_year = current_cal_year - 1
+        print(f"Fetching official NFL schedule for {target_year}...")
+    else:
+        target_year = current_cal_year
+        print(f"Fetching official NFL schedule for {target_year}...")
 
     # 2. Load schedule using nflreadpy
     # This replaces all the BeautifulSoup and requests code

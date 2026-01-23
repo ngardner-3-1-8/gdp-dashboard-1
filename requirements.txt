@@ -20,3 +20,5 @@ PyGithub
 pyarrow
 tabulate
 scipy
+matplotlib
+seaborn

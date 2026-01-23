@@ -2,9 +2,10 @@ name: Weekly NFL Data Collection
 
 on:
   schedule:
-    # 14:00 UTC is 9:00 AM Eastern Time
-    # '0 14 * * 2' = Minute 0, Hour 14, Every Day, Every Month, Tuesday (2)
-    - cron: '0 9 * * 2'
+
+    # Runs at 13:30 UTC every Tuesday
+    # (6:00 AM EDT / 5:00 AM EST)
+    - cron: '0 10 * * 2'
   workflow_dispatch: # Allows you to trigger it manually for testing
 
 jobs:

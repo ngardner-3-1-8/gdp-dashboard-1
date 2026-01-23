@@ -32,8 +32,8 @@ jobs:
           git config --local user.name "GitHub Action"
           
           # Stage CSVs and Images (png/jpg) if you are generating plots
-          git add internal-rankings/*.csv
-          git add internal-rankings/*.png
+          git add nfl-power-ratings/*.csv
+          git add nfl-power-ratings/*.png
           
           git commit -m "Daily Rankings Update: $(date +'%Y-%m-%d')" || echo "No changes to commit"
           git push

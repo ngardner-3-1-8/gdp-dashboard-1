@@ -41,8 +41,37 @@ def update_annual_schedule():
         schedule_df = schedule_df.rename(columns={
             "away_team": "Away Team",
             "home_team": "Home Team",
-            "week": "Week"  # Optional: standardizing the Week column as well
+            "week": "Week",
+            "season": "Season",
+            "gameday": "Date",
+            "gametime": "Time",
+            "weekday": "Day of Week",
+            "away_score": "Away Score",
+            "home_score": "Home Score",
+            "location": "Location",
+            "away_qb_name": "Away QB",
+            "home_qb_name": "Home QB",
+            "referee": "Referee",
+            "stadium": "Stadium",
+            "roof": "Roof Type",
+            "surface": "Surface Type",
+            "temp": "Temperature",
+            "wind": "Wind Speed"
         })
+
+        # Define the list of columns to remove
+        cols_to_remove = [
+            'game_type', 'result', 'overtime', 'total', 'nfl_detail_id', 
+            'total_line', 'under_odds', 'over_odds', 'div_game', 'home_coach', 
+            'away_coach', 'referee', 'stadium_id', 'away_rest', 'home_rest', 
+            'away_moneyline', 'home_moneyline', 'spread_line', 'away_spread_odds', 
+            'home_spread_odds'
+        ]
+        
+        # Drop the columns
+        schedule_df = schedule_df.drop(columns=cols_to_remove)
+
+
 
         # 5. Save to CSV
         output_dir = "nfl-schedules"

@@ -678,8 +678,6 @@ def collect_schedule_travel_ranking_data(pd, config: dict, schedule_rows):
     # Adjust January games to 2025 in the DataFrame
 	df.loc[df['Date'] >= pd.to_datetime(thanksgiving_reset_date), 'Week'] += 1
 	df.loc[df['Date'] >= pd.to_datetime(christmas_reset_date), 'Week'] += 1
-	df.loc[df['Date'] >= pd.to_datetime(thanksgiving_reset_date), 'Week_Num'] += 1
-	df.loc[df['Date'] >= pd.to_datetime(christmas_reset_date), 'Week_Num'] += 1
 
 
     # Convert 'Week' back to string format if needed
@@ -713,7 +711,7 @@ def collect_schedule_travel_ranking_data(pd, config: dict, schedule_rows):
     for index, row in df.iterrows():
         away_team = row['Away Team']
         home_team = row['Home Team']
-        week_num = row['Week_Num']
+        week_num = row['Week']
         away_stadium = row['Actual Stadium']
         home_stadium = row['Actual Stadium']
         
@@ -753,12 +751,12 @@ def collect_schedule_travel_ranking_data(pd, config: dict, schedule_rows):
         row = df.loc[index]
         away_team = row['Away Team']
         home_team = row['Home Team']
-        week_num = row['Week_Num']
+        week_num = row['Week']
         away_stadium = row['Actual Stadium']
         home_stadium = row['Actual Stadium']
         
         # Check if its not the last week
-        if week_num < df['Week_Num'].max():
+        if week_num < df['Week'].max():
             # Get the previous opponents from the dictionary
             if away_team in team_next_opponent:
                 df.loc[index, 'Away Team Next Opponent'] = team_next_opponent[away_team]
@@ -1770,22 +1768,22 @@ def collect_schedule_travel_ranking_data(pd, config: dict, schedule_rows):
     
     consolidated_df['Away Team Pre Thanksgiving'] = (
         (consolidated_df['Away Team Thanksgiving Favorite'].astype(bool) | consolidated_df['Away Team Thanksgiving Underdog'].astype(bool))
-        & (consolidated_df['Week_Num'] < thanksgiving_week)
+        & (consolidated_df['Week'] < thanksgiving_week)
     ).astype(int)
     
     consolidated_df['Home Team Pre Thanksgiving'] = (
         (consolidated_df['Home Team Thanksgiving Favorite'].astype(bool) | consolidated_df['Home Team Thanksgiving Underdog'].astype(bool))
-        & (consolidated_df['Week_Num'] < thanksgiving_week)
+        & (consolidated_df['Week'] < thanksgiving_week)
     ).astype(int)
     
     consolidated_df['Away Team Pre Christmas'] = (
         (consolidated_df['Away Team Christmas Favorite'].astype(bool) | consolidated_df['Away Team Christmas Underdog'].astype(bool))
-        & (consolidated_df['Week_Num'] < christmas_week)
+        & (consolidated_df['Week'] < christmas_week)
     ).astype(int)
     
     consolidated_df['Home Team Pre Christmas'] = (
         (consolidated_df['Home Team Christmas Favorite'].astype(bool) | consolidated_df['Home Team Christmas Underdog'].astype(bool))
-        & (consolidated_df['Week_Num'] < christmas_week)
+        & (consolidated_df['Week'] < christmas_week)
     ).astype(int)
     # Create the 'Divisional Matchup Boolean' column
     consolidated_df["Divisional Matchup Boolean"] = 0
@@ -2214,7 +2212,7 @@ def collect_schedule_travel_ranking_data(pd, config: dict, schedule_rows):
         """
         
         # 1. Get week number (e.g., "Week 10" -> 10)
-        week_num = row["Week_Num"]
+        week_num = row["Week"]
         
         # 2. Get the full team name and identify if we seek a home or away team
         if team_type == 'home':

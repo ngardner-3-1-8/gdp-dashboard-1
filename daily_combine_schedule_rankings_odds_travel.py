@@ -436,7 +436,7 @@ if os.path.exists(hfa_file):
 # Used if the user selects 'Default' in the UI for away adjustment.
 # These values are divided by 2 from the input as they appear to be half-points.
 # --------------------------------------------------------------------------
-	DEFAULT_AWAY_ADJ = {
+    DEFAULT_AWAY_ADJ = {
         'Arizona Cardinals' : -1 * get_home_advantage("ARI")/2,
         'Atlanta Falcons' : -1 * get_home_advantage("ATL")/2,
         'Baltimore Ravens' : -1 * get_home_advantage("BAL")/2,

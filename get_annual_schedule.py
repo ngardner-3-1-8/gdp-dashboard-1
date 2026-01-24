@@ -4,41 +4,49 @@ import os
 from datetime import datetime
 
 def update_annual_schedule():
-    # 1. Determine the Year (May 15 is always for the UPCOMING season)
-    # 1. Get current date
+    # 1. Determine the Year
     today = datetime.now()
     current_cal_year = today.year 
     
-    # 2. Initial Year Logic based on Month (User Rule)
-    # If Jan-May (< 6), assume we are finishing the previous season.
     if today.month < 5:
         target_year = current_cal_year - 1
-        print(f"Fetching official NFL schedule for {target_year}...")
     else:
         target_year = current_cal_year
-        print(f"Fetching official NFL schedule for {target_year}...")
+    
+    print(f"Fetching official NFL schedule for {target_year}...")
 
-    # 2. Load schedule using nflreadpy
-    # This replaces all the BeautifulSoup and requests code
     try:
+        # 2. Load schedule and team metadata
         schedule_raw = nfl.load_schedules([target_year])
         schedule_df = schedule_raw.to_pandas()
+        
+        # Load team info to get full names
+        teams_df = nfl.load_teams().to_pandas()
         
         if schedule_df.empty:
             print(f"⚠️ Warning: No schedule found for {target_year} yet.")
             return
 
-        # 3. Create output directory if it doesn't exist
+        # 3. Create Mapping Dictionary {Abbreviation: Full Name}
+        # We use 'team_abbr' as the key and 'team_name' as the value
+        team_map = dict(zip(teams_df['team_abbr'], teams_df['team_name']))
+
+        # 4. Clean the Schedule Data
+        schedule_df = schedule_df[schedule_df['game_type'] == 'REG'].copy()
+
+        # Replace abbreviations with full names in away_team and home_team columns
+        schedule_df['away_team'] = schedule_df['away_team'].map(team_map).fillna(schedule_df['away_team'])
+        schedule_df['home_team'] = schedule_df['home_team'].map(team_map).fillna(schedule_df['home_team'])
+
+        # 5. Save to CSV
         output_dir = "nfl-schedules"
         if not os.path.exists(output_dir):
             os.makedirs(output_dir)
 
-        # 4. Save to CSV
         file_path = f"{output_dir}/schedule_{target_year}.csv"
-        schedule_df = schedule_df[schedule_df['game_type'] == 'REG']
         schedule_df.to_csv(file_path, index=False)
         
-        print(f"✅ Success! {target_year} schedule saved to {file_path}")
+        print(f"✅ Success! {target_year} schedule saved with full team names to {file_path}")
         print(f"Total Games Found: {len(schedule_df)}")
 
     except Exception as e:

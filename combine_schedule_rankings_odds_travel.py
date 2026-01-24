@@ -2264,9 +2264,12 @@ def collect_schedule_travel_ranking_data(pd, config: dict, schedule_rows):
 
     # Save the consolidated DataFrame to a single CSV file
 
-	consolidated_csv_file = "nfl_schedule_circa.csv"
+	consolidated_csv_file = "nfl-schedules/nfl_schedule_rankings_travel_odds_circa.csv"
 
     consolidated_df.to_csv(consolidated_csv_file, index=False)    
     collect_schedule_travel_ranking_data_nfl_schedule_df = consolidated_df
     
     return collect_schedule_travel_ranking_data_nfl_schedule_df
+
+collect_schedule_travel_ranking_data_df = collect_schedule_travel_ranking_data(pd, config, schedule_rows)
+

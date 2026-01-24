@@ -88,7 +88,7 @@ else:# We find the latest game that has happened to determine "current" week
             starting_week += 1
         
 	    # Bound check: If season is over (e.g. Week 22), cap it or handle as needed
-	    if starting_week > 19: 
+		if starting_week > 19: 
 	        starting_week = 19
 	else:
 		starting_week = 1

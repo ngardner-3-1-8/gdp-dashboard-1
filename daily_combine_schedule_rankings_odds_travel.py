@@ -90,8 +90,8 @@ else:# We find the latest game that has happened to determine "current" week
 	    # Bound check: If season is over (e.g. Week 22), cap it or handle as needed
         if starting_week > 19: 
             starting_week = 19
-	else:
-		starting_week = 1
+    else:
+        starting_week = 1
 
 # 5. Final Assignment to your variables
 current_year = target_year
@@ -554,7 +554,7 @@ def collect_schedule_travel_ranking_data(pd):
         
         # 1. Get Preseason Rank (from global static dict)
         mp_preseason_rank = MP_PRESEASON_RANKS.get(team, 0)
-		gsf_preseason_rank = GSF_PRESEASON_RANKS.get(team, 0)
+        gsf_preseason_rank = GSF_PRESEASON_RANKS.get(team, 0)
         
         # 2. Get Current/Custom Rank (from config or default)
         user_rank = CUSTOM_RANKS.get(team, 0)
@@ -576,8 +576,8 @@ def collect_schedule_travel_ranking_data(pd):
             info[4], # Division
             mp_preseason_rank,  # 5: Preseason Rank
             mp_current_ranks,    # 6: Current Rank
-			gsf_preseason_rank,   #7
-			gsf_current_ranks,    #8
+            gsf_preseason_rank,   #7
+            gsf_current_ranks,    #8
             home_adv,        # 9: Home Advantage
             away_adj         # 10: Away Adjustment			
         ]
@@ -596,7 +596,7 @@ def collect_schedule_travel_ranking_data(pd):
 # Contains static, non-user-configurable data for NFL teams and stadiums.
 
 
-	def haversine(lat1, lon1, lat2, lon2):
+    def haversine(lat1, lon1, lat2, lon2):
 	    # Convert degrees to radians
 	    lat1, lon1, lat2, lon2 = map(radians, [lat1, lon1, lat2, lon2])
 	    # Differences
@@ -608,7 +608,7 @@ def collect_schedule_travel_ranking_data(pd):
 	    r = 3956 # Radius in miles
 	    return c * r
 	
-	def calculate_hours_difference(tz1, tz2):
+    def calculate_hours_difference(tz1, tz2):
 	    try:
 	        tz1_offset = pytz.timezone(tz1).utcoffset(datetime.datetime.now()).total_seconds() / 3600
 	        tz2_offset = pytz.timezone(tz2).utcoffset(datetime.datetime.now()).total_seconds() / 3600
@@ -616,19 +616,19 @@ def collect_schedule_travel_ranking_data(pd):
 	    except:
 	        return 0
 			
-	df = ratings_df
+    df = ratings_df
 	
 	# 2. Pre-processing: Convert date column and sort to ensure chronological order
-	df['Date'] = pd.to_datetime(df['Date'])
-	df = df.sort_values(by=['Date', 'Time'])
+    df['Date'] = pd.to_datetime(df['Date'])
+    df = df.sort_values(by=['Date', 'Time'])
 	
 	# 3. Initialize tracking variables
-	last_game = {}          # Stores the date of the last game for each team
-	last_away_game = {}     # Stores the week of the last away game for each team
-	cumulative_advantage = {} # Stores running total of rest advantage
-	data = []
+    last_game = {}          # Stores the date of the last game for each team
+    last_away_game = {}     # Stores the week of the last away game for each team
+    cumulative_advantage = {} # Stores running total of rest advantage
+    data = []
 	
-	for index, row in df.iterrows():
+    for index, row in df.iterrows():
 	    # 1. Use the row itself for the base data
 	    week = row['Week']
 	    last_date = row['Date']
@@ -671,12 +671,12 @@ def collect_schedule_travel_ranking_data(pd):
 	
 	# 5. Create the final DataFrame
 	# Because 'data' is a list of dicts, pandas automatically matches the keys to column names
-	df = pd.DataFrame(data)
+    df = pd.DataFrame(data)
 
     df['Date'] = pd.to_datetime(df['Date'], format='%b %d, %Y')
     # Adjust January games to 2025 in the DataFrame
-	df.loc[df['Date'] >= pd.to_datetime(thanksgiving_reset_date), 'Week'] += 1
-	df.loc[df['Date'] >= pd.to_datetime(christmas_reset_date), 'Week'] += 1
+    df.loc[df['Date'] >= pd.to_datetime(thanksgiving_reset_date), 'Week'] += 1
+    df.loc[df['Date'] >= pd.to_datetime(christmas_reset_date), 'Week'] += 1
 
 
     # Convert 'Week' back to string format if needed
@@ -906,14 +906,14 @@ def collect_schedule_travel_ranking_data(pd):
     df['Adjusted Generic Sports Fan Current Winner'] = df.apply(lambda row: row['Away Team'] if row['Away Team Adjusted Generic Sports Fan Current Rank'] > row['Home Team Adjusted Generic Sports Fan Current Rank'] else (row['Home Team'] if row['Away Team Adjusted Generic Sports Fan Current Rank'] < row['Home Team Adjusted Generic Sports Fan Current Rank'] else 'Tie'), axis=1)
     df['Adjusted Generic Sports Fan Current Difference'] = abs(df['Away Team Adjusted Generic Sports Fan Current Rank'] - df['Home Team Adjusted Generic Sports Fan Current Rank'])
 
-	df['Massey-Peabody Bayesian Same Winner Across All Metrics'] = df.apply(lambda row: 'Same' if row['Massey-Peabody Preseason Winner'] == row['Adjusted Massey-Peabody Preseason Winner'] == row['Massey-Peabody Current Winner'] == row['Adjusted Massey-Peabody Current Winner'] else 'Different', axis=1)
-	df['Generic Sports Fan Bayesian Same Adjusted Winner'] = df.apply(lambda row: 'Same' if row['Generic Sports Fan Preseason Winner'] == row['Adjusted Generic Sports Fan Preseason Winner'] == row['Generic Sports Fan Current Winner'] == row['Adjusted Generic Sports Fan Current Winner'] else 'Different', axis=1)
+    df['Massey-Peabody Bayesian Same Winner Across All Metrics'] = df.apply(lambda row: 'Same' if row['Massey-Peabody Preseason Winner'] == row['Adjusted Massey-Peabody Preseason Winner'] == row['Massey-Peabody Current Winner'] == row['Adjusted Massey-Peabody Current Winner'] else 'Different', axis=1)
+    df['Generic Sports Fan Bayesian Same Adjusted Winner'] = df.apply(lambda row: 'Same' if row['Generic Sports Fan Preseason Winner'] == row['Adjusted Generic Sports Fan Preseason Winner'] == row['Generic Sports Fan Current Winner'] == row['Adjusted Generic Sports Fan Current Winner'] else 'Different', axis=1)
 
-	df['Massey-Peabody Bayesian Same Current and Preseason Adjusted Winner'] = df.apply(lambda row: 'Same' if row['Adjusted Massey-Peabody Preseason Winner'] == row['Adjusted Massey-Peabody Current Winner'] else 'Different', axis=1)
-	df['Generic Sports Fan Bayesian Current and Preseason Adjusted Winner'] = df.apply(lambda row: 'Same' if row['Adjusted Generic Sports Fan Preseason Winner'] == row['Adjusted Generic Sports Fan Current Winner'] else 'Different', axis=1)
+    df['Massey-Peabody Bayesian Same Current and Preseason Adjusted Winner'] = df.apply(lambda row: 'Same' if row['Adjusted Massey-Peabody Preseason Winner'] == row['Adjusted Massey-Peabody Current Winner'] else 'Different', axis=1)
+    df['Generic Sports Fan Bayesian Current and Preseason Adjusted Winner'] = df.apply(lambda row: 'Same' if row['Adjusted Generic Sports Fan Preseason Winner'] == row['Adjusted Generic Sports Fan Current Winner'] else 'Different', axis=1)
 
-	df['Massey-Peabody Bayesian Same Current and Adjusted Current Winner'] = df.apply(lambda row: 'Same' if row['Massey-Peabody Current Winner'] == row['Adjusted Massey-Peabody Current Winner'] else 'Different', axis=1)
-	df['Generic Sports Fan Bayesian Same Current and Adjusted Current Winner'] = df.apply(lambda row: 'Same' if row['Generic Sports Fan Current Winner'] == row['Adjusted Generic Sports Fan Current Winner'] else 'Different', axis=1)
+    df['Massey-Peabody Bayesian Same Current and Adjusted Current Winner'] = df.apply(lambda row: 'Same' if row['Massey-Peabody Current Winner'] == row['Adjusted Massey-Peabody Current Winner'] else 'Different', axis=1)
+    df['Generic Sports Fan Bayesian Same Current and Adjusted Current Winner'] = df.apply(lambda row: 'Same' if row['Generic Sports Fan Current Winner'] == row['Adjusted Generic Sports Fan Current Winner'] else 'Different', axis=1)
 
     
     df['Thursday Night Game'] = 'False'
@@ -1521,20 +1521,20 @@ def collect_schedule_travel_ranking_data(pd):
         
             
 
-	df["Away Team Fair Odds"] = (
+    df["Away Team Fair Odds"] = (
 	    df["Away Team Sportsbook Fair Odds"]
 	    .fillna(df["Away Team Massey-Peabody Fair Odds"])
 	    .fillna(df["Away Team Generic Sports Fan Fair Odds"])
 	)
 	
-	df["Home Team Fair Odds"] = (
+    df["Home Team Fair Odds"] = (
 	    df["Home Team Sportsbook Fair Odds"]
 	    .fillna(df["Home Team Massey-Peabody Fair Odds"])
 	    .fillna(df["Home Team Generic Sports Fan Fair Odds"])
 	)
 
-	df["Away Team Expected Win Advantage"] = round(df["Away Team Fair Odds"] - 0.5, 4)
-	df["Home Team Expected Win Advantage"] = round(df["Home Team Fair Odds"] - 0.5, 4)
+    df["Away Team Expected Win Advantage"] = round(df["Away Team Fair Odds"] - 0.5, 4)
+    df["Home Team Expected Win Advantage"] = round(df["Home Team Fair Odds"] - 0.5, 4)
     # Initialize an empty dictionary to store team information
     team_dict = {}
 
@@ -2140,10 +2140,10 @@ def collect_schedule_travel_ranking_data(pd):
     # Final date manipulation (e.g., correcting Thanksgiving/Christmas week numbers)
     # NOTE: The df.loc assignments must be run *after* the Calendar Date is populated.
 
-	condition_2026_date = (public_pick_df['Year'] == 2026) & (public_pick_df['Calendar Date'] >= pd.to_datetime('2026-11-28'))
-	public_pick_df.loc[condition_2026_date, 'Week'] += 1
-	condition_2026_week = (public_pick_df['Year'] == 2026) & (public_pick_df['Calendar Date'] >= pd.to_datetime('2025-12-26'))
-	public_pick_df.loc[condition_2026_week, 'Week'] += 1
+    condition_2026_date = (public_pick_df['Year'] == 2026) & (public_pick_df['Calendar Date'] >= pd.to_datetime('2026-11-28'))
+    public_pick_df.loc[condition_2026_date, 'Week'] += 1
+    condition_2026_week = (public_pick_df['Year'] == 2026) & (public_pick_df['Calendar Date'] >= pd.to_datetime('2025-12-26'))
+    public_pick_df.loc[condition_2026_week, 'Week'] += 1
     
     # For Year 2025
     condition_2025_date = (public_pick_df['Year'] == 2025) & (public_pick_df['Calendar Date'] >= pd.to_datetime('2025-11-29'))
@@ -2263,7 +2263,7 @@ def collect_schedule_travel_ranking_data(pd):
 
     # Save the consolidated DataFrame to a single CSV file
 
-	consolidated_csv_file = "nfl-schedules/nfl_schedule_rankings_travel_odds_circa.csv"
+    consolidated_csv_file = "nfl-schedules/nfl_schedule_rankings_travel_odds_circa.csv"
 
     consolidated_df.to_csv(consolidated_csv_file, index=False)    
     collect_schedule_travel_ranking_data_nfl_schedule_df = consolidated_df

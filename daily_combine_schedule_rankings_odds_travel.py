@@ -39,7 +39,7 @@ import calendar
 
 
 # 1. Get current date
-today = datetime.datetime.now()
+today = datetime.now()
 current_cal_year = today.year 
 
 # 2. Initial Year Logic based on Month (User Rule)
@@ -58,14 +58,14 @@ def get_thanksgiving(year):
     # 4th Thursday in November
     c = calendar.monthcalendar(year, 11)
     thursdays = [row[calendar.THURSDAY] for row in c if row[calendar.THURSDAY] != 0]
-    return datetime.datetime(year, 11, thursdays[3])
+    return datetime(year, 11, thursdays[3])
 
 
 
 thanksgiving_date = get_thanksgiving(target_year)
 black_friday = thanksgiving_date + datetime.timedelta(days=1)
-christmas_day = datetime.datetime(target_year, 12, 25)
-boxing_day = datetime.datetime(target_year, 12, 26)
+christmas_day = datetime(target_year, 12, 25)
+boxing_day = datetime(target_year, 12, 26)
 
 thanksgiving_week = int((thanksgiving_date - first_game_date)/7) + 1 ## +1 because the first game date is technically week 1, not week 0
 christmas_week = int((christmas_day - first_game_date)/7) + 2 ## +2 because the first game date is technically week 1, not week 0, and the addition of thanksgiving_week
@@ -609,8 +609,8 @@ def collect_schedule_travel_ranking_data(pd):
 	
     def calculate_hours_difference(tz1, tz2):
 	    try:
-	        tz1_offset = pytz.timezone(tz1).utcoffset(datetime.datetime.now()).total_seconds() / 3600
-	        tz2_offset = pytz.timezone(tz2).utcoffset(datetime.datetime.now()).total_seconds() / 3600
+	        tz1_offset = pytz.timezone(tz1).utcoffset(datetime.now()).total_seconds() / 3600
+	        tz2_offset = pytz.timezone(tz2).utcoffset(datetime.now()).total_seconds() / 3600
 	        return tz1_offset - tz2_offset
 	    except:
 	        return 0

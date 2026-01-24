@@ -36,6 +36,7 @@ from typing import Dict, List, Any
 from sklearn.feature_selection import RFE
 from scipy.stats import percentileofscore
 import warnings
+import calendar
 
 
 # 1. Get current date
@@ -47,9 +48,7 @@ current_cal_year = today.year
 target_year = current_cal_year - 1 if today.month < 5 else current_cal_year
 
 schedule_df = pd.read_csv(f"nfl-schedules/schedule_{target_year}.csv")
-    
-        
-schedule_df = pd.read_csv(f"nfl-schedules/schedule_{target_year}.csv")
+
 schedule_df['gameday'] = pd.to_datetime(schedule_df['gameday'])
 schedule_df = schedule_df[schedule_df['game_type'] == 'REG']
 
@@ -70,7 +69,7 @@ christmas_day = datetime.datetime(target_year, 12, 25)
 boxing_day = datetime.datetime(target_year, 12, 26)
 
 thanksgiving_week = int((thanksgiving_date - first_game_date)/7) + 1 ## +1 because the first game date is technically week 1, not week 0
-christmas_week = int((christmas_day - first_game_date)/7)) + 2 ## +2 because the first game date is technically week 1, not week 0, and the addition of thanksgiving_week
+christmas_week = int((christmas_day - first_game_date)/7) + 2 ## +2 because the first game date is technically week 1, not week 0, and the addition of thanksgiving_week
 
 if today <= first_game_date:
     starting_week = 1
@@ -101,7 +100,7 @@ starting_year = target_year
 current_year_plus_1 = current_year + 1
 season_start_date = first_game_date - 1
 
-thanksgiving_reset_date = black_friday_date + 1 #THIS DATE IS INCLUDED IN THE RESET. SO IF THERE ARE GAMES ON THIS DATE, THEY WILL HAVE A WEEK ADDED
+thanksgiving_reset_date = black_friday + 1 #THIS DATE IS INCLUDED IN THE RESET. SO IF THERE ARE GAMES ON THIS DATE, THEY WILL HAVE A WEEK ADDED
 christmas_reset_date = boxing_day
 
 NUM_WEEKS_TO_KEEP = starting_week - 1
@@ -391,7 +390,7 @@ if os.path.exists(hfa_file):
         try:
             # Change 'team' to 'off_team' if that is the name of your team column
             hfa = hfa_df.loc[hfa_df['team'] == team_abbr, 'HFA (Points)'].values[0]
-            return float(rating)
+            return float(hfa)
         except (IndexError, KeyError):
             print(f"Warning: Could not find rating for {team_abbr}. Defaulting to 0.")
             return 0.0
@@ -546,7 +545,7 @@ STADIUM_INFO = {
 ALL_TEAMS = list(STADIUM_INFO.keys())
 
 
-def collect_schedule_travel_ranking_data(pd, config: dict, schedule_rows):
+def collect_schedule_travel_ranking_data(pd):
 # Get the user's custom rankings from the config
 
     stadiums = {}
@@ -865,10 +864,10 @@ def collect_schedule_travel_ranking_data(pd, config: dict, schedule_rows):
     df['Away Team Generic Sports Fan Preseason Rank'] = df['Away Team'].map(lambda team: stadiums[team][7] if team in stadiums else 'NA')
     df['Home Team Generic Sports Fan Preseason Rank'] = df['Home Team'].map(lambda team: stadiums[team][7] if team in stadiums else 'NA')
 
-    df['Massey-Peabody Preseason Winner'] = df.apply(lambda row: row['Away Team'] if row['Away Team Massey-Peabody Preseason Rankk'] > row['Home Team Massey-Peabody Preseason Rank'] else (row['Home Team'] if row['Away Team Massey-Peabody Preseason Rank'] < row['Home Team Massey-Peabody Preseason Rank'] else 'Tie'), axis=1)
+    df['Massey-Peabody Preseason Winner'] = df.apply(lambda row: row['Away Team'] if row['Away Team Massey-Peabody Preseason Rank'] > row['Home Team Massey-Peabody Preseason Rank'] else (row['Home Team'] if row['Away Team Massey-Peabody Preseason Rank'] < row['Home Team Massey-Peabody Preseason Rank'] else 'Tie'), axis=1)
     df['Massey-Peabody Preseason Difference'] = abs(df['Away Team Massey-Peabody Preseason Rank'] - df['Home Team Massey-Peabody Preseason Rank'])
 
-    df['Generic Sports Fan Preseason Winner'] = df.apply(lambda row: row['Away Team'] if row['Away Team Generic Sports Fan Preseason Rankk'] > row['Home Team Generic Sports Fan Preseason Rank'] else (row['Home Team'] if row['Away Team Generic Sports Fan Preseason Rank'] < row['Home Team Generic Sports Fan Preseason Rank'] else 'Tie'), axis=1)
+    df['Generic Sports Fan Preseason Winner'] = df.apply(lambda row: row['Away Team'] if row['Away Team Generic Sports Fan Preseason Rank'] > row['Home Team Generic Sports Fan Preseason Rank'] else (row['Home Team'] if row['Away Team Generic Sports Fan Preseason Rank'] < row['Home Team Generic Sports Fan Preseason Rank'] else 'Tie'), axis=1)
     df['Generic Sports Fan Preseason Difference'] = abs(df['Away Team Generic Sports Fan Preseason Rank'] - df['Home Team Generic Sports Fan Preseason Rank'])
 
     df['Away Team Adjusted Massey-Peabody Preseason Rank'] = df['Away Team'].map(lambda team: stadiums[team][5]) + np.where((df['Away Travel Advantage'] < -100) & (df['Home Stadium'] == df['Actual Stadium']), -.125, 0) - pd.to_numeric(df['Away Timezone Advantage']*.25, errors='coerce').fillna(0)-pd.to_numeric(df['Weekly Away Rest Advantage'], errors='coerce').fillna(0)-.125*df['Away Team Current Week Cumulative Rest Advantage'] - np.where((df['Away Team'].map(lambda team: stadiums[team][0])) != df['Home Team'].map(lambda team: stadiums[team][0]), df['Away Team'].map(lambda team: stadiums[team][10]), 0)
@@ -918,7 +917,7 @@ def collect_schedule_travel_ranking_data(pd, config: dict, schedule_rows):
 
     
     df['Thursday Night Game'] = 'False'
-    df["Thursday Night Game"] = df.apply(lambda row: 'True' if (row['Date'].weekday() == 3) and (row['Date'] != pd.to_datetime(thanksgiving_date)) and (row['Date'] != pd.to_datetime(boxing_day_date)) and (row['Date'] != pd.to_datetime(christmas_date)) else row["Thursday Night Game"], axis =1)
+    df["Thursday Night Game"] = df.apply(lambda row: 'True' if (row['Date'].weekday() == 3) and (row['Date'] != pd.to_datetime(thanksgiving_date)) and (row['Date'] != pd.to_datetime(boxing_day)) and (row['Date'] != pd.to_datetime(christmas_day)) else row["Thursday Night Game"], axis =1)
 
 
     df['Masey-Peabody Home Team Winner?'] = df.apply(lambda row: 'Home Team' if row['Adjusted Massey-Peabody Current Winner'] == row['Home Team'] else 'Away Team', axis=1)
@@ -2271,5 +2270,5 @@ def collect_schedule_travel_ranking_data(pd, config: dict, schedule_rows):
     
     return collect_schedule_travel_ranking_data_nfl_schedule_df
 
-collect_schedule_travel_ranking_data_df = collect_schedule_travel_ranking_data(pd, config, schedule_rows)
+collect_schedule_travel_ranking_data_df = collect_schedule_travel_ranking_data(pd)
 

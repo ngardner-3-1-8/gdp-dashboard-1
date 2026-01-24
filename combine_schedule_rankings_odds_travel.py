@@ -620,8 +620,8 @@ def collect_schedule_travel_ranking_data(pd, config: dict, schedule_rows):
 	df = ratings_df
 	
 	# 2. Pre-processing: Convert date column and sort to ensure chronological order
-	df['gameday'] = pd.to_datetime(df['gameday'])
-	df = df.sort_values(by=['gameday', 'gametime'])
+	df['Date'] = pd.to_datetime(df['Date'])
+	df = df.sort_values(by=['Date', 'Time'])
 	
 	# 3. Initialize tracking variables
 	last_game = {}          # Stores the date of the last game for each team
@@ -632,7 +632,7 @@ def collect_schedule_travel_ranking_data(pd, config: dict, schedule_rows):
 	for index, row in df.iterrows():
 	    # 1. Use the row itself for the base data
 	    week = row['Week']
-	    last_date = row['gameday']
+	    last_date = row['Date']
 	    away_team = row['Away Team']
 	    home_team = row['Home Team']
 	
@@ -674,12 +674,8 @@ def collect_schedule_travel_ranking_data(pd, config: dict, schedule_rows):
 	# Because 'data' is a list of dicts, pandas automatically matches the keys to column names
 	df = pd.DataFrame(data)
 
-
-    df['Date'] = df['Date'].str.replace(r'(\w+)\s(\w+)\s(\d+)', r'\2 \3, 2025', regex=True)
     df['Date'] = pd.to_datetime(df['Date'], format='%b %d, %Y')
     # Adjust January games to 2025 in the DataFrame
-    df['Date'] = df['Date'].apply(lambda x: x.replace(year = target_year + 1) if x.month == 1 else x)
-
 	df.loc[df['Date'] >= pd.to_datetime(thanksgiving_reset_date), 'Week'] += 1
 	df.loc[df['Date'] >= pd.to_datetime(christmas_reset_date), 'Week'] += 1
 	df.loc[df['Date'] >= pd.to_datetime(thanksgiving_reset_date), 'Week_Num'] += 1

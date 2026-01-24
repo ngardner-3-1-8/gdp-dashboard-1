@@ -236,7 +236,7 @@ if os.path.exists(ratings_file):
     ratings_df = pd.read_csv(ratings_file)
     
     # 3. Create a helper function to get the rating safely
-    def get_team_rating(team_abbr):
+    def get_mp_team_rating(team_abbr):
         # Look for the team in the 'team' or 'off_team' column (check your CSV header)
         # We use .iloc[0] to get the value from the matching row
         try:
@@ -246,41 +246,88 @@ if os.path.exists(ratings_file):
         except (IndexError, KeyError):
             print(f"Warning: Could not find rating for {team_abbr}. Defaulting to 0.")
             return 0.0
+	    # 3. Create a helper function to get the rating safely
+    def get_gsf_team_rating(team_abbr):
+        # Look for the team in the 'team' or 'off_team' column (check your CSV header)
+        # We use .iloc[0] to get the value from the matching row
+        try:
+            # Change 'team' to 'off_team' if that is the name of your team column
+            rating = ratings_df.loc[ratings_df['team'] == team_abbr, 'Power Rating'].values[0]
+            return float(rating)
+        except (IndexError, KeyError):
+            print(f"Warning: Could not find rating for {team_abbr}. Defaulting to 0.")
+            return 0.0
 
     # 4. Build your dictionary dynamically
-    team_ratings_dict = {
-        'Arizona Cardinals' : get_team_rating("ARI"),
-        'Atlanta Falcons' : get_team_rating("ATL"),
-        'Baltimore Ravens' : get_team_rating("BAL"),
-        'Buffalo Bills' : get_team_rating("BUF"),
-        'Carolina Panthers' : get_team_rating("CAR"),
-        'Chicago Bears' : get_team_rating("CHI"),
-        'Cincinnati Bengals' : get_team_rating("CIN"),
-        'Cleveland Browns' : get_team_rating("CLE"),
-        'Dallas Cowboys' : get_team_rating("DAL"),
-        'Denver Broncos' : get_team_rating("DEN"),
-        'Detroit Lions' : get_team_rating("DET"),
-        'Green Bay Packers' : get_team_rating("GB"),
-        'Houston Texans' : get_team_rating("HOU"),
-        'Indianapolis Colts' : get_team_rating("IND"),
-        'Jacksonville Jaguars' : get_team_rating("JAX"),
-        'Kansas City Chiefs' : get_team_rating("KC"),
-        'Las Vegas Raiders' : get_team_rating("LV"),
-        'Los Angeles Chargers' : get_team_rating("LAC"),
-        'Los Angeles Rams' : get_team_rating("LAR"),
-        'Miami Dolphins' : get_team_rating("MIA"),
-        'Minnesota Vikings' : get_team_rating("MIN"),
-        'New England Patriots' : get_team_rating("NE"),
-        'New Orleans Saints' : get_team_rating("NO"),
-        'New York Giants' : get_team_rating("NYG"),
-        'New York Jets' : get_team_rating("NYJ"),
-        'Philadelphia Eagles' : get_team_rating("PHI"),
-        'Pittsburgh Steelers' : get_team_rating("PIT"),
-        'San Francisco 49ers' : get_team_rating("SF"),
-        'Seattle Seahawks' : get_team_rating("SEA"),
-        'Tampa Bay Buccaneers' : get_team_rating("TB"),
-        'Tennessee Titans' : get_team_rating("TEN"),
-        'Washington Commanders' : get_team_rating("WAS")
+    mp_current_ranks = {
+        'Arizona Cardinals' : get_mp_team_rating("ARI"),
+        'Atlanta Falcons' : get_mp_team_rating("ATL"),
+        'Baltimore Ravens' : get_mp_team_rating("BAL"),
+        'Buffalo Bills' : get_mp_team_rating("BUF"),
+        'Carolina Panthers' : get_mp_team_rating("CAR"),
+        'Chicago Bears' : get_mp_team_rating("CHI"),
+        'Cincinnati Bengals' : get_mp_team_rating("CIN"),
+        'Cleveland Browns' : get_mp_team_rating("CLE"),
+        'Dallas Cowboys' : get_mp_team_rating("DAL"),
+        'Denver Broncos' : get_mp_team_rating("DEN"),
+        'Detroit Lions' : get_mp_team_rating("DET"),
+        'Green Bay Packers' : get_mp_team_rating("GB"),
+        'Houston Texans' : get_mp_team_rating("HOU"),
+        'Indianapolis Colts' : get_mp_team_rating("IND"),
+        'Jacksonville Jaguars' : get_mp_team_rating("JAX"),
+        'Kansas City Chiefs' : get_mp_team_rating("KC"),
+        'Las Vegas Raiders' : get_mp_team_rating("LV"),
+        'Los Angeles Chargers' : get_mp_team_rating("LAC"),
+        'Los Angeles Rams' : get_mp_team_rating("LAR"),
+        'Miami Dolphins' : get_mp_team_rating("MIA"),
+        'Minnesota Vikings' : get_mp_team_rating("MIN"),
+        'New England Patriots' : get_mp_team_rating("NE"),
+        'New Orleans Saints' : get_mp_team_rating("NO"),
+        'New York Giants' : get_mp_team_rating("NYG"),
+        'New York Jets' : get_mp_team_rating("NYJ"),
+        'Philadelphia Eagles' : get_mp_team_rating("PHI"),
+        'Pittsburgh Steelers' : get_mp_team_rating("PIT"),
+        'San Francisco 49ers' : get_mp_team_rating("SF"),
+        'Seattle Seahawks' : get_mp_team_rating("SEA"),
+        'Tampa Bay Buccaneers' : get_mp_team_rating("TB"),
+        'Tennessee Titans' : get_mp_team_rating("TEN"),
+        'Washington Commanders' : get_mp_team_rating("WAS")
+    }
+	
+    # 4. Build your dictionary dynamically
+    gsf_current_ranks = {
+        'Arizona Cardinals' : get_gsf_team_rating("ARI"),
+        'Atlanta Falcons' : get_gsf_team_rating("ATL"),
+        'Baltimore Ravens' : get_gsf_team_rating("BAL"),
+        'Buffalo Bills' : get_gsf_team_rating("BUF"),
+        'Carolina Panthers' : get_gsf_team_rating("CAR"),
+        'Chicago Bears' : get_gsf_team_rating("CHI"),
+        'Cincinnati Bengals' : get_gsf_team_rating("CIN"),
+        'Cleveland Browns' : get_gsf_team_rating("CLE"),
+        'Dallas Cowboys' : get_gsf_team_rating("DAL"),
+        'Denver Broncos' : get_gsf_team_rating("DEN"),
+        'Detroit Lions' : get_gsf_team_rating("DET"),
+        'Green Bay Packers' : get_gsf_team_rating("GB"),
+        'Houston Texans' : get_gsf_team_rating("HOU"),
+        'Indianapolis Colts' : get_gsf_team_rating("IND"),
+        'Jacksonville Jaguars' : get_gsf_team_rating("JAX"),
+        'Kansas City Chiefs' : get_gsf_team_rating("KC"),
+        'Las Vegas Raiders' : get_gsf_team_rating("LV"),
+        'Los Angeles Chargers' : get_gsf_team_rating("LAC"),
+        'Los Angeles Rams' : get_gsf_team_rating("LAR"),
+        'Miami Dolphins' : get_gsf_team_rating("MIA"),
+        'Minnesota Vikings' : get_gsf_team_rating("MIN"),
+        'New England Patriots' : get_gsf_team_rating("NE"),
+        'New Orleans Saints' : get_gsf_team_rating("NO"),
+        'New York Giants' : get_gsf_team_rating("NYG"),
+        'New York Jets' : get_gsf_team_rating("NYJ"),
+        'Philadelphia Eagles' : get_gsf_team_rating("PHI"),
+        'Pittsburgh Steelers' : get_gsf_team_rating("PIT"),
+        'San Francisco 49ers' : get_gsf_team_rating("SF"),
+        'Seattle Seahawks' : get_gsf_team_rating("SEA"),
+        'Tampa Bay Buccaneers' : get_gsf_team_rating("TB"),
+        'Tennessee Titans' : get_gsf_team_rating("TEN"),
+        'Washington Commanders' : get_gsf_team_rating("WAS")
     }
 else:
     print(f"Error: {ratings_file} not found. Hardcoded fallback or empty dict required.")
@@ -288,40 +335,7 @@ else:
 
 print("Dynamic Team Ratings Loaded Successfully.")
 
-gsf_current_ranks = {
-    'Arizona Cardinals' : -5.6,
-    'Atlanta Falcons' : -1.61,
-    'Baltimore Ravens' : 5,
-    'Buffalo Bills' : 5.24,
-    'Carolina Panthers' : -5.07,
-    'Chicago Bears' : -1.68,
-    'Cincinnati Bengals' : -6.02,
-    'Cleveland Browns' : -8.97,
-    'Dallas Cowboys' : 0.33,
-    'Denver Broncos' : 3.31,
-    'Detroit Lions' : 4.55,
-    'Green Bay Packers' : 4.69,
-    'Houston Texans' : -1.23,
-    'Indianapolis Colts' : 3.95,
-    'Jacksonville Jaguars' : 1.02,
-    'Kansas City Chiefs' : 6.47,
-    'Las Vegas Raiders' : -5.91,
-    'Los Angeles Chargers' : 0.68,
-    'Los Angeles Rams' : 7.26,
-    'Miami Dolphins' : -1.34,
-    'Minnesota Vikings' : -0.87,
-    'New England Patriots' : 0.28,
-    'New Orleans Saints' : -7.09,
-    'New York Giants' : -5.86,
-    'New York Jets' : -3.07,
-    'Philadelphia Eagles' : 5.73,
-    'Pittsburgh Steelers' : 1.1,
-    'San Francisco 49ers' : 4.49,
-    'Seattle Seahawks' : 8.34,
-    'Tampa Bay Buccaneers' : 1.3,
-    'Tennessee Titans' : -7.24,
-    'Washington Commanders' : -2.04
-}
+
 
 CUSTOM_RANKS = {
     'Arizona Cardinals' : 0,
@@ -358,92 +372,102 @@ CUSTOM_RANKS = {
     'Washington Commanders' : 0
 }
     
-# --------------------------------------------------------------------------
-# --- 3. HOME FIELD ADVANTAGE (STATIC DEFAULTS) ---
-# Used if the user selects 'Default' in the UI for home field advantage.
-# These values are divided by 2 from the input as they appear to be half-points.
-# --------------------------------------------------------------------------
-DEFAULT_HOME_ADVANTAGE = {
-    'Arizona Cardinals': 1.5/2,
-    'Atlanta Falcons': 2.3/2,
-    'Baltimore Ravens': 3.8/2,
-    'Buffalo Bills': 3.6/2,
-    'Carolina Panthers': 1.9/2,
-    'Chicago Bears': 1.5/2,
-    'Cincinnati Bengals': 2.1/2,
-    'Cleveland Browns': 1.3/2,
-    'Dallas Cowboys': 3.7/2,
-    'Denver Broncos': 2.6/2,
-    'Detroit Lions': 2.1/2,
-    'Green Bay Packers': 3.8/2,
-    'Houston Texans': 1.9/2,
-    'Indianapolis Colts': 2.6/2,
-    'Jacksonville Jaguars': 1.4/2,
-    'Kansas City Chiefs': 3.8/2,
-    'Las Vegas Raiders': 1.4/2,
-    'Los Angeles Chargers': 2.6/2,
-    'Los Angeles Rams': 2.6/2,
-    'Miami Dolphins': 2.3/2,
-    'Minnesota Vikings': 3.1/2,
-    'New England Patriots': 3.9/2,
-    'New Orleans Saints': 3.1/2,
-    'New York Giants': 1.1/2,
-    'New York Jets': 1.2/2,
-    'Philadelphia Eagles': 3.3/2,
-    'Pittsburgh Steelers': 3.5/2,
-    'San Francisco 49ers': 3.6/2,
-    'Seattle Seahawks': 2.6/2,
-    'Tampa Bay Buccaneers': 2.0/2,
-    'Tennessee Titans': 2.1/2,
-    'Washington Commanders': 1.3/2
-}
+# 1. Define the file path based on your existing variables
+hfa_file = f"nfl-power-ratings/nfl_hfa_ratings.csv"
+
+# 2. Check if the file exists before trying to read it
+if os.path.exists(hfa_file):
+    print(f"Loading ratings from {hfa_file}")
+    hfa_df = pd.read_csv(hfa_file)
+    
+    # 3. Create a helper function to get the rating safely
+    def get_home_advantage(team_abbr):
+        # Look for the team in the 'team' or 'off_team' column (check your CSV header)
+        # We use .iloc[0] to get the value from the matching row
+        try:
+            # Change 'team' to 'off_team' if that is the name of your team column
+            hfa = hfa_df.loc[hfa_df['team'] == team_abbr, 'HFA (Points)'].values[0]
+            return float(rating)
+        except (IndexError, KeyError):
+            print(f"Warning: Could not find rating for {team_abbr}. Defaulting to 0.")
+            return 0.0
+
+    # 4. Build your dictionary dynamically
+    DEFAULT_HOME_ADVANTAGE = {
+        'Arizona Cardinals' : get_home_advantage("ARI")/2,
+        'Atlanta Falcons' : get_home_advantage("ATL")/2,
+        'Baltimore Ravens' : get_home_advantage("BAL")/2,
+        'Buffalo Bills' : get_home_advantage("BUF")/2,
+        'Carolina Panthers' : get_home_advantage("CAR")/2,
+        'Chicago Bears' : get_home_advantage("CHI")/2,
+        'Cincinnati Bengals' : get_home_advantage("CIN")/2,
+        'Cleveland Browns' : get_home_advantage("CLE")/2,
+        'Dallas Cowboys' : get_home_advantage("DAL")/2,
+        'Denver Broncos' : get_home_advantage("DEN")/2,
+        'Detroit Lions' : get_home_advantage("DET")/2,
+        'Green Bay Packers' : get_home_advantage("GB")/2,
+        'Houston Texans' : get_home_advantage("HOU")/2,
+        'Indianapolis Colts' : get_home_advantage("IND")/2,
+        'Jacksonville Jaguars' : get_home_advantage("JAX")/2,
+        'Kansas City Chiefs' : get_home_advantage("KC")/2,
+        'Las Vegas Raiders' : get_home_advantage("LV")/2,
+        'Los Angeles Chargers' : get_home_advantage("LAC")/2,
+        'Los Angeles Rams' : get_home_advantage("LAR")/2,
+        'Miami Dolphins' : get_home_advantage("MIA")/2,
+        'Minnesota Vikings' : get_home_advantage("MIN")/2,
+        'New England Patriots' : get_home_advantage("NE")/2,
+        'New Orleans Saints' : get_home_advantage("NO")/2,
+        'New York Giants' : get_home_advantage("NYG")/2,
+        'New York Jets' : get_home_advantage("NYJ")/2,
+        'Philadelphia Eagles' : get_home_advantage("PHI")/2,
+        'Pittsburgh Steelers' : get_home_advantage("PIT")/2,
+        'San Francisco 49ers' : get_home_advantage("SF")/2,
+        'Seattle Seahawks' : get_home_advantage("SEA")/2,
+        'Tampa Bay Buccaneers' : get_home_advantage("TB")/2,
+        'Tennessee Titans' : get_home_advantage("TEN")/2,
+        'Washington Commanders' : get_home_advantage("WAS")/2
+    }
 
 # --------------------------------------------------------------------------
 # --- 4. AWAY ADJUSTMENT (STATIC DEFAULTS) ---
 # Used if the user selects 'Default' in the UI for away adjustment.
 # These values are divided by 2 from the input as they appear to be half-points.
 # --------------------------------------------------------------------------
-DEFAULT_AWAY_ADJ = {
-    'Arizona Cardinals': -0.3/2,
-    'Atlanta Falcons': 0.2/2,
-    'Baltimore Ravens': -1.5/2,
-    'Buffalo Bills': -1.1/2,
-    'Carolina Panthers': 0.5/2,
-    'Chicago Bears': 1.0/2,
-    'Cincinnati Bengals': -0.2/2,
-    'Cleveland Browns': 1.5/2,
-    'Dallas Cowboys': -1.2/2,
-    'Denver Broncos': 0.6/2,
-    'Detroit Lions': 0.7/2,
-    'Green Bay Packers': -0.1/2,
-    'Houston Texans': 0.7/2,
-    'Indianapolis Colts': -0.2/2,
-    'Jacksonville Jaguars': 1.6/2,
-    'Kansas City Chiefs': -1.6/2,
-    'Las Vegas Raiders': -0.3/2,
-    'Los Angeles Chargers': -0.8/2,
-    'Los Angeles Rams': 1.3/2,
-    'Miami Dolphins': 1.4/2,
-    'Minnesota Vikings': -0.5/2,
-    'New England Patriots': -1.8/2,
-    'New Orleans Saints': -1.6/2,
-    'New York Giants': 0.9/2,
-    'New York Jets': 1.9/2,
-    'Philadelphia Eagles': -0.2/2,
-    'Pittsburgh Steelers': -0.2/2,
-    'San Francisco 49ers': -1.1/2,
-    'Seattle Seahawks': -0.4/2,
-    'Tampa Bay Buccaneers': -0.1/2,
-    'Tennessee Titans': 0.4/2,
-    'Washington Commanders': 0.6/2
-}
+	DEFAULT_AWAY_ADJ = {
+        'Arizona Cardinals' : -1 * get_home_advantage("ARI")/2,
+        'Atlanta Falcons' : -1 * get_home_advantage("ATL")/2,
+        'Baltimore Ravens' : -1 * get_home_advantage("BAL")/2,
+        'Buffalo Bills' : -1 * get_home_advantage("BUF")/2,
+        'Carolina Panthers' : -1 * get_home_advantage("CAR")/2,
+        'Chicago Bears' : -1 * get_home_advantage("CHI")/2,
+        'Cincinnati Bengals' : -1 * get_home_advantage("CIN")/2,
+        'Cleveland Browns' : -1 * get_home_advantage("CLE")/2,
+        'Dallas Cowboys' : -1 * get_home_advantage("DAL")/2,
+        'Denver Broncos' : -1 * get_home_advantage("DEN")/2,
+        'Detroit Lions' : -1 * get_home_advantage("DET")/2,
+        'Green Bay Packers' : -1 * get_home_advantage("GB")/2,
+        'Houston Texans' : -1 * get_home_advantage("HOU")/2,
+        'Indianapolis Colts' : -1 * get_home_advantage("IND")/2,
+        'Jacksonville Jaguars' : -1 * get_home_advantage("JAX")/2,
+        'Kansas City Chiefs' : -1 * get_home_advantage("KC")/2,
+        'Las Vegas Raiders' : -1 * get_home_advantage("LV")/2,
+        'Los Angeles Chargers' : -1 * get_home_advantage("LAC")/2,
+        'Los Angeles Rams' : -1 * get_home_advantage("LAR")/2,
+        'Miami Dolphins' : -1 * get_home_advantage("MIA")/2,
+        'Minnesota Vikings' : -1 * get_home_advantage("MIN")/2,
+        'New England Patriots' : -1 * get_home_advantage("NE")/2,
+        'New Orleans Saints' : -1 * get_home_advantage("NO")/2,
+        'New York Giants' : -1 * get_home_advantage("NYG")/2,
+        'New York Jets' : -1 * get_home_advantage("NYJ")/2,
+        'Philadelphia Eagles' : -1 * get_home_advantage("PHI")/2,
+        'Pittsburgh Steelers' : -1 * get_home_advantage("PIT")/2,
+        'San Francisco 49ers' : -1 * get_home_advantage("SF")/2,
+        'Seattle Seahawks' : -1 * get_home_advantage("SEA")/2,
+        'Tampa Bay Buccaneers' : -1 * get_home_advantage("TB")/2,
+        'Tennessee Titans' : -1 * get_home_advantage("TEN")/2,
+        'Washington Commanders' : -1 * get_home_advantage("WAS")/2
+    }
 
-# --------------------------------------------------------------------------
-# --- 5. STADIUM INFO (STATIC) ---
-# Static stadium and location data. This list is *merged* with the dynamic
-# rank/advantage values inside the collect_schedule_travel_ranking_data function.
-# The structure is: [Stadium Name, Lat, Lon, Timezone, Division]
-# --------------------------------------------------------------------------
 STADIUM_INFO = {
     'Arizona Cardinals': ['State Farm Stadium', 33.5277, -112.262608, 'America/Denver', 'NFC West'],
     'Atlanta Falcons': ['Mercedes-Benz Stadium', 33.7489, -84.3880, 'America/New_York', 'NFC South'],

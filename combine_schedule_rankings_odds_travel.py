@@ -62,10 +62,15 @@ def get_thanksgiving(year):
     thursdays = [row[calendar.THURSDAY] for row in c if row[calendar.THURSDAY] != 0]
     return datetime.datetime(year, 11, thursdays[3])
 
+
+
 thanksgiving_date = get_thanksgiving(target_year)
 black_friday = thanksgiving_date + datetime.timedelta(days=1)
 christmas_day = datetime.datetime(target_year, 12, 25)
 boxing_day = datetime.datetime(target_year, 12, 26)
+
+thanksgiving_week = int((thanksgiving_date - first_game_date)/7) + 1 ## +1 because the first game date is technically week 1, not week 0
+christmas_week = int((christmas_day - first_game_date)/7)) + 2 ## +2 because the first game date is technically week 1, not week 0, and the addition of thanksgiving_week
 
 if today <= first_game_date:
     starting_week = 1
@@ -83,16 +88,17 @@ else:# We find the latest game that has happened to determine "current" week
         if today >= boxing_day:
             starting_week += 1
         
-    # Bound check: If season is over (e.g. Week 22), cap it or handle as needed
-    if starting_week > 19: 
-        starting_week = 19
+	    # Bound check: If season is over (e.g. Week 22), cap it or handle as needed
+	    if starting_week > 19: 
+	        starting_week = 19
+	else:
+		starting_week = 1
 
 # 5. Final Assignment to your variables
 current_year = target_year
 starting_year = target_year
 
 current_year_plus_1 = current_year + 1
-
 season_start_date = first_game_date - 1
 
 thanksgiving_reset_date = black_friday_date + 1 #THIS DATE IS INCLUDED IN THE RESET. SO IF THERE ARE GAMES ON THIS DATE, THEY WILL HAVE A WEEK ADDED
@@ -224,8 +230,6 @@ mp_current_ranks = {
     'Tennessee Titans' : -7.24,
     'Washington Commanders' : -2.04
 }
-import pandas as pd
-import os
 
 # 1. Define the file path based on your existing variables
 ratings_file = f"nfl-power-ratings/nfl_power_ratings_blended_week_{standard_nfl_week}_{target_year}.csv"
@@ -467,6 +471,42 @@ if os.path.exists(hfa_file):
         'Tennessee Titans' : -1 * get_home_advantage("TEN")/2,
         'Washington Commanders' : -1 * get_home_advantage("WAS")/2
     }
+    ABBR_TO_FULL = {
+        "ARI": "Arizona Cardinals",
+        "ATL": "Atlanta Falcons",
+        "BAL": "Baltimore Ravens",
+        "BUF": "Buffalo Bills",
+        "CAR": "Carolina Panthers",
+        "CHI": "Chicago Bears",
+        "CIN": "Cincinnati Bengals",
+        "CLE": "Cleveland Browns",
+        "DAL": "Dallas Cowboys",
+        "DEN": "Denver Broncos",
+        "DET": "Detroit Lions",
+        "GB": "Green Bay Packers",
+        "HOU": "Houston Texans",
+        "IND": "Indianapolis Colts",
+        "JAX": "Jacksonville Jaguars",
+		"JAC": "Jacksonville Jaguars",
+        "KC": "Kansas City Chiefs",
+        "LV": "Las Vegas Raiders",
+        "LAC": "Los Angeles Chargers",
+        "LAR": "Los Angeles Rams",
+        "MIA": "Miami Dolphins",
+        "MIN": "Minnesota Vikings",
+        "NE": "New England Patriots",
+        "NO": "New Orleans Saints",
+        "NYG": "New York Giants",
+        "NYJ": "New York Jets",
+        "PHI": "Philadelphia Eagles",
+        "PIT": "Pittsburgh Steelers",
+        "SF": "San Francisco 49ers",
+        "SEA": "Seattle Seahawks",
+        "TB": "Tampa Bay Buccaneers",
+        "TEN": "Tennessee Titans",
+        "WAS": "Washington Commanders",
+		"WSH": "Washington Commanders"
+    }
 
 STADIUM_INFO = {
     'Arizona Cardinals': ['State Farm Stadium', 33.5277, -112.262608, 'America/Denver', 'NFC West'],
@@ -508,21 +548,17 @@ ALL_TEAMS = list(STADIUM_INFO.keys())
 
 def collect_schedule_travel_ranking_data(pd, config: dict, schedule_rows):
 # Get the user's custom rankings from the config
-    custom_rankings = config.get('team_rankings', {})
 
     stadiums = {}
     for team, info in STADIUM_INFO.items():
         # info = [Stadium Name, Lat, Lon, Timezone, Division]
         
         # 1. Get Preseason Rank (from global static dict)
-        preseason_rank = PRESEASON_RANKS.get(team, 0)
+        mp_preseason_rank = MP_PRESEASON_RANKS.get(team, 0)
+		gsf_preseason_rank = GSF_PRESEASON_RANKS.get(team, 0)
         
         # 2. Get Current/Custom Rank (from config or default)
-        user_rank = custom_rankings.get(team, 'Default')
-        if user_rank == 'Default':
-            current_rank = massey_peabody_rankings.get(team, 0)
-        else:
-            current_rank = float(user_rank) # Ensure it's a number
+        user_rank = CUSTOM_RANKS.get(team, 0)
         
         # 3. Get Home Advantage (from global static dict)
         #    (Your config doesn't store this, so we use default)
@@ -539,16 +575,17 @@ def collect_schedule_travel_ranking_data(pd, config: dict, schedule_rows):
             info[2], # Lon
             info[3], # Timezone
             info[4], # Division
-            preseason_rank,  # 5: Preseason Rank
-            current_rank,    # 6: Current Rank
-            home_adv,        # 7: Home Advantage
-            away_adj         # 8: Away Adjustment
+            mp_preseason_rank,  # 5: Preseason Rank
+            mp_current_ranks,    # 6: Current Rank
+			gsf_preseason_rank,   #7
+			gsf_current_ranks,    #8
+            home_adv,        # 9: Home Advantage
+            away_adj         # 10: Away Adjustment			
         ]
     data = []
     # Initialize a variable to hold the last valid date and week
     last_date = None
-    start_date_str = season_start_date
-    start_date = parse(start_date_str)
+    start_date = pd.to_datetime(season_start_date)
     week = 1
     # Initialize a dictionary to store the last game date for each team
     last_game = {}
@@ -560,152 +597,96 @@ def collect_schedule_travel_ranking_data(pd, config: dict, schedule_rows):
 # Contains static, non-user-configurable data for NFL teams and stadiums.
 
 
-    #Get the distances traveled
-    def haversine(lat1, lon1, lat2, lon2):
-        # Convert degrees to radians
-        lat1, lon1, lat2, lon2 = map(radians, [lat1, lon1, lat2, lon2])
-
-        # Differences
-        dlat = lat2 - lat1
-        dlon = lon2 - lon1
-
-        # Haversine formula
-        a = sin(dlat / 2)**2 + cos(lat1) * cos(lat2) * sin(dlon / 2)**2
-        c = 2 * atan2(sqrt(a), sqrt(1 - a))
-
-        # Radius of earth in kilometers. Use 3956 for miles
-        r = 3956
-
-        return c * r
-
-    #Get the timzone differences
-    def calculate_hours_difference(tz1, tz2):
-        # This function calculates the difference in hours between two timezones
-        tz1_offset = pytz.timezone(tz1).utcoffset(pd.Timestamp.now()).total_seconds() / 3600
-        tz2_offset = pytz.timezone(tz2).utcoffset(pd.Timestamp.now()).total_seconds() / 3600
-        return tz1_offset - tz2_offset
-
-    # Loop through each row in the table
-    for schedule_row in schedule_rows:
-    #for schedule_row in schedule_table.find_all('tr'):
-        # Check if the row has a white background
-        if schedule_row.get('bgcolor') == '#ffffff':
-            # Find all columns in the row
-            cols = schedule_row.find_all('td')
-    #        print(cols)
-            # Get the text from each column and strip leading/trailing whitespaces
-            cols_text = []
-            actual_stadium = []
-            for col in cols:
-                text = BeautifulSoup(col.get_text(strip=True), 'html.parser').text
-                if " ¹" in text:
-                    actual_stadium = "London, UK"
-                    text = text.replace(" ¹", "")
-                else:
-                    actual_stadium = ''
-                if " *" in text:
-                    text = text.replace(" *", "")
-                cols_text.append(text)
-            # If the date field is not blank, update last_date and check if it's a new week
-            if cols_text[0].strip() != '':
-                # Parse the date
-                date_str = cols_text[0]
-                date = parse(date_str)
-                if date.month == 1:
-                    # Change the year to 2025
-                    date = date.replace(year=2026)
-                else:
-                    date = date.replace(year=2025)
-                # Adjust week for games on or after November 30th
-                #if date >= pd.Timestamp('2024-11-30'):
-                    #week += 1
-                # Adjust week for games on or after December 27th
-                #if date >= pd.Timestamp('2024-12-27'):
-                    #week += 1
-                # Calculate the difference in days
-                days_diff = (date - start_date).days
-
-                # Calculate the week number
-                week = 1 + days_diff // 7
-
-                # Update cols_text with the week information
-                #cols_text.insert(0, f'Week {week}')
-
-                # Rest of your existing logic (rest days, advantage, etc.)
-
-                # Update last_date
-                last_date = date
-            # If the date field is blank and last_date is not None, use last_date
-            elif last_date is not None:
-                cols_text[0] = last_date.strftime('%a %b %d')
-            # Add week to the start of cols_text
-            cols_text.insert(0, f'Week {week}')
-
-            # Calculate rest days for away team and add it to cols_text
-            away_team = cols_text[3]
-            home_team = cols_text[4]
-            if away_team in last_game:
-                away_rest_days = (last_date - last_game[away_team]).days
-            else:
-                away_rest_days = 0
-            if home_team in last_game:
-                home_rest_days = (last_date - last_game[home_team]).days
-            else:
-                home_rest_days = 0   
-            # Calculate rest advantage for both teams and add it to cols_text
-            if isinstance(away_rest_days, int) and isinstance(home_rest_days, int):
-                away_advantage = away_rest_days - home_rest_days
-                home_advantage = home_rest_days - away_rest_days
-
-                # Update cumulative rest advantage for both teams regardless of whether they are home or away this game.
-                cumulative_advantage[away_team] = cumulative_advantage.get(away_team, 0) + away_advantage
-                cumulative_advantage[home_team] = cumulative_advantage.get(home_team, 0) + home_advantage
-
-            else:
-                away_advantage = 'NA'
-                home_advantage = 'NA'        
-
-            cols_text.extend([away_rest_days, home_rest_days, away_advantage, home_advantage,
-                              cumulative_advantage.get(away_team, 'NA'), 
-                              cumulative_advantage.get(home_team, 'NA')])  
-
-            # Update last game date for both teams regardless of whether they are home or away this game.
-            last_game[away_team] = last_date
-            last_game[home_team] = last_date
-
-            # Check if the current game is an away game in the next week after the last away game
-            back_to_back_away = False
-            if away_team in last_away_game and last_away_game[away_team] == week - 1:
-                back_to_back_away = True
-            # Update the last away game week for the away team
-            last_away_game[away_team] = week
-
-
-            data.append(cols_text + [actual_stadium, back_to_back_away])
-    #        print(cols_text)
-    df = pd.DataFrame(data, columns=['Week', 'Date', 'Time', 'Away Team', 'Home Team', 
-                                     'Away Team Weekly Rest', 'Home Team Weekly Rest', 
-                                     'Weekly Away Rest Advantage', 'Weekly Home Rest Advantage',
-                                     'Away Cumulative Rest Advantage', 'Home Cumulative Rest Advantage','Actual Stadium', 'Back to Back Away Games'])
+	def haversine(lat1, lon1, lat2, lon2):
+	    # Convert degrees to radians
+	    lat1, lon1, lat2, lon2 = map(radians, [lat1, lon1, lat2, lon2])
+	    # Differences
+	    dlat = lat2 - lat1
+	    dlon = lon2 - lon1
+	    # Haversine formula
+	    a = sin(dlat / 2)**2 + cos(lat1) * cos(lat2) * sin(dlon / 2)**2
+	    c = 2 * atan2(sqrt(a), sqrt(1 - a))
+	    r = 3956 # Radius in miles
+	    return c * r
+	
+	def calculate_hours_difference(tz1, tz2):
+	    try:
+	        tz1_offset = pytz.timezone(tz1).utcoffset(datetime.datetime.now()).total_seconds() / 3600
+	        tz2_offset = pytz.timezone(tz2).utcoffset(datetime.datetime.now()).total_seconds() / 3600
+	        return tz1_offset - tz2_offset
+	    except:
+	        return 0
+			
+	df = ratings_df
+	
+	# 2. Pre-processing: Convert date column and sort to ensure chronological order
+	df['gameday'] = pd.to_datetime(df['gameday'])
+	df = df.sort_values(by=['gameday', 'gametime'])
+	
+	# 3. Initialize tracking variables
+	last_game = {}          # Stores the date of the last game for each team
+	last_away_game = {}     # Stores the week of the last away game for each team
+	cumulative_advantage = {} # Stores running total of rest advantage
+	data = []
+	
+	for index, row in df.iterrows():
+	    # 1. Use the row itself for the base data
+	    week = row['Week']
+	    last_date = row['gameday']
+	    away_team = row['Away Team']
+	    home_team = row['Home Team']
+	
+	    # 2. Calculate rest (Logic remains the same)
+	    away_rest_days = (last_date - last_game[away_team]).days if away_team in last_game else 0
+	    home_rest_days = (last_date - last_game[home_team]).days if home_team in last_game else 0
+	    
+	    away_advantage = away_rest_days - home_rest_days
+	    home_advantage = home_rest_days - away_rest_days
+	
+	    cumulative_advantage[away_team] = cumulative_advantage.get(away_team, 0) + away_advantage
+	    cumulative_advantage[home_team] = cumulative_advantage.get(home_team, 0) + home_advantage
+	
+	    # 3. Handle Back-to-Back Logic
+	    back_to_back_away = (away_team in last_away_game and last_away_game[away_team] == week - 1)
+	    last_away_game[away_team] = week
+	    last_game[away_team] = last_date
+	    last_game[home_team] = last_date
+	
+	    # 4. STORE AS DICTIONARY (Much safer than a list)
+	    # This maps specific values to specific column names immediately
+	    new_row = {
+	        'Week': week,
+	        'Date': last_date,
+	        'Away Team': away_team,
+	        'Home Team': home_team,
+	        'Away Team Weekly Rest': away_rest_days,
+	        'Home Team Weekly Rest': home_rest_days,
+	        'Weekly Away Rest Advantage': away_advantage,
+	        'Weekly Home Rest Advantage': home_advantage,
+	        'Away Cumulative Rest Advantage': cumulative_advantage[away_team],
+	        'Home Cumulative Rest Advantage': cumulative_advantage[home_team],
+	        'Actual Stadium': row['stadium'],
+	        'Back to Back Away Games': back_to_back_away
+	    }
+	    data.append(new_row)
+	
+	# 5. Create the final DataFrame
+	# Because 'data' is a list of dicts, pandas automatically matches the keys to column names
+	df = pd.DataFrame(data)
 
 
     df['Date'] = df['Date'].str.replace(r'(\w+)\s(\w+)\s(\d+)', r'\2 \3, 2025', regex=True)
     df['Date'] = pd.to_datetime(df['Date'], format='%b %d, %Y')
     # Adjust January games to 2025 in the DataFrame
-    df['Date'] = df['Date'].apply(lambda x: x.replace(year=2026) if x.month == 1 else x)
-    df['Week_Num'] = df['Week'].str.replace('Week ', '').astype(int)
-    df['Week'] = df['Week'].str.replace('Week ', '', regex=False).astype(int)
+    df['Date'] = df['Date'].apply(lambda x: x.replace(year = target_year + 1) if x.month == 1 else x)
 
-    selected_contest = config['selected_contest']
-    if selected_contest == 'Circa':
-        df.loc[df['Date'] >= pd.to_datetime(thanksgiving_reset_date), 'Week'] += 1
-        df.loc[df['Date'] >= pd.to_datetime(christmas_reset_date), 'Week'] += 1
-        df.loc[df['Date'] >= pd.to_datetime(thanksgiving_reset_date), 'Week_Num'] += 1
-        df.loc[df['Date'] >= pd.to_datetime(christmas_reset_date), 'Week_Num'] += 1
+	df.loc[df['Date'] >= pd.to_datetime(thanksgiving_reset_date), 'Week'] += 1
+	df.loc[df['Date'] >= pd.to_datetime(christmas_reset_date), 'Week'] += 1
+	df.loc[df['Date'] >= pd.to_datetime(thanksgiving_reset_date), 'Week_Num'] += 1
+	df.loc[df['Date'] >= pd.to_datetime(christmas_reset_date), 'Week_Num'] += 1
 
 
     # Convert 'Week' back to string format if needed
-    df['Week'] = 'Week ' + df['Week'].astype(str)
     df['Away Team Current Week Cumulative Rest Advantage'] = pd.to_numeric(df['Away Cumulative Rest Advantage'], errors='coerce').fillna(0) - pd.to_numeric(df['Home Cumulative Rest Advantage'], errors='coerce').fillna(0)
     df['Home Team Current Week Cumulative Rest Advantage'] = pd.to_numeric(df['Home Cumulative Rest Advantage'], errors='coerce').fillna(0) - pd.to_numeric(df['Away Cumulative Rest Advantage'], errors='coerce').fillna(0)
     df['Away Team Division'] = df['Away Team'].map(lambda team: stadiums[team][4] if team in stadiums else 'NA')
@@ -884,40 +865,70 @@ def collect_schedule_travel_ranking_data(pd, config: dict, schedule_rows):
     #df['Away Timezone Advantage'] = (df['Away Timezone Change'] - df['Home Timezone Change'])
     #df['Home Timezone Advantage'] = (df['Home Timezone Change'] - df['Away Timezone Change'])
 
-    df['Away Team Preseason Rank'] = df['Away Team'].map(lambda team: stadiums[team][5] if team in stadiums else 'NA')
-    df['Home Team Preseason Rank'] = df['Home Team'].map(lambda team: stadiums[team][5] if team in stadiums else 'NA')
+    df['Away Team Massey-Peabody Preseason Rank'] = df['Away Team'].map(lambda team: stadiums[team][5] if team in stadiums else 'NA')
+    df['Home Team Massey-Peabody Preseason Rank'] = df['Home Team'].map(lambda team: stadiums[team][5] if team in stadiums else 'NA')
 
-    df['Preseason Winner'] = df.apply(lambda row: row['Away Team'] if row['Away Team Preseason Rank'] > row['Home Team Preseason Rank'] else (row['Home Team'] if row['Away Team Preseason Rank'] < row['Home Team Preseason Rank'] else 'Tie'), axis=1)
-    df['Preseason Difference'] = abs(df['Away Team Preseason Rank'] - df['Home Team Preseason Rank'])
+    df['Away Team Generic Sports Fan Preseason Rank'] = df['Away Team'].map(lambda team: stadiums[team][7] if team in stadiums else 'NA')
+    df['Home Team Generic Sports Fan Preseason Rank'] = df['Home Team'].map(lambda team: stadiums[team][7] if team in stadiums else 'NA')
 
-    df['Away Team Adjusted Preseason Rank'] = df['Away Team'].map(lambda team: stadiums[team][5]) + np.where((df['Away Travel Advantage'] < -100) & (df['Home Stadium'] == df['Actual Stadium']), -.125, 0) - pd.to_numeric(df['Away Timezone Advantage']*.25, errors='coerce').fillna(0)-pd.to_numeric(df['Weekly Away Rest Advantage'], errors='coerce').fillna(0)-.125*df['Away Team Current Week Cumulative Rest Advantage'] - np.where((df['Away Team'].map(lambda team: stadiums[team][0])) != df['Home Team'].map(lambda team: stadiums[team][0]), df['Away Team'].map(lambda team: stadiums[team][8]), 0)
-    df['Home Team Adjusted Preseason Rank'] = df['Home Team'].map(lambda team: stadiums[team][5]) - np.where((df['Away Travel Advantage'] < -100) & (df['Home Stadium'] == df['Actual Stadium']), .125, 0) - pd.to_numeric(df['Home Timezone Advantage']*.25, errors='coerce').fillna(0)-pd.to_numeric(df['Weekly Home Rest Advantage'], errors='coerce').fillna(0)-.125*df['Home Team Current Week Cumulative Rest Advantage'] + np.where((df['Away Team'].map(lambda team: stadiums[team][0])) != df['Home Team'].map(lambda team: stadiums[team][0]), df['Home Team'].map(lambda team: stadiums[team][7]), 0)
+    df['Massey-Peabody Preseason Winner'] = df.apply(lambda row: row['Away Team'] if row['Away Team Massey-Peabody Preseason Rankk'] > row['Home Team Massey-Peabody Preseason Rank'] else (row['Home Team'] if row['Away Team Massey-Peabody Preseason Rank'] < row['Home Team Massey-Peabody Preseason Rank'] else 'Tie'), axis=1)
+    df['Massey-Peabody Preseason Difference'] = abs(df['Away Team Massey-Peabody Preseason Rank'] - df['Home Team Massey-Peabody Preseason Rank'])
 
-    df['Adjusted Preseason Winner'] = df.apply(lambda row: row['Away Team'] if row['Away Team Adjusted Preseason Rank'] > row['Home Team Adjusted Preseason Rank'] else (row['Home Team'] if row['Away Team Adjusted Preseason Rank'] < row['Home Team Adjusted Preseason Rank'] else 'Tie'), axis=1)
-    df['Adjusted Preseason Difference'] = abs(df['Away Team Adjusted Preseason Rank'] - df['Home Team Adjusted Preseason Rank'])
+    df['Generic Sports Fan Preseason Winner'] = df.apply(lambda row: row['Away Team'] if row['Away Team Generic Sports Fan Preseason Rankk'] > row['Home Team Generic Sports Fan Preseason Rank'] else (row['Home Team'] if row['Away Team Generic Sports Fan Preseason Rank'] < row['Home Team Generic Sports Fan Preseason Rank'] else 'Tie'), axis=1)
+    df['Generic Sports Fan Preseason Difference'] = abs(df['Away Team Generic Sports Fan Preseason Rank'] - df['Home Team Generic Sports Fan Preseason Rank'])
 
-    df['Away Team Current Rank'] = df['Away Team'].map(lambda team: stadiums[team][6] if team in stadiums else 'NA')
-    df['Home Team Current Rank'] = df['Home Team'].map(lambda team: stadiums[team][6] if team in stadiums else 'NA')
+    df['Away Team Adjusted Massey-Peabody Preseason Rank'] = df['Away Team'].map(lambda team: stadiums[team][5]) + np.where((df['Away Travel Advantage'] < -100) & (df['Home Stadium'] == df['Actual Stadium']), -.125, 0) - pd.to_numeric(df['Away Timezone Advantage']*.25, errors='coerce').fillna(0)-pd.to_numeric(df['Weekly Away Rest Advantage'], errors='coerce').fillna(0)-.125*df['Away Team Current Week Cumulative Rest Advantage'] - np.where((df['Away Team'].map(lambda team: stadiums[team][0])) != df['Home Team'].map(lambda team: stadiums[team][0]), df['Away Team'].map(lambda team: stadiums[team][10]), 0)
+    df['Home Team Adjusted Massey-Peabody Preseason Rank'] = df['Home Team'].map(lambda team: stadiums[team][5]) - np.where((df['Away Travel Advantage'] < -100) & (df['Home Stadium'] == df['Actual Stadium']), .125, 0) - pd.to_numeric(df['Home Timezone Advantage']*.25, errors='coerce').fillna(0)-pd.to_numeric(df['Weekly Home Rest Advantage'], errors='coerce').fillna(0)-.125*df['Home Team Current Week Cumulative Rest Advantage'] + np.where((df['Away Team'].map(lambda team: stadiums[team][0])) != df['Home Team'].map(lambda team: stadiums[team][0]), df['Home Team'].map(lambda team: stadiums[team][9]), 0)
 
-    df['Current Winner'] = df.apply(lambda row: row['Away Team'] if row['Away Team Current Rank'] > row['Home Team Current Rank'] else (row['Home Team'] if row['Away Team Current Rank'] < row['Home Team Current Rank'] else 'Tie'), axis=1)
-    df['Current Difference'] = abs(df['Away Team Current Rank'] - df['Home Team Current Rank'])
+    df['Away Team Adjusted Generic Sports Fan Preseason Rank'] = df['Away Team'].map(lambda team: stadiums[team][7]) + np.where((df['Away Travel Advantage'] < -100) & (df['Home Stadium'] == df['Actual Stadium']), -.125, 0) - pd.to_numeric(df['Away Timezone Advantage']*.25, errors='coerce').fillna(0)-pd.to_numeric(df['Weekly Away Rest Advantage'], errors='coerce').fillna(0)-.125*df['Away Team Current Week Cumulative Rest Advantage'] - np.where((df['Away Team'].map(lambda team: stadiums[team][0])) != df['Home Team'].map(lambda team: stadiums[team][0]), df['Away Team'].map(lambda team: stadiums[team][10]), 0)
+    df['Home Team Adjusted Generic Sports Fan Preseason Rank'] = df['Home Team'].map(lambda team: stadiums[team][7]) - np.where((df['Away Travel Advantage'] < -100) & (df['Home Stadium'] == df['Actual Stadium']), .125, 0) - pd.to_numeric(df['Home Timezone Advantage']*.25, errors='coerce').fillna(0)-pd.to_numeric(df['Weekly Home Rest Advantage'], errors='coerce').fillna(0)-.125*df['Home Team Current Week Cumulative Rest Advantage'] + np.where((df['Away Team'].map(lambda team: stadiums[team][0])) != df['Home Team'].map(lambda team: stadiums[team][0]), df['Home Team'].map(lambda team: stadiums[team][9]), 0)
 
-    df['Away Team Adjusted Current Rank'] = df['Away Team'].map(lambda team: stadiums[team][6]) + np.where((df['Away Travel Advantage'] < -400) & (df['Home Stadium'] == df['Actual Stadium']), -.125, 0) - pd.to_numeric(df['Away Timezone Advantage'] * .1, errors='coerce').fillna(0) + pd.to_numeric(df['Weekly Away Rest Advantage'], errors='coerce').fillna(0) * .125 + df['Away Team Current Week Cumulative Rest Advantage'] * .0625 + np.where((df['Away Team'].map(lambda team: stadiums[team][0])) != df['Home Team'].map(lambda team: stadiums[team][0]), df['Away Team'].map(lambda team: stadiums[team][8]), 0)
-    df['Home Team Adjusted Current Rank'] = df['Home Team'].map(lambda team: stadiums[team][6]) + np.where((df['Away Travel Advantage'] < -400) & (df['Home Stadium'] == df['Actual Stadium']), .125, 0) + pd.to_numeric(df['Home Timezone Advantage'] * .1, errors='coerce').fillna(0) + pd.to_numeric(df['Weekly Home Rest Advantage'], errors='coerce').fillna(0) * .125 + df['Home Team Current Week Cumulative Rest Advantage'] * .0625 + np.where((df['Away Team'].map(lambda team: stadiums[team][0])) != df['Home Team'].map(lambda team: stadiums[team][0]), df['Home Team'].map(lambda team: stadiums[team][7]), 0)
+    df['Adjusted Massey-Peabody Preseason Winner'] = df.apply(lambda row: row['Away Team'] if row['Away Team Adjusted Massey-Peabody Preseason Rank'] > row['Home Team Adjusted Massey-Peabody Preseason Rank'] else (row['Home Team'] if row['Away Team Adjusted Massey-Peabody Preseason Rank'] < row['Home Team Adjusted Massey-Peabody Preseason Rank'] else 'Tie'), axis=1)
+    df['Adjusted Massey-Peabody Preseason Difference'] = abs(df['Away Team Adjusted Massey-Peabody Preseason Rank'] - df['Home Team Adjusted Massey-Peabody Preseason Rank'])
 
-    df['Adjusted Current Winner'] = df.apply(lambda row: row['Away Team'] if row['Away Team Adjusted Current Rank'] > row['Home Team Adjusted Current Rank'] else (row['Home Team'] if row['Away Team Adjusted Current Rank'] < row['Home Team Adjusted Current Rank'] else 'Tie'), axis=1)
-    df['Adjusted Current Difference'] = abs(df['Away Team Adjusted Current Rank'] - df['Home Team Adjusted Current Rank'])
+    df['Adjusted Generic Sports Fan Preseason Winner'] = df.apply(lambda row: row['Away Team'] if row['Away Team Adjusted Generic Sports Fan Preseason Rank'] > row['Home Team Adjusted Generic Sports Fan Preseason Rank'] else (row['Home Team'] if row['Away Team Adjusted Generic Sports Fan Preseason Rank'] < row['Home Team Adjusted Generic Sports Fan Preseason Rank'] else 'Tie'), axis=1)
+    df['Adjusted Generic Sports Fan Preseason Difference'] = abs(df['Away Team Adjusted Generic Sports Fan Preseason Rank'] - df['Home Team Adjusted Massey-Peabody Preseason Rank'])
 
-    df['Same Winner?'] = df.apply(lambda row: 'Same' if row['Preseason Winner'] == row['Adjusted Preseason Winner'] == row['Current Winner'] == row['Adjusted Current Winner'] else 'Different', axis=1)
-    df['Same Adjusted Preseason Winner?'] = df.apply(lambda row: 'Same' if row['Adjusted Preseason Winner'] == row['Adjusted Current Winner'] else 'Different', axis=1)
-    df['Same Current and Adjusted Current Winner?'] = df.apply(lambda row: 'Same' if row['Current Winner'] == row['Adjusted Current Winner'] else 'Different', axis=1)
+    df['Away Team Massey-Peabody Current Rank'] = df['Away Team'].map(lambda team: stadiums[team][6] if team in stadiums else 'NA')
+    df['Home Team Massey-Peabody Current Rank'] = df['Home Team'].map(lambda team: stadiums[team][6] if team in stadiums else 'NA')
+
+    df['Away Team Generic Sports Fan Current Rank'] = df['Away Team'].map(lambda team: stadiums[team][8] if team in stadiums else 'NA')
+    df['Home Team Generic Sports Fan Current Rank'] = df['Home Team'].map(lambda team: stadiums[team][8] if team in stadiums else 'NA')
+
+    df['Massey-Peabody Current Winner'] = df.apply(lambda row: row['Away Team'] if row['Away Team Massey-Peabody Current Rank'] > row['Home Team Massey-Peabody Current Rank'] else (row['Home Team'] if row['Away Team Massey-Peabody Current Rank'] < row['Home Team Massey-Peabody Current Rank'] else 'Tie'), axis=1)
+    df['Massey-Peabody Current Difference'] = abs(df['Away Team Massey-Peabody Current Rank'] - df['Home Team Massey-Peabody Current Rank'])
+
+    df['Generic Sports Fan Current Winner'] = df.apply(lambda row: row['Away Team'] if row['Away Team Generic Sports Fan Current Rank'] > row['Home Team Generic Sports Fan Current Rank'] else (row['Home Team'] if row['Away Team Generic Sports Fan Current Rank'] < row['Home Team Generic Sports Fan Current Rank'] else 'Tie'), axis=1)
+    df['Generic Sports Fan Current Difference'] = abs(df['Away Team Generic Sports Fan Current Rank'] - df['Home Team Generic Sports Fan Current Rank'])
+
+    df['Away Team Adjusted Massey-Peabody Current Rank'] = df['Away Team'].map(lambda team: stadiums[team][6]) + np.where((df['Away Travel Advantage'] < -400) & (df['Home Stadium'] == df['Actual Stadium']), -.125, 0) - pd.to_numeric(df['Away Timezone Advantage'] * .1, errors='coerce').fillna(0) + pd.to_numeric(df['Weekly Away Rest Advantage'], errors='coerce').fillna(0) * .125 + df['Away Team Current Week Cumulative Rest Advantage'] * .0625 + np.where((df['Away Team'].map(lambda team: stadiums[team][0])) != df['Home Team'].map(lambda team: stadiums[team][0]), df['Away Team'].map(lambda team: stadiums[team][10]), 0)
+    df['Home Team Adjusted Massey-Peabody Current Rank'] = df['Home Team'].map(lambda team: stadiums[team][6]) + np.where((df['Away Travel Advantage'] < -400) & (df['Home Stadium'] == df['Actual Stadium']), .125, 0) + pd.to_numeric(df['Home Timezone Advantage'] * .1, errors='coerce').fillna(0) + pd.to_numeric(df['Weekly Home Rest Advantage'], errors='coerce').fillna(0) * .125 + df['Home Team Current Week Cumulative Rest Advantage'] * .0625 + np.where((df['Away Team'].map(lambda team: stadiums[team][0])) != df['Home Team'].map(lambda team: stadiums[team][0]), df['Home Team'].map(lambda team: stadiums[team][9]), 0)
+
+    df['Away Team Adjusted Generic Sports Fan Current Rank'] = df['Away Team'].map(lambda team: stadiums[team][8]) + np.where((df['Away Travel Advantage'] < -400) & (df['Home Stadium'] == df['Actual Stadium']), -.125, 0) - pd.to_numeric(df['Away Timezone Advantage'] * .1, errors='coerce').fillna(0) + pd.to_numeric(df['Weekly Away Rest Advantage'], errors='coerce').fillna(0) * .125 + df['Away Team Current Week Cumulative Rest Advantage'] * .0625 + np.where((df['Away Team'].map(lambda team: stadiums[team][0])) != df['Home Team'].map(lambda team: stadiums[team][0]), df['Away Team'].map(lambda team: stadiums[team][10]), 0)
+    df['Home Team Adjusted Generic Sports Fan Current Rank'] = df['Home Team'].map(lambda team: stadiums[team][8]) + np.where((df['Away Travel Advantage'] < -400) & (df['Home Stadium'] == df['Actual Stadium']), .125, 0) + pd.to_numeric(df['Home Timezone Advantage'] * .1, errors='coerce').fillna(0) + pd.to_numeric(df['Weekly Home Rest Advantage'], errors='coerce').fillna(0) * .125 + df['Home Team Current Week Cumulative Rest Advantage'] * .0625 + np.where((df['Away Team'].map(lambda team: stadiums[team][0])) != df['Home Team'].map(lambda team: stadiums[team][0]), df['Home Team'].map(lambda team: stadiums[team][9]), 0)
+
+    df['Adjusted Massey-Peabody Current Winner'] = df.apply(lambda row: row['Away Team'] if row['Away Team Adjusted Massey-Peabody Current Rank'] > row['Home Team Adjusted Massey-Peabody Current Rank'] else (row['Home Team'] if row['Away Team Adjusted Massey-Peabody Current Rank'] < row['Home Team Adjusted Massey-Peabody Current Rank'] else 'Tie'), axis=1)
+    df['Adjusted Massey-Peabody Current Difference'] = abs(df['Away Team Adjusted Massey-Peabody Current Rank'] - df['Home Team Adjusted Massey-Peabody Current Rank'])
+
+    df['Adjusted Generic Sports Fan Current Winner'] = df.apply(lambda row: row['Away Team'] if row['Away Team Adjusted Generic Sports Fan Current Rank'] > row['Home Team Adjusted Generic Sports Fan Current Rank'] else (row['Home Team'] if row['Away Team Adjusted Generic Sports Fan Current Rank'] < row['Home Team Adjusted Generic Sports Fan Current Rank'] else 'Tie'), axis=1)
+    df['Adjusted Generic Sports Fan Current Difference'] = abs(df['Away Team Adjusted Generic Sports Fan Current Rank'] - df['Home Team Adjusted Generic Sports Fan Current Rank'])
+
+	df['Massey-Peabody Bayesian Same Winner Across All Metrics'] = df.apply(lambda row: 'Same' if row['Massey-Peabody Preseason Winner'] == row['Adjusted Massey-Peabody Preseason Winner'] == row['Massey-Peabody Current Winner'] == row['Adjusted Massey-Peabody Current Winner'] else 'Different', axis=1)
+	df['Generic Sports Fan Bayesian Same Adjusted Winner'] = df.apply(lambda row: 'Same' if row['Generic Sports Fan Preseason Winner'] == row['Adjusted Generic Sports Fan Preseason Winner'] == row['Generic Sports Fan Current Winner'] == row['Adjusted Generic Sports Fan Current Winner'] else 'Different', axis=1)
+
+	df['Massey-Peabody Bayesian Same Current and Preseason Adjusted Winner'] = df.apply(lambda row: 'Same' if row['Adjusted Massey-Peabody Preseason Winner'] == row['Adjusted Massey-Peabody Current Winner'] else 'Different', axis=1)
+	df['Generic Sports Fan Bayesian Current and Preseason Adjusted Winner'] = df.apply(lambda row: 'Same' if row['Adjusted Generic Sports Fan Preseason Winner'] == row['Adjusted Generic Sports Fan Current Winner'] else 'Different', axis=1)
+
+	df['Massey-Peabody Bayesian Same Current and Adjusted Current Winner'] = df.apply(lambda row: 'Same' if row['Massey-Peabody Current Winner'] == row['Adjusted Massey-Peabody Current Winner'] else 'Different', axis=1)
+	df['Generic Sports Fan Bayesian Same Current and Adjusted Current Winner'] = df.apply(lambda row: 'Same' if row['Generic Sports Fan Current Winner'] == row['Adjusted Generic Sports Fan Current Winner'] else 'Different', axis=1)
 
     
     df['Thursday Night Game'] = 'False'
-    df["Thursday Night Game"] = df.apply(lambda row: 'True' if (row['Date'].weekday() == 3) and (row['Date'] != pd.to_datetime(thanksgiving_date)) and (row['Date'] != pd.to_datetime(boxing_day_date)) and (row['Date'] != pd.to_datetime(christmas_date))  else row["Thursday Night Game"], axis =1)
+    df["Thursday Night Game"] = df.apply(lambda row: 'True' if (row['Date'].weekday() == 3) and (row['Date'] != pd.to_datetime(thanksgiving_date)) and (row['Date'] != pd.to_datetime(boxing_day_date)) and (row['Date'] != pd.to_datetime(christmas_date)) else row["Thursday Night Game"], axis =1)
 
 
-    df['Home Team Winner?'] = df.apply(lambda row: 'Home Team' if row['Adjusted Current Winner'] == row['Home Team'] else 'Away Team', axis=1)
+    df['Masey-Peabody Home Team Winner?'] = df.apply(lambda row: 'Home Team' if row['Adjusted Massey-Peabody Current Winner'] == row['Home Team'] else 'Away Team', axis=1)
+    df['Generic Sports Fan Home Team Winner?'] = df.apply(lambda row: 'Home Team' if row['Adjusted Generic Sports Fan Current Winner'] == row['Home Team'] else 'Away Team', axis=1)
     #df['Divisional Matchup?'] = df.apply(lambda row: 'Divisional' if row['Home Team Division'] == row['Away Team Division'] else 'Non-divisional', axis=1)
     df['Divisional Matchup?'] = (df['Home Team Division'] == df['Away Team Division']).astype(int)
 
@@ -1026,10 +1037,7 @@ def collect_schedule_travel_ranking_data(pd, config: dict, schedule_rows):
         try:
             print("Fetching backup odds from nflreadpy...")
             
-            # 1. Determine the current NFL season
-            # If it's Jan/Feb, we are technically in the previous calendar year's season
-            now = datetime.now()
-            season = now.year if now.month > 3 else now.year - 1
+            season = target_year
             
             # 2. Load Schedule and Team Data
             df_schedule = nfl.load_schedules([season])
@@ -1296,10 +1304,10 @@ def collect_schedule_travel_ranking_data(pd, config: dict, schedule_rows):
         csv_df = df.copy()
     
         # Initialize columns that will be populated by DraftKings data or overridden with internal data
-        csv_df['Home Team Moneyline'] = np.nan
-        csv_df['Away Team Moneyline'] = np.nan
-        csv_df['Favorite'] = np.nan
-        csv_df['Underdog'] = np.nan
+        csv_df['Home Team Sportsbook Moneyline'] = np.nan
+        csv_df['Away Team Sportsbook Moneyline'] = np.nan
+        csv_df['Sportsbook Favorite'] = np.nan
+        csv_df['Sportsbook Underdog'] = np.nan
         csv_df['Home Team Sportsbook Spread'] = np.nan
         csv_df['Away Team Sportsbook Spread'] = np.nan
         
@@ -1314,50 +1322,30 @@ def collect_schedule_travel_ranking_data(pd, config: dict, schedule_rows):
                 ]
                 if not matching_row.empty:
                     # If a match is found, apply DraftKings moneyline odds
-                    csv_df.loc[index, 'Away Team Moneyline'] = matching_row.iloc[0]['Away Odds']
-                    csv_df.loc[index, 'Home Team Moneyline'] = matching_row.iloc[0]['Home Odds']
+                    csv_df.loc[index, 'Away Team Sportsbook Moneyline'] = matching_row.iloc[0]['Away Odds']
+                    csv_df.loc[index, 'Home Team Sportsbook Moneyline'] = matching_row.iloc[0]['Home Odds']
                     csv_df.loc[index, 'Away Team Sportsbook Spread'] = matching_row.iloc[0]['Away Spread']
                     csv_df.loc[index, 'Home Team Sportsbook Spread'] = matching_row.iloc[0]['Home Spread']					
                     
                     # Determine Favorite/Underdog based on DraftKings odds
                     # Assuming odds <= -110 typically indicates the favorite
                     if matching_row.iloc[0]['Home Odds'] <= -110:
-                        csv_df.loc[index, 'Favorite'] = csv_df.loc[index, 'Home Team']
-                        csv_df.loc[index, 'Underdog'] = csv_df.loc[index, 'Away Team']
+                        csv_df.loc[index, 'Sportsbook Favorite'] = csv_df.loc[index, 'Home Team']
+                        csv_df.loc[index, 'Sportsbook Underdog'] = csv_df.loc[index, 'Away Team']
                     else:
-                        csv_df.loc[index, 'Favorite'] = csv_df.loc[index, 'Away Team']
-                        csv_df.loc[index, 'Underdog'] = csv_df.loc[index, 'Home Team']
+                        csv_df.loc[index, 'Sportsbook Favorite'] = csv_df.loc[index, 'Away Team']
+                        csv_df.loc[index, 'Sportsbook Underdog'] = csv_df.loc[index, 'Home Team']
     
-        # Calculate internal data for all rows. These values will be used to override
-        # any missing or incomplete DraftKings data.
-        csv_df['Adjusted Home Points'] = csv_df['Home Team Adjusted Current Rank']
-        csv_df['Adjusted Away Points'] = csv_df['Away Team Adjusted Current Rank']
-    
-        csv_df['Preseason Spread'] = abs(csv_df['Away Team Adjusted Preseason Rank'] - csv_df['Home Team Adjusted Preseason Rank'])
 
-        # Determine Favorite and Underdog
-		
-        missing_odds_mask = pd.isna(csv_df['Favorite'])
-        
-        # Use a vectorized approach to conditionally update only those rows.
-        csv_df.loc[missing_odds_mask, 'Favorite'] = csv_df[missing_odds_mask].apply(
-            lambda row: row['Home Team'] if row['Home Team Adjusted Current Rank'] >= row['Away Team Adjusted Current Rank'] else row['Away Team'], axis=1
-        )
-        
-        csv_df.loc[missing_odds_mask, 'Underdog'] = csv_df[missing_odds_mask].apply(
-            lambda row: row['Home Team'] if row['Home Team Adjusted Current Rank'] < row['Away Team Adjusted Current Rank'] else row['Away Team'], axis=1
-        )
 
-        # Adjust Spread based on Favorite
-        csv_df['Adjusted Spread'] = abs(csv_df['Away Team Adjusted Current Rank'] - csv_df['Home Team Adjusted Current Rank'])
     
         # Helper function to get moneyline based on calculated spread and internal odds dictionary
-        def get_moneyline(row, odds, team_type):
+        def get_mp_moneyline(row, odds, team_type):
             """
             Calculates moneyline based on a team's adjusted spread and the predefined odds dictionary.
             Finds the closest spread in the dictionary if an exact match is not found.
             """
-            spread = round(row['Adjusted Spread'] * 2) / 2
+            spread = round(row['Adjusted Massey-Peabody Current Difference'] * 2) / 2
             
             # Find the closest spread in the odds dictionary to handle non-exact matches
             closest_spread = min(odds.keys(), key=lambda k: abs(k - spread))
@@ -1366,7 +1354,32 @@ def collect_schedule_travel_ranking_data(pd, config: dict, schedule_rows):
             
             # Determine which moneyline (favorite or underdog) applies to the current team
             if team_type == 'home':
-                if row['Favorite'] == row['Home Team']:
+                if row['Adjusted Massey-Peabody Current Winner'] == row['Home Team']:
+                    return moneyline_tuple[0] # Favorite odds
+                else:
+                    return moneyline_tuple[1] # Underdog odds
+            elif team_type == 'away':
+                if row['Favorite'] == row['Away Team']:
+                    return moneyline_tuple[0] # Favorite odds
+                else:
+                    return moneyline_tuple[1] # Underdog odds
+            return np.nan # Should not be reached under normal circumstances
+	        # Helper function to get moneyline based on calculated spread and internal odds dictionary
+        def get_gsf_moneyline(row, odds, team_type):
+            """
+            Calculates moneyline based on a team's adjusted spread and the predefined odds dictionary.
+            Finds the closest spread in the dictionary if an exact match is not found.
+            """
+            spread = round(row['Adjusted Generic Sports Fan Current Difference'] * 2) / 2
+            
+            # Find the closest spread in the odds dictionary to handle non-exact matches
+            closest_spread = min(odds.keys(), key=lambda k: abs(k - spread))
+            
+            moneyline_tuple = odds[closest_spread] # Use the moneyline values for the closest spread
+            
+            # Determine which moneyline (favorite or underdog) applies to the current team
+            if team_type == 'home':
+                if row['Adjusted Generic Sports Fan Current Winner'] == row['Home Team']:
                     return moneyline_tuple[0] # Favorite odds
                 else:
                     return moneyline_tuple[1] # Underdog odds
@@ -1378,122 +1391,131 @@ def collect_schedule_travel_ranking_data(pd, config: dict, schedule_rows):
             return np.nan # Should not be reached under normal circumstances
     
         # Calculate internal moneyline values for all games
-        csv_df['Internal Home Team Moneyline'] = csv_df.apply(
-            lambda row: get_moneyline(row, odds, 'home'), axis=1
+        csv_df['Massey-Peabody Home Team Moneyline'] = csv_df.apply(
+            lambda row: get_mp_moneyline(row, odds, 'home'), axis=1
         )
-        csv_df['Internal Away Team Moneyline'] = csv_df.apply(
-            lambda row: get_moneyline(row, odds, 'away'), axis=1
+        csv_df['Massey-Peabody Away Team Moneyline'] = csv_df.apply(
+            lambda row: get_mp_moneyline(row, odds, 'away'), axis=1
         )
-        override_condition = pd.isna(csv_df['Away Team Moneyline']) | pd.isna(csv_df['Home Team Moneyline'])
-        csv_df['No Live Odds Available - Internal Rankings Used for Moneyline Calculation'] = np.where(override_condition, 'True', 'False')
-        overridden_games_df = csv_df[override_condition]
-        overridden_games_df = csv_df[override_condition][['Home Team', 'Away Team', 'Actual Stadium', 'Date', 'Home Team Moneyline', 'Away Team Moneyline', 'Internal Home Team Moneyline', 'Internal Away Team Moneyline', 'Home Team Sportsbook Spread', 'Away Team Sportsbook Spread', 'Home Team Adjusted Current Rank', 'Away Team Adjusted Current Rank']].copy()
 
-        for index, row in overridden_games_df.iterrows():
-            # Override Moneyline if DraftKings data was missing (still NaN)
-            if pd.isna(row['Away Team Moneyline']) or row['Away Team Moneyline'] is None:
-                overridden_games_df.loc[index, 'Away Team Moneyline'] = row['Internal Away Team Moneyline']
-            if pd.isna(row['Home Team Moneyline']) or row['Home Team Moneyline'] is None:
-                overridden_games_df.loc[index, 'Home Team Moneyline'] = row['Internal Home Team Moneyline']
-            if pd.isna(row['Home Team Sportsbook Spread']) or row['Home Team Sportsbook Spread'] is None:
-                overridden_games_df.loc[index, 'Home Team Sportsbook Spread'] = row['Away Team Adjusted Current Rank'] - row['Home Team Adjusted Current Rank']
-            if pd.isna(row['Away Team Sportsbook Spread']) or row['Away Team Sportsbook Spread'] is None:
-                overridden_games_df.loc[index, 'Away Team Sportsbook Spread'] = row['Home Team Adjusted Current Rank'] - row['Away Team Adjusted Current Rank']
+        # Calculate internal moneyline values for all games
+        csv_df['Generic Sports Fan Home Team Moneyline'] = csv_df.apply(
+            lambda row: get_gsf_moneyline(row, odds, 'home'), axis=1
+        )
+        csv_df['Generic Sports Fan Away Team Moneyline'] = csv_df.apply(
+            lambda row: get_gsf_moneyline(row, odds, 'away'), axis=1
+        )
+		
+
 #        st.subheader('Games with Unavailable Live Odds')
 #        st.write('This dataframe contains the games where live odds from the Live Odds API were unavailable. This will likely happen for lookahead lines and future weeks')
 #        st.write(overridden_games_df)
         st.write('')
         st.write('')
         st.write('')
-        csv_df['Internal Home Team Spread'] = csv_df['Away Team Adjusted Current Rank'] - csv_df['Home Team Adjusted Current Rank']
-        csv_df['Internal Away Team Spread'] = csv_df['Home Team Adjusted Current Rank'] - csv_df['Away Team Adjusted Current Rank']
+        csv_df['Massey-Peabody Home Team Spread'] = csv_df['Away Team Adjusted Massey-Peabody Current Rank'] - csv_df['Home Team Adjusted Massey-Peabody Current Rank']
+        csv_df['Massey-Peabody Away Team Spread'] = csv_df['Home Team Adjusted Massey-Peabody Current Rank'] - csv_df['Away Team Adjusted Massey-Peabody Current Rank']
+
+        csv_df['Generic Sports Fan Home Team Spread'] = csv_df['Away Team Adjusted Generic Sports Fan Current Rank'] - csv_df['Home Team Adjusted Generic Sports Fan Current Rank']
+        csv_df['Generic Sports Fan Away Team Spread'] = csv_df['Home Team Adjusted Generic Sports Fan Current Rank'] - csv_df['Away Team Adjusted Generic Sports Fan Current Rank']
+		
         # Iterate through the DataFrame to apply overrides and calculate implied/fair odds
         for index, row in csv_df.iterrows():
-            # Override Moneyline if DraftKings data was missing (still NaN)
-            if pd.isna(row['Away Team Moneyline']):
-                csv_df.loc[index, 'Away Team Moneyline'] = row['Internal Away Team Moneyline']
-            if pd.isna(row['Home Team Moneyline']):
-                csv_df.loc[index, 'Home Team Moneyline'] = row['Internal Home Team Moneyline']
-            if pd.isna(row['Home Team Sportsbook Spread']) or row['Home Team Sportsbook Spread'] is None:
-                csv_df.loc[index, 'Home Team Sportsbook Spread'] = row['Internal Home Team Spread']
-            if pd.isna(row['Away Team Sportsbook Spread']) or row['Away Team Sportsbook Spread'] is None:
-                csv_df.loc[index, 'Away Team Sportsbook Spread'] = row['Internal Away Team Spread']		            
-            # Override Favorite/Underdog if not set by DraftKings (i.e., still NaN)
-            if pd.isna(row['Favorite']) or row['Favorite'] is None:
-                # Determine Favorite and Underdog based on internal ranks
-                if row['Home Team Adjusted Current Rank'] >= row['Away Team Adjusted Current Rank']:
-                    csv_df.loc[index, 'Favorite'] = row['Home Team']
-                    csv_df.loc[index, 'Underdog'] = row['Away Team']
-                else:
-                    csv_df.loc[index, 'Favorite'] = row['Away Team']
-                    csv_df.loc[index, 'Underdog'] = row['Home Team']
-
-    
             # Calculate Implied Odds for the final (potentially overridden) moneyline
-            away_moneyline = csv_df.loc[index, 'Away Team Moneyline']
-            home_moneyline = csv_df.loc[index, 'Home Team Moneyline']
+            away_moneyline = csv_df.loc[index, 'Sportsbook Away Team Moneyline']
+            home_moneyline = csv_df.loc[index, 'Sportsbook Home Team Moneyline']
     
             # Handle potential NaN values before calculating implied odds
             if pd.isna(away_moneyline):
-                csv_df.loc[index, 'Away Team Implied Odds to Win'] = np.nan
+                csv_df.loc[index, 'Away Team Sportsbook Implied Odds to Win'] = np.nan
             elif away_moneyline > 0:
-                csv_df.loc[index, 'Away Team Implied Odds to Win'] = 100 / (away_moneyline + 100)
+                csv_df.loc[index, 'Away Team Sportsbook Implied Odds to Win'] = 100 / (away_moneyline + 100)
             else:
-                csv_df.loc[index, 'Away Team Implied Odds to Win'] = abs(away_moneyline) / (abs(away_moneyline) + 100)
+                csv_df.loc[index, 'Away Team Sportsbook Implied Odds to Win'] = abs(away_moneyline) / (abs(away_moneyline) + 100)
             
             if pd.isna(home_moneyline):
-                csv_df.loc[index, 'Home team Implied Odds to Win'] = np.nan
+                csv_df.loc[index, 'Home team Sportsbook Implied Odds to Win'] = np.nan
             elif home_moneyline > 0:
-                csv_df.loc[index, 'Home team Implied Odds to Win'] = 100 / (home_moneyline + 100)
+                csv_df.loc[index, 'Home team Sportsbook Implied Odds to Win'] = 100 / (home_moneyline + 100)
             else:
-                csv_df.loc[index, 'Home team Implied Odds to Win'] = abs(home_moneyline) / (abs(home_moneyline) + 100)
+                csv_df.loc[index, 'Home team Sportsbook Implied Odds to Win'] = abs(home_moneyline) / (abs(home_moneyline) + 100)
+
+				
+	        away_mp_moneyline = csv_df.loc[index, 'Massey-Peabody Away Team Moneyline']
+            home_mp_moneyline = csv_df.loc[index, 'Massey-Peabody Home Team Moneyline']
+    
+            # Handle potential NaN values before calculating implied odds
+            if pd.isna(away_mp_moneyline):
+                csv_df.loc[index, 'Away Team Massey-Peabody Implied Odds to Win'] = np.nan
+            elif away_mp_moneyline > 0:
+                csv_df.loc[index, 'Away Team Massey-Peabody Implied Odds to Win'] = 100 / (away_mp_moneyline + 100)
+            else:
+                csv_df.loc[index, 'Away Team Massey-Peabody Implied Odds to Win'] = abs(away_mp_moneyline) / (abs(away_mp_moneyline) + 100)
             
-            # Calculate Implied Odds for Internal Moneyline (always calculated regardless of DK data)
-            internal_away_moneyline = row['Internal Away Team Moneyline']
-            internal_home_moneyline = row['Internal Home Team Moneyline']
-    
-            if pd.isna(internal_away_moneyline):
-                csv_df.loc[index, 'Internal Away Team Implied Odds to Win'] = np.nan
-            elif internal_away_moneyline > 0:
-                csv_df.loc[index, 'Internal Away Team Implied Odds to Win'] = 100 / (internal_away_moneyline + 100)
+            if pd.isna(home_mp_moneyline):
+                csv_df.loc[index, 'Home team Massey-Peabody Implied Odds to Win'] = np.nan
+            elif home_mp_moneyline > 0:
+                csv_df.loc[index, 'Home team Massey-Peabody Implied Odds to Win'] = 100 / (home_mp_moneyline + 100)
             else:
-                csv_df.loc[index, 'Internal Away Team Implied Odds to Win'] = abs(internal_away_moneyline) / (abs(internal_away_moneyline) + 100)
+                csv_df.loc[index, 'Home Team Massey-Peabody Implied Odds to Win'] = abs(home_mp_moneyline) / (abs(home_mp_moneyline) + 100)
+
+		    away_gsf_moneyline = csv_df.loc[index, 'Generic Sports Fan Away Team Moneyline']
+            home_gsf_moneyline = csv_df.loc[index, 'Generic Sports Fan Home Team Moneyline']
     
-            if pd.isna(internal_home_moneyline):
-                csv_df.loc[index, 'Internal Home team Implied Odds to Win'] = np.nan
-            elif internal_home_moneyline > 0:
-                csv_df.loc[index, 'Internal Home team Implied Odds to Win'] = 100 / (internal_home_moneyline + 100)
+            # Handle potential NaN values before calculating implied odds
+            if pd.isna(away_gsf_moneyline):
+                csv_df.loc[index, 'Away Team Generic Sports Fan Implied Odds to Win'] = np.nan
+            elif away_gsf_moneyline > 0:
+                csv_df.loc[index, 'Away Team Generic Sports Fan Implied Odds to Win'] = 100 / (away_gsf_moneyline + 100)
             else:
-                csv_df.loc[index, 'Internal Home team Implied Odds to Win'] = abs(internal_home_moneyline) / (abs(internal_home_moneyline) + 100)
+                csv_df.loc[index, 'Away Team Generic Sports Fan Implied Odds to Win'] = abs(away_gsf_moneyline) / (abs(away_gsf_moneyline) + 100)
+            
+            if pd.isna(home_gsf_moneyline):
+                csv_df.loc[index, 'Home Team Generic Sports Fan Implied Odds to Win'] = np.nan
+            elif home_gsf_moneyline > 0:
+                csv_df.loc[index, 'Home Team Generic Sports Fan Implied Odds to Win'] = 100 / (home_gsf_moneyline + 100)
+            else:
+                csv_df.loc[index, 'Home Team Generic Sports Fan Implied Odds to Win'] = abs(home_gsf_moneyline) / (abs(home_gsf_moneyline) + 100)
     
             # Calculate Fair Odds for the final (potentially overridden) moneyline
-            away_implied_odds = csv_df.loc[index, 'Away Team Implied Odds to Win']
-            home_implied_odds = csv_df.loc[index, 'Home team Implied Odds to Win']
+            away_implied_odds = csv_df.loc[index, 'Away Team Sportsbook Implied Odds to Win']
+            home_implied_odds = csv_df.loc[index, 'Home team Sportsbook Implied Odds to Win']
             
             # Ensure sum is not zero or NaN before division
             if pd.isna(away_implied_odds) or pd.isna(home_implied_odds) or (away_implied_odds + home_implied_odds) == 0:
-                csv_df.loc[index, 'Away Team Fair Odds'] = np.nan
-                csv_df.loc[index, 'Home Team Fair Odds'] = np.nan
+                csv_df.loc[index, 'Away Team Sportsbook Fair Odds'] = np.nan
+                csv_df.loc[index, 'Home Team Sportsbook Fair Odds'] = np.nan
             else:
-                csv_df.loc[index, 'Away Team Fair Odds'] = away_implied_odds / (away_implied_odds + home_implied_odds)
-                csv_df.loc[index, 'Home Team Fair Odds'] = home_implied_odds / (away_implied_odds + home_implied_odds)
+                csv_df.loc[index, 'Away Team Sportsbook Fair Odds'] = away_implied_odds / (away_implied_odds + home_implied_odds)
+                csv_df.loc[index, 'Home Team Sportsbook Fair Odds'] = home_implied_odds / (away_implied_odds + home_implied_odds)
     
             # Calculate Fair Odds for Internal Moneyline (always calculated)
-            internal_away_implied_odds = csv_df.loc[index, 'Internal Away Team Implied Odds to Win']
-            internal_home_implied_odds = csv_df.loc[index, 'Internal Home team Implied Odds to Win']
+            mp_away_implied_odds = csv_df.loc[index, 'Away Team Massey-Peabody Implied Odds to Win']
+            mp_home_implied_odds = csv_df.loc[index, 'Home Team Massey-Peabody Implied Odds to Win']
             
-            if pd.isna(internal_away_implied_odds) or pd.isna(internal_home_implied_odds) or (internal_away_implied_odds + internal_home_implied_odds) == 0:
-                csv_df.loc[index, 'Internal Away Team Fair Odds'] = np.nan
-                csv_df.loc[index, 'Internal Home Team Fair Odds'] = np.nan
+            if pd.isna(mp_away_implied_odds) or pd.isna(mp_home_implied_odds) or (mp_away_implied_odds + mp_home_implied_odds) == 0:
+                csv_df.loc[index, 'Away Team Massey-Peabody Fair Odds'] = np.nan
+                csv_df.loc[index, 'Home Team Massey-Peabody Fair Odds'] = np.nan
             else:
-                csv_df.loc[index, 'Internal Away Team Fair Odds'] = internal_away_implied_odds / (internal_away_implied_odds + internal_home_implied_odds)
-                csv_df.loc[index, 'Internal Home Team Fair Odds'] = internal_home_implied_odds / (internal_away_implied_odds + internal_home_implied_odds)
+                csv_df.loc[index, 'Away Team Massey-Peabody Fair Odds'] = mp_away_implied_odds / (mp_away_implied_odds + mp_home_implied_odds)
+                csv_df.loc[index, 'Home Team Massey-Peabody Fair Odds'] = mp_home_implied_odds / (mp_away_implied_odds + mp_home_implied_odds)
+
+            # Calculate Fair Odds for Internal Moneyline (always calculated)
+            gsf_away_implied_odds = csv_df.loc[index, 'Away Team Generic Sports Fan Implied Odds to Win']
+            gsf_home_implied_odds = csv_df.loc[index, 'Home Team Generic Sports Fan Implied Odds to Win']
+            
+            if pd.isna(gsf_away_implied_odds) or pd.isna(gsf_home_implied_odds) or (gsf_away_implied_odds + gsf_home_implied_odds) == 0:
+                csv_df.loc[index, 'Away Team Generic Sports Fan Fair Odds'] = np.nan
+                csv_df.loc[index, 'Home Team Generic Sports Fan Fair Odds'] = np.nan
+            else:
+                csv_df.loc[index, 'Away Team Generic Sports Fan Fair Odds'] = gsf_away_implied_odds / (gsf_away_implied_odds + gsf_home_implied_odds)
+                csv_df.loc[index, 'Home Team Generic Sports Fan Fair Odds'] = gsf_home_implied_odds / (gsf_away_implied_odds + gsf_home_implied_odds)
     
             # Round all calculated odds to 4 decimal places
-            for col in ['Away Team Implied Odds to Win', 'Home team Implied Odds to Win',
-                        'Away Team Fair Odds', 'Home Team Fair Odds',
-                        'Internal Away Team Implied Odds to Win', 'Internal Home team Implied Odds to Win',
-                        'Internal Away Team Fair Odds', 'Internal Home Team Fair Odds']:
+            for col in ['Away Team Massey-Peabody Implied Odds to Win', 'Home Team Massey-Peabody Implied Odds to Win', 'Away Team Sportsbook Implied Odds to Win',
+					   'Home Team Sportsbook Implied Odds to Win', 'Away Team Generic Sports Fan Implied Odds to Win', 'Home Team Generic Sports Fan Implied Odds to Win',
+					   'Away Team Sportsbook Fair Odds', 'Home Team Sportsbook Fair Odds', 'Away Team Massey-Peabody Fair Odds', 'Home Team Massey-Peabody Fair Odds',
+					   'Away Team Generic Sports Fan Fair Odds', 'Home Team Generic Sports Fan Fair Odds']:
                 if not pd.isna(csv_df.loc[index, col]): # Only round if not NaN
                     csv_df.loc[index, col] = round(csv_df.loc[index, col], 4)
     
@@ -1506,12 +1528,20 @@ def collect_schedule_travel_ranking_data(pd, config: dict, schedule_rows):
         
             
 
-    # Calculate expected win advantage for away team
-    df["Away Team Expected Win Advantage"] = round(df["Away Team Fair Odds"] - 0.5,4)
+	df["Away Team Fair Odds"] = (
+	    df["Away Team Sportsbook Fair Odds"]
+	    .fillna(df["Away Team Massey-Peabody Fair Odds"])
+	    .fillna(df["Away Team Generic Sports Fan Fair Odds"])
+	)
+	
+	df["Home Team Fair Odds"] = (
+	    df["Home Team Sportsbook Fair Odds"]
+	    .fillna(df["Home Team Massey-Peabody Fair Odds"])
+	    .fillna(df["Home Team Generic Sports Fan Fair Odds"])
+	)
 
-    # Calculate expected win advantage for home team
-    df["Home Team Expected Win Advantage"] = round(df["Home Team Fair Odds"] - 0.5,4)
-
+	df["Away Team Expected Win Advantage"] = round(df["Away Team Fair Odds"] - 0.5, 4)
+	df["Home Team Expected Win Advantage"] = round(df["Home Team Fair Odds"] - 0.5, 4)
     # Initialize an empty dictionary to store team information
     team_dict = {}
 
@@ -1659,7 +1689,7 @@ def collect_schedule_travel_ranking_data(pd, config: dict, schedule_rows):
 
         # Mark Thanksgiving Favorites
         # Find Week 13 games and winners
-        week13_df = df[df["Week"] == "Week 13"]
+        week13_df = df[df["Week"] == thanksgiving_week]
         week13_winners = week13_df["Favorite"].unique()
         
         # Create new columns and mark Thanksgiving Favorites (returning 1 or 0)
@@ -1679,7 +1709,7 @@ def collect_schedule_travel_ranking_data(pd, config: dict, schedule_rows):
 
         # Mark Christmas Favorites
         # Find Week 18 games and winners
-        week18_df = df[df["Week"] == "Week 18"]
+        week18_df = df[df["Week"] == christmas_week]
         week18_winners = week18_df["Favorite"].unique()
 
         # Create new columns and mark Christmas Favorites (returning 1 or 0)
@@ -1697,7 +1727,7 @@ def collect_schedule_travel_ranking_data(pd, config: dict, schedule_rows):
         )
         
         # Mark Thanksgiving Underdogs
-        week13_df = df[df["Week"] == "Week 13"]
+        week13_df = df[df["Week"] == thanksgiving_week]
         week13_underdogs = week13_df["Underdog"].unique() # Changed variable name to underdogs
         
 
@@ -1718,7 +1748,7 @@ def collect_schedule_travel_ranking_data(pd, config: dict, schedule_rows):
 
         # Mark Christmas Underdogs
         # Find Week 18 games and underdogs
-        week18_df = df[df["Week"] == "Week 18"]
+        week18_df = df[df["Week"] == christmas_week]
         week18_underdogs = week18_df["Underdog"].unique() # Changed variable name to underdogs
 
         # Create new columns and mark Christmas Underdogs (returning 1 or 0)
@@ -1856,7 +1886,7 @@ def collect_schedule_travel_ranking_data(pd, config: dict, schedule_rows):
     
     public_pick_df = public_pick_df.drop_duplicates()
     
-    public_pick_df.to_csv("Raw Pick Data.csv", index = False)
+    public_pick_df.to_csv(f"contest-historical-data/raw-public-pick-data{target_year}.csv", index = False)
     
     # ==============================================================================
     # SECTION 2: API DATA COLLECTION (REPLACED BY nflreadpy)
@@ -2116,6 +2146,11 @@ def collect_schedule_travel_ranking_data(pd, config: dict, schedule_rows):
     
     # Final date manipulation (e.g., correcting Thanksgiving/Christmas week numbers)
     # NOTE: The df.loc assignments must be run *after* the Calendar Date is populated.
+
+	condition_2026_date = (public_pick_df['Year'] == 2026) & (public_pick_df['Calendar Date'] >= pd.to_datetime('2026-11-28'))
+	public_pick_df.loc[condition_2026_date, 'Week'] += 1
+	condition_2026_week = (public_pick_df['Year'] == 2026) & (public_pick_df['Calendar Date'] >= pd.to_datetime('2025-12-26'))
+	public_pick_df.loc[condition_2026_week, 'Week'] += 1
     
     # For Year 2025
     condition_2025_date = (public_pick_df['Year'] == 2025) & (public_pick_df['Calendar Date'] >= pd.to_datetime('2025-11-29'))
@@ -2217,8 +2252,7 @@ def collect_schedule_travel_ranking_data(pd, config: dict, schedule_rows):
         else:
             # No match found in public_pick_df for this team/week
             return np.nan
-    
-    # --- Apply the function to your week_df ---
+
     
     print("Populating 'Away Team Public Pick %' in week_df...")
     consolidated_df["Away Team Public Pick %"] = consolidated_df.apply(
@@ -2236,25 +2270,9 @@ def collect_schedule_travel_ranking_data(pd, config: dict, schedule_rows):
 
     # Save the consolidated DataFrame to a single CSV file
 
-    if selected_contest == 'Circa':
-        consolidated_csv_file = "nfl_schedule_circa.csv"
-    elif selected_contest == 'Splash Sports':
-        consolidated_csv_file = "nfl_schedule_splash.csv"
-    else:
-        consolidated_csv_file = "nfl_schedule_dk.csv"
+	consolidated_csv_file = "nfl_schedule_circa.csv"
+
     consolidated_df.to_csv(consolidated_csv_file, index=False)    
     collect_schedule_travel_ranking_data_nfl_schedule_df = consolidated_df
     
     return collect_schedule_travel_ranking_data_nfl_schedule_df
-
-#def get_live_contest_data():
-#	if selected_contest = 'Circa':
-#	elif selected_contest = 'Splash Sports':
-#		if subcontest = '':
-#		elif subcontest = '':
-#		elif subcontest = '':
-#		elif subcontest = '':
-#		elif subcontest = '':
-#		elif subcontest = '':
-#		elif subcontest = '':
-#	else:

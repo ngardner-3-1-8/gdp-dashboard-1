@@ -1434,7 +1434,7 @@ def collect_schedule_travel_ranking_data(pd):
                 csv_df.loc[index, 'Home team Sportsbook Implied Odds to Win'] = abs(home_moneyline) / (abs(home_moneyline) + 100)
 
 				
-	        away_mp_moneyline = csv_df.loc[index, 'Massey-Peabody Away Team Moneyline']
+            away_mp_moneyline = csv_df.loc[index, 'Massey-Peabody Away Team Moneyline']
             home_mp_moneyline = csv_df.loc[index, 'Massey-Peabody Home Team Moneyline']
     
             # Handle potential NaN values before calculating implied odds
@@ -1452,7 +1452,7 @@ def collect_schedule_travel_ranking_data(pd):
             else:
                 csv_df.loc[index, 'Home Team Massey-Peabody Implied Odds to Win'] = abs(home_mp_moneyline) / (abs(home_mp_moneyline) + 100)
 
-		    away_gsf_moneyline = csv_df.loc[index, 'Generic Sports Fan Away Team Moneyline']
+            away_gsf_moneyline = csv_df.loc[index, 'Generic Sports Fan Away Team Moneyline']
             home_gsf_moneyline = csv_df.loc[index, 'Generic Sports Fan Home Team Moneyline']
     
             # Handle potential NaN values before calculating implied odds

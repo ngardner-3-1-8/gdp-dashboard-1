@@ -38,6 +38,12 @@ def update_annual_schedule():
         schedule_df['away_team'] = schedule_df['away_team'].map(team_map).fillna(schedule_df['away_team'])
         schedule_df['home_team'] = schedule_df['home_team'].map(team_map).fillna(schedule_df['home_team'])
 
+        schedule_df = schedule_df.rename(columns={
+            "away_team": "Away Team",
+            "home_team": "Home Team",
+            "week": "Week"  # Optional: standardizing the Week column as well
+        })
+
         # 5. Save to CSV
         output_dir = "nfl-schedules"
         if not os.path.exists(output_dir):

@@ -1673,50 +1673,50 @@ def collect_schedule_travel_ranking_data(schedule_df):
     # Apply the function to create the new columns for each week
 
     # 1. Define Favorite/Underdog for the WHOLE DataFrame
-	df["Favorite"] = (
-	    df["Sportsbook Favorite"]
-	    .fillna(df["Adjusted Massey-Peabody Current Winner"])
-	    .fillna(df["Adjusted Generic Sports Fan Current Winner"])
-	)
+    df["Favorite"] = (
+        df["Sportsbook Favorite"]
+        .fillna(df["Adjusted Massey-Peabody Current Winner"])
+        .fillna(df["Adjusted Generic Sports Fan Current Winner"])
+    )
 	
-	df["Underdog"] = np.where(
-	    df["Favorite"] == df["Home Team"], 
-	    df["Away Team"], 
-	    df["Home Team"]
-	)
+    df["Underdog"] = np.where(
+        df["Favorite"] == df["Home Team"], 
+        df["Away Team"], 
+        df["Home Team"]
+    )
 	
 	# 2. Identify Holiday Teams ONCE (Outside any loops)
 	# Using .unique() to get a set of teams for fast lookup
-	tg_winners = set(df[df["Week"] == thanksgiving_week]["Favorite"].unique())
-	tg_underdogs = set(df[df["Week"] == thanksgiving_week]["Underdog"].unique())
+    tg_winners = set(df[df["Week"] == thanksgiving_week]["Favorite"].unique())
+    tg_underdogs = set(df[df["Week"] == thanksgiving_week]["Underdog"].unique())
 	
-	xm_winners = set(df[df["Week"] == christmas_week]["Favorite"].unique())
-	xm_underdogs = set(df[df["Week"] == christmas_week]["Underdog"].unique())
+    xm_winners = set(df[df["Week"] == christmas_week]["Favorite"].unique())
+    xm_underdogs = set(df[df["Week"] == christmas_week]["Underdog"].unique())
 	
 	# 3. Create Holiday Columns using vectorized logic (No loop needed)
 	# Helper to check if a team is a Holiday Favorite
-	def mark_holiday(team_col, week_col, holiday_week, team_set):
-	    # Returns 1 if week is <= holiday week AND team is in the set
-	    return ((week_col <= holiday_week) & (team_col.isin(team_set))).astype(int)
+    def mark_holiday(team_col, week_col, holiday_week, team_set):
+        # Returns 1 if week is <= holiday week AND team is in the set
+        return ((week_col <= holiday_week) & (team_col.isin(team_set))).astype(int)
 	
 	# Apply Thanksgiving Flags
-	df["Away Team Thanksgiving Favorite"] = mark_holiday(df["Away Team"], df["Week"], thanksgiving_week, tg_winners)
-	df["Home Team Thanksgiving Favorite"] = mark_holiday(df["Home Team"], df["Week"], thanksgiving_week, tg_winners)
-	df["Away Team Thanksgiving Underdog"] = mark_holiday(df["Away Team"], df["Week"], thanksgiving_week, tg_underdogs)
-	df["Home Team Thanksgiving Underdog"] = mark_holiday(df["Home Team"], df["Week"], thanksgiving_week, tg_underdogs)
+    df["Away Team Thanksgiving Favorite"] = mark_holiday(df["Away Team"], df["Week"], thanksgiving_week, tg_winners)
+    df["Home Team Thanksgiving Favorite"] = mark_holiday(df["Home Team"], df["Week"], thanksgiving_week, tg_winners)
+    df["Away Team Thanksgiving Underdog"] = mark_holiday(df["Away Team"], df["Week"], thanksgiving_week, tg_underdogs)
+    df["Home Team Thanksgiving Underdog"] = mark_holiday(df["Home Team"], df["Week"], thanksgiving_week, tg_underdogs)
 	
 	# Apply Christmas Flags
-	df["Away Team Christmas Favorite"] = mark_holiday(df["Away Team"], df["Week"], christmas_week, xm_winners)
-	df["Home Team Christmas Favorite"] = mark_holiday(df["Home Team"], df["Week"], christmas_week, xm_winners)
-	df["Away Team Christmas Underdog"] = mark_holiday(df["Away Team"], df["Week"], christmas_week, xm_underdogs)
-	df["Home Team Christmas Underdog"] = mark_holiday(df["Home Team"], df["Week"], christmas_week, xm_underdogs)
+    df["Away Team Christmas Favorite"] = mark_holiday(df["Away Team"], df["Week"], christmas_week, xm_winners)
+    df["Home Team Christmas Favorite"] = mark_holiday(df["Home Team"], df["Week"], christmas_week, xm_winners)
+    df["Away Team Christmas Underdog"] = mark_holiday(df["Away Team"], df["Week"], christmas_week, xm_underdogs)
+    df["Home Team Christmas Underdog"] = mark_holiday(df["Home Team"], df["Week"], christmas_week, xm_underdogs)
 	
 	# 4. Pre-Holiday Logic (Vectorized)
-	df['Away Team Pre Thanksgiving'] = ((df['Away Team Thanksgiving Favorite'] | df['Away Team Thanksgiving Underdog']) & (df['Week'] < thanksgiving_week)).astype(int)
-	df['Home Team Pre Thanksgiving'] = ((df['Home Team Thanksgiving Favorite'] | df['Home Team Thanksgiving Underdog']) & (df['Week'] < thanksgiving_week)).astype(int)
+    df['Away Team Pre Thanksgiving'] = ((df['Away Team Thanksgiving Favorite'] | df['Away Team Thanksgiving Underdog']) & (df['Week'] < thanksgiving_week)).astype(int)
+    df['Home Team Pre Thanksgiving'] = ((df['Home Team Thanksgiving Favorite'] | df['Home Team Thanksgiving Underdog']) & (df['Week'] < thanksgiving_week)).astype(int)
 	
 	# 5. Divisional Matchup Boolean
-	df["Divisional Matchup Boolean"] = (df["Divisional Matchup?"] == True).astype(int)
+    df["Divisional Matchup Boolean"] = (df["Divisional Matchup?"] == True).astype(int)
 
 # 6. ONLY loop for the Star Ratings (since that usually needs specialized logic)
 for week in unique_weeks:

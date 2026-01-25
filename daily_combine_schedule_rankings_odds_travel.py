@@ -1605,9 +1605,6 @@ def collect_schedule_travel_ranking_data(schedule_df):
     # Get unique week values
     unique_weeks = df["Week"].unique()
 
-    # Create an empty DataFrame to store the consolidated data
-    consolidated_df = pd.DataFrame()
-
     # Calculate the maximum cumulative win percentage for each week
     max_cumulative_win_percentage = {}
     for week in unique_weeks:
@@ -1717,6 +1714,7 @@ def collect_schedule_travel_ranking_data(schedule_df):
 	
 	# 5. Divisional Matchup Boolean
     df["Divisional Matchup Boolean"] = (df["Divisional Matchup?"] == True).astype(int)
+
 
     unique_weeks = df["Week"].unique()
 	
@@ -2178,13 +2176,13 @@ def collect_schedule_travel_ranking_data(schedule_df):
 
     
     print("Populating 'Away Team Public Pick %' in week_df...")
-    consolidated_df["Away Team Public Pick %"] = consolidated_df.apply(
+    df["Away Team Public Pick %"] = df.apply(
         lambda row: get_public_pick_percent(row, 'away'),
         axis=1
     )
     
     print("Populating 'Home Team Public Pick %' in week_df...")
-    consolidated_df["Home Team Public Pick %"] = consolidated_df.apply(
+    df["Home Team Public Pick %"] = df.apply(
         lambda row: get_public_pick_percent(row, 'home'),
         axis=1
     )
@@ -2195,8 +2193,8 @@ def collect_schedule_travel_ranking_data(schedule_df):
 
     consolidated_csv_file = "nfl-schedules/nfl_schedule_rankings_travel_odds_circa.csv"
 
-    consolidated_df.to_csv(consolidated_csv_file, index=False)    
-    collect_schedule_travel_ranking_data_nfl_schedule_df = consolidated_df
+    df.to_csv(consolidated_csv_file, index=False)    
+    collect_schedule_travel_ranking_data_nfl_schedule_df = df
     
 
 collect_schedule_travel_ranking_data_df = collect_schedule_travel_ranking_data(schedule_df)

@@ -1761,13 +1761,13 @@ def collect_schedule_travel_ranking_data(schedule_df):
             return data
     
     
-    def scrape_all_data(starting_year, current_year_plus_1, config):
+    def scrape_all_data(starting_year, current_year_plus_1):
         all_data = []
         base_url = "https://www.survivorgrid.com/{year}/{week}"
     
         total_iterations = (current_year_plus_1 - starting_year) * 18
 
-        start_week = config.get("starting_week")
+        start_week = starting_week
         completed = 0
         for year in range(starting_year, current_year_plus_1):
             for week in range(1, start_week + 1):
@@ -1789,7 +1789,7 @@ def collect_schedule_travel_ranking_data(schedule_df):
     
         return all_data
     print("Collecting Live Public Pick Percentages...")
-    all_data = scrape_all_data(starting_year, current_year_plus_1, config)
+    all_data = scrape_all_data(starting_year, current_year_plus_1)
 
     print(f"Scraping complete! Retrieved {len(all_data)} rows.")
     

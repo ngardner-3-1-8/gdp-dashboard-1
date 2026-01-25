@@ -242,7 +242,7 @@ if os.path.exists(ratings_file):
         # We use .iloc[0] to get the value from the matching row
         try:
             # Change 'team' to 'off_team' if that is the name of your team column
-            rating = ratings_df.loc[ratings_df['team'] == team_abbr, 'MP_Rating'].values[0]
+            rating = ratings_df.loc[ratings_df['Team'] == team_abbr, 'MP_Rating'].values[0]
             return float(rating)
         except (IndexError, KeyError):
             print(f"Warning: Could not find rating for {team_abbr}. Defaulting to 0.")
@@ -253,7 +253,7 @@ if os.path.exists(ratings_file):
         # We use .iloc[0] to get the value from the matching row
         try:
             # Change 'team' to 'off_team' if that is the name of your team column
-            rating = ratings_df.loc[ratings_df['team'] == team_abbr, 'Power Rating'].values[0]
+            rating = ratings_df.loc[ratings_df['Team'] == team_abbr, 'Power Rating'].values[0]
             return float(rating)
         except (IndexError, KeyError):
             print(f"Warning: Could not find rating for {team_abbr}. Defaulting to 0.")
@@ -279,7 +279,7 @@ if os.path.exists(ratings_file):
         'Kansas City Chiefs' : get_mp_team_rating("KC"),
         'Las Vegas Raiders' : get_mp_team_rating("LV"),
         'Los Angeles Chargers' : get_mp_team_rating("LAC"),
-        'Los Angeles Rams' : get_mp_team_rating("LAR"),
+        'Los Angeles Rams' : get_mp_team_rating("LA"),
         'Miami Dolphins' : get_mp_team_rating("MIA"),
         'Minnesota Vikings' : get_mp_team_rating("MIN"),
         'New England Patriots' : get_mp_team_rating("NE"),
@@ -315,7 +315,7 @@ if os.path.exists(ratings_file):
         'Kansas City Chiefs' : get_gsf_team_rating("KC"),
         'Las Vegas Raiders' : get_gsf_team_rating("LV"),
         'Los Angeles Chargers' : get_gsf_team_rating("LAC"),
-        'Los Angeles Rams' : get_gsf_team_rating("LAR"),
+        'Los Angeles Rams' : get_gsf_team_rating("LA"),
         'Miami Dolphins' : get_gsf_team_rating("MIA"),
         'Minnesota Vikings' : get_gsf_team_rating("MIN"),
         'New England Patriots' : get_gsf_team_rating("NE"),
@@ -387,7 +387,7 @@ if os.path.exists(hfa_file):
         # We use .iloc[0] to get the value from the matching row
         try:
             # Change 'team' to 'off_team' if that is the name of your team column
-            hfa = hfa_df.loc[hfa_df['team'] == team_abbr, 'HFA (Points)'].values[0]
+            hfa = hfa_df.loc[hfa_df['Team'] == team_abbr, 'HFA (Points)'].values[0]
             return float(hfa)
         except (IndexError, KeyError):
             print(f"Warning: Could not find rating for {team_abbr}. Defaulting to 0.")
@@ -413,7 +413,7 @@ if os.path.exists(hfa_file):
         'Kansas City Chiefs' : get_home_advantage("KC")/2,
         'Las Vegas Raiders' : get_home_advantage("LV")/2,
         'Los Angeles Chargers' : get_home_advantage("LAC")/2,
-        'Los Angeles Rams' : get_home_advantage("LAR")/2,
+        'Los Angeles Rams' : get_home_advantage("LA")/2,
         'Miami Dolphins' : get_home_advantage("MIA")/2,
         'Minnesota Vikings' : get_home_advantage("MIN")/2,
         'New England Patriots' : get_home_advantage("NE")/2,

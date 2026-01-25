@@ -1427,11 +1427,11 @@ def collect_schedule_travel_ranking_data(schedule_df):
                 csv_df.loc[index, 'Away Team Sportsbook Implied Odds to Win'] = abs(away_moneyline) / (abs(away_moneyline) + 100)
             
             if pd.isna(home_moneyline):
-                csv_df.loc[index, 'Home team Sportsbook Implied Odds to Win'] = np.nan
+                csv_df.loc[index, 'Home Team Sportsbook Implied Odds to Win'] = np.nan
             elif home_moneyline > 0:
-                csv_df.loc[index, 'Home team Sportsbook Implied Odds to Win'] = 100 / (home_moneyline + 100)
+                csv_df.loc[index, 'Home Team Sportsbook Implied Odds to Win'] = 100 / (home_moneyline + 100)
             else:
-                csv_df.loc[index, 'Home team Sportsbook Implied Odds to Win'] = abs(home_moneyline) / (abs(home_moneyline) + 100)
+                csv_df.loc[index, 'Home Team Sportsbook Implied Odds to Win'] = abs(home_moneyline) / (abs(home_moneyline) + 100)
 
 				
             away_mp_moneyline = csv_df.loc[index, 'Massey-Peabody Away Team Moneyline']
@@ -1472,7 +1472,7 @@ def collect_schedule_travel_ranking_data(schedule_df):
     
             # Calculate Fair Odds for the final (potentially overridden) moneyline
             away_implied_odds = csv_df.loc[index, 'Away Team Sportsbook Implied Odds to Win']
-            home_implied_odds = csv_df.loc[index, 'Home team Sportsbook Implied Odds to Win']
+            home_implied_odds = csv_df.loc[index, 'Home Team Sportsbook Implied Odds to Win']
             
             # Ensure sum is not zero or NaN before division
             if pd.isna(away_implied_odds) or pd.isna(home_implied_odds) or (away_implied_odds + home_implied_odds) == 0:

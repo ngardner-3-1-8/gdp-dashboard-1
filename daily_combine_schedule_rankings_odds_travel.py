@@ -453,7 +453,7 @@ if os.path.exists(hfa_file):
         'Kansas City Chiefs' : -1 * get_home_advantage("KC")/2,
         'Las Vegas Raiders' : -1 * get_home_advantage("LV")/2,
         'Los Angeles Chargers' : -1 * get_home_advantage("LAC")/2,
-        'Los Angeles Rams' : -1 * get_home_advantage("LAR")/2,
+        'Los Angeles Rams' : -1 * get_home_advantage("LA")/2,
         'Miami Dolphins' : -1 * get_home_advantage("MIA")/2,
         'Minnesota Vikings' : -1 * get_home_advantage("MIN")/2,
         'New England Patriots' : -1 * get_home_advantage("NE")/2,
@@ -489,6 +489,7 @@ if os.path.exists(hfa_file):
         "LV": "Las Vegas Raiders",
         "LAC": "Los Angeles Chargers",
         "LAR": "Los Angeles Rams",
+        "LA": "Los Angeles Rams",
         "MIA": "Miami Dolphins",
         "MIN": "Minnesota Vikings",
         "NE": "New England Patriots",
@@ -543,7 +544,7 @@ STADIUM_INFO = {
 ALL_TEAMS = list(STADIUM_INFO.keys())
 
 
-def collect_schedule_travel_ranking_data(pd):
+def collect_schedule_travel_ranking_data(ratings_df):
 # Get the user's custom rankings from the config
 
     stadiums = {}
@@ -2268,5 +2269,5 @@ def collect_schedule_travel_ranking_data(pd):
     
     return collect_schedule_travel_ranking_data_nfl_schedule_df
 
-collect_schedule_travel_ranking_data_df = collect_schedule_travel_ranking_data(pd)
+collect_schedule_travel_ranking_data_df = collect_schedule_travel_ranking_data(ratings_df)
 

@@ -48,10 +48,10 @@ target_year = current_cal_year - 1 if today.month < 5 else current_cal_year
 
 schedule_df = pd.read_csv(f"nfl-schedules/schedule_{target_year}.csv")
 
-schedule_df['gameday'] = pd.to_datetime(schedule_df['gameday'])
+schedule_df['Date'] = pd.to_datetime(schedule_df['Date'])
 schedule_df = schedule_df[schedule_df['game_type'] == 'REG']
 
-first_game_date = schedule_df['gameday'].min()
+first_game_date = schedule_df['Date'].min()
 
 # 3. Calculate Important Dates Automatically
 def get_thanksgiving(year):

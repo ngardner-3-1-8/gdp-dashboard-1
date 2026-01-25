@@ -2057,7 +2057,7 @@ def collect_schedule_travel_ranking_data(schedule_df):
     public_pick_df = public_pick_df[public_pick_df['Team Division'] != '']
     public_pick_df = public_pick_df[public_pick_df['Opponent Division'] != '']
     
-    public_pick_df = public_pick_df[public_pick_df['Year'] == current_year]
+    public_pick_df = public_pick_df[public_pick_df['Year'] == target_year]
     
     public_pick_df = public_pick_df.drop_duplicates()
     

@@ -67,8 +67,8 @@ black_friday = thanksgiving_date + timedelta(days=1)
 christmas_day = datetime(target_year, 12, 25)
 boxing_day = datetime(target_year, 12, 26)
 
-thanksgiving_week = int((thanksgiving_date - first_game_date)/7) + 1 ## +1 because the first game date is technically week 1, not week 0
-christmas_week = int((christmas_day - first_game_date)/7) + 2 ## +2 because the first game date is technically week 1, not week 0, and the addition of thanksgiving_week
+thanksgiving_week = int((thanksgiving_date - first_game_date).days/7) + 1 ## +1 because the first game date is technically week 1, not week 0
+christmas_week = int((christmas_day - first_game_date).days/7) + 2 ## +2 because the first game date is technically week 1, not week 0, and the addition of thanksgiving_week
 
 if today <= first_game_date:
     starting_week = 1

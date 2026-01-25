@@ -1781,10 +1781,8 @@ def collect_schedule_travel_ranking_data(schedule_df):
                     all_data.append(row)
     
                 completed += 1
-                progress_bar.progress(completed / total_iterations)
                 time.sleep(2)  # Delay between requests
     
-        progress_bar.progress(1.0)
         print("✅ Data scraping complete!")
     
         return all_data

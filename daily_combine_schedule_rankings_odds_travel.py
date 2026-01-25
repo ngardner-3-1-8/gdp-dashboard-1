@@ -663,7 +663,7 @@ def collect_schedule_travel_ranking_data(schedule_df):
 	        'Weekly Home Rest Advantage': home_advantage,
 	        'Away Cumulative Rest Advantage': cumulative_advantage[away_team],
 	        'Home Cumulative Rest Advantage': cumulative_advantage[home_team],
-	        'Actual Stadium': row['stadium'],
+	        'Actual Stadium': row['Stadium'],
 	        'Back to Back Away Games': back_to_back_away
 	    }
 	    data.append(new_row)

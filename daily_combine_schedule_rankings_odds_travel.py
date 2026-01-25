@@ -1718,45 +1718,47 @@ def collect_schedule_travel_ranking_data(schedule_df):
 	# 5. Divisional Matchup Boolean
     df["Divisional Matchup Boolean"] = (df["Divisional Matchup?"] == True).astype(int)
 
-# 6. ONLY loop for the Star Ratings (since that usually needs specialized logic)
-for week in unique_weeks:
-    mask = df["Week"] == week
-    df.loc[mask, "Away Team Star Rating"] = df.loc[mask, "Away Team Cumulative Win Percentage"].apply(lambda x: calculate_star_rating(x, week))
-    df.loc[mask, "Home Team Star Rating"] = df.loc[mask, "Home Team Cumulative Win Percentage"].apply(lambda x: calculate_star_rating(x, week))
-    def scrape_data(url):
-        response = requests.get(url)
-        soup = BeautifulSoup(response.content, "lxml")
-        table_rows = soup.find_all("tr")
-    
-        data = []
-        for row in table_rows:
-            columns = row.find_all("td")
-            if len(columns) >= 5:
-                ev, win_pct, pick_pct, team, opponent = columns[:5]
-                rest = columns[5:]
-                future_value_cell = rest[-1] if rest else None
-    
-                if future_value_cell:
-                    div_tag = future_value_cell.find("div")
-                    if div_tag and "style" in div_tag.attrs:
-                        style_attr = div_tag["style"]
-                        width_match = re.search(r"width:\s*(\d+)px", style_attr)
-                        star_rating = int(width_match.group(1)) / 16 if width_match else 0
+    unique_weeks = df["Week"].unique()
+	
+	# 6. ONLY loop for the Star Ratings (since that usually needs specialized logic)
+    for week in unique_weeks:
+        mask = df["Week"] == week
+        df.loc[mask, "Away Team Star Rating"] = df.loc[mask, "Away Team Cumulative Win Percentage"].apply(lambda x: calculate_star_rating(x, week))
+        df.loc[mask, "Home Team Star Rating"] = df.loc[mask, "Home Team Cumulative Win Percentage"].apply(lambda x: calculate_star_rating(x, week))
+        def scrape_data(url):
+            response = requests.get(url)
+            soup = BeautifulSoup(response.content, "lxml")
+            table_rows = soup.find_all("tr")
+        
+            data = []
+            for row in table_rows:
+                columns = row.find_all("td")
+                if len(columns) >= 5:
+                    ev, win_pct, pick_pct, team, opponent = columns[:5]
+                    rest = columns[5:]
+                    future_value_cell = rest[-1] if rest else None
+        
+                    if future_value_cell:
+                        div_tag = future_value_cell.find("div")
+                        if div_tag and "style" in div_tag.attrs:
+                            style_attr = div_tag["style"]
+                            width_match = re.search(r"width:\s*(\d+)px", style_attr)
+                            star_rating = int(width_match.group(1)) / 16 if width_match else 0
+                        else:
+                            star_rating = 0
                     else:
                         star_rating = 0
-                else:
-                    star_rating = 0
-    
-                data.append({
-                    "EV": ev.text,
-                    "Win %": win_pct.text,
-                    "Pick %": pick_pct.text,
-                    "Team": team.text,
-                    "Opponent": opponent.text,
-                    "Future Value (Stars)": star_rating
-                })
-    
-        return data
+        
+                    data.append({
+                        "EV": ev.text,
+                        "Win %": win_pct.text,
+                        "Pick %": pick_pct.text,
+                        "Team": team.text,
+                        "Opponent": opponent.text,
+                        "Future Value (Stars)": star_rating
+                    })
+        
+            return data
     
     
     def scrape_all_data(starting_year, current_year_plus_1, config):

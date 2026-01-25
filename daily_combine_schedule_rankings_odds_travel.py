@@ -2198,7 +2198,6 @@ for week in unique_weeks:
     consolidated_df.to_csv(consolidated_csv_file, index=False)    
     collect_schedule_travel_ranking_data_nfl_schedule_df = consolidated_df
     
-    return collect_schedule_travel_ranking_data_nfl_schedule_df
 
 collect_schedule_travel_ranking_data_df = collect_schedule_travel_ranking_data(schedule_df)
 

@@ -1354,7 +1354,7 @@ def collect_schedule_travel_ranking_data(schedule_df):
                 else:
                     return moneyline_tuple[1] # Underdog odds
             elif team_type == 'away':
-                if row['Favorite'] == row['Away Team']:
+                if row['Adjusted Massey-Peabody Current Winner'] == row['Away Team']:
                     return moneyline_tuple[0] # Favorite odds
                 else:
                     return moneyline_tuple[1] # Underdog odds
@@ -1379,7 +1379,7 @@ def collect_schedule_travel_ranking_data(schedule_df):
                 else:
                     return moneyline_tuple[1] # Underdog odds
             elif team_type == 'away':
-                if row['Favorite'] == row['Away Team']:
+                if row['Adjusted Generic Sports Fan Current Winner'] == row['Away Team']:
                     return moneyline_tuple[0] # Favorite odds
                 else:
                     return moneyline_tuple[1] # Underdog odds

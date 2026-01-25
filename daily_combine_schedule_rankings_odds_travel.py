@@ -872,6 +872,12 @@ def collect_schedule_travel_ranking_data(schedule_df):
     df['Generic Sports Fan Preseason Winner'] = df.apply(lambda row: row['Away Team'] if row['Away Team Generic Sports Fan Preseason Rank'] > row['Home Team Generic Sports Fan Preseason Rank'] else (row['Home Team'] if row['Away Team Generic Sports Fan Preseason Rank'] < row['Home Team Generic Sports Fan Preseason Rank'] else 'Tie'), axis=1)
     df['Generic Sports Fan Preseason Difference'] = abs(df['Away Team Generic Sports Fan Preseason Rank'] - df['Home Team Generic Sports Fan Preseason Rank'])
 
+    df['Away Team MP + GSF Average Preseason Rank'] = (df['Away Team Massey-Peabody Preseason Rank'] + df['Away Team Generic Sports Fan Preseason Rank'])/2
+    df['Home Team MP + GSF Average Preseason Rank'] = (df['Home Team Massey-Peabody Preseason Rank'] + df['Home Team Generic Sports Fan Preseason Rank'])/2
+    df['MP + GSF Average Preseason Winner'] = df.apply(lambda row: row['Away Team'] if row['Away Team MP + GSF Average Preseason Rank'] > row['Home Team MP + GSF Average Preseason Rank'] else (row['Home Team'] if row['Away Team MP + GSF Average Preseason Rank'] < row['Home Team MP + GSF Average Preseason Rank'] else 'Tie'), axis=1)
+    df['MP + GSF Average Preseason Difference'] = abs(df['Away Team MP + GSF Average Preseason Rank'] - df['Home Team MP + GSF Average Preseason Rank'])
+
+
     df['Away Team Adjusted Massey-Peabody Preseason Rank'] = df['Away Team'].map(lambda team: stadiums[team][5]) + np.where((df['Away Travel Advantage'] < -100) & (df['Home Stadium'] == df['Actual Stadium']), -.125, 0) - pd.to_numeric(df['Away Timezone Advantage']*.25, errors='coerce').fillna(0)-pd.to_numeric(df['Weekly Away Rest Advantage'], errors='coerce').fillna(0)-.125*df['Away Team Current Week Cumulative Rest Advantage'] - np.where((df['Away Team'].map(lambda team: stadiums[team][0])) != df['Home Team'].map(lambda team: stadiums[team][0]), df['Away Team'].map(lambda team: stadiums[team][10]), 0)
     df['Home Team Adjusted Massey-Peabody Preseason Rank'] = df['Home Team'].map(lambda team: stadiums[team][5]) - np.where((df['Away Travel Advantage'] < -100) & (df['Home Stadium'] == df['Actual Stadium']), .125, 0) - pd.to_numeric(df['Home Timezone Advantage']*.25, errors='coerce').fillna(0)-pd.to_numeric(df['Weekly Home Rest Advantage'], errors='coerce').fillna(0)-.125*df['Home Team Current Week Cumulative Rest Advantage'] + np.where((df['Away Team'].map(lambda team: stadiums[team][0])) != df['Home Team'].map(lambda team: stadiums[team][0]), df['Home Team'].map(lambda team: stadiums[team][9]), 0)
 
@@ -883,6 +889,12 @@ def collect_schedule_travel_ranking_data(schedule_df):
 
     df['Adjusted Generic Sports Fan Preseason Winner'] = df.apply(lambda row: row['Away Team'] if row['Away Team Adjusted Generic Sports Fan Preseason Rank'] > row['Home Team Adjusted Generic Sports Fan Preseason Rank'] else (row['Home Team'] if row['Away Team Adjusted Generic Sports Fan Preseason Rank'] < row['Home Team Adjusted Generic Sports Fan Preseason Rank'] else 'Tie'), axis=1)
     df['Adjusted Generic Sports Fan Preseason Difference'] = abs(df['Away Team Adjusted Generic Sports Fan Preseason Rank'] - df['Home Team Adjusted Massey-Peabody Preseason Rank'])
+
+    df['Away Team Adjusted MP + GSF Average Preseason Rank'] = (df['Away Team Adjusted Massey-Peabody Preseason Rank'] + df['Away Team Adjusted Generic Sports Fan Preseason Rank'])/2
+    df['Home Team Adjusted MP + GSF Average Preseason Rank'] = (df['Home Team Adjusted Massey-Peabody Preseason Rank'] + df['Home Team Adjusted Generic Sports Fan Preseason Rank'])/2
+    df['Adjusted MP + GSF Average Preseason Winner'] = df.apply(lambda row: row['Away Team'] if row['Away Team Adjusted MP + GSF Average Preseason Rank'] > row['Home Team Adjusted MP + GSF Average Preseason Rank'] else (row['Home Team'] if row['Away Team Adjusted MP + GSF Average Preseason Rank'] < row['Home Team Adjusted MP + GSF Average Preseason Rank'] else 'Tie'), axis=1)
+    df['Adjusted MP + GSF Average Preseason Difference'] = abs(df['Away Team Adjusted MP + GSF Average Preseason Rank'] - df['Home Team Adjusted MP + GSF Average Preseason Rank'])
+
 
     df['Away Team Massey-Peabody Current Rank'] = df['Away Team'].map(lambda team: stadiums[team][6] if team in stadiums else 'NA')
     df['Home Team Massey-Peabody Current Rank'] = df['Home Team'].map(lambda team: stadiums[team][6] if team in stadiums else 'NA')
@@ -896,6 +908,11 @@ def collect_schedule_travel_ranking_data(schedule_df):
     df['Generic Sports Fan Current Winner'] = df.apply(lambda row: row['Away Team'] if row['Away Team Generic Sports Fan Current Rank'] > row['Home Team Generic Sports Fan Current Rank'] else (row['Home Team'] if row['Away Team Generic Sports Fan Current Rank'] < row['Home Team Generic Sports Fan Current Rank'] else 'Tie'), axis=1)
     df['Generic Sports Fan Current Difference'] = abs(df['Away Team Generic Sports Fan Current Rank'] - df['Home Team Generic Sports Fan Current Rank'])
 
+    df['Away Team MP + GSF Average Current Rank'] = (df['Away Team Massey-Peabody Current Rank'] + df['Away Team Generic Sports Fan Current Rank'])/2
+    df['Home Team MP + GSF Average Current Rank'] = (df['Home Team Massey-Peabody Current Rank'] + df['Home Team Generic Sports Fan Current Rank'])/2
+    df['MP + GSF Average Current Winner'] = df.apply(lambda row: row['Away Team'] if row['Away Team MP + GSF Average Current Rank'] > row['Home Team MP + GSF Average Current Rank'] else (row['Home Team'] if row['Away Team MP + GSF Average Current Rank'] < row['Home Team MP + GSF Average Current Rank'] else 'Tie'), axis=1)
+    df['MP + GSF Average Current Difference'] = abs(df['Away Team MP + GSF Average Current Rank'] - df['Home Team MP + GSF Average Current Rank'])
+
     df['Away Team Adjusted Massey-Peabody Current Rank'] = df['Away Team'].map(lambda team: stadiums[team][6]) + np.where((df['Away Travel Advantage'] < -400) & (df['Home Stadium'] == df['Actual Stadium']), -.125, 0) - pd.to_numeric(df['Away Timezone Advantage'] * .1, errors='coerce').fillna(0) + pd.to_numeric(df['Weekly Away Rest Advantage'], errors='coerce').fillna(0) * .125 + df['Away Team Current Week Cumulative Rest Advantage'] * .0625 + np.where((df['Away Team'].map(lambda team: stadiums[team][0])) != df['Home Team'].map(lambda team: stadiums[team][0]), df['Away Team'].map(lambda team: stadiums[team][10]), 0)
     df['Home Team Adjusted Massey-Peabody Current Rank'] = df['Home Team'].map(lambda team: stadiums[team][6]) + np.where((df['Away Travel Advantage'] < -400) & (df['Home Stadium'] == df['Actual Stadium']), .125, 0) + pd.to_numeric(df['Home Timezone Advantage'] * .1, errors='coerce').fillna(0) + pd.to_numeric(df['Weekly Home Rest Advantage'], errors='coerce').fillna(0) * .125 + df['Home Team Current Week Cumulative Rest Advantage'] * .0625 + np.where((df['Away Team'].map(lambda team: stadiums[team][0])) != df['Home Team'].map(lambda team: stadiums[team][0]), df['Home Team'].map(lambda team: stadiums[team][9]), 0)
 
@@ -907,6 +924,11 @@ def collect_schedule_travel_ranking_data(schedule_df):
 
     df['Adjusted Generic Sports Fan Current Winner'] = df.apply(lambda row: row['Away Team'] if row['Away Team Adjusted Generic Sports Fan Current Rank'] > row['Home Team Adjusted Generic Sports Fan Current Rank'] else (row['Home Team'] if row['Away Team Adjusted Generic Sports Fan Current Rank'] < row['Home Team Adjusted Generic Sports Fan Current Rank'] else 'Tie'), axis=1)
     df['Adjusted Generic Sports Fan Current Difference'] = abs(df['Away Team Adjusted Generic Sports Fan Current Rank'] - df['Home Team Adjusted Generic Sports Fan Current Rank'])
+
+    df['Away Team Adjusted MP + GSF Average Current Rank'] = (df['Away Team Adjusted Massey-Peabody Current Rank'] + df['Away Team Adjusted Generic Sports Fan Current Rank'])/2
+    df['Home Team Adjusted MP + GSF Average Current Rank'] = (df['Home Team Adjusted Massey-Peabody Current Rank'] + df['Home Team Adjusted Generic Sports Fan Current Rank'])/2
+    df['Adjusted MP + GSF Average Current Winner'] = df.apply(lambda row: row['Away Team'] if row['Away Team Adjusted MP + GSF Average Current Rank'] > row['Home Team Adjusted MP + GSF Average Current Rank'] else (row['Home Team'] if row['Away Team Adjusted MP + GSF Average Current Rank'] < row['Home Team Adjusted MP + GSF Average Current Rank'] else 'Tie'), axis=1)
+    df['Adjusted MP + GSF Average Current Difference'] = abs(df['Away Team Adjusted MP + GSF Average Current Rank'] - df['Home Team Adjusted MP + GSF Average Current Rank'])
 
     df['Massey-Peabody Bayesian Same Winner Across All Metrics'] = df.apply(lambda row: 'Same' if row['Massey-Peabody Preseason Winner'] == row['Adjusted Massey-Peabody Preseason Winner'] == row['Massey-Peabody Current Winner'] == row['Adjusted Massey-Peabody Current Winner'] else 'Different', axis=1)
     df['Generic Sports Fan Bayesian Same Adjusted Winner'] = df.apply(lambda row: 'Same' if row['Generic Sports Fan Preseason Winner'] == row['Adjusted Generic Sports Fan Preseason Winner'] == row['Generic Sports Fan Current Winner'] == row['Adjusted Generic Sports Fan Current Winner'] else 'Different', axis=1)

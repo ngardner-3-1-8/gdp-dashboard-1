@@ -1564,7 +1564,7 @@ def collect_schedule_travel_ranking_data(schedule_df):
             win_odds = details["Win Odds"]
 
             # Get the remaining weeks for the team
-            remaining_weeks = [w for w in games.keys() if int(w.split()[1]) > int(week.split()[1])]
+            remaining_weeks = [w for w in games.keys() if int(w) > int(week)]
 
             #print(remaining_weeks)
 

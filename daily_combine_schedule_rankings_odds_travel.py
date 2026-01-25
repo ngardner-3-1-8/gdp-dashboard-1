@@ -544,7 +544,7 @@ STADIUM_INFO = {
 ALL_TEAMS = list(STADIUM_INFO.keys())
 
 
-def collect_schedule_travel_ranking_data(ratings_df):
+def collect_schedule_travel_ranking_data(schedule_df):
 # Get the user's custom rankings from the config
 
     stadiums = {}
@@ -615,7 +615,7 @@ def collect_schedule_travel_ranking_data(ratings_df):
 	    except:
 	        return 0
 			
-    df = ratings_df
+    df = schedule_df
 	
 	# 2. Pre-processing: Convert date column and sort to ensure chronological order
     df['Date'] = pd.to_datetime(df['Date'])
@@ -2269,5 +2269,5 @@ def collect_schedule_travel_ranking_data(ratings_df):
     
     return collect_schedule_travel_ranking_data_nfl_schedule_df
 
-collect_schedule_travel_ranking_data_df = collect_schedule_travel_ranking_data(ratings_df)
+collect_schedule_travel_ranking_data_df = collect_schedule_travel_ranking_data(schedule_df)
 

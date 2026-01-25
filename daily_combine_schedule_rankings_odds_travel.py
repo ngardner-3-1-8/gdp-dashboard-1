@@ -73,10 +73,10 @@ christmas_week = int((christmas_day - first_game_date).days/7) + 2 ## +2 because
 if today <= first_game_date:
     starting_week = 1
 else:# We find the latest game that has happened to determine "current" week
-    games_played = schedule_df[schedule_df['gameday'] <= today]
-    last_played_week = int(games_played['week'].max())
+    games_played = schedule_df[schedule_df['Date'] <= today]
+    last_played_week = int(games_played['Week'].max())
     if not games_played.empty:
-        standard_nfl_week = int(games_played['week'].max())
+        standard_nfl_week = int(games_played['Week'].max())
         
         # ADJUST FOR CIRCA SPECIAL WEEKS
         # Start with standard week

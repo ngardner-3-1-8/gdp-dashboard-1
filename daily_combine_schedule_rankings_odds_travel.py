@@ -1446,9 +1446,9 @@ def collect_schedule_travel_ranking_data(schedule_df):
                 csv_df.loc[index, 'Away Team Massey-Peabody Implied Odds to Win'] = abs(away_mp_moneyline) / (abs(away_mp_moneyline) + 100)
             
             if pd.isna(home_mp_moneyline):
-                csv_df.loc[index, 'Home team Massey-Peabody Implied Odds to Win'] = np.nan
+                csv_df.loc[index, 'Home Team Massey-Peabody Implied Odds to Win'] = np.nan
             elif home_mp_moneyline > 0:
-                csv_df.loc[index, 'Home team Massey-Peabody Implied Odds to Win'] = 100 / (home_mp_moneyline + 100)
+                csv_df.loc[index, 'Home Team Massey-Peabody Implied Odds to Win'] = 100 / (home_mp_moneyline + 100)
             else:
                 csv_df.loc[index, 'Home Team Massey-Peabody Implied Odds to Win'] = abs(home_mp_moneyline) / (abs(home_mp_moneyline) + 100)
 

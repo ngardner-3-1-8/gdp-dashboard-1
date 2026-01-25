@@ -1108,7 +1108,7 @@ def collect_schedule_travel_ranking_data(schedule_df):
             df_schedule = df_schedule_polars.to_pandas()
             df_teams = df_teams_polars.to_pandas()
         except Exception as e:
-            st.error(f"Error fetching nflreadpy data: {e}")
+            print(f"Error fetching nflreadpy data: {e}")
             return pd.DataFrame()
     
         # Create mapping: Abbr (KC) -> Full Name (Kansas City Chiefs) to match Odds API
@@ -1257,12 +1257,12 @@ def collect_schedule_travel_ranking_data(schedule_df):
         # Fetch Data
         live_api_odds_df = get_full_season_odds(API_KEY)
         
-        st.subheader("Full Season Odds (Historical + Live)")
+        print("Full Season Odds (Historical + Live)")
         
         # Optional: Highlight the Source column so you see which are Live vs Historical
-        st.dataframe(live_api_odds_df)
+        print(live_api_odds_df)
     else:
-        st.warning("Please enter your API Key")
+        print("Please enter your API Key")
 	
     def add_odds_to_main_csv():
         """
@@ -1405,9 +1405,7 @@ def collect_schedule_travel_ranking_data(schedule_df):
 #        st.subheader('Games with Unavailable Live Odds')
 #        st.write('This dataframe contains the games where live odds from the Live Odds API were unavailable. This will likely happen for lookahead lines and future weeks')
 #        st.write(overridden_games_df)
-        st.write('')
-        st.write('')
-        st.write('')
+
         csv_df['Massey-Peabody Home Team Spread'] = csv_df['Away Team Adjusted Massey-Peabody Current Rank'] - csv_df['Home Team Adjusted Massey-Peabody Current Rank']
         csv_df['Massey-Peabody Away Team Spread'] = csv_df['Home Team Adjusted Massey-Peabody Current Rank'] - csv_df['Away Team Adjusted Massey-Peabody Current Rank']
 
@@ -1832,8 +1830,7 @@ def collect_schedule_travel_ranking_data(schedule_df):
         base_url = "https://www.survivorgrid.com/{year}/{week}"
     
         total_iterations = (current_year_plus_1 - starting_year) * 18
-        progress_bar = st.progress(0)
-        status_text = st.empty()
+
         start_week = config.get("starting_week")
         completed = 0
         for year in range(starting_year, current_year_plus_1):
@@ -1855,10 +1852,10 @@ def collect_schedule_travel_ranking_data(schedule_df):
         status_text.text("✅ Data scraping complete!")
     
         return all_data
-    st.write("Collecting Live Public Pick Percentages...")
+    print("Collecting Live Public Pick Percentages...")
     all_data = scrape_all_data(starting_year, current_year_plus_1, config)
 
-    st.success(f"Scraping complete! Retrieved {len(all_data)} rows.")
+    print(f"Scraping complete! Retrieved {len(all_data)} rows.")
     
     # Convert the list of dictionaries to a DataFrame
     public_pick_df = pd.DataFrame(all_data)
@@ -2041,8 +2038,6 @@ def collect_schedule_travel_ranking_data(schedule_df):
     public_pick_df['Opponent Division'] = public_pick_df['Opponent'].map(lambda opponent: teams2.get(opponent, ['', '', '', '', '', ''])[5])
     public_pick_df['Divisional Matchup?'] = (public_pick_df['Team Division'] == public_pick_df['Opponent Division']).astype(int)
 
-    st.write('PUBLIC PICK DF')
-    st.write(public_pick_df)    
 
     # Load the historical data from the file created by nflreadpy
     away_data_df = df_api_schedule
@@ -2186,7 +2181,6 @@ def collect_schedule_travel_ranking_data(schedule_df):
   
     public_pick_df = public_pick_df.drop_duplicates()
 
-    st.write(public_pick_df)
     
     # ==============================================================================
     # SECTION 4: POPULATE week_df WITH PUBLIC PICK DATA

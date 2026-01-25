@@ -554,6 +554,9 @@ def collect_schedule_travel_ranking_data(schedule_df):
         # 1. Get Preseason Rank (from global static dict)
         mp_preseason_rank = MP_PRESEASON_RANKS.get(team, 0)
         gsf_preseason_rank = GSF_PRESEASON_RANKS.get(team, 0)
+
+        mp_current_rank = mp_current_ranks.get(team, 0)
+        gsf_current_rank = gsf_current_ranks.get(team, 0)
         
         # 2. Get Current/Custom Rank (from config or default)
         user_rank = CUSTOM_RANKS.get(team, 0)
@@ -574,9 +577,9 @@ def collect_schedule_travel_ranking_data(schedule_df):
             info[3], # Timezone
             info[4], # Division
             mp_preseason_rank,  # 5: Preseason Rank
-            mp_current_ranks,    # 6: Current Rank
+            mp_current_rank,    # 6: Current Rank
             gsf_preseason_rank,   #7
-            gsf_current_ranks,    #8
+            gsf_current_rank,    #8
             home_adv,        # 9: Home Advantage
             away_adj         # 10: Away Adjustment			
         ]

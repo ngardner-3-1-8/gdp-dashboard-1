@@ -63,7 +63,7 @@ def get_thanksgiving(year):
 
 
 thanksgiving_date = get_thanksgiving(target_year)
-black_friday = thanksgiving_date + datetime.timedelta(days=1)
+black_friday = thanksgiving_date + (days=1)
 christmas_day = datetime(target_year, 12, 25)
 boxing_day = datetime(target_year, 12, 26)
 

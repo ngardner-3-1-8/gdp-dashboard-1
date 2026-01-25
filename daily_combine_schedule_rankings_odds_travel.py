@@ -1688,14 +1688,14 @@ def collect_schedule_travel_ranking_data(schedule_df):
         # Create new columns and mark Thanksgiving Favorites (returning 1 or 0)
         week_df["Away Team Thanksgiving Favorite"] = week_df.apply(
             lambda row: 1
-            if (1 <= int(row["Week"].replace("Week ", "")) <= 12) and (row["Away Team"] in week13_winners)
+            if (1 <= int(row["Week"]) <= thanksgiving_week) and (row["Away Team"] in week13_winners)
             else 0,
             axis=1,
         )
 
         week_df["Home Team Thanksgiving Favorite"] = week_df.apply(
             lambda row: 1
-            if (1 <= int(row["Week"].replace("Week ", "")) <= 12) and (row["Home Team"] in week13_winners)
+            if (1 <= int(row["Week"]) <= thanksgiving_week) and (row["Home Team"] in week13_winners)
             else 0,
             axis=1,
         )
@@ -1708,13 +1708,13 @@ def collect_schedule_travel_ranking_data(schedule_df):
         # Create new columns and mark Christmas Favorites (returning 1 or 0)
         week_df["Away Team Christmas Favorite"] = week_df.apply(
             lambda row: 1
-            if (1 <= int(row["Week"].replace("Week ", "")) <= 17) and (row["Away Team"] in week18_winners)
+            if (1 <= int(row["Week"]) <= christmas_week) and (row["Away Team"] in week18_winners)
             else 0,
             axis=1,
         )
         week_df["Home Team Christmas Favorite"] = week_df.apply(
             lambda row: 1
-            if (1 <= int(row["Week"].replace("Week ", "")) <= 17) and (row["Home Team"] in week18_winners)
+            if (1 <= int(row["Week"]) <= christmas_week) and (row["Home Team"] in week18_winners)
             else 0,
             axis=1,
         )
@@ -1727,14 +1727,14 @@ def collect_schedule_travel_ranking_data(schedule_df):
         # Create new columns and mark Thanksgiving Underdogs (returning 1 or 0)
         week_df["Away Team Thanksgiving Underdog"] = week_df.apply(
             lambda row: 1
-            if (1 <= int(row["Week"].replace("Week ", "")) <= 12) and (row["Away Team"] in week13_underdogs)
+            if (1 <= int(row["Week"]) <= thanksgiving_week) and (row["Away Team"] in week13_underdogs)
             else 0,
             axis=1,
         )
 
         week_df["Home Team Thanksgiving Underdog"] = week_df.apply(
             lambda row: 1
-            if (1 <= int(row["Week"].replace("Week ", "")) <= 12) and (row["Home Team"] in week13_underdogs)
+            if (1 <= int(row["Week"]) <= thanksgiving_week) and (row["Home Team"] in week13_underdogs)
             else 0,
             axis=1,
         )
@@ -1747,13 +1747,13 @@ def collect_schedule_travel_ranking_data(schedule_df):
         # Create new columns and mark Christmas Underdogs (returning 1 or 0)
         week_df["Away Team Christmas Underdog"] = week_df.apply(
             lambda row: 1
-            if (1 <= int(row["Week"].replace("Week ", "")) <= 17) and (row["Away Team"] in week18_underdogs)
+            if (1 <= int(row["Week"]) <= christmas_week) and (row["Away Team"] in week18_underdogs)
             else 0,
             axis=1,
         )
         week_df["Home Team Christmas Underdog"] = week_df.apply(
             lambda row: 1
-            if (1 <= int(row["Week"].replace("Week ", "")) <= 17) and (row["Home Team"] in week18_underdogs)
+            if (1 <= int(row["Week"]) <= christmas_week) and (row["Home Team"] in week18_underdogs)
             else 0,
             axis=1,
         )

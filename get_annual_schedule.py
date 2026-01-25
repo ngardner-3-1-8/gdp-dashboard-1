@@ -51,7 +51,7 @@ def update_annual_schedule():
             "location": "Location",
             "away_qb_name": "Away QB",
             "home_qb_name": "Home QB",
-            "referee": "Referee",
+#            "referee": "Referee",
             "stadium": "Stadium",
             "roof": "Roof Type",
             "surface": "Surface Type",

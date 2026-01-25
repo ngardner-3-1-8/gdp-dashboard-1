@@ -1415,8 +1415,8 @@ def collect_schedule_travel_ranking_data(schedule_df):
         # Iterate through the DataFrame to apply overrides and calculate implied/fair odds
         for index, row in csv_df.iterrows():
             # Calculate Implied Odds for the final (potentially overridden) moneyline
-            away_moneyline = csv_df.loc[index, 'Sportsbook Away Team Moneyline']
-            home_moneyline = csv_df.loc[index, 'Sportsbook Home Team Moneyline']
+            away_moneyline = csv_df.loc[index, 'Away Team Sportsbook Moneyline']
+            home_moneyline = csv_df.loc[index, 'Home Team Sportsbook Moneyline']
     
             # Handle potential NaN values before calculating implied odds
             if pd.isna(away_moneyline):

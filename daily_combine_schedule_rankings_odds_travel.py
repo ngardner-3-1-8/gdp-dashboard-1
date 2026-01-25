@@ -1772,7 +1772,7 @@ def collect_schedule_travel_ranking_data(schedule_df):
         for year in range(starting_year, current_year_plus_1):
             for week in range(1, start_week + 1):
                 url = base_url.format(year=year, week=week)
-                status_text.text(f"🔄 Scraping data for {year} Week {week} ...")
+                print(f"🔄 Scraping data for {year} Week {week} ...")
                 week_data = scrape_data(url)
     
                 for row in week_data:
@@ -1785,7 +1785,7 @@ def collect_schedule_travel_ranking_data(schedule_df):
                 time.sleep(2)  # Delay between requests
     
         progress_bar.progress(1.0)
-        status_text.text("✅ Data scraping complete!")
+        print("✅ Data scraping complete!")
     
         return all_data
     print("Collecting Live Public Pick Percentages...")

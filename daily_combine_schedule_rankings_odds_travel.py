@@ -96,9 +96,9 @@ current_year = target_year
 starting_year = target_year
 
 current_year_plus_1 = current_year + 1
-season_start_date = first_game_date - 1
+season_start_date = first_game_date - timedelta(days=1)
 
-thanksgiving_reset_date = black_friday + 1 #THIS DATE IS INCLUDED IN THE RESET. SO IF THERE ARE GAMES ON THIS DATE, THEY WILL HAVE A WEEK ADDED
+thanksgiving_reset_date = black_friday + timedelta(days=1) #THIS DATE IS INCLUDED IN THE RESET. SO IF THERE ARE GAMES ON THIS DATE, THEY WILL HAVE A WEEK ADDED
 christmas_reset_date = boxing_day
 
 NUM_WEEKS_TO_KEEP = starting_week - 1

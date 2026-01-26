@@ -3287,7 +3287,7 @@ if __name__ == "__main__":
     sim.load_data() 
     
     simulation_results = []
-    
+    print(schedule_df)
     print(f"\nStarting Simulations for {len(schedule_df)} games...")
     print(f"{'Game':<30} | {'Source':<15} | {'Wind':<5} | {'Spread':<6} | {'Spread Var':<10}")
     print("-" * 85)

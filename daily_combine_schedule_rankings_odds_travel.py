@@ -3367,6 +3367,6 @@ if __name__ == "__main__":
         monte_carlo_df[cols_to_round] = monte_carlo_df[cols_to_round].round(2)
         
         print("\nSimulation Complete!")
-        monte_carlo_df.to_csv("final_sim_results_with_variance.csv", index=False)
+        monte_carlo_df.to_csv("nfl-power-ratings/final_sim_results_with_variance.csv", index=False)
         print("Results saved to 'final_sim_results_with_variance.csv'")
 

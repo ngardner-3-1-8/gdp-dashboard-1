@@ -2232,7 +2232,7 @@ def collect_schedule_travel_ranking_data(schedule_df):
     # Save the consolidated DataFrame to a single CSV file
 
     consolidated_csv_file = "nfl-schedules/nfl_schedule_rankings_travel_odds_circa.csv"
-
+	schedule_df = df
     df.to_csv(consolidated_csv_file, index=False)    
     collect_schedule_travel_ranking_data_nfl_schedule_df = df
     
@@ -2242,7 +2242,7 @@ collect_schedule_travel_ranking_data_df = collect_schedule_travel_ranking_data(s
 # --- CONFIGURATION ---
 SIMULATIONS = 50
 HISTORY_DAYS = 840
-CURRENT_SEASON = 2025
+CURRENT_SEASON = target_year
 DECAY_RATE = 0.00475
 GARBAGE_MIN = 0.05
 GARBAGE_MAX = 0.95
@@ -2282,7 +2282,7 @@ class AdvancedNFLSimulator:
         self.hfa_map = {} 
         self.league_avgs = {}
     
-    def load_data(self, hfa_file="nfl_hfa_ratings.csv"):
+    def load_data(self, hfa_file="nfl-power-ratings/nfl_hfa_ratings.csv"):
         print("--- Loading Data & Calculating Advanced Profiles ---")
         try:
             hfa_df = pd.read_csv(hfa_file)
@@ -3288,11 +3288,11 @@ if __name__ == "__main__":
     
     simulation_results = []
     
-    print(f"\nStarting Simulations for {len(df)} games...")
+    print(f"\nStarting Simulations for {len(schedule_df)} games...")
     print(f"{'Game':<30} | {'Source':<15} | {'Wind':<5} | {'Spread':<6} | {'Spread Var':<10}")
     print("-" * 85)
 
-    for index, row in df.iterrows():
+    for index, row in schedule_df.iterrows():
         try:
             # Extract Row Data
             away = row['Away Team']

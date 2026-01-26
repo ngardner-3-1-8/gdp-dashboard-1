@@ -2235,6 +2235,8 @@ def collect_schedule_travel_ranking_data(schedule_df):
     schedule_df = df
     df.to_csv(consolidated_csv_file, index=False)    
     collect_schedule_travel_ranking_data_nfl_schedule_df = df
+
+	return collect_schedule_travel_ranking_data_nfl_schedule_df
     
 
 collect_schedule_travel_ranking_data_df = collect_schedule_travel_ranking_data(schedule_df)

@@ -632,10 +632,20 @@ def collect_schedule_travel_ranking_data(schedule_df):
 	
     for index, row in df.iterrows():
 	    # 1. Use the row itself for the base data
+	    game_id = row['game_id']
+	    season = row['Season']
 	    week = row['Week']
 	    last_date = row['Date']
+	    time = row['Time']
 	    away_team = row['Away Team']
 	    home_team = row['Home Team']
+	    location = row['Location']
+	    away_qb = row['Away QB']
+	    home_qb = row['Home QB']
+	    away_qb_id = row['away_qb_id']
+	    home_qb_id = row['home_qb_id']
+
+
 	
 	    # 2. Calculate rest (Logic remains the same)
 	    away_rest_days = (last_date - last_game[away_team]).days if away_team in last_game else 0
@@ -656,10 +666,18 @@ def collect_schedule_travel_ranking_data(schedule_df):
 	    # 4. STORE AS DICTIONARY (Much safer than a list)
 	    # This maps specific values to specific column names immediately
 	    new_row = {
+	        'Game ID': game_id,
+	        'Season': season
 	        'Week': week,
 	        'Date': last_date,
+	        'Time': time,
 	        'Away Team': away_team,
 	        'Home Team': home_team,
+	        'Location': location,
+	        'Away QB': away_qb,
+	        'Home QB': home_qb,
+	        'Away QB ID': away_qb_id,
+	        'Home QB ID': home_qb_id,
 	        'Away Team Weekly Rest': away_rest_days,
 	        'Home Team Weekly Rest': home_rest_days,
 	        'Weekly Away Rest Advantage': away_advantage,

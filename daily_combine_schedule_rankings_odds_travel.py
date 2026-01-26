@@ -636,7 +636,7 @@ def collect_schedule_travel_ranking_data(schedule_df):
 	    season = row['Season']
 	    week = row['Week']
 	    last_date = row['Date']
-	    time = row['Time']
+	    gametime = row['Time']
 	    away_team = row['Away Team']
 	    home_team = row['Home Team']
 	    location = row['Location']
@@ -670,7 +670,7 @@ def collect_schedule_travel_ranking_data(schedule_df):
 	        'Season': season,
 	        'Week': week,
 	        'Date': last_date,
-	        'Time': time,
+	        'Time': gametime,
 	        'Away Team': away_team,
 	        'Home Team': home_team,
 	        'Location': location,

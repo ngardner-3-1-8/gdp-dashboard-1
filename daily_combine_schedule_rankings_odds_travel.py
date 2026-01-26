@@ -667,7 +667,7 @@ def collect_schedule_travel_ranking_data(schedule_df):
 	    # This maps specific values to specific column names immediately
 	    new_row = {
 	        'Game ID': game_id,
-	        'Season': season
+	        'Season': season,
 	        'Week': week,
 	        'Date': last_date,
 	        'Time': time,

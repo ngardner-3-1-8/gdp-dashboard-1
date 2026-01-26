@@ -3287,12 +3287,11 @@ if __name__ == "__main__":
     sim.load_data() 
     
     simulation_results = []
-    print(schedule_df)
-    print(f"\nStarting Simulations for {len(schedule_df)} games...")
+    print(f"\nStarting Simulations for {len(collect_schedule_travel_ranking_data_df)} games...")
     print(f"{'Game':<30} | {'Source':<15} | {'Wind':<5} | {'Spread':<6} | {'Spread Var':<10}")
     print("-" * 85)
 
-    for index, row in schedule_df.iterrows():
+    for index, row in collect_schedule_travel_ranking_data_df.iterrows():
         try:
             # Extract Row Data
             away = row['Away Team']

@@ -3249,8 +3249,9 @@ def get_weather_for_game(lat, lon, date_str, stadium_name):
     try:
         game_date = datetime.strptime(str(date_str), "%Y-%m-%d")
         days_until = (game_date - datetime.now()).days
-    except:
-        return 10, False, "Date Error (Default)"
+    
+    except Exception as e:
+        return 10, False, f"Date Error (Default). Error: {e}"
 
     # 4. IF GAME IS SOON: Call Open-Meteo API
     if 0 <= days_until <= 10:

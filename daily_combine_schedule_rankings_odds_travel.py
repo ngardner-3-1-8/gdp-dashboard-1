@@ -3245,13 +3245,16 @@ def get_weather_for_game(lat, lon, date_str, stadium_name):
         # Fallback if coordinates are missing in DF
         return 10, False, "Missing Coords (Default)"
 
-    # 3. Check Date for API Eligibility (Must be within 10 days)
     try:
-        game_date = datetime.strptime(str(date_str), "%Y-%m-%d")
+        # --- FIX IS HERE ---
+        # We convert to string and slice [:10] to ensure we only get 'YYYY-MM-DD'
+        # This handles both "2025-09-04" strings and "2025-09-04 00:00:00" timestamps
+        clean_date_str = str(date_str)[:10]
+        game_date = datetime.strptime(clean_date_str, "%Y-%m-%d")
+        
         days_until = (game_date - datetime.now()).days
-    
     except Exception as e:
-        return 10, False, f"Date Error (Default). Error: {e}"
+        return 10, False, f"Date Error: {e}"
 
     # 4. IF GAME IS SOON: Call Open-Meteo API
     if 0 <= days_until <= 10:

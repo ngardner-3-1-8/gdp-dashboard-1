@@ -3284,6 +3284,20 @@ def get_weather_for_game(lat, lon, date_str, stadium_name):
     
     return avg_wind, False, "Historical Avg"
 
+NAME_MAP = {
+    'Arizona Cardinals': 'ARI', 'Atlanta Falcons': 'ATL', 'Baltimore Ravens': 'BAL',
+    'Buffalo Bills': 'BUF', 'Carolina Panthers': 'CAR', 'Chicago Bears': 'CHI',
+    'Cincinnati Bengals': 'CIN', 'Cleveland Browns': 'CLE', 'Dallas Cowboys': 'DAL',
+    'Denver Broncos': 'DEN', 'Detroit Lions': 'DET', 'Green Bay Packers': 'GB',
+    'Houston Texans': 'HOU', 'Indianapolis Colts': 'IND', 'Jacksonville Jaguars': 'JAX',
+    'Kansas City Chiefs': 'KC', 'Las Vegas Raiders': 'LV', 'Los Angeles Chargers': 'LAC',
+    'Los Angeles Rams': 'LA', 'Miami Dolphins': 'MIA', 'Minnesota Vikings': 'MIN',
+    'New England Patriots': 'NE', 'New Orleans Saints': 'NO', 'New York Giants': 'NYG',
+    'New York Jets': 'NYJ', 'Philadelphia Eagles': 'PHI', 'Pittsburgh Steelers': 'PIT',
+    'San Francisco 49ers': 'SF', 'Seattle Seahawks': 'SEA', 'Tampa Bay Buccaneers': 'TB',
+    'Tennessee Titans': 'TEN', 'Washington Commanders': 'WAS'
+}
+
 # --- MAIN EXECUTION BLOCK ---
 if __name__ == "__main__":
     sim = AdvancedNFLSimulator()
@@ -3297,8 +3311,11 @@ if __name__ == "__main__":
     for index, row in collect_schedule_travel_ranking_data_df.iterrows():
         try:
             # Extract Row Data
-            away = row['Away Team']
-            home = row['Home Team']
+            away_full = row['Away Team']
+            home_full = row['Home Team']            
+            # Convert to Abbr (Default to the full name if not found, just in case)
+            away = NAME_MAP.get(away_full, away_full)
+            home = NAME_MAP.get(home_full, home_full)
             stadium = row['Actual Stadium']
             date =  pd.to_datetime(row['Date']) 
             lat = row['Actual Stadium Latitude']

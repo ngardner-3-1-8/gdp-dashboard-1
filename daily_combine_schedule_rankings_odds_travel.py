@@ -3402,6 +3402,6 @@ if __name__ == "__main__":
         
         print("\nSimulation Complete!")
         # Ensure directory exists or remove prefix if not needed
-        monte_carlo_df.to_csv("final_sim_results_with_variance.csv", index=False)
-        print("Results saved to 'final_sim_results_with_variance.csv'")
+        monte_carlo_df.to_csv("nfl-power-ratings/final_sim_results_with_variance.csv", index=False)
+        print("Results saved to 'nfl-power-ratings/final_sim_results_with_variance.csv'")
 

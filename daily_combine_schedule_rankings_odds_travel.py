@@ -3311,32 +3311,50 @@ if __name__ == "__main__":
     print(f"{'Game':<30} | {'Source':<15} | {'Wind':<5} | {'Spread':<6} | {'Spread Var':<10}")
     print("-" * 85)
 
+    # 1. UPDATED THRESHOLDS: Based on your model's actual outputs (140-210 range)
+    def get_variance_label(val, metric_type='combined'):
+        if metric_type == 'combined':
+            if val < 160: return "Low"
+            if val < 170: return "Med-Low"
+            if val < 180: return "Medium"
+            if val < 195: return "Med-High"
+            return "High"
+        else:
+            if val < 70:  return "Low"
+            if val < 85:  return "Med-Low"
+            if val < 100: return "Medium"
+            if val < 115: return "Med-High"
+            return "High"
+
     for index, row in collect_schedule_travel_ranking_data_df.iterrows():
         try:
             # Extract Row Data
             away_full = row['Away Team']
             home_full = row['Home Team']            
-            # Convert to Abbr (Default to the full name if not found, just in case)
             away = NAME_MAP.get(away_full, away_full)
             home = NAME_MAP.get(home_full, home_full)
             stadium = row['Actual Stadium']
-            date =  pd.to_datetime(row['Date']) 
+            date = pd.to_datetime(row['Date']) 
             lat = row['Actual Stadium Latitude']
             lon = row['Actual Stadium Longitude']
             
-            # 1. Get Weather (using the function defined previously)
+            # 1. Get Weather
             wind, is_dome, source = get_weather_for_game(lat, lon, date, stadium)
             
             # 2. Run Simulation
             df_sim = sim.simulate_matchup(home, away, wind_speed=wind, is_dome=is_dome, print_sample_game=False)
             
             if not df_sim.empty:
-                # 3. Define the Series variables needed for the calculations
+                # 3. Define the Series variables
                 margin = df_sim['Margin']
                 df_sim['Total'] = df_sim['Home_Score'] + df_sim['Away_Score']
                 total = df_sim['Total']
                 
-                # 4. Calculate Key Number Probabilities
+                # 4. Calculate Stats & Labels
+                # --- FIX: Define spread_var BEFORE using it in the function ---
+                spread_var = margin.var() 
+                vol_label = get_variance_label(spread_var, metric_type='combined')
+                
                 abs_margin = margin.abs()
                 prob_land_3 = (abs_margin == 3).mean()
                 prob_land_7 = (abs_margin == 7).mean()
@@ -3348,23 +3366,18 @@ if __name__ == "__main__":
                     'Matchup': f"{away} @ {home}",
                     'Wind': wind,
                     'Weather_Source': source,
-                    
-                    # Spread Stats (Mean & Median)
                     'Spread_Mean': margin.mean(),
                     'Spread_Median': margin.median(),
                     'Spread_Std': margin.std(),
-                    'Spread_Variance': margin.var(),
+                    'Spread_Variance': spread_var,
+                    'Spread_Variance_Label': vol_label,
                     'Spread_25th': margin.quantile(0.25),
                     'Spread_75th': margin.quantile(0.75),
-                    
-                    # Total Stats (Mean & Median)
                     'Total_Mean': total.mean(),
                     'Total_Median': total.median(),
                     'Total_Std': total.std(),
                     'Total_10th_Floor': total.quantile(0.10),
                     'Total_90th_Ceiling': total.quantile(0.90),
-                    
-                    # Probabilities
                     'Home_Win_Pct': (margin < 0).mean(),
                     'Away_Win_Pct': (margin > 0).mean(),
                     'Prob_Land_3': prob_land_3,
@@ -3374,7 +3387,7 @@ if __name__ == "__main__":
                 simulation_results.append(res)
                 
                 # Progress Print
-                print(f"{away:>3} @ {home:<3} {date:<12} | {source:<15} | {wind:>4.1f} | {res['Spread_Mean']:>6.2f} | {res['Spread_Variance']:>8.2f}")
+                print(f"{away:>3} @ {home:<3} {date.strftime('%Y-%m-%d'):<10} | {source:<15} | {wind:>4.1f} | {res['Spread_Mean']:>6.2f} | {spread_var:>8.2f}")
 
         except Exception as e:
             print(f"Error simulating {row.get('Away Team')} vs {row.get('Home Team')}: {e}")
@@ -3384,11 +3397,11 @@ if __name__ == "__main__":
     monte_carlo_df = pd.DataFrame(simulation_results)
     
     if not monte_carlo_df.empty:
-        # Match the rounding to the actual keys in your dictionary
         cols_to_round = ['Spread_Mean', 'Spread_Median', 'Total_Mean', 'Total_Median', 'Spread_Variance', 'Spread_Std']
         monte_carlo_df[cols_to_round] = monte_carlo_df[cols_to_round].round(2)
         
         print("\nSimulation Complete!")
-        monte_carlo_df.to_csv("nfl-power-ratings/final_sim_results_with_variance.csv", index=False)
+        # Ensure directory exists or remove prefix if not needed
+        monte_carlo_df.to_csv("final_sim_results_with_variance.csv", index=False)
         print("Results saved to 'final_sim_results_with_variance.csv'")
 

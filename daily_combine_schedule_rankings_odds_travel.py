@@ -3301,6 +3301,20 @@ NAME_MAP = {
     'Tennessee Titans': 'TEN', 'Washington Commanders': 'WAS'
 }
 
+NAME_TO_ABBR = {
+    'Arizona Cardinals': 'ARI', 'Atlanta Falcons': 'ATL', 'Baltimore Ravens': 'BAL',
+    'Buffalo Bills': 'BUF', 'Carolina Panthers': 'CAR', 'Chicago Bears': 'CHI',
+    'Cincinnati Bengals': 'CIN', 'Cleveland Browns': 'CLE', 'Dallas Cowboys': 'DAL',
+    'Denver Broncos': 'DEN', 'Detroit Lions': 'DET', 'Green Bay Packers': 'GB',
+    'Houston Texans': 'HOU', 'Indianapolis Colts': 'IND', 'Jacksonville Jaguars': 'JAX',
+    'Kansas City Chiefs': 'KC', 'Las Vegas Raiders': 'LV', 'Los Angeles Chargers': 'LAC',
+    'Los Angeles Rams': 'LAR', 'Miami Dolphins': 'MIA', 'Minnesota Vikings': 'MIN',
+    'New England Patriots': 'NE', 'New Orleans Saints': 'NO', 'New York Giants': 'NYG',
+    'New York Jets': 'NYJ', 'Philadelphia Eagles': 'PHI', 'Pittsburgh Steelers': 'PIT',
+    'San Francisco 49ers': 'SF', 'Seattle Seahawks': 'SEA', 'Tampa Bay Buccaneers': 'TB',
+    'Tennessee Titans': 'TEN', 'Washington Commanders': 'WAS'
+}
+
 # --- MAIN EXECUTION BLOCK ---
 if __name__ == "__main__":
     sim = AdvancedNFLSimulator()
@@ -3361,27 +3375,28 @@ if __name__ == "__main__":
                 
                 # 5. Build the Result Row
                 res = {
+                    'Matchup_ID': index,
                     'Week': row.get('Week'),
                     'Date': date,
                     'Matchup': f"{away} @ {home}",
-                    'Wind': wind,
-                    'Weather_Source': source,
-                    'Spread_Mean': margin.mean(),
-                    'Spread_Median': margin.median(),
-                    'Spread_Std': margin.std(),
-                    'Spread_Variance': spread_var,
-                    'Spread_Variance_Label': vol_label,
-                    'Spread_25th': margin.quantile(0.25),
-                    'Spread_75th': margin.quantile(0.75),
-                    'Total_Mean': total.mean(),
-                    'Total_Median': total.median(),
-                    'Total_Std': total.std(),
-                    'Total_10th_Floor': total.quantile(0.10),
-                    'Total_90th_Ceiling': total.quantile(0.90),
-                    'Home_Win_Pct': (margin < 0).mean(),
-                    'Away_Win_Pct': (margin > 0).mean(),
-                    'Prob_Land_3': prob_land_3,
-                    'Prob_Land_7': prob_land_7
+                    'Sim_Wind': wind,
+                    'Sim_Weather_Source': source,
+                    'Sim_Spread_Mean': margin.mean(),
+                    'Sim_Spread_Median': margin.median(),
+                    'Sim_Spread_Std': margin.std(),
+                    'Sim_Spread_Variance': spread_var,
+                    'Sim_Spread_Variance_Label': vol_label,
+                    'Sim_Spread_25th': margin.quantile(0.25),
+                    'Sim_Spread_75th': margin.quantile(0.75),
+                    'Sim_Total_Mean': total.mean(),
+                    'Sim_Total_Median': total.median(),
+                    'Sim_Total_Std': total.std(),
+                    'Sim_Total_10th_Floor': total.quantile(0.10),
+                    'Sim_Total_90th_Ceiling': total.quantile(0.90),
+                    'Sim_Home_Win_Pct': (margin < 0).mean(),
+                    'Sim_Away_Win_Pct': (margin > 0).mean(),
+                    'Sim_Prob_Land_3': prob_land_3,
+                    'Sim_Prob_Land_7': prob_land_7
                 }
                 
                 simulation_results.append(res)
@@ -3397,11 +3412,14 @@ if __name__ == "__main__":
     monte_carlo_df = pd.DataFrame(simulation_results)
     
     if not monte_carlo_df.empty:
-        cols_to_round = ['Spread_Mean', 'Spread_Median', 'Total_Mean', 'Total_Median', 'Spread_Variance', 'Spread_Std']
+        cols_to_round = ['Sim_Spread_Mean', 'Sim_Spread_Median', 'Sim_Total_Mean', 
+                         'Sim_Total_Median', 'Sim_Spread_Variance', 'Sim_Spread_Std']
         monte_carlo_df[cols_to_round] = monte_carlo_df[cols_to_round].round(2)
+        final_combined_df = collect_schedule_travel_ranking_data_df.merge(monte_carlo_df, left_index=True, right_on='Matchup_ID', how='left')
+
         
         print("\nSimulation Complete!")
         # Ensure directory exists or remove prefix if not needed
-        monte_carlo_df.to_csv("nfl-power-ratings/final_sim_results_with_variance.csv", index=False)
+        final_combined_df.to_csv("nfl-power-ratings/final_sim_results_with_variance.csv", index=False)
         print("Results saved to 'nfl-power-ratings/final_sim_results_with_variance.csv'")
 

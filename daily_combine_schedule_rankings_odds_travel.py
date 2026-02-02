@@ -3339,11 +3339,11 @@ def get_weather_for_game(lat, lon, date_str, stadium_name):
                 temp = np.mean(data['hourly']['temperature_2m'][13:17])
                 
                 # Handle NaNs if data is missing
-                if np.isnan(wind): wind = 10
+                if np.isnan(raw_wind): raw_wind = 10
                 if np.isnan(precip): precip = 0
                 if np.isnan(temp): temp = 60
                 
-                return wind, precip, temp, False, "Historical API"
+                return raw_wind, precip, temp, False, "Historical API"
                 
         except Exception as e:
             print(f"   [Archive API Error] {stadium_name}: {e}")
@@ -3370,7 +3370,7 @@ def get_weather_for_game(lat, lon, date_str, stadium_name):
                 raw_wind = np.mean(data['hourly']['wind_speed_10m'][13:17])
                 precip = np.sum(data['hourly']['precipitation'][13:17])
                 temp = np.mean(data['hourly']['temperature_2m'][13:17])
-                return wind, precip, temp, False, "Live Forecast"
+                return raw_wind, precip, temp, False, "Live Forecast"
         except Exception as e:
             print(f"   [Forecast API Error] {stadium_name}: {e}")
 

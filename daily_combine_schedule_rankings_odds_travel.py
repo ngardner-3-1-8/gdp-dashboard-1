@@ -3496,7 +3496,7 @@ if __name__ == "__main__":
                 simulation_results.append(res)
                 
                 # Progress Print
-                print(f"{away:>3} @ {home:<3} {date.strftime('%Y-%m-%d'):<10} | {source:<15} | {raw_wind:>4.1f} | {res['Spread_Mean']:>6.2f} | {spread_var:>8.2f}")
+                print(f"{away:>3} @ {home:<3} {date.strftime('%Y-%m-%d'):<10} | {source:<15} | {raw_wind:>4.1f} | {res['Sim_Spread_Mean']:>6.2f} | {spread_var:>8.2f}")
 
         except Exception as e:
             print(f"Error simulating {row.get('Away Team')} vs {row.get('Home Team')}: {e}")

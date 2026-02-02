@@ -3302,6 +3302,9 @@ def get_weather_for_game(lat, lon, date_str, stadium_name):
     # 2. Validate Coordinates
     if pd.isna(lat) or pd.isna(lon):
         return 10, 0.0, 60, False, "Missing Coords (Default)"
+	
+    month_defaults = config.get('defaults', {}).get(month, (60, 10))
+    default_temp, default_wind = month_defaults
 
     try:
         clean_date_str = str(date_str)[:10]

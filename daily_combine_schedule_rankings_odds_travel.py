@@ -2520,11 +2520,52 @@ class AdvancedNFLSimulator:
             'league_breakaway_run': league_bk_rate
         }
 
-    def _resolve_play_outcome(self, off, def_, zone, ptype, stats, def_mult, hfa_impact, verbose):
-        """
+    def _resolve_play_outcome(self, off, def_, zone, ptype, stats, def_mult, hfa_impact, 
+                              wind_speed, temp, is_rain, is_snow, is_dome, verbose):        """
         Calculates the result of a play, injecting 'Breakaway' logic to fix low totals.
         Returns: (yards, is_complete, is_turnover, desc_tag)
         """
+
+# --- APPLY WEATHER PHYSICS ---
+        if not is_dome:
+            # 1. WIND EFFECTS
+            if wind_speed > 15:
+                # Harder to throw accurate deep balls
+                if ptype == 'pass':
+                    stats['complete'] -= 0.05
+                    stats['mu'] -= 1.0 # Average depth of target drops
+            if wind_speed > 25:
+                if ptype == 'pass':
+                    stats['complete'] -= 0.12
+                    stats['intercept'] += 0.01 # Tips/Overthrows
+            
+            # 2. PRECIPITATION EFFECTS (Ball Security & Catching)
+            if is_rain:
+                # "Slick Ball"
+                stats['fumble'] *= 1.3      # 50% increase in fumble risk
+                if ptype == 'pass':
+                    stats['complete'] -= 0.06 # Drops
+                    stats['mu'] *= 0.9        # Players slip, less YAC
+                else:
+                    stats['mu'] *= 0.95       # Slower footing
+            
+            elif is_snow:
+                # "Chaos" Factor
+                stats['fumble'] *= 1.4
+                if ptype == 'pass':
+                    stats['complete'] -= 0.08 # Visibility/Tracking issues
+                else:
+                    # OFFENSIVE ADVANTAGE in Snow (Run Game)
+                    # Defenders react slower and slip.
+                    # RBs know where they are going.
+                    stats['mu'] += 0.4 
+
+            # 3. TEMPERATURE EFFECTS (The "Rock")
+            if temp < 20:
+                stats['fumble'] *= 1.25 # Hits hurt more, ball is hard
+                if ptype == 'pass':
+                    stats['complete'] -= 0.04 # Hard to grip/catch
+
         yards = 0
         is_complete = True
         is_turnover = False
@@ -2639,11 +2680,12 @@ class AdvancedNFLSimulator:
             # KICKOFF RETURN TOUCHDOWN (0.5% chance)
             return 100
 
-    def simulate_matchup(self, home, away, wind_speed=0, is_dome=False, print_sample_game=False):
-        results = []
+    def simulate_matchup(self, home, away, wind_speed=0, temp=70, precip=0, is_dome=False, print_sample_game=False):        results = []
         wind_mod = 1.0
         if not is_dome and wind_speed > WIND_THRESHOLD:
             wind_mod = WIND_PASS_IMPACT
+        is_snow = (temp <= 32 and precip > 0)
+        is_rain = (temp > 32 and precip > 0)
         
         h_lookup = TEAM_MAP.get(home, home)
         hfa_impact = self.hfa_map.get(h_lookup, HFA_DEFENSE_BOOST_DEFAULT)
@@ -2656,8 +2698,7 @@ class AdvancedNFLSimulator:
             print(f"{'='*60}\nEND SAMPLE LOG\n{'='*60}\n")
 
         for _ in range(SIMULATIONS):
-            res = self._play_game(home, away, wind_mod, wind_speed, is_dome, hfa_impact, verbose=False)
-            results.append(res)
+            res = self._play_game(home, away, wind_speed, temp, is_rain, is_snow, is_dome, hfa_impact, verbose=False)            results.append(res)
             
         return pd.DataFrame(results)
 
@@ -2699,7 +2740,7 @@ class AdvancedNFLSimulator:
         if verbose: print(f"   >>> {desc} ({off} {scores[off]} - {def_} {scores[def_]})")
         return
 
-    def _play_game(self, home, away, wind_mod, raw_wind, is_dome, hfa_impact, verbose=False):
+    def _play_game(self, home, away, wind_speed, temp, is_rain, is_snow, is_dome, hfa_impact, verbose=False):
         clock = 3600
         phase = 'REG' 
         scores = {home: 0, away: 0}
@@ -2782,6 +2823,16 @@ class AdvancedNFLSimulator:
             # --- PLAY CALL ---
             pass_prob = self.profiles['playcalling'].get((off, down, d_bucket, ctx))
             if pass_prob is None: pass_prob = self.league_pass_rates.get((down, d_bucket, ctx), 0.55)
+
+            # WIND: severe penalty if over 20mph
+            if not is_dome and wind_speed > 20:
+                pass_prob -= 0.15  # Heavy shift to run
+            elif not is_dome and wind_speed > 15:
+                pass_prob -= 0.05
+            
+            # RAIN/SNOW: slight shift to run to avoid drops/tips
+            if not is_dome and (is_rain or is_snow):
+                pass_prob -= 0.05
             
             # Standard Adjustments
             if phase == 'REG' and clock < 300:
@@ -2874,9 +2925,12 @@ class AdvancedNFLSimulator:
                 weather_max_dist = k_stats['max_made']
                 weather_acc_mod = 1.0
                 if not is_dome and raw_wind > 0:
-                    weather_max_dist -= (raw_wind / 3.0)
-                    if raw_wind > 15: weather_acc_mod = 0.90
-                    if raw_wind > 25: weather_acc_mod = 0.75
+                    weather_max_dist -= (raw_wind / 2.5)
+                    if raw_wind > 15: weather_acc_mod = 0.85
+                    if raw_wind > 25: weather_acc_mod = 0.70
+
+                    if temp < 30: weather_max_dist -= 5
+                    if temp < 15: weather_max_dist -= 10
                 
                 in_fg_range = kick_dist <= (weather_max_dist + 2)
                 
@@ -3022,7 +3076,8 @@ class AdvancedNFLSimulator:
             
             # --- CALL THE NEW HELPER FUNCTION ---
             yards, is_complete, is_turnover, desc_tag = self._resolve_play_outcome(
-                off, def_, zone, ptype, stats, def_mult, hfa_impact, verbose
+                off, def_, zone, ptype, stats, def_mult, hfa_impact, 
+                wind_speed, temp, is_rain, is_snow, is_dome, verbose
             )
             
             # If verbose, append the specific tag (Deep Ball, Breakaway) to the printout later
@@ -3260,32 +3315,32 @@ def get_weather_for_game(lat, lon, date_str, stadium_name):
     if 0 <= days_until <= 10:
         try:
             url = "https://api.open-meteo.com/v1/forecast"
-            params = {
-                "latitude": lat,
-                "longitude": lon,
-                "hourly": "wind_speed_10m",
-                "start_date": date_str,
-                "end_date": date_str,
-                "wind_speed_unit": "mph"
-            }
+			params = {
+			    "latitude": lat,
+  			    "longitude": lon,
+			    "hourly": ["wind_speed_10m", "precipitation", "temperature_2m"],
+			    "start_date": clean_date_str,
+			    "end_date": clean_date_str,
+			    "wind_speed_unit": "mph",
+			    "temperature_unit": "fahrenheit"
+			}
             # Timeout is important so one bad call doesn't hang the whole script
             r = requests.get(url, params=params, timeout=3)
             data = r.json()
             
-            if 'hourly' in data and 'wind_speed_10m' in data['hourly']:
-                # Take the max wind speed during the game day as a conservative estimate
-                wind_speed = max(data['hourly']['wind_speed_10m'])
-                return wind_speed, False, "Live Forecast"
+            if 'hourly' in data:
+                # Use averages/maxes for the game window (roughly hours 13-16 for afternoon games)
+			    wind = np.mean(data['hourly']['wind_speed_10m'][12:17])
+			    precip = np.sum(data['hourly']['precipitation'][12:17])
+			    temp = np.mean(data['hourly']['temperature_2m'][12:17])
+			    return wind, precip, temp, False, "Live Forecast"
         except Exception as e:
             print(f"   [API Error] {stadium_name}: {e}")
 
-    # 5. IF GAME IS FAR AWAY: Use Historical Defaults
+    # 5. Fallback to Historical Defaults (Add temp/precip to your STADIUM_CONFIG defaults)
     month = game_date.month
-    defaults = config.get('defaults', {})
-    # Default to 10mph if month/stadium not found
-    avg_wind = defaults.get(month, (50, 10))[1]
-    
-    return avg_wind, False, "Historical Avg"
+    defaults = config.get('defaults', {}).get(month, (50, 10, 0)) # temp, wind, precip
+    return defaults[1], defaults[2], defaults[0], False, "Historical Avg"
 
 NAME_MAP = {
     'Arizona Cardinals': 'ARI', 'Atlanta Falcons': 'ATL', 'Baltimore Ravens': 'BAL',
@@ -3353,11 +3408,10 @@ if __name__ == "__main__":
             lon = row['Actual Stadium Longitude']
             
             # 1. Get Weather
-            wind, is_dome, source = get_weather_for_game(lat, lon, date, stadium)
+            wind, precip, temp, is_dome, source = get_weather_for_game(lat, lon, date, stadium)
             
             # 2. Run Simulation
-            df_sim = sim.simulate_matchup(home, away, wind_speed=wind, is_dome=is_dome, print_sample_game=False)
-            
+            df_sim = sim.simulate_matchup(home, away, wind_speed=wind, temp=temp, precip=precip, is_dome=is_dome)            
             if not df_sim.empty:
                 # 3. Define the Series variables
                 margin = df_sim['Margin']
@@ -3379,7 +3433,9 @@ if __name__ == "__main__":
                     'Week': row.get('Week'),
                     'Date': date,
                     'Matchup': f"{away} @ {home}",
-                    'Sim_Wind': wind,
+                    'Wind': wind,
+                    'Temperature': temp,
+                    'Precipitation': precip,
                     'Sim_Weather_Source': source,
                     'Sim_Spread_Mean': margin.mean(),
                     'Sim_Spread_Median': margin.median(),

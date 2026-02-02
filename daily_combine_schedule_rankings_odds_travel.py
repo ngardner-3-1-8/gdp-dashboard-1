@@ -2699,7 +2699,8 @@ class AdvancedNFLSimulator:
             print(f"{'='*60}\nEND SAMPLE LOG\n{'='*60}\n")
 
         for _ in range(SIMULATIONS):
-            res = self._play_game(home, away, wind_speed, temp, is_rain, is_snow, is_dome, hfa_impact, verbose=False)            results.append(res)
+            res = self._play_game(home, away, wind_speed, temp, is_rain, is_snow, is_dome, hfa_impact, verbose=False)
+            results.append(res)
             
         return pd.DataFrame(results)
 

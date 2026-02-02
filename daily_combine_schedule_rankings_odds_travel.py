@@ -3286,61 +3286,99 @@ STADIUM_CONFIG = {
 
 def get_weather_for_game(lat, lon, date_str, stadium_name):
     """
-    Determines wind speed based on Dome Status > Live Forecast > Historical Average.
+    Determines weather.
+    - If Dome: Returns 0 wind, 0 precip, 70 temp.
+    - If Historical (>10 days ago): Uses Open-Meteo Archive API.
+    - If Forecast (Next 10 days): Uses Open-Meteo Forecast API.
+    - If Far Future (>10 days out): Defaults to Historical Averages.
     """
     # 1. Check Dome Status (Lookup by Name)
     config = STADIUM_CONFIG.get(stadium_name, {})
     is_dome = config.get('dome', False)
     
     if is_dome:
-        return 0, True, "Dome"
+        return 0, 0.0, 70, True, "Dome"
 
     # 2. Validate Coordinates
     if pd.isna(lat) or pd.isna(lon):
-        # Fallback if coordinates are missing in DF
-        return 10, False, "Missing Coords (Default)"
+        return 10, 0.0, 60, False, "Missing Coords (Default)"
 
     try:
-        # --- FIX IS HERE ---
-        # We convert to string and slice [:10] to ensure we only get 'YYYY-MM-DD'
-        # This handles both "2025-09-04" strings and "2025-09-04 00:00:00" timestamps
         clean_date_str = str(date_str)[:10]
         game_date = datetime.strptime(clean_date_str, "%Y-%m-%d")
-        
-        days_until = (game_date - datetime.now()).days
+        now = datetime.now()
+        days_diff = (game_date - now).days
     except Exception as e:
-        return 10, False, f"Date Error: {e}"
+        return 10, 0.0, 60, False, f"Date Error: {e}"
 
-    # 4. IF GAME IS SOON: Call Open-Meteo API
-    if 0 <= days_until <= 10:
+    # 3. ROUTING LOGIC
+    # A) HISTORICAL DATA (Game was more than 10 days ago)
+    #    We use the Archive API for accuracy on past events.
+    if days_diff < -10:
+        try:
+            url = "https://archive-api.open-meteo.com/v1/archive"
+            params = {
+                "latitude": lat,
+                "longitude": lon,
+                "start_date": clean_date_str,
+                "end_date": clean_date_str,
+                "hourly": ["temperature_2m", "precipitation", "wind_speed_10m"],
+                "temperature_unit": "fahrenheit",
+                "wind_speed_unit": "mph",
+                "timezone": "auto"
+            }
+            # Timeout set to 5s to prevent hanging
+            r = requests.get(url, params=params, timeout=5)
+            data = r.json()
+            
+            if 'hourly' in data:
+                # Average the weather during typical game window (1 PM - 4 PM local roughly)
+                # Indices 13 to 17 correspond to 1PM to 5PM roughly
+                wind = np.mean(data['hourly']['wind_speed_10m'][13:17])
+                precip = np.sum(data['hourly']['precipitation'][13:17])
+                temp = np.mean(data['hourly']['temperature_2m'][13:17])
+                
+                # Handle NaNs if data is missing
+                if np.isnan(wind): wind = 10
+                if np.isnan(precip): precip = 0
+                if np.isnan(temp): temp = 60
+                
+                return wind, precip, temp, False, "Historical API"
+                
+        except Exception as e:
+            print(f"   [Archive API Error] {stadium_name}: {e}")
+            # Fall through to averages if API fails
+
+    # B) LIVE FORECAST (Game is within next 10 days or very recent past)
+    elif -10 <= days_diff <= 10:
         try:
             url = "https://api.open-meteo.com/v1/forecast"
-			params = {
-			    "latitude": lat,
-  			    "longitude": lon,
-			    "hourly": ["wind_speed_10m", "precipitation", "temperature_2m"],
-			    "start_date": clean_date_str,
-			    "end_date": clean_date_str,
-			    "wind_speed_unit": "mph",
-			    "temperature_unit": "fahrenheit"
-			}
-            # Timeout is important so one bad call doesn't hang the whole script
+            params = {
+                "latitude": lat,
+                "longitude": lon,
+                "hourly": ["temperature_2m", "precipitation", "wind_speed_10m"],
+                "start_date": clean_date_str,
+                "end_date": clean_date_str,
+                "wind_speed_unit": "mph",
+                "temperature_unit": "fahrenheit",
+                "timezone": "auto"
+            }
             r = requests.get(url, params=params, timeout=3)
             data = r.json()
             
             if 'hourly' in data:
-                # Use averages/maxes for the game window (roughly hours 13-16 for afternoon games)
-			    wind = np.mean(data['hourly']['wind_speed_10m'][12:17])
-			    precip = np.sum(data['hourly']['precipitation'][12:17])
-			    temp = np.mean(data['hourly']['temperature_2m'][12:17])
-			    return wind, precip, temp, False, "Live Forecast"
+                wind = np.mean(data['hourly']['wind_speed_10m'][13:17])
+                precip = np.sum(data['hourly']['precipitation'][13:17])
+                temp = np.mean(data['hourly']['temperature_2m'][13:17])
+                return wind, precip, temp, False, "Live Forecast"
         except Exception as e:
-            print(f"   [API Error] {stadium_name}: {e}")
+            print(f"   [Forecast API Error] {stadium_name}: {e}")
 
-    # 5. Fallback to Historical Defaults (Add temp/precip to your STADIUM_CONFIG defaults)
+    # C) HISTORICAL AVERAGES (Far Future or API Failure)
     month = game_date.month
     defaults = config.get('defaults', {}).get(month, (50, 10, 0)) # temp, wind, precip
     return defaults[1], defaults[2], defaults[0], False, "Historical Avg"
+
 
 NAME_MAP = {
     'Arizona Cardinals': 'ARI', 'Atlanta Falcons': 'ATL', 'Baltimore Ravens': 'BAL',

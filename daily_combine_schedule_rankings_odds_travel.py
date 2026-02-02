@@ -2521,8 +2521,8 @@ class AdvancedNFLSimulator:
         }
 
     def _resolve_play_outcome(self, off, def_, zone, ptype, stats, def_mult, hfa_impact, 
-                              wind_speed, temp, is_rain, is_snow, is_dome, verbose):        """
-        Calculates the result of a play, injecting 'Breakaway' logic to fix low totals.
+                            wind_speed, temp, is_rain, is_snow, is_dome, verbose):
+        """Calculates the result of a play, injecting 'Breakaway' logic to fix low totals.
         Returns: (yards, is_complete, is_turnover, desc_tag)
         """
 

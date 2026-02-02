@@ -3336,7 +3336,7 @@ def get_weather_for_game(lat, lon, date_str, stadium_name):
             if 'hourly' in data:
                 # Average the weather during typical game window (1 PM - 4 PM local roughly)
                 # Indices 13 to 17 correspond to 1PM to 5PM roughly
-                wind = np.mean(data['hourly']['wind_speed_10m'][13:17])
+                raw_wind = np.mean(data['hourly']['wind_speed_10m'][13:17])
                 precip = np.sum(data['hourly']['precipitation'][13:17])
                 temp = np.mean(data['hourly']['temperature_2m'][13:17])
                 
@@ -3369,7 +3369,7 @@ def get_weather_for_game(lat, lon, date_str, stadium_name):
             data = r.json()
             
             if 'hourly' in data:
-                wind = np.mean(data['hourly']['wind_speed_10m'][13:17])
+                raw_wind = np.mean(data['hourly']['wind_speed_10m'][13:17])
                 precip = np.sum(data['hourly']['precipitation'][13:17])
                 temp = np.mean(data['hourly']['temperature_2m'][13:17])
                 return wind, precip, temp, False, "Live Forecast"
@@ -3448,10 +3448,10 @@ if __name__ == "__main__":
             lon = row['Actual Stadium Longitude']
             
             # 1. Get Weather
-            wind, precip, temp, is_dome, source = get_weather_for_game(lat, lon, date, stadium)
+            raw_wind, precip, temp, is_dome, source = get_weather_for_game(lat, lon, date, stadium)
             
             # 2. Run Simulation
-            df_sim = sim.simulate_matchup(home, away, wind_speed=wind, temp=temp, precip=precip, is_dome=is_dome)            
+            df_sim = sim.simulate_matchup(home, away, wind_speed=raw_wind, temp=temp, precip=precip, is_dome=is_dome)            
             if not df_sim.empty:
                 # 3. Define the Series variables
                 margin = df_sim['Margin']
@@ -3473,7 +3473,7 @@ if __name__ == "__main__":
                     'Week': row.get('Week'),
                     'Date': date,
                     'Matchup': f"{away} @ {home}",
-                    'Wind': wind,
+                    'Wind': raw_wind,
                     'Temperature': temp,
                     'Precipitation': precip,
                     'Sim_Weather_Source': source,
@@ -3498,7 +3498,7 @@ if __name__ == "__main__":
                 simulation_results.append(res)
                 
                 # Progress Print
-                print(f"{away:>3} @ {home:<3} {date.strftime('%Y-%m-%d'):<10} | {source:<15} | {wind:>4.1f} | {res['Spread_Mean']:>6.2f} | {spread_var:>8.2f}")
+                print(f"{away:>3} @ {home:<3} {date.strftime('%Y-%m-%d'):<10} | {source:<15} | {raw_wind:>4.1f} | {res['Spread_Mean']:>6.2f} | {spread_var:>8.2f}")
 
         except Exception as e:
             print(f"Error simulating {row.get('Away Team')} vs {row.get('Home Team')}: {e}")

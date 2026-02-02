@@ -2682,9 +2682,7 @@ class AdvancedNFLSimulator:
 
     def simulate_matchup(self, home, away, wind_speed=0, temp=70, precip=0, is_dome=False, print_sample_game=False):
         results = []
-        wind_mod = 1.0
-        if not is_dome and wind_speed > WIND_THRESHOLD:
-            wind_mod = WIND_PASS_IMPACT
+
         is_snow = (temp <= 32 and precip > 0)
         is_rain = (temp > 32 and precip > 0)
         
@@ -2695,7 +2693,7 @@ class AdvancedNFLSimulator:
         
         if print_sample_game:
             print(f"\n{'='*60}\nSAMPLE GAME LOG ({away} @ {home})\n{'='*60}")
-            self._play_game(home, away, wind_mod, wind_speed, is_dome, hfa_impact, verbose=True)
+            self._play_game(home, away, wind_speed, temp, is_rain, is_snow, is_dome, hfa_impact, verbose=True)
             print(f"{'='*60}\nEND SAMPLE LOG\n{'='*60}\n")
 
         for _ in range(SIMULATIONS):
@@ -2762,7 +2760,7 @@ class AdvancedNFLSimulator:
             if verbose: print(f"[{format_clock(clock, phase)}] OPENING KICKOFF RETURN TOUCHDOWN {possession}!")
             
             # Attempt PAT (Use 'opponent' since 'def_' isn't defined yet)
-            self._attempt_pat(possession, opponent, scores, clock, phase, raw_wind, verbose)
+            self._attempt_pat(possession, opponent, scores, clock, phase, wind_speed, verbose)
             
             # Since they scored, they kick off to the opponent.
             # The opponent gets the ball for the first drive of the loop.
@@ -2926,10 +2924,10 @@ class AdvancedNFLSimulator:
                 
                 weather_max_dist = k_stats['max_made']
                 weather_acc_mod = 1.0
-                if not is_dome and raw_wind > 0:
-                    weather_max_dist -= (raw_wind / 2.5)
-                    if raw_wind > 15: weather_acc_mod = 0.85
-                    if raw_wind > 25: weather_acc_mod = 0.70
+                if not is_dome and wind_speed > 0:
+                    weather_max_dist -= (wind_speed / 2.5)
+                    if wind_speed > 15: weather_acc_mod = 0.85
+                    if wind_speed > 25: weather_acc_mod = 0.70
 
                     if temp < 30: weather_max_dist -= 5
                     if temp < 15: weather_max_dist -= 10
@@ -2974,7 +2972,7 @@ class AdvancedNFLSimulator:
                                 # KICK RETURN TD!
                                 scores[possession] += 6
                                 if verbose: print(f"   >>> KICKOFF RETURN TOUCHDOWN {possession}!")
-                                self._attempt_pat(possession, off, scores, clock, phase, raw_wind, verbose)
+                                self._attempt_pat(possession, off, scores, clock, phase, wind_speed, verbose)
                                 # Kick it right back to the other team
                                 possession = off 
                                 yardline = 30 
@@ -3003,7 +3001,7 @@ class AdvancedNFLSimulator:
                         if verbose: print(f"[{format_clock(clock, phase)}] {off} ANALYTICS: Going for it (4th & {dist})!")
                     else:
                         p_stats = self.profiles['punting'].get(off, {'mu': 41.0, 'sigma': 4.0})
-                        adj_mu = p_stats['mu'] - (raw_wind / 2.0)
+                        adj_mu = p_stats['mu'] - (wind_speed / 2.0)
                         dist_to_goal = 100 - yardline
                         
                         if adj_mu > dist_to_goal:
@@ -3174,7 +3172,7 @@ class AdvancedNFLSimulator:
                  if np.random.random() < 0.08:
                      scores[def_] += 6
                      if verbose: print(f"   >>> DEFENSIVE TOUCHDOWN (PICK-6/FUMBLE-6) {def_}!")
-                     self._attempt_pat(def_, off, scores, clock, phase, raw_wind, verbose)
+                     self._attempt_pat(def_, off, scores, clock, phase, wind_speed, verbose)
                      
                      # Kickoff logic
                      possession = off # Offense gets ball back
@@ -3206,7 +3204,7 @@ class AdvancedNFLSimulator:
                 scores[off] += 6 
                 if verbose: print(f"   >>> TOUCHDOWN {off}!")
                 
-                self._attempt_pat(off, def_, scores, clock, phase, raw_wind if not is_dome else 0, verbose)
+                self._attempt_pat(off, def_, scores, clock, phase, wind_speed if not is_dome else 0, verbose)
                 clock_running = False 
 
                 if phase == 'OT':
@@ -3227,7 +3225,7 @@ class AdvancedNFLSimulator:
                     # KICK RETURN TD!
                     scores[possession] += 6
                     if verbose: print(f"   >>> KICKOFF RETURN TOUCHDOWN {possession}!")
-                    self._attempt_pat(possession, off, scores, clock, phase, raw_wind, verbose)
+                    self._attempt_pat(possession, off, scores, clock, phase, wind_speed, verbose)
                     # Kick it right back to the other team
                     possession = off 
                     yardline = 30 

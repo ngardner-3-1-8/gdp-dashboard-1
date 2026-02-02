@@ -2680,7 +2680,8 @@ class AdvancedNFLSimulator:
             # KICKOFF RETURN TOUCHDOWN (0.5% chance)
             return 100
 
-    def simulate_matchup(self, home, away, wind_speed=0, temp=70, precip=0, is_dome=False, print_sample_game=False):        results = []
+    def simulate_matchup(self, home, away, wind_speed=0, temp=70, precip=0, is_dome=False, print_sample_game=False):
+        results = []
         wind_mod = 1.0
         if not is_dome and wind_speed > WIND_THRESHOLD:
             wind_mod = WIND_PASS_IMPACT

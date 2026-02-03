@@ -3431,6 +3431,7 @@ if __name__ == "__main__":
 
     weather_df = pd.read_csv(f'nfl-schedules/schedule_{target_year}.csv')
     weather_lookup = weather_df[['game_id', 'Temperature', 'Wind Speed']].rename(columns={
+		'game_id': 'Game ID',
         'Temperature': 'temp',
         'Wind Speed': 'wind'
     })
@@ -3439,7 +3440,7 @@ if __name__ == "__main__":
 	# Using how='left' ensures you don't lose any games even if weather is missing
     collect_schedule_travel_ranking_data_df = collect_schedule_travel_ranking_data_df.merge(
         weather_lookup, 
-        on='game_id', 
+        on='Game ID', 
         how='left'
     )
 

@@ -3429,6 +3429,20 @@ if __name__ == "__main__":
             if val < 115: return "Med-High"
             return "High"
 
+    weather_df = pd.read_csv(f'nfl-schedules/schedule_{target_year}.csv')
+    weather_lookup = weather_df[['game_id', 'Temperature', 'Wind Speed']].rename(columns={
+        'Temperature': 'temp',
+        'Wind Speed': 'wind'
+    })
+	
+	# 2. Merge this into your main dataframe on the 'game_id' key
+	# Using how='left' ensures you don't lose any games even if weather is missing
+    collect_schedule_travel_ranking_data_df = collect_schedule_travel_ranking_data_df.merge(
+        weather_lookup, 
+        on='game_id', 
+        how='left'
+    )
+
     for index, row in collect_schedule_travel_ranking_data_df.iterrows():
         try:
             # Extract Row Data
@@ -3449,7 +3463,7 @@ if __name__ == "__main__":
                 lat, lon, date, stadium, 
                 row_temp=sched_temp, 
                 row_wind=sched_wind,
-                row_desc=sched_desc  # <--- Pass the description
+                row_desc=sched_desc
             )
             # 2. Run Simulation
             df_sim = sim.simulate_matchup(home, away, wind_speed=raw_wind, temp=temp, precip=precip, is_dome=is_dome)

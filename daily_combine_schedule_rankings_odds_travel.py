@@ -2922,7 +2922,7 @@ class AdvancedNFLSimulator:
                 kick_dist = (100 - yardline) + 18
                 k_stats = self.profiles['kicking'].get(off, {'max_made': 55, 'short_acc': 0.95, 'med_acc': 0.85, 'long_acc': 0.60})
                 
-   #WEATHER             weather_max_dist = k_stats['max_made']
+                weather_max_dist = k_stats['max_made']
                 weather_acc_mod = 1.0
    #WEATHER             if not is_dome and wind_speed > 0:
    #WEATHER                 weather_max_dist -= (wind_speed / 2.5)
@@ -2932,7 +2932,7 @@ class AdvancedNFLSimulator:
    #WEATHER                 if temp < 30: weather_max_dist -= 5
 #WEATHER                    if temp < 15: weather_max_dist -= 10
                 
- #WEATHER               in_fg_range = kick_dist <= (weather_max_dist + 2)
+                in_fg_range = kick_dist <= (weather_max_dist + 2)
                 
                 if in_fg_range and kick_dist <= 65:
                     if must_go_fg_range:

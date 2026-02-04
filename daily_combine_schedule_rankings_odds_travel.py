@@ -2527,44 +2527,44 @@ class AdvancedNFLSimulator:
         """
 
 # --- APPLY WEATHER PHYSICS ---
-        if not is_dome:
+#WEATHER        if not is_dome:
             # 1. WIND EFFECTS
-            if wind_speed > 15:
+#WEATHER            if wind_speed > 15:
                 # Harder to throw accurate deep balls
-                if ptype == 'pass':
-                    stats['complete'] -= 0.05
-                    stats['mu'] -= 1.0 # Average depth of target drops
-            if wind_speed > 25:
-                if ptype == 'pass':
-                    stats['complete'] -= 0.12
-                    stats['intercept'] += 0.01 # Tips/Overthrows
+#WEATHER                if ptype == 'pass':
+#WEATHER                    stats['complete'] -= 0.05
+#WEATHER                    stats['mu'] -= 1.0 # Average depth of target drops
+#WEATHER            if wind_speed > 25:
+#WEATHER                if ptype == 'pass':
+#WEATHER                    stats['complete'] -= 0.12
+#WEATHER                    stats['intercept'] += 0.01 # Tips/Overthrows
             
             # 2. PRECIPITATION EFFECTS (Ball Security & Catching)
-            if is_rain:
+#WEATHER            if is_rain:
                 # "Slick Ball"
-                stats['fumble'] *= 1.3      # 50% increase in fumble risk
-                if ptype == 'pass':
-                    stats['complete'] -= 0.06 # Drops
-                    stats['mu'] *= 0.9        # Players slip, less YAC
-                else:
-                    stats['mu'] *= 0.95       # Slower footing
+#WEATHER                stats['fumble'] *= 1.3      # 50% increase in fumble risk
+#WEATHER                if ptype == 'pass':
+#WEATHER                    stats['complete'] -= 0.06 # Drops
+#WEATHER                    stats['mu'] *= 0.9        # Players slip, less YAC
+#WEATHER                else:
+#WEATHER                    stats['mu'] *= 0.95       # Slower footing
             
-            elif is_snow:
+#WEATHER            elif is_snow:
                 # "Chaos" Factor
-                stats['fumble'] *= 1.4
-                if ptype == 'pass':
-                    stats['complete'] -= 0.08 # Visibility/Tracking issues
-                else:
+#WEATHER                stats['fumble'] *= 1.4
+#WEATHER                if ptype == 'pass':
+#WEATHER                    stats['complete'] -= 0.08 # Visibility/Tracking issues
+#WEATHER                else:
                     # OFFENSIVE ADVANTAGE in Snow (Run Game)
                     # Defenders react slower and slip.
                     # RBs know where they are going.
-                    stats['mu'] += 0.4 
+#WEATHER                    stats['mu'] += 0.4 
 
             # 3. TEMPERATURE EFFECTS (The "Rock")
-            if temp < 20:
-                stats['fumble'] *= 1.25 # Hits hurt more, ball is hard
-                if ptype == 'pass':
-                    stats['complete'] -= 0.04 # Hard to grip/catch
+#WEATHER            if temp < 20:
+#WEATHER                stats['fumble'] *= 1.25 # Hits hurt more, ball is hard
+#WEATHER                if ptype == 'pass':
+#WEATHER                    stats['complete'] -= 0.04 # Hard to grip/catch
 
         yards = 0
         is_complete = True
@@ -2825,14 +2825,14 @@ class AdvancedNFLSimulator:
             if pass_prob is None: pass_prob = self.league_pass_rates.get((down, d_bucket, ctx), 0.55)
 
             # WIND: severe penalty if over 20mph
-            if not is_dome and wind_speed > 20:
-                pass_prob -= 0.15  # Heavy shift to run
-            elif not is_dome and wind_speed > 15:
-                pass_prob -= 0.05
+#WEATHER            if not is_dome and wind_speed > 20:
+#WEATHER                pass_prob -= 0.15  # Heavy shift to run
+#WEATHER            elif not is_dome and wind_speed > 15:
+#WEATHER                pass_prob -= 0.05
             
             # RAIN/SNOW: slight shift to run to avoid drops/tips
-            if not is_dome and (is_rain or is_snow):
-                pass_prob -= 0.05
+#WEATHER            if not is_dome and (is_rain or is_snow):
+#WEATHER                pass_prob -= 0.05
             
             # Standard Adjustments
             if phase == 'REG' and clock < 300:
@@ -2922,17 +2922,17 @@ class AdvancedNFLSimulator:
                 kick_dist = (100 - yardline) + 18
                 k_stats = self.profiles['kicking'].get(off, {'max_made': 55, 'short_acc': 0.95, 'med_acc': 0.85, 'long_acc': 0.60})
                 
-                weather_max_dist = k_stats['max_made']
+   #WEATHER             weather_max_dist = k_stats['max_made']
                 weather_acc_mod = 1.0
-                if not is_dome and wind_speed > 0:
-                    weather_max_dist -= (wind_speed / 2.5)
-                    if wind_speed > 15: weather_acc_mod = 0.85
-                    if wind_speed > 25: weather_acc_mod = 0.70
+   #WEATHER             if not is_dome and wind_speed > 0:
+   #WEATHER                 weather_max_dist -= (wind_speed / 2.5)
+   #WEATHER                 if wind_speed > 15: weather_acc_mod = 0.85
+   #WEATHER                 if wind_speed > 25: weather_acc_mod = 0.70
 
-                    if temp < 30: weather_max_dist -= 5
-                    if temp < 15: weather_max_dist -= 10
+   #WEATHER                 if temp < 30: weather_max_dist -= 5
+#WEATHER                    if temp < 15: weather_max_dist -= 10
                 
-                in_fg_range = kick_dist <= (weather_max_dist + 2)
+ #WEATHER               in_fg_range = kick_dist <= (weather_max_dist + 2)
                 
                 if in_fg_range and kick_dist <= 65:
                     if must_go_fg_range:

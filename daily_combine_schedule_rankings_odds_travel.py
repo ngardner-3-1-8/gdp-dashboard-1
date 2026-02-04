@@ -2242,7 +2242,7 @@ def collect_schedule_travel_ranking_data(schedule_df):
 collect_schedule_travel_ranking_data_df = collect_schedule_travel_ranking_data(schedule_df)
 
 # --- CONFIGURATION ---
-SIMULATIONS = 100
+SIMULATIONS = 1000
 HISTORY_DAYS = 840
 CURRENT_SEASON = target_year
 DECAY_RATE = 0.00475

@@ -2924,13 +2924,13 @@ class AdvancedNFLSimulator:
                 
                 weather_max_dist = k_stats['max_made']
                 weather_acc_mod = 1.0
-   #WEATHER             if not is_dome and wind_speed > 0:
-   #WEATHER                 weather_max_dist -= (wind_speed / 2.5)
-   #WEATHER                 if wind_speed > 15: weather_acc_mod = 0.85
-   #WEATHER                 if wind_speed > 25: weather_acc_mod = 0.70
+                if not is_dome and wind_speed > 0:
+                    weather_max_dist -= (wind_speed / 3)
+                    if wind_speed > 15: weather_acc_mod = 0.90
+                    if wind_speed > 25: weather_acc_mod = 0.75
 
-   #WEATHER                 if temp < 30: weather_max_dist -= 5
-#WEATHER                    if temp < 15: weather_max_dist -= 10
+                    if temp < 30: weather_max_dist -= 5
+                    if temp < 15: weather_max_dist -= 10
                 
                 in_fg_range = kick_dist <= (weather_max_dist + 2)
                 

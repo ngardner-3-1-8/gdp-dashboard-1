@@ -2944,7 +2944,7 @@ class AdvancedNFLSimulator:
                         else: base_prob = k_stats['long_acc']
                         
                         final_prob = base_prob * weather_acc_mod
-                        if kick_dist > (weather_max_dist - 3): final_prob *= 0.8 
+#WEATHER                        if kick_dist > (weather_max_dist - 3): final_prob *= 0.8 
                         made = np.random.random() < final_prob
                         
                         if verbose: print(f"[{format_clock(clock, phase)}] {off} {int(kick_dist)} yd FG Attempt... {'GOOD' if made else 'MISS'}")

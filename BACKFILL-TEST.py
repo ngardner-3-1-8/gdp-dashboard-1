@@ -37,7 +37,7 @@ from scipy.stats import percentileofscore
 import warnings
 import calendar
     
-def loop_through_sims(date)    
+def loop_through_sims(date):    
     # 1. Get current date
     today = pd.to_datetime(date)
     current_cal_year = today.year 

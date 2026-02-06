@@ -193,43 +193,9 @@ GSF_PRESEASON_RANKS = {
     'Washington Commanders': 1.45
 }
 
-mp_current_ranks = {
-    'Arizona Cardinals' : -5.6,
-    'Atlanta Falcons' : -1.61,
-    'Baltimore Ravens' : 5,
-    'Buffalo Bills' : 5.24,
-    'Carolina Panthers' : -5.07,
-    'Chicago Bears' : -1.68,
-    'Cincinnati Bengals' : -6.02,
-    'Cleveland Browns' : -8.97,
-    'Dallas Cowboys' : 0.33,
-    'Denver Broncos' : 3.31,
-    'Detroit Lions' : 4.55,
-    'Green Bay Packers' : 4.69,
-    'Houston Texans' : -1.23,
-    'Indianapolis Colts' : 3.95,
-    'Jacksonville Jaguars' : 1.02,
-    'Kansas City Chiefs' : 6.47,
-    'Las Vegas Raiders' : -5.91,
-    'Los Angeles Chargers' : 0.68,
-    'Los Angeles Rams' : 7.26,
-    'Miami Dolphins' : -1.34,
-    'Minnesota Vikings' : -0.87,
-    'New England Patriots' : 0.28,
-    'New Orleans Saints' : -7.09,
-    'New York Giants' : -5.86,
-    'New York Jets' : -3.07,
-    'Philadelphia Eagles' : 5.73,
-    'Pittsburgh Steelers' : 1.1,
-    'San Francisco 49ers' : 4.49,
-    'Seattle Seahawks' : 8.34,
-    'Tampa Bay Buccaneers' : 1.3,
-    'Tennessee Titans' : -7.24,
-    'Washington Commanders' : -2.04
-}
 
 # 1. Define the file path based on your existing variables
-ratings_file = f"nfl-power-ratings/nfl_power_ratings_blended_week_{standard_nfl_week}_{target_year}.csv"
+ratings_file = f"nfl-power-ratings/nfl_power_ratings_blended_week_{starting_week}_{target_year}.csv"
 
 # 2. Check if the file exists before trying to read it
 if os.path.exists(ratings_file):

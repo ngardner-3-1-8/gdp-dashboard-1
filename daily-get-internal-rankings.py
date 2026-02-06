@@ -11,7 +11,7 @@ import os
 from datetime import datetime, timedelta
 
 
-def loop_through_rankings(date)
+def loop_through_rankings(date):
     output_folders = ["nfl-power-ratings"] 
     
     for folder in output_folders:

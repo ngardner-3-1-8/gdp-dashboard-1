@@ -1405,7 +1405,7 @@ def loop_through_dates(date)
     df = df.drop_duplicates()
     
     df.to_csv("contest-historical-data/Circa_historical_data.csv", index=False)
-    df.to_csv(f"contest-historical-data/Circa_historical_data_week_{starting_week}_{target_year}.csv", index=False)
+    df.to_csv(f"contest-historical-data/Circa_historical_data.csv", index=False)
 
     
     def scrape_circa_survivor_picks():

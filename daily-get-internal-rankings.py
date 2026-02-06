@@ -232,7 +232,7 @@ def loop_through_rankings(date):
     
     def build_power_ratings():
         # 1. Setup
-        current_date = datetime.now()
+        current_date = today
         start_date = current_date - timedelta(days=DAYS_WINDOW)
         years_to_load = [target_year, target_year - 1, target_year - 2]
         
@@ -568,7 +568,7 @@ def loop_through_rankings(date):
     
     def calculate_hfa():
         # 1. Setup
-        current_date = datetime.now()
+        current_date = today
         start_date = current_date - timedelta(days=DAYS_WINDOW)
         years_to_load = [current_date.year, current_date.year - 1, current_date.year - 2]
         
@@ -815,7 +815,7 @@ def loop_through_rankings(date):
     
     def calculate_tz_splits():
         # 1. Setup
-        current_date = datetime.now()
+        current_date = today
         start_date = current_date - timedelta(days=DAYS_WINDOW)
         years_to_load = range(start_date.year, current_date.year + 1)
         

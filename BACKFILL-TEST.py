@@ -229,7 +229,7 @@ def loop_through_sims(date):
     }
     
     # 1. Define the file path based on your existing variables
-    ratings_file = f"nfl-power-ratings/nfl_power_ratings_blended_week_{standard_nfl_week}_{target_year}.csv"
+    ratings_file = f"nfl-power-ratings/nfl_power_ratings_blended_week_{starting_week}_{target_year}.csv"
     
     # 2. Check if the file exists before trying to read it
     if os.path.exists(ratings_file):

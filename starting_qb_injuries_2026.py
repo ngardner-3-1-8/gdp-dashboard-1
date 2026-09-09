@@ -1,13 +1,13 @@
 # TYPICAL STARTERS MAP (Primary 2025 Starters)
 TYPICAL_STARTERS = {
     'ARI': 'J.Brissett',
-    'ATL': 'M.Penix',
+    'ATL': 'T.Tagovailoa',
     'BAL': 'L.Jackson',
     'BUF': 'J.Allen',
     'CAR': 'B.Young',
     'CHI': 'C.Williams',
     'CIN': 'J.Burrow',
-    'CLE': 'S.Sanders',
+    'CLE': 'D.Watson',
     'DAL': 'D.Prescott',
     'DEN': 'B.Nix',
     'DET': 'J.Goff',
